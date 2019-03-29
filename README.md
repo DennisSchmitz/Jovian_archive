@@ -1,10 +1,10 @@
 # Jovian, user-friendly metagenomics   
 
-![Jovian_logo](files/GitHub_images/Jovian_logo.png)
-
 **IMPORTANT: Do not share the code without my express permission as it is unpublished (manuscript in preparation)**  
 
 ___
+
+<img align="right" src="files/GitHub_images/Jovian_logo.png">  
 
 ## Table of content  
 - [Pipeline description](#pipeline-description)  
