@@ -4,7 +4,7 @@ Organisation: Rijksinstituut voor Volksgezondheid en Milieu (RIVM)
 Department: Virology - Emerging and Endemic Viruses (EEV)
 Date: 23-08-2018
 Changelog, examples, installation guide and explanation on:
-   https://gitl01-int-p.rivm.nl/schmitzd/PZN
+   https://github.com/DennisSchmitz/Jovian
 """
 
 #################################################################################
@@ -13,7 +13,6 @@ Changelog, examples, installation guide and explanation on:
 
 shell.executable("/bin/bash")
 
-# TODO: Put a checker here for required files and settings, such as .ncbirc, maybe jupyter config, database locations, etc. See example here: https://wiki.chpc.utah.edu/display/~u0424091/Snakemake
 onstart:
     shell("echo -e '\n\tSnakemake is starting...\n\t\tPlaceholder for required configfile checker code.\n\t\tPlacholder for .ncbirc BLAST db aliases.\n\t\tPlaceholder for Jupyter config checker.\n\t\tPlaceholder Jupyter Notebook theme settings\n'")
 
@@ -59,7 +58,7 @@ rule all:
         expand("data/scaffolds_filtered/{sample}_{type}.stats", sample = SAMPLES, type = [ 'MinLenFiltSummary', 'perMinLenFiltScaffold', 'perORFcoverage' ]), ### TEMP
         expand("data/scaffolds_filtered/{sample}_{extension}", sample = SAMPLES, extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi' ]), # Prodigal ORF prediction output
         expand("data/scaffolds_filtered/{sample}_{extension}", sample = SAMPLES, extension = [ 'unfiltered.vcf', 'filtered.vcf', 'filtered.vcf.gz', 'filtered.vcf.gz.tbi' ]), # SNP calling output
-        expand("data/scaffolds_filtered/{sample}{extension}", sample = SAMPLES, extension = [ '.windows', '_GC.bedgraph', '_DoC.bedgraph' ]), # Percentage GC content per specified window and detailed DoC per scaffold
+        expand("data/scaffolds_filtered/{sample}{extension}", sample = SAMPLES, extension = [ '.windows', '_GC.bedgraph' ]), # Percentage GC content per specified window
         expand("data/scaffolds_filtered/{sample}_IGVjs.html", sample = SAMPLES), # IGVjs html's
         expand("data/taxonomic_classification/{sample}.blastn", sample = SAMPLES), # MegablastN output
         expand("data/taxonomic_classification/{sample}.{extension}", sample = SAMPLES, extension = [ 'taxtab', 'taxMagtab' ]), # Krona output
@@ -436,23 +435,6 @@ bedtools nuc \
 cut -f 1-3,5 2>> {log} 1> {output.GC_bed}
         """
 
-rule Determine_DoC:
-    input:
-        bam="data/scaffolds_filtered/{sample}_sorted.bam",
-    output:
-        cov_bed="data/scaffolds_filtered/{sample}_DoC.bedgraph"
-    conda:
-        "envs/scaffold_analyses.yaml"
-    log:
-        "logs/Determine_DoC_{sample}.log"
-    benchmark:
-        "logs/benchmark/Determine_DoC_{sample}.txt"
-    threads: 1
-    shell:
-        """
-bedtools genomecov -dz -ibam {input.bam} 2>> {log} 1> {output.cov_bed}
-        """
-
     #############################################################################
     ##### Generate IGVjs index HTML                                         #####
     #############################################################################
@@ -469,6 +451,7 @@ rule Generate_IGVjs_html_file:
         zipped_vcf_index="data/scaffolds_filtered/{sample}_filtered.vcf.gz.tbi",
         zipped_gff3="data/scaffolds_filtered/{sample}_annotation.gff.gz",
         zipped_gff3_index="data/scaffolds_filtered/{sample}_annotation.gff.gz.tbi",
+        GC_bed="data/scaffolds_filtered/{sample}_GC.bedgraph",
     output:
         "data/scaffolds_filtered/{sample}_IGVjs.html"
     conda:
@@ -489,7 +472,8 @@ Jovian \
 {input.zipped_vcf} \
 {input.zipped_vcf_index} \
 {input.zipped_gff3} \
-{input.zipped_gff3_index} > {log} 2>&1
+{input.zipped_gff3_index} \
+{input.GC_bed} > {log} 2>&1
         """
 
     #############################################################################
@@ -775,8 +759,6 @@ find {params.search_folder} -type f -name "{params.unclassified_glob}" -exec awk
 find {params.search_folder} -type f -name "{params.virusHost_glob}" -exec awk 'NR==1 || FNR!=1' {{}} + 2>> {log} 1> {output.virusHost}
         """
 
-#### TREE MOET NOG IN ONDERSTAANDE RULE YAML GEZET WORDEN!
-
 rule Generate_index_html:
     input:
         "results/heatmaps/Superkingdoms_heatmap.html",
@@ -840,9 +822,6 @@ rule Concat_filtered_SNPs:
         """
 python bin/concat_filtered_vcf.py {params.vcf_folder_glob} {output} > {log} 2>&1
         """
-
-# TREE moet nog in master env!
-### conda install -c eumetsat tree
 
 #################################################################################
 ##### These are the conditional cleanup rules                               #####

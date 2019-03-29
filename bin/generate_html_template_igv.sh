@@ -14,10 +14,10 @@
 #   indexed="true"
 #   name="7_20688_AGGCAGAAGCGTAAGA_L001_sorted"
 
-if [ -z "${1}" ] || [ $# -ne 10 ]
+if [ -z "${1}" ] || [ $# -ne 11 ]
 then
    echo "give the following parameters:"
-   echo "id(1) fastaURL(2) url_bam_file(3) indexURL_bam_file(bai)(4) htmlnamei(5) dir_script(pwd)(6) url_vcf_file(7) indexURL_vcf(8) url_gff3(9) indexURL_gff3(10)"
+   echo "id(1) fastaURL(2) url_bam_file(3) indexURL_bam_file(bai)(4) htmlnamei(5) dir_script(pwd)(6) url_vcf_file(7) indexURL_vcf(8) url_gff3(9) indexURL_gff3(10) GC_content_bedgraph(11)"
    exit 1
 else
    pwd="${6}"
@@ -30,6 +30,7 @@ else
    indexURL_vcf="/igv/${pwd}/${8}"
    url_gff3="/igv/${pwd}/${9}"
    indexURL_gff3="/igv/${pwd}/${10}"
+   GCcontentBedGraph="/igv/${pwd}/${11}"
 fi
 
 a="$(cat << EOF
@@ -69,6 +70,14 @@ a="$(cat << EOF
                     },
 
             tracks: [
+                {
+                    type: "wig",
+                    name: "GC contents",
+                    format: "bedGraph",
+                    url: "<<<GCcontentBedGraph>>>",
+                    min: "0",
+                    max: "1"
+                },
                 {
                     name:"SNPs",
                     type:"variant",
@@ -123,7 +132,8 @@ echo "${a}" |awk '{
        gsub ("<<<indexURL_vcf>>>",indexURL_vcf)
        gsub ("<<<url_gff3>>>",url_gff3)
        gsub ("<<<indexURL_gff3>>>",indexURL_gff3)
+       gsub ("<<<GCcontentBedGraph>>>", GCcontentBedGraph)
        print $0
-      }' id="$id" fastaURL="${fastaURL}" locus="${locus}" url_bam="${url_bam}" indexURL_bam="${indexURL_bam}" url_vcf="${url_vcf}" indexURL_vcf="${indexURL_vcf}" url_gff3="${url_gff3}" indexURL_gff3="${indexURL_gff3}"> ${htmlname}
+      }' id="$id" fastaURL="${fastaURL}" locus="${locus}" url_bam="${url_bam}" indexURL_bam="${indexURL_bam}" url_vcf="${url_vcf}" indexURL_vcf="${indexURL_vcf}" url_gff3="${url_gff3}" indexURL_gff3="${indexURL_gff3}" GCcontentBedGraph="${GCcontentBedGraph}" > ${htmlname}
 
 #cp ${htmlname} /data/software/igv.js/generated/
