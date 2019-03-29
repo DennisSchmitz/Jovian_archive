@@ -10,21 +10,15 @@ Changelog, examples, installation guide and explanation on:
 # Maybe make de novo and classification output protected()? If I can't get the tmp() working properly...
 
 #################################################################################
-##### The `onstart` checker codeblock                                       #####
+##### Import config file, sample_sheet and set output folder names          #####
 #################################################################################
 
 shell.executable("/bin/bash")
 
-onstart:
-    shell("echo -e '\n\tSnakemake is starting...\n\t\tPlaceholder for required configfile checker code.\n\t\tPlacholder for .ncbirc BLAST db aliases.\n\t\tPlaceholder for Jupyter config checker.\n\t\tPlaceholder Jupyter Notebook theme settings\n'")
-
-#################################################################################
-##### Import config file, sample_sheet and set output folder names          #####
-#################################################################################
-
 configfile: "profile/pipeline_parameters.yaml"
 
 import pprint
+import os
 import yaml
 yaml.warnings({'YAMLLoadWarning': False}) # Suppress yaml "unsafe" warnings.
 
@@ -35,6 +29,24 @@ with open(config["sample_sheet"]) as sample_sheet_file:
 # Pretty-print sample sheet for debugging / logging.
 #print("Samples:")
 #pprint.pprint(SAMPLES)
+
+#################################################################################
+##### The `onstart` checker codeblock                                       #####
+#################################################################################
+
+# Need to add checker for ~/.ncbirc --> , config["databases"]["BLAST_ncbirc"] --> doesn't work
+onstart:
+    try:
+        print("Checking if all specified files are accessible...")
+        for filename in [ config["databases"]["HuGo_ref"], config["databases"]["Krona_taxonomy"], config["databases"]["virusHostDB"], config["databases"]["NCBI_new_taxdump_rankedlineage"], config["databases"]["NCBI_new_taxdump_host"] ]:
+            if not os.path.exists(filename):
+                raise FileNotFoundError(filename)
+    except FileNotFoundError as e:
+        print("This file is not available or accessible: %s" % e)
+        sys.exit(1)
+    else:
+        print("...All specified files are present!")
+#    shell("echo -e '\n\tSnakemake is starting...\n\t\tPlaceholder for required configfile checker code.\n\t\tPlacholder for .ncbirc BLAST db aliases.\n\t\tPlaceholder for Jupyter config checker.\n\t\tPlaceholder Jupyter Notebook theme settings\n'")
 
 #################################################################################
 ##### Specify Jovian's final output:                                        #####
@@ -828,17 +840,17 @@ echo -e "\tRemoving temporary files..."
 if [ "{config[remove_temp]}" != "0" ]
 then
 #    echo -e "\t\tValue is NOT 0 --> {config[remove_temp]}"   # DEBUG only
-    rm -r data/FastQC_pretrim/
-    rm -r data/FastQC_posttrim/
-    rm -r data/cleaned_fastq/fastq_without_HuGo_removal/
-    rm data/scaffolds_filtered/*_insert_size_histogram.pdf
-    rm data/scaffolds_filtered/*_insert_size_metrics.txt
-    rm data/scaffolds_filtered/*_MinLenFiltSummary.stats
-    rm data/scaffolds_filtered/*_perMinLenFiltScaffold.stats
-    rm data/scaffolds_filtered/*nt.fasta.sizes
-    rm data/scaffolds_filtered/*.windows
-    rm data/taxonomic_classification/*.taxtab
-    rm data/taxonomic_classification/*.taxMagtab
+    rm -rf data/FastQC_pretrim/
+    rm -rf data/FastQC_posttrim/
+    rm -rf data/cleaned_fastq/fastq_without_HuGo_removal/
+    rm -f data/scaffolds_filtered/*_insert_size_histogram.pdf
+    rm -f data/scaffolds_filtered/*_insert_size_metrics.txt
+    rm -f data/scaffolds_filtered/*_MinLenFiltSummary.stats
+    rm -f data/scaffolds_filtered/*_perMinLenFiltScaffold.stats
+    rm -f data/scaffolds_filtered/*nt.fasta.sizes
+    rm -f data/scaffolds_filtered/*.windows
+    rm -f data/taxonomic_classification/*.taxtab
+    rm -f data/taxonomic_classification/*.taxMagtab
 else
 #    echo -e "\t\tValue is 0 --> {config[remove_temp]}"   # DEBUG only
     echo -e "\t\tYou chose to not remove temp files: the human genome alignment files are not removed."
