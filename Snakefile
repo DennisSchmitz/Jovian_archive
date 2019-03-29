@@ -25,6 +25,8 @@ configfile: "profile/pipeline_parameters.yaml"
 import pprint
 import yaml
 
+yaml.warnings({'YAMLLoadWarning': False})
+
 SAMPLES = {}
 with open(config["sample_sheet"]) as sample_sheet_file:
     SAMPLES = yaml.load(sample_sheet_file) # SAMPLES is a dict with sample in the form sample > read number > file. E.g.: SAMPLES["sample_1"]["R1"] = "x_R1.gz"
@@ -836,11 +838,8 @@ find data -depth -type d -not \( -path data/scaffolds_raw -prune \) -empty -dele
 echo -e "\tRemoving empty typing tool files..."
 find data/virus_typing_tables/ -type f -empty -delete
 
-echo -e "\tGenerating rulegraph plot of the pipeline..."
-snakemake --unlock --config sample_sheet=sample_sheet.yaml
-snakemake --rulegraph --config sample_sheet=sample_sheet.yaml | dot -Tpng > results/rulegraph_Jovian.png
-
 echo -e "\tGenerating Snakemake report..."
+snakemake --unlock --config sample_sheet=sample_sheet.yaml
 snakemake --report results/snakemake_report.html --config sample_sheet=sample_sheet.yaml
          """)
     

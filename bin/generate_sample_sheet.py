@@ -24,6 +24,7 @@ import pathlib
 import re
 import yaml
 
+yaml.warnings({'YAMLLoadWarning': False})
 
 fq_pattern = re.compile("(.*)_R(1|2).*")
 
