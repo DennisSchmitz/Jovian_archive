@@ -69,12 +69,16 @@ ___
 ___
 
 ## Pipeline requirements
-Jovian has one software dependency; miniConda. It depends on several databases that you have to download yourself, decribed below. And it requires some configuration, explained below.
+Jovian has two software dependency; miniConda and IGVjs. It also depends on several databases that you have to download yourself, as decribed below. And it requires some configuration, explained below.  
 
 ### Software  
 |Software name|Installation instructions|Reason|  
 |:---|:---|:---|  
 |```miniConda```|https://conda.io/docs/user-guide/install/linux.html|Installation of pipeline dependencies.|  
+
+`IGVjs` is installed using this [script](bin/install_IGVjs.sh) provided alongside the Jovian installation  
+- Move to Jovian installation directory, and there do...  
+```bin/install_IGVjs.sh ``` N.B. this can take some time (~30 minutes).  
 
 ### Databases  
 |Database name|Link|Installation instructions|Reason|
