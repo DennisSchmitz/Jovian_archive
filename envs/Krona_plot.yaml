@@ -1,0 +1,9 @@
+name: Krona_plot
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+    - krona==2.7
+    - pandas==0.23.4
+    - python==3.7.0

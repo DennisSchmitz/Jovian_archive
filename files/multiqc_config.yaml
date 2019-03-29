@@ -1,0 +1,20 @@
+# Source: https://github.com/ewels/MultiQC/blob/master/multiqc_config_example.yaml
+# Date: 20181026
+
+# Title to use for the report.
+title: Jovian quality control metrics
+
+# How to plot graphs. Different templates can override these settings, but
+# the default template can use interactive plots (Javascript using HighCharts)
+# or flat plots (images, using MatPlotLib). With interactive plots, the report
+# can prevent automatically rendering all graphs if there are lots of samples
+# to prevent the browser being locked up when the report opens.
+plots_force_flat: False          # Try to use only flat image graphs
+plots_force_interactive: False   # Try to use only interactive javascript graphs
+plots_flat_numseries: 250        # If neither of the above, use flat if > this number of datasets
+num_datasets_plot_limit: 50      # If interactive, don't plot on load if > this number of datasets
+max_table_rows: 1500             # Swap tables for a beeswarm plot above this
+
+extra_fn_clean_trim:             # MultiQC also imports the log of HuGo alignment, this log file has the rule name in it, this needs to be removed, this can be done as follows... Source: https://multiqc.info/docs/#sample-name-cleaning
+    - 'HuGo_removal_pt1_alignment_'
+    - '_sorted'

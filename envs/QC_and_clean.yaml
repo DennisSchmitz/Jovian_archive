@@ -1,0 +1,9 @@
+name: QC_and_clean
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+    - fastqc==0.11.8
+    - trimmomatic==0.38
+    - openjdk==9.0.7 # Added 20190131: with openjdk version 11.* you get fatal "SIGILL" java errors.

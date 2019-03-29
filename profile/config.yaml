@@ -1,0 +1,19 @@
+### Profiles parameters: (See: https://snakemake.readthedocs.io/en/stable/executable.html?highlight=profile#profiles AND https://github.com/snakemake-profiles/doc )
+#dryrun: false
+#verbose: false
+#printshellcmds: true
+#quiet: false
+#reason: true
+#keep-going: false
+notemp: true
+local-cores: 4
+cores: 120
+resources:
+    TT_connections=2
+config:
+   sample_sheet=sample_sheet.yaml
+latency-wait: 60
+use-conda: true
+drmaa: " -q bio -n {threads} -R \"span[hosts=1]\""
+drmaa-log-dir: logs/drmaa
+jobname: Jovian_{name}.jobid{jobid}

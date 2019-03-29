@@ -1,0 +1,15 @@
+.ipynb_checkpoints/
+.snakemake/
+bin/software/
+data/
+infra/
+logs/
+raw_data/
+results/
+undetermined_demultiplex_data/
+jovian
+sample_sheet.yaml
+backup*
+DELME*
+LSF_Snakemake.*
+private_*

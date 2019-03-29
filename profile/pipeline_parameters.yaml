@@ -1,0 +1,69 @@
+######################################
+### Software parameters            ###
+######################################
+
+Trimmomatic:
+    adapter_removal_config: ILLUMINACLIP:files/trimmomatic_0.36_adapters_lists/NexteraPE-PE.fa:2:30:10:8:true # For the Nextera PE lib prep adapters
+    quality_trimming_config: SLIDINGWINDOW:5:30 # Default: 5 nucleotides window size, minimum average Phred score of 30
+    minimum_length_config: MINLEN:50 # Default: Remove anything smaller than 50 nucleotides
+    
+HuGo_removal:
+    alignment_type: --local # Choose if you want to do "local" or "global" alignment. Keep this as "--local" unless you know what you're doing.
+
+SPAdes:
+    kmersizes: 21,33,55,77 # uncomment this line if you want to use the pipeline for short Illumina reads (<250 nt in length). Then also comment the line below.
+#    kmersizes: 21,33,55,77,99,127 # uncomment this line if you want to use the pipeline for longer Illumina reads (>250 nt in length). Then also comment the line above.
+
+scaffold_minLen_filter:
+    minlen: 500 # Minimum allowed scaffold size to be allowed for downstream processessing. Advice, use a minimum length that is atleast 1nt greater than your Illumina read length
+
+taxonomic_classification: # NT database is hardcoded for now
+    evalue: 0.05 # E-value threshold for saving hits
+    max_target_seqs: 10 # Maximum number of target sequences to report
+
+taxonomic_classification_LCA:
+    bitscoreDeltaLCA: 5 # Every taxonomic hit within this bitscore distance will be used in the LCA analysis.
+
+SNP_calling:
+    max_cov: 20000 # Maximum coverage that will be used for SNP calling. Don't change this value unless you know what you're doing.
+    minimum_AF: 0.05 # This is the minimum allelle frequency (=AF) for which you want a SNP to be reported. Default is 5%.
+
+ORF_prediction:
+    procedure: meta # Set the prodigal procedure. Use "meta" for metagenomics data.
+    output_format: gff # Set the ORF prediction output format. The format that IGVjs (the alignment viewer program) accepts is "gff"
+
+HTML_index_titles:
+    IGVjs_title: "Interactive genome viewers for all samples in this run:"
+    heatmap_title: "Interactive heatmaps of different taxonomic levels for all samples in this run:"
+
+######################################################
+### Database locations and IGVjs network settings  ###
+######################################################
+
+databases: # Location of NT, NR and TaxDB are stored via an alias in your home directory (~/.ncbirc). They should work with keywords "nt" "nr" "taxdb"
+    HuGo_ref: /mnt/db/Reference_genomes/Homo_sapiens/NCBI/GRCh38/Sequence/Bowtie2Index_without_EBV_virus_chr/genome.fa # Location of HuGo assembly GRCH38 from which I manually removed the EBV chromosome, see the README.md for explanation  
+    Krona_taxonomy: /mnt/db/taxonomy_krona/ # Location of the Krona taxonomy files; installable with the helper script attached along with Jovian
+    virusHostDB: /mnt/db/Virus-Host_interaction_DB/virushostdb.tsv # Location of the Virus-Host interaction database, see http://www.genome.jp/virushostdb/note.html
+    NCBI_new_taxdump_rankedlineage: /mnt/db/new_taxdump/rankedlineage.dmp.delim # Location of the NCBI's "new_taxdump" file "rankedlineage.dmp", see ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/
+    NCBI_new_taxdump_host: /mnt/db/new_taxdump/host.dmp.delim # Location of the NCBI's "new_taxdump" file "host.dmp", see ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/
+
+server_info: # This is used for IGVjs, discuss this with your IT department, depends on your local setup
+    http_adress: http://rivm-biohn-l01p.rivm.ssc-campus.nl
+    port: 8083
+
+######################################
+### Technical parameters           ###
+######################################
+
+threads:
+    Clean_the_data: 4
+    HuGo_removal: 4
+    De_novo_assembly: 12
+    Taxonomic_classification_of_scaffolds: 12
+    SNP_calling: 12
+    Fragment_length_analysis: 4
+    quantify_output: 4
+
+typingtool_http:
+    NoV_TT_http: https://www.rivm.nl/mpf/typingservice/norovirus
+    EV_TT_http: https://www.rivm.nl/mpf/typingservice/enterovirus

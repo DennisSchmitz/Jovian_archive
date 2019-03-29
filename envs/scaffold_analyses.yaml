@@ -1,0 +1,16 @@
+name: scaffold_analyses
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+    - prodigal==2.6.3
+    - tabix==0.2.6
+    - samtools==1.9
+    - bbmap==38.22
+    - bwa==0.7.17
+    - picard==2.18.14
+    - lofreq==2.1.3.1
+    - bedtools==2.27.1
+    - gawk==4.2.1
+    - igvtools==2.3.93

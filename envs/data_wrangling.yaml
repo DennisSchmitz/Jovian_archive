@@ -1,0 +1,9 @@
+name: data_wrangling
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+    - biopython==1.72
+    - pandas==0.23.4
+    - gawk==4.2.1
