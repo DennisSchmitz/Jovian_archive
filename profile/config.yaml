@@ -5,7 +5,7 @@
 #quiet: false
 #reason: true
 #keep-going: false
-notemp: true
+#notemp: true
 local-cores: 4
 cores: 120
 resources:

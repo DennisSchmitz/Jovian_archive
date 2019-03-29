@@ -1,11 +1,13 @@
 """
-Authors: Dennis Schmitz, Robert Verhagen, Sam Nooij, Thierry Janssens, Jeroen Cremer, Mark Kroon
+Authors: Dennis Schmitz, Sam Nooij, Robert Verhagen, Thierry Janssens, Jeroen Cremer, Mark Kroon
 Organisation: Rijksinstituut voor Volksgezondheid en Milieu (RIVM)
 Department: Virology - Emerging and Endemic Viruses (EEV)
 Date: 23-08-2018
 Changelog, examples, installation guide and explanation on:
    https://github.com/DennisSchmitz/Jovian
 """
+
+# Maybe make de novo and classification output protected()? If I can't get the tmp() working properly...
 
 #################################################################################
 ##### The `onstart` checker codeblock                                       #####
@@ -24,8 +26,7 @@ configfile: "profile/pipeline_parameters.yaml"
 
 import pprint
 import yaml
-
-yaml.warnings({'YAMLLoadWarning': False})
+yaml.warnings({'YAMLLoadWarning': False}) # Suppress yaml "unsafe" warnings.
 
 SAMPLES = {}
 with open(config["sample_sheet"]) as sample_sheet_file:
@@ -51,19 +52,15 @@ localrules:
 
 rule all:
     input:
-        expand("data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_{read}.fastq", sample = SAMPLES, read = [ 'pR1', 'pR2', 'uR1', 'uR2' ]), # Trimmomatic output, N.B. this still contains HuGo data!
         expand("data/cleaned_fastq/{sample}_{read}.fq", sample = SAMPLES, read = [ 'pR1', 'pR2', 'unpaired' ]), # Extract unmapped & paired reads AND unpaired from HuGo alignment; i.e. cleaned fastqs
         expand("data/scaffolds_raw/{sample}/scaffolds.fasta", sample = SAMPLES), # SPAdes assembly output
-        expand("data/scaffolds_filtered/{sample}_scaffolds_ge{len}nt.{extension}", sample = SAMPLES, len = config["scaffold_minLen_filter"]["minlen"], extension = [ 'fasta', 'fasta.fai', 'fasta.sizes' ]), # Filtered SPAdes Scaffolds
+        expand("data/scaffolds_filtered/{sample}_scaffolds_ge{len}nt.{extension}", sample = SAMPLES, len = config["scaffold_minLen_filter"]["minlen"], extension = [ 'fasta', 'fasta.fai' ]), # Filtered SPAdes Scaffolds
         expand("data/scaffolds_filtered/{sample}_sorted.bam", sample = SAMPLES), # BWA mem alignment for fragment length analysis
-        expand("data/scaffolds_filtered/{sample}_insert_size_{extension}", sample = SAMPLES, extension = [ 'metrics.txt', 'histogram.pdf' ]), # Picard's CollectInsertSizeMetrics output txt and pdf
-        expand("data/scaffolds_filtered/{sample}_{type}.stats", sample = SAMPLES, type = [ 'MinLenFiltSummary', 'perMinLenFiltScaffold', 'perORFcoverage' ]), ### TEMP
         expand("data/scaffolds_filtered/{sample}_{extension}", sample = SAMPLES, extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi' ]), # Prodigal ORF prediction output
         expand("data/scaffolds_filtered/{sample}_{extension}", sample = SAMPLES, extension = [ 'unfiltered.vcf', 'filtered.vcf', 'filtered.vcf.gz', 'filtered.vcf.gz.tbi' ]), # SNP calling output
-        expand("data/scaffolds_filtered/{sample}{extension}", sample = SAMPLES, extension = [ '.windows', '_GC.bedgraph' ]), # Percentage GC content per specified window
+        expand("data/scaffolds_filtered/{sample}_GC.bedgraph", sample = SAMPLES), # Percentage GC content per specified window
         expand("data/scaffolds_filtered/{sample}_IGVjs.html", sample = SAMPLES), # IGVjs html's
         expand("data/taxonomic_classification/{sample}.blastn", sample = SAMPLES), # MegablastN output
-        expand("data/taxonomic_classification/{sample}.{extension}", sample = SAMPLES, extension = [ 'taxtab', 'taxMagtab' ]), # Krona output
         expand("data/tables/{sample}_{extension}", sample = SAMPLES, extension = [ 'taxClassified.tsv', 'taxUnclassified.tsv', 'virusHost.tsv' ]), # Tab seperated tables with merged data
         expand("data/virus_typing_tables/{sample}_{virus}.{extension}", sample = SAMPLES, virus = [ 'NoV', 'EV' ], extension = [ 'fa', 'xml', 'csv' ]), # Virus typingtool output tables
         expand("results/{file}", file = [ 'all_taxClassified.tsv', 'all_taxUnclassified.tsv', 'all_virusHost.tsv', 'all_NoV-TT.tsv', 'all_EV-TT.tsv', 'all_filtered_SNPs.tsv' ]), # Concatenated classification, virus host and typing tool tables
@@ -85,8 +82,8 @@ rule QC_raw_data:
     input:
         lambda wildcards: SAMPLES[wildcards.sample][wildcards.read]
     output:
-        html=temp("data/FastQC_pretrim/{sample}_{read}_fastqc.html"),
-        zip=temp("data/FastQC_pretrim/{sample}_{read}_fastqc.zip")
+        html="data/FastQC_pretrim/{sample}_{read}_fastqc.html",
+        zip="data/FastQC_pretrim/{sample}_{read}_fastqc.zip"
     conda:
         "envs/QC_and_clean.yaml"
     benchmark:
@@ -135,8 +132,8 @@ rule QC_clean_data:
     input:
         "data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_{read}.fastq"
     output:
-        html=temp("data/FastQC_posttrim/{sample}_{read}_fastqc.html"),
-        zip=temp("data/FastQC_posttrim/{sample}_{read}_fastqc.zip")
+        html="data/FastQC_posttrim/{sample}_{read}_fastqc.html",
+        zip="data/FastQC_posttrim/{sample}_{read}_fastqc.zip"
     conda:
         "envs/QC_and_clean.yaml"
     benchmark:
@@ -167,8 +164,8 @@ rule HuGo_removal_pt1_alignment:
         r1_unpaired="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_uR1.fastq",
         r2_unpaired="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_uR2.fastq",
     output:
-        sorted_bam=temp("data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_sorted.bam"),
-        sorted_bam_index=temp("data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_sorted.bam.bai"),
+        sorted_bam="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_sorted.bam",
+        sorted_bam_index="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_sorted.bam.bai",
     conda:
         "envs/HuGo_removal.yaml"
     benchmark:
@@ -381,9 +378,9 @@ rule Generate_contigs_metrics:
         fasta="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"],
         ORF_NT_fasta="data/scaffolds_filtered/{sample}_ORF_NT.fa",
     output:
-        summary=temp("data/scaffolds_filtered/{sample}_MinLenFiltSummary.stats"),
-        perScaffold=temp("data/scaffolds_filtered/{sample}_perMinLenFiltScaffold.stats"),
-        perORFcoverage=temp("data/scaffolds_filtered/{sample}_perORFcoverage.stats"),
+        summary="data/scaffolds_filtered/{sample}_MinLenFiltSummary.stats",
+        perScaffold="data/scaffolds_filtered/{sample}_perMinLenFiltScaffold.stats",
+        perORFcoverage="data/scaffolds_filtered/{sample}_perORFcoverage.stats",
     conda:
         "envs/scaffold_analyses.yaml"
     log:
@@ -402,19 +399,13 @@ outorf={output.perORFcoverage} \
 out={output.perScaffold} 2> {output.summary} 1> {log}
         """
 
-    #############################################################################
-    ##### Determine the GC content and DoC per scaffolds                    #####
-    #############################################################################
-
-# Hier nog iets voor maken met IGVjs ipv plotly
-
 rule Determine_GC_content:
     input:
         fasta="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"],
         fasta_fai="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta.fai" % config["scaffold_minLen_filter"]["minlen"],
     output:
-        fasta_sizes=temp("data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta.sizes" % config["scaffold_minLen_filter"]["minlen"]),
-        bed_windows=temp("data/scaffolds_filtered/{sample}.windows"),
+        fasta_sizes="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta.sizes" % config["scaffold_minLen_filter"]["minlen"],
+        bed_windows="data/scaffolds_filtered/{sample}.windows",
         GC_bed="data/scaffolds_filtered/{sample}_GC.bedgraph"
     conda:
         "envs/scaffold_analyses.yaml"
@@ -441,8 +432,6 @@ cut -f 1-3,5 2>> {log} 1> {output.GC_bed}
     ##### Generate IGVjs index HTML                                         #####
     #############################################################################
 
-# Dit is nu broken door de 403 errors, ik kan het niet debuggen. Wachten tot Robert het heeft opgelost.
-### Daarna de DoC en GC% toevoegen aan de html
 rule Generate_IGVjs_html_file:
     input:
         fasta="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"],
@@ -599,8 +588,8 @@ rule Krona_chart_and_LCA:
         classification="data/taxonomic_classification/{sample}.blastn",
         stats="data/scaffolds_filtered/{sample}_perMinLenFiltScaffold.stats"
     output:
-        taxtab=temp("data/taxonomic_classification/{sample}.taxtab"),
-        taxMagtab=temp("data/taxonomic_classification/{sample}.taxMagtab"),
+        taxtab="data/taxonomic_classification/{sample}.taxtab",
+        taxMagtab="data/taxonomic_classification/{sample}.taxMagtab",
     conda:
         "envs/Krona_plot.yaml"
     benchmark:
@@ -834,6 +823,26 @@ onsuccess:
 echo -e "\nCleaning up..."
 echo -e "\tRemoving empty folders..."
 find data -depth -type d -not \( -path data/scaffolds_raw -prune \) -empty -delete
+
+echo -e "\tRemoving temporary files..."
+if [ "{config[remove_temp]}" != "0" ]
+then
+#    echo -e "\t\tValue is NOT 0 --> {config[remove_temp]}"   # DEBUG only
+    rm -r data/FastQC_pretrim/
+    rm -r data/FastQC_posttrim/
+    rm -r data/cleaned_fastq/fastq_without_HuGo_removal/
+    rm data/scaffolds_filtered/*_insert_size_histogram.pdf
+    rm data/scaffolds_filtered/*_insert_size_metrics.txt
+    rm data/scaffolds_filtered/*_MinLenFiltSummary.stats
+    rm data/scaffolds_filtered/*_perMinLenFiltScaffold.stats
+    rm data/scaffolds_filtered/*nt.fasta.sizes
+    rm data/scaffolds_filtered/*.windows
+    rm data/taxonomic_classification/*.taxtab
+    rm data/taxonomic_classification/*.taxMagtab
+else
+#    echo -e "\t\tValue is 0 --> {config[remove_temp]}"   # DEBUG only
+    echo -e "\t\tYou chose to not remove temp files: the human genome alignment files are not removed."
+fi
 
 echo -e "\tRemoving empty typing tool files..."
 find data/virus_typing_tables/ -type f -empty -delete
