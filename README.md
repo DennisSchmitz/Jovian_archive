@@ -76,18 +76,17 @@ Jovian has two software dependency; miniConda and IGVjs. It also depends on seve
 |:---|:---|:---|  
 |```miniConda```|https://conda.io/docs/user-guide/install/linux.html|Installation of pipeline dependencies.|  
 
-`IGVjs` is installed using this [script](bin/install_IGVjs.sh) provided alongside the Jovian installation  
-- Move to Jovian installation directory, and there do...  
-```bin/install_IGVjs.sh ``` N.B. this can take some time (~30 minutes).  
+`IGVjs` is installed using this [script](bin/install_IGVjs.sh) provided alongside the Jovian installation and can be installed by doing...  
+- First move to the Jovian installation directory, then do ```bin/install_IGVjs.sh ```. N.B. this can take some time (~30 minutes).  
 
 ### Databases  
-|Database name|Link|Installation instructions|Reason|
-|:---|:---|:---|:---|
-|```NCBI NT & NR```|ftp://ftp.ncbi.nlm.nih.gov/blast/db/|[link](#blast-nt-nr-and-taxdb-databases)|Taxonomic annotation.|
-|```NCBI Taxdump```|ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/|[link](#blast-nt-nr-and-taxdb-databases)|Taxonomic annotation|
-|```NCBI New_taxdump```|ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/|[link](#ncbi-new_taxdump-database)|Taxonomic annotation|
-|```Latest Human Genome```|https://support.illumina.com/sequencing/sequencing_software/igenome.html|[link](#human-genome)|Removal of human data|
-|```Virus-Host interaction database```|http://www.genome.jp/virushostdb/note.html|[link](#virus-host-interaction-database)|Annotation of known virus hosts|
+|Database name|Link|Installation instructions|
+|:---|:---|:---|
+|```NCBI NT & NR```|ftp://ftp.ncbi.nlm.nih.gov/blast/db/|[link](#blast-nt-nr-and-taxdb-databases)|
+|```NCBI Taxdump```|ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/|[link](#blast-nt-nr-and-taxdb-databases)|
+|```NCBI New_taxdump```|ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/|[link](#ncbi-new_taxdump-database)|
+|```Latest Human Genome```|https://support.illumina.com/sequencing/sequencing_software/igenome.html|[link](#human-genome)|
+|```Virus-Host interaction database```|http://www.genome.jp/virushostdb/note.html|[link](#virus-host-interaction-database)|
 
 ___
 
@@ -98,7 +97,7 @@ Pipeline software, databases and Jupyter Notebook need to be downloaded, install
 
 ### Installing the pipeline  
 - Navigate to a directory where you want to analyse your datasets and download the pipeline via `git clone https://github.com/DennisSchmitz/Jovian.git`  
-- Navigate to the newly created `Jovian` folder. Install the [Jovian_master_environment](envs/Jovian_master_environment.yaml) and [Jovian_helper_environment](envs/Jovian_helper_environment.yaml) software environments via `conda-env create -f envs/Jovian_master_environment.yaml` and `conda-env create envs/Jovian_helper_environment.yaml`, respectively.   
+- Navigate to the newly created `Jovian` folder. Install the [Jovian_master_environment](envs/Jovian_master_environment.yaml) and [Jovian_helper_environment](envs/Jovian_helper_environment.yaml) software environments via `conda-env create -f envs/Jovian_master_environment.yaml` and `conda-env create -f envs/Jovian_helper_environment.yaml`, respectively.   
 - Activate the `Jovian_master` environment via `source activate Jovian_master`, the environment name should appear before your command prompt, i.e. `$ (Jovian_master) [username@server /] `  
 
 ### Database configuration  
@@ -187,7 +186,8 @@ Currently, the method to launch analyses via the Jupyter Notebook requires some 
 - Go to the `Jovian` folder [created above](#installing-the-pipeline) and activate the `Jovian_master` Conda environment via `source activate Jovian_master`.  
 - N.B. The pipeline is not compatible with zipped input files, first manually extract them. This functionality will be added later.  
 - Generate a sample sheet via:  
-  - `bin/generate_sample_sheet.py [raw_data_folder] > sample_sheet.yaml`  
+  - `bin/generate_sample_sheet.py [raw_data_folder] > sample_sheet.yaml` N.B. if your input files are zipped this file will be empty and you will get an error when you try to start the analysis!  
+    - You can unzip them via `cd [raw_data_folder]; parallel gunzip ::: *.gz`  
 - Configure pipeline parameters by changing the [profile/pipeline_parameters.yaml](profile/pipeline_parameters.yaml) file. Either via Jupyter Notebook or via command line editors.  
   - You can also configure the snakemake flags by editing the [profile/config.yaml](profile/config.yaml) file.  
 - First do a dry-run via ```snakemake -n --profile profile```. If no errors are found, perform the actual analysis via `snakemake --profile profile`.  
@@ -207,10 +207,8 @@ _____
 |:---|:---|
 |bin/ |Contains the scripts required for Jovian to work |
 |data/ | Contains intermediate and detailed data |
-|dev/ | For developers only: contains scripts and unfinished features |
 |envs/ | Contains all conda environments for the pipeline |
 |files/ | Contains ancillary files for the pipeline |
-|infra/ | For developers only: contains all infrastructure related scripts and files |
 |logs/ | Contains all Jovian log files, use these files to troubleshoot errors |
 |profile/ | Contains the files with Snakemake and pipeline parameters |
 |results/ | This contains all files that are important for end-users and are imported by the Jupyter Report |
