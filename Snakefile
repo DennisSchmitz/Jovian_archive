@@ -7,8 +7,6 @@ Changelog, examples, installation guide and explanation on:
    https://github.com/DennisSchmitz/Jovian
 """
 
-# Maybe make de novo and classification output protected()? If I can't get the tmp() working properly...
-
 #################################################################################
 ##### Import config file, sample_sheet and set output folder names          #####
 #################################################################################
@@ -94,6 +92,8 @@ rule all:
     ##### Data quality control and cleaning                                 #####
     #############################################################################
 
+
+
 rule QC_raw_data:
     input:
         lambda wildcards: SAMPLES[wildcards.sample][wildcards.read]
@@ -107,9 +107,11 @@ rule QC_raw_data:
     threads: 1
     log:
         "logs/QC_raw_data_{sample}_{read}.log"
+    params:
+        output_dir="data/FastQC_pretrim/"
     shell:
         """
-fastqc --quiet --outdir data/FastQC_pretrim/ {input} > {log} 2>&1
+bash bin/fastqc_wrapper.sh {input} {params.output_dir} {output.html} {output.zip} {log}
         """
 
 rule Clean_the_data:
