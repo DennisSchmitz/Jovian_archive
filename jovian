@@ -72,10 +72,6 @@ do
         shift # Next
         shift # Next
         ;;
-        --debug)
-        DEBUG="--verbose --printshellcmds --reason"
-        shift # Next
-        ;;
         -h|--help)
         JOVIAN_HELP="TRUE"
         shift # Next
@@ -110,6 +106,7 @@ set -- "${POSITIONAL[@]:-}" # Restores the positional arguments (i.e. without th
 
 ### Check the jovian CLI arguments and do stuff
 if [ "${CLEAN:-}" == "TRUE" ]; then
+    echo -e "Removing Jovian output: data/ logs/ results/"
     rm -rf data/
     rm -rf logs/
     rm -rf results/
@@ -138,7 +135,8 @@ Parameters:
                                display what would be done.
   --unlock                     Useful snakemake command: Remove a lock on the working
                                directory.
-  --debug                      Verbose output
+  --quiet -q                   Useful snakemake command: Do not output any progress or
+                               rule information.
 Installation:
   --install-dependencies -ic   Install the required software dependencies
   --install-igvjs -ii          Install IGVjs dependency
@@ -149,7 +147,7 @@ elif [ "${SNAKEMAKE_HELP:-}" == "TRUE" ]; then
     snakemake --help
     exit 0
 elif [ "${INSTALL_CONDA:-}" == "TRUE" ]; then
-    echo -e "\nAutomatically installing required conda environments, this can take up to an hour..."
+    echo -e "\nInstalling required conda environments, this can take up to an hour..."
     snakemake --use-conda --create-envs-only --profile $PROFILE
     exit 0
 elif [ "${INSTALL_IGVJS:-}" == "TRUE" ]; then
@@ -158,6 +156,7 @@ elif [ "${INSTALL_IGVJS:-}" == "TRUE" ]; then
     echo -e "DONE"
     exit 0
 elif [ "${INSTALL_DB:-}" == "TRUE" ]; then
+    echo -e "Installing databases, this can take hours for a fresh installation..."
     if [[ $PATH != *$HELPER_NAME* ]]; then # If helper env is not in your path (i.e. it is not currently active), do...
         set +u # Turn bash strict mode off because that breaks conda
         source activate $HELPER_NAME # Try to activate this env
@@ -178,4 +177,4 @@ fi
 ### Pass other CLI arguments along to Snakemake
 # if INPUT_DIR/*.[fq|fastq].gz, then parallel gunzip ::: input
 echo -e "bin/generate_sample_sheet.py ${INPUT_DIR:-} > sample_sheet.yaml"
-snakemake -s Snakefile ${DEBUG:---quiet} --profile ${PROFILE} ${@}
+snakemake -s Snakefile --profile ${PROFILE} ${@}
