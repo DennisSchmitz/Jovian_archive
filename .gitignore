@@ -7,7 +7,7 @@ logs/
 raw_data/
 results/
 undetermined_demultiplex_data/
-jovian
+jovian_*
 sample_sheet.yaml
 backup*
 DELME*

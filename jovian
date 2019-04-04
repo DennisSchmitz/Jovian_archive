@@ -1,0 +1,167 @@
+#!/bin/bash
+
+echo -e "\nThis wrapper is a work in progress, use at your own risk!\n"
+
+#set -euo pipefail
+#set -e
+#set -v
+#set -x
+
+# read-length code van Anita
+# optie voor MiSeq of NextSeq
+# Sample_sheet script
+# Databases aanmaken en controleren
+# Zippen output
+# Checken of alle dbs bestaan --> anders error
+# pipeline parameters via CLI meegeven ipv config.yaml
+# start the jupyter notebook, if already running, then print token.
+
+### Pre-flight check: Assess availability of required files, conda and Jovian_master environment
+PATH_JOVIAN_MASTER_YAML="envs/Jovian_master_environment.yaml"
+MASTER_NAME=$(head -n 1 $PATH_JOVIAN_MASTER_YAML | cut -f2 -d ' ') # Extract Conda environment name as specified in yaml file
+PATH_JOVIAN_HELPER_YAML="envs/Jovian_helper_environment.yaml"
+HELPER_NAME=$(head -n 1 $PATH_JOVIAN_HELPER_YAML | cut -f2 -d ' ') # Extract Conda environment name as specified in yaml file
+PROFILE="profile"
+
+if [ ! -e "$PATH_JOVIAN_MASTER_YAML" ]; then # If this yaml file does not exist, do...
+    echo -e "ERROR: Missing file \"${PATH_JOVIAN_MASTER_YAML}\""
+    exit 1
+elif [ ! -e "$PATH_JOVIAN_HELPER_YAML" ]; then # If this yaml file does not exist, do...
+    echo -e "ERROR: Missing file \"${PATH_JOVIAN_HELPER_YAML}\""
+    exit 1
+elif [ ! -e "${PROFILE}/config.yaml" ]; then # If this profile folder does not exist, do...
+    echo -e "ERROR: Missing file \"${PROFILE}/config.yaml\""
+    exit 1
+elif [ -e "~/.ncbirc" ]; then # If the BLAST required ~/.ncbirc does not exist, give error.
+    echo -e "ERROR: Missing file \"~/.ncbirc\". This is config file is required for BLAST to function, contains the locations to the BLAST databases on your local system. It should be in your home directory."
+    exit 1
+elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. the `conda` command is not available), if true, install it in ~/tmp. Otherwise, proceed.
+    #echo "Miniconda missing. Exiting. Please install Miniconda first: https://repo.continuum.io/miniconda/"
+    #exit 1
+# STILL NEED TO TEST THE BELOW BLOCK OF CODE ON A CLEAN INSTALLATION
+    echo -e "Miniconda missing. Installing, can take up to 15 minutes..." 
+    wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    chmod +x Miniconda3-latest-Linux-x86_64.sh
+    mkdir -p ~/tmp
+    ./Miniconda3-latest-Linux-x86_64.sh -b -p ~/tmp/Miniconda3
+    rm Miniconda3-latest-Linux-x86_64.sh
+    export PATH=~/tmp/Miniconda3/bin:$PATH 
+    echo -e "DONE"
+#    export PYTHONPATH=~/tmp/Miniconda3/pkgs/   # Don't know if this is needed, have to ask Anita
+#    export PERL5LIB=~/tmp/Miniconda3/lib/perl5/site_perl/5.22.0   # Don't know if this is needed, have to ask Anita
+elif [[ $PATH != *$MASTER_NAME* ]]; then # If the master environment is not in your path (i.e. it is not currently active), do...
+    source activate $MASTER_NAME # Try to activate this env
+    if [ ! $? -eq 0 ]; then # If exit statement is not 0, i.e. master conda env hasn't been installed yet, do...
+        echo -e "\tInstalling Jovian master environment..."
+        conda env create -f $PATH_JOVIAN_MASTER_YAML # Create the env from the specified yaml file
+        source activate $MASTER_NAME
+        echo -e "DONE"
+    fi
+fi
+
+### Parse the jovian commandline arguments, if they are not part of jovian, they get send to Snakemake
+DEBUG="--quiet"
+INSTALL_CONDA=""
+INSTALL_IGVJS=""
+INSTALL_DB=""
+CLEAN=""
+JOVIAN_HELP=""
+SNAKEMAKE_HELP=""
+
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+    case $key in
+        --debug)
+        DEBUG="--verbose --printshellcmds --reason"
+        shift # Next
+        ;;
+        -h|--help)
+        JOVIAN_HELP="TRUE"
+        shift # Next
+        ;;
+        -sh|--snakemake-help)
+        SNAKEMAKE_HELP="TRUE"
+        shift # Next
+        ;;
+        -ic|--install-dependencies)
+        INSTALL_CONDA="TRUE"
+        shift # Next
+        ;;
+        -ii|--install-igvjs)
+        INSTALL_IGVJS="TRUE"
+        shift # Next
+        ;;
+        -id|--install-databases)
+        INSTALL_DB="TRUE"
+        shift # Next
+        ;;
+        --clean)
+        CLEAN="TRUE"
+        shift # Next
+        ;;
+        *) # Any other option
+        POSITIONAL+=("$1") # save in array
+        shift # Next
+        ;;
+    esac
+done
+set -- "${POSITIONAL[@]}" # Restores the positional arguments (i.e. with the case arguments) which then can be called via `$@` or `$[0-9]` etc. These are parameters are send to Snakemake.
+
+### Check the jovian CLI arguments and do stuff
+if [ "$CLEAN" == "TRUE" ]; then
+    echo -e "rm -rf data/"
+    echo -e "rm -rf logs/"
+    echo -e "rm -rf results/"
+    exit 0
+elif [ "$JOVIAN_HELP" == "TRUE" ]; then # Print Jovian help message
+    cat <<HELP_USAGE
+Jovian, version 0.9.0, built with Snakemake
+  Usage: $0 blabla
+Parameters:
+  -h --help                    Print the Jovian help document
+  -sh --snakemake-help         Print the Snakemake help document
+  --clean                      Removes Jovian output
+  -k --keep-going              Useful snakemake command: Go on with independent jobs if
+                               a job fails.
+  -n --dry-run                 Useful snakemake command: Do not execute anything, and
+                               display what would be done.
+  --unlock                     Useful snakemake command: Remove a lock on the working
+                               directory.
+  --debug                      Verbose output
+  -ic --install-dependencies   Install the required software dependencies
+  -ii --install-igvjs          Install IGVjs dependency
+  -id --install-databases      Install required databases
+HELP_USAGE
+    exit 1
+elif [ "$SNAKEMAKE_HELP" == "TRUE" ]; then
+    snakemake --help
+    exit 0
+elif [ "$INSTALL_CONDA" == "TRUE" ]; then
+    echo -e "\nAutomatically installing required conda environments, this can take up to an hour..."
+    snakemake --use-conda --create-envs-only --profile $PROFILE
+    exit 0
+elif [ "$INSTALL_IGVJS" == "TRUE" ]; then
+    echo -e "Installing IGVjs software, this can take up to 15 minutes..."
+    bash bin/install_IGVjs.sh
+    echo -e "DONE"
+    exit 0
+elif [ "$INSTALL_DB" == "TRUE" ]; then
+    if [[ $PATH != *$HELPER_NAME* ]]; then # If helper env is not in your path (i.e. it is not currently active), do...
+        source activate $HELPER_NAME # Try to activate this env
+        if [ ! $? -eq 0 ]; then # If exit statement is not 0, i.e. helper conda env hasn't been installed yet, do...
+            echo -e "\tInstalling Jovian helper environment..."
+            conda env create -f $PATH_JOVIAN_HELPER_YAML # Create the env from the specified yaml file
+            source activate $HELPER_NAME
+        fi
+    fi
+    echo -e "PLACEHOLDER for the actual DB update scripts"
+    # The rest of the code is performed in the helper env, not in the master env. 
+    # source deactivate # if you need to go back to the master_env
+    echo -e "DONE"
+    exit 0
+fi
+
+### Pass other CLI arguments along to Snakemake
+echo -e "snakemake -s Snakefile ${DEBUG} --profile ${PROFILE} ${@}"
