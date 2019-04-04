@@ -117,7 +117,7 @@ if [ "${CLEAN:-}" == "TRUE" ]; then
 elif [ "${JOVIAN_HELP:-}" == "TRUE" ]; then # Print Jovian help message
     cat <<HELP_USAGE
 Jovian, version 0.9.0, built with Snakemake
-  Usage: $0 <arguments>
+  Usage: $0 -i <INPUT_DIR> <arguments>
 Input:
   --input -i DIR               This is the folder containing your input fastq files.
                                N.B. pathing must be relative from current directory.
@@ -176,5 +176,6 @@ elif [ "${INSTALL_DB:-}" == "TRUE" ]; then
 fi
 
 ### Pass other CLI arguments along to Snakemake
+# if INPUT_DIR/*.[fq|fastq].gz, then parallel gunzip ::: input
 echo -e "bin/generate_sample_sheet.py ${INPUT_DIR:-} > sample_sheet.yaml"
 snakemake -s Snakefile ${DEBUG:---quiet} --profile ${PROFILE} ${@}
