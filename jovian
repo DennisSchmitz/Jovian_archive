@@ -67,6 +67,11 @@ while [[ $# -gt 0 ]]
 do
     key="$1"
     case $key in
+        -i|--input)
+        INPUT_DIR="$2"
+        shift # Next
+        shift # Next
+        ;;
         --debug)
         DEBUG="--verbose --printshellcmds --reason"
         shift # Next
@@ -122,7 +127,7 @@ Output:
   data/                        Contains detailed intermediate files
   logs/                        Contains all log files
   results/                     Contains all final results, these are visualized via the
-                               report (Notebook_report.ipynb)
+                               web-report (Notebook_report.ipynb)
 Parameters:
   --help -h                    Print the Jovian help document
   --snakemake-help -sh         Print the Snakemake help document
@@ -134,6 +139,7 @@ Parameters:
   --unlock                     Useful snakemake command: Remove a lock on the working
                                directory.
   --debug                      Verbose output
+Installation:
   --install-dependencies -ic   Install the required software dependencies
   --install-igvjs -ii          Install IGVjs dependency
   --install-databases -id      Install required databases
@@ -170,4 +176,5 @@ elif [ "${INSTALL_DB:-}" == "TRUE" ]; then
 fi
 
 ### Pass other CLI arguments along to Snakemake
+echo -e "bin/generate_sample_sheet.py ${INPUT_DIR:-} > sample_sheet.yaml"
 snakemake -s Snakefile ${DEBUG:---quiet} --profile ${PROFILE} ${@}
