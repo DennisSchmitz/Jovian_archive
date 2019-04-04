@@ -1,12 +1,9 @@
 #!/bin/bash
-
-echo -e "\nThis wrapper is a work in progress, use at your own risk!\n"
-
-#set -euo pipefail
-#set -e
+set -euo pipefail
 #set -v
 #set -x
 
+echo -e "\nThis wrapper is a work in progress, use at your own risk!\n"
 # read-length code van Anita
 # optie voor MiSeq of NextSeq
 # Sample_sheet script
@@ -23,13 +20,13 @@ PATH_JOVIAN_HELPER_YAML="envs/Jovian_helper_environment.yaml"
 HELPER_NAME=$(head -n 1 $PATH_JOVIAN_HELPER_YAML | cut -f2 -d ' ') # Extract Conda environment name as specified in yaml file
 PROFILE="profile"
 
-if [ ! -e "$PATH_JOVIAN_MASTER_YAML" ]; then # If this yaml file does not exist, do...
+if [ ! -e "$PATH_JOVIAN_MASTER_YAML" ]; then # If this yaml file does not exist, give error.
     echo -e "ERROR: Missing file \"${PATH_JOVIAN_MASTER_YAML}\""
     exit 1
-elif [ ! -e "$PATH_JOVIAN_HELPER_YAML" ]; then # If this yaml file does not exist, do...
+elif [ ! -e "$PATH_JOVIAN_HELPER_YAML" ]; then # If this yaml file does not exist, give error.
     echo -e "ERROR: Missing file \"${PATH_JOVIAN_HELPER_YAML}\""
     exit 1
-elif [ ! -e "${PROFILE}/config.yaml" ]; then # If this profile folder does not exist, do...
+elif [ ! -e "${PROFILE}/config.yaml" ]; then # If this profile folder containing config.yaml does not exist, give error.
     echo -e "ERROR: Missing file \"${PROFILE}/config.yaml\""
     exit 1
 elif [ -e "~/.ncbirc" ]; then # If the BLAST required ~/.ncbirc does not exist, give error.
@@ -50,6 +47,7 @@ elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e
 #    export PYTHONPATH=~/tmp/Miniconda3/pkgs/   # Don't know if this is needed, have to ask Anita
 #    export PERL5LIB=~/tmp/Miniconda3/lib/perl5/site_perl/5.22.0   # Don't know if this is needed, have to ask Anita
 elif [[ $PATH != *$MASTER_NAME* ]]; then # If the master environment is not in your path (i.e. it is not currently active), do...
+    set +u # Turn strict mode off because that breaks conda
     source activate $MASTER_NAME # Try to activate this env
     if [ ! $? -eq 0 ]; then # If exit statement is not 0, i.e. master conda env hasn't been installed yet, do...
         echo -e "\tInstalling Jovian master environment..."
@@ -57,17 +55,10 @@ elif [[ $PATH != *$MASTER_NAME* ]]; then # If the master environment is not in y
         source activate $MASTER_NAME
         echo -e "DONE"
     fi
+    set -u # Turn strict mode on again
 fi
 
 ### Parse the jovian commandline arguments, if they are not part of jovian, they get send to Snakemake
-DEBUG="--quiet"
-INSTALL_CONDA=""
-INSTALL_IGVJS=""
-INSTALL_DB=""
-CLEAN=""
-JOVIAN_HELP=""
-SNAKEMAKE_HELP=""
-
 POSITIONAL=()
 while [[ $# -gt 0 ]]
 do
@@ -107,61 +98,63 @@ do
         ;;
     esac
 done
-set -- "${POSITIONAL[@]}" # Restores the positional arguments (i.e. with the case arguments) which then can be called via `$@` or `$[0-9]` etc. These are parameters are send to Snakemake.
+set -- "${POSITIONAL[@]:-}" # Restores the positional arguments (i.e. without the case arguments above) which then can be called via `$@` or `$[0-9]` etc. These parameters are send to Snakemake.
 
 ### Check the jovian CLI arguments and do stuff
-if [ "$CLEAN" == "TRUE" ]; then
-    echo -e "rm -rf data/"
-    echo -e "rm -rf logs/"
-    echo -e "rm -rf results/"
+if [ "${CLEAN:-}" == "TRUE" ]; then
+    rm -rf data/
+    rm -rf logs/
+    rm -rf results/
     exit 0
-elif [ "$JOVIAN_HELP" == "TRUE" ]; then # Print Jovian help message
+elif [ "${JOVIAN_HELP:-}" == "TRUE" ]; then # Print Jovian help message
     cat <<HELP_USAGE
 Jovian, version 0.9.0, built with Snakemake
-  Usage: $0 blabla
+  Usage: $0 <arguments>
 Parameters:
-  -h --help                    Print the Jovian help document
-  -sh --snakemake-help         Print the Snakemake help document
+  --help -h                    Print the Jovian help document
+  --snakemake-help -sh         Print the Snakemake help document
   --clean                      Removes Jovian output
-  -k --keep-going              Useful snakemake command: Go on with independent jobs if
+  --keep-going -k              Useful snakemake command: Go on with independent jobs if
                                a job fails.
-  -n --dry-run                 Useful snakemake command: Do not execute anything, and
+  --dry-run -n                 Useful snakemake command: Do not execute anything, and
                                display what would be done.
   --unlock                     Useful snakemake command: Remove a lock on the working
                                directory.
   --debug                      Verbose output
-  -ic --install-dependencies   Install the required software dependencies
-  -ii --install-igvjs          Install IGVjs dependency
-  -id --install-databases      Install required databases
+  --install-dependencies -ic   Install the required software dependencies
+  --install-igvjs -ii          Install IGVjs dependency
+  --install-databases -id      Install required databases
 HELP_USAGE
     exit 1
-elif [ "$SNAKEMAKE_HELP" == "TRUE" ]; then
+elif [ "${SNAKEMAKE_HELP:-}" == "TRUE" ]; then
     snakemake --help
     exit 0
-elif [ "$INSTALL_CONDA" == "TRUE" ]; then
+elif [ "${INSTALL_CONDA:-}" == "TRUE" ]; then
     echo -e "\nAutomatically installing required conda environments, this can take up to an hour..."
     snakemake --use-conda --create-envs-only --profile $PROFILE
     exit 0
-elif [ "$INSTALL_IGVJS" == "TRUE" ]; then
+elif [ "${INSTALL_IGVJS:-}" == "TRUE" ]; then
     echo -e "Installing IGVjs software, this can take up to 15 minutes..."
     bash bin/install_IGVjs.sh
     echo -e "DONE"
     exit 0
-elif [ "$INSTALL_DB" == "TRUE" ]; then
+elif [ "${INSTALL_DB:-}" == "TRUE" ]; then
     if [[ $PATH != *$HELPER_NAME* ]]; then # If helper env is not in your path (i.e. it is not currently active), do...
+        set +u # Turn strict mode off because that breaks conda
         source activate $HELPER_NAME # Try to activate this env
         if [ ! $? -eq 0 ]; then # If exit statement is not 0, i.e. helper conda env hasn't been installed yet, do...
             echo -e "\tInstalling Jovian helper environment..."
             conda env create -f $PATH_JOVIAN_HELPER_YAML # Create the env from the specified yaml file
             source activate $HELPER_NAME
         fi
+        set -u # Turn strict mode on again
     fi
     echo -e "PLACEHOLDER for the actual DB update scripts"
     # The rest of the code is performed in the helper env, not in the master env. 
-    # source deactivate # if you need to go back to the master_env
+    # source deactivate # if you need to go back to the master_env. N.B. Wrap this command with set +u and set -u when working in strict bash mode.
     echo -e "DONE"
     exit 0
 fi
 
 ### Pass other CLI arguments along to Snakemake
-echo -e "snakemake -s Snakefile ${DEBUG} --profile ${PROFILE} ${@}"
+snakemake -s Snakefile ${DEBUG:---quiet} --profile ${PROFILE} ${@}
