@@ -12,6 +12,9 @@ echo -e "\nThis wrapper is a work in progress, use at your own risk!\n"
 # Checken of alle dbs bestaan --> anders error
 # pipeline parameters via CLI meegeven ipv config.yaml
 # start the jupyter notebook, if already running, then print token.
+### Update theme and plugins
+# Start nginx?
+# Render jup NB?
 
 ### Pre-flight check: Assess availability of required files, conda and Jovian_master environment
 PATH_JOVIAN_MASTER_YAML="envs/Jovian_master_environment.yaml"
@@ -47,7 +50,7 @@ elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e
 #    export PYTHONPATH=~/tmp/Miniconda3/pkgs/   # Don't know if this is needed, have to ask Anita
 #    export PERL5LIB=~/tmp/Miniconda3/lib/perl5/site_perl/5.22.0   # Don't know if this is needed, have to ask Anita
 elif [[ $PATH != *$MASTER_NAME* ]]; then # If the master environment is not in your path (i.e. it is not currently active), do...
-    set +u # Turn strict mode off because that breaks conda
+    set +u # Turn bash strict mode off because that breaks conda
     source activate $MASTER_NAME # Try to activate this env
     if [ ! $? -eq 0 ]; then # If exit statement is not 0, i.e. master conda env hasn't been installed yet, do...
         echo -e "\tInstalling Jovian master environment..."
@@ -55,7 +58,7 @@ elif [[ $PATH != *$MASTER_NAME* ]]; then # If the master environment is not in y
         source activate $MASTER_NAME
         echo -e "DONE"
     fi
-    set -u # Turn strict mode on again
+    set -u # Turn bash strict mode on again
 fi
 
 ### Parse the jovian commandline arguments, if they are not part of jovian, they get send to Snakemake
@@ -110,6 +113,16 @@ elif [ "${JOVIAN_HELP:-}" == "TRUE" ]; then # Print Jovian help message
     cat <<HELP_USAGE
 Jovian, version 0.9.0, built with Snakemake
   Usage: $0 <arguments>
+Input:
+  --input -i DIR               This is the folder containing your input fastq files.
+                               N.B. pathing must be relative from current directory.
+                               N.B. It is only designed for Illumina paired-end data.
+                               N.B. It can not (yet) handle gzipped input files.
+Output:
+  data/                        Contains detailed intermediate files
+  logs/                        Contains all log files
+  results/                     Contains all final results, these are visualized via the
+                               report (Notebook_report.ipynb)
 Parameters:
   --help -h                    Print the Jovian help document
   --snakemake-help -sh         Print the Snakemake help document
@@ -125,7 +138,7 @@ Parameters:
   --install-igvjs -ii          Install IGVjs dependency
   --install-databases -id      Install required databases
 HELP_USAGE
-    exit 1
+    exit 0
 elif [ "${SNAKEMAKE_HELP:-}" == "TRUE" ]; then
     snakemake --help
     exit 0
@@ -140,14 +153,14 @@ elif [ "${INSTALL_IGVJS:-}" == "TRUE" ]; then
     exit 0
 elif [ "${INSTALL_DB:-}" == "TRUE" ]; then
     if [[ $PATH != *$HELPER_NAME* ]]; then # If helper env is not in your path (i.e. it is not currently active), do...
-        set +u # Turn strict mode off because that breaks conda
+        set +u # Turn bash strict mode off because that breaks conda
         source activate $HELPER_NAME # Try to activate this env
         if [ ! $? -eq 0 ]; then # If exit statement is not 0, i.e. helper conda env hasn't been installed yet, do...
             echo -e "\tInstalling Jovian helper environment..."
             conda env create -f $PATH_JOVIAN_HELPER_YAML # Create the env from the specified yaml file
             source activate $HELPER_NAME
         fi
-        set -u # Turn strict mode on again
+        set -u # Turn bash strict mode on again
     fi
     echo -e "PLACEHOLDER for the actual DB update scripts"
     # The rest of the code is performed in the helper env, not in the master env. 

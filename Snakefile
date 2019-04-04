@@ -865,7 +865,7 @@ fi
 echo -e "\tRemoving empty typing tool files..."
 find data/virus_typing_tables/ -type f -empty -delete
 
-echo -e "\tGenerating methodological hash (fingerprint)"
+echo -e "\tGenerating methodological hash (fingerprint)..."
 echo -e "This is the link to the code used for this analysis:\thttps://github.com/DennisSchmitz/Jovian/tree/$(git log -n 1 --pretty=format:"%H")" > results/git_log.txt
 echo -e "This code with unique fingerprint $(git log -n1 --pretty=format:"%H") was committed by $(git log -n1 --pretty=format:"%an <%ae>") at $(git log -n1 --pretty=format:"%ad")" >> results/git_log.txt
 
