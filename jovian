@@ -42,10 +42,10 @@ elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e
     echo -e "Miniconda missing. Installing, can take up to 15 minutes..." 
     curl -o latest -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
     chmod +x latest
-    mkdir -p ~/tmp
-    sh ./latest -b -p ~/tmp/Miniconda3
+    mkdir -p ~/tmp/Miniconda3
+    sh latest -b -p ~/tmp/Miniconda3
     rm latest
-    export PATH=~/tmp/Miniconda3/bin:$PATH 
+    export PATH=${HOME}/tmp/Miniconda3/bin:$PATH
     echo -e "DONE"
 #    export PYTHONPATH=~/tmp/Miniconda3/pkgs/   # Don't know if this is needed, have to ask Anita
 #    export PERL5LIB=~/tmp/Miniconda3/lib/perl5/site_perl/5.22.0   # Don't know if this is needed, have to ask Anita
