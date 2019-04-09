@@ -50,6 +50,8 @@ elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e
     echo -e "DONE"
 #    export PYTHONPATH=~/tmp/Miniconda3/pkgs/   # Don't know if this is needed, have to ask Anita
 #    export PERL5LIB=~/tmp/Miniconda3/lib/perl5/site_perl/5.22.0   # Don't know if this is needed, have to ask Anita
+fi
+
 if [[ $PATH != *$MASTER_NAME* ]]; then # If the master environment is not in your path (i.e. it is not currently active), do...
     set +ue # Turn bash strict mode off because that breaks conda
     source activate "$MASTER_NAME" # Try to activate this env
