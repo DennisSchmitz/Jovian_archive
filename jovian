@@ -109,10 +109,14 @@ set -- "${POSITIONAL[@]:-}" # Restores the positional arguments (i.e. without th
 
 ### Check the jovian CLI arguments and do stuff
 if [ "${CLEAN:-}" == "TRUE" ]; then
-    echo -e "Removing Jovian output: data/ logs/ results/"
-    rm -rf data/
-    rm -rf logs/
-    rm -rf results/
+    read -r -p "Are you sure you wish to permanently delete these files and folders? [y/N] " response
+    response=${response,,}    # tolower
+    if [[ "$response" =~ ^(yes|y)$ ]]; then
+        echo -e "Removing Jovian output: data/ logs/ results/"
+        rm -rf data/
+        rm -rf logs/
+        rm -rf results/
+    fi
     exit 0
 elif [ "${JOVIAN_HELP:-}" == "TRUE" ]; then # Print Jovian help message
     cat <<HELP_USAGE
