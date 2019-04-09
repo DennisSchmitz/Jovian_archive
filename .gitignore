@@ -14,3 +14,4 @@ DELME*
 LSF_Snakemake.*
 private_*
 .github/
+.vscode/

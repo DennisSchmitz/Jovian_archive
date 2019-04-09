@@ -32,7 +32,7 @@ elif [ ! -e "$PATH_JOVIAN_HELPER_YAML" ]; then # If this yaml file does not exis
 elif [ ! -e "${PROFILE}/config.yaml" ]; then # If this profile folder containing config.yaml does not exist, give error.
     echo -e "ERROR: Missing file \"${PROFILE}/config.yaml\""
     exit 1
-elif [ -e "~/.ncbirc" ]; then # If the BLAST required ~/.ncbirc does not exist, give error.
+elif [ ! -e "${HOME}/.ncbirc" ]; then # If the BLAST required ~/.ncbirc does not exist, give error.
     echo -e "ERROR: Missing file \"~/.ncbirc\". This is config file is required for BLAST to function, contains the locations to the BLAST databases on your local system. It should be in your home directory."
     exit 1
 elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. the `conda` command is not available), if true, install it in ~/tmp. Otherwise, proceed.
@@ -42,22 +42,24 @@ elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e
     echo -e "Miniconda missing. Installing, can take up to 15 minutes..." 
     curl -o latest.sh -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
     chmod +x latest.sh
-    sh latest.sh -b -p ${HOME}/tmp/Miniconda3
+    sh latest.sh -b -p "${HOME}/tmp/Miniconda3"
     rm latest.sh
-    export PATH=${HOME}/tmp/Miniconda3/bin:$PATH
+    #export PATH=${HOME}/tmp/Miniconda3/bin:$PATH
+    echo "PATH=$PATH:${HOME}/tmp/Miniconda3/bin" >> "${HOME}/.bash_profile"
+    source "${HOME}/.bash_profile"
     echo -e "DONE"
 #    export PYTHONPATH=~/tmp/Miniconda3/pkgs/   # Don't know if this is needed, have to ask Anita
 #    export PERL5LIB=~/tmp/Miniconda3/lib/perl5/site_perl/5.22.0   # Don't know if this is needed, have to ask Anita
-elif [[ $PATH != *$MASTER_NAME* ]]; then # If the master environment is not in your path (i.e. it is not currently active), do...
-    set +u # Turn bash strict mode off because that breaks conda
-    source activate $MASTER_NAME # Try to activate this env
+if [[ $PATH != *$MASTER_NAME* ]]; then # If the master environment is not in your path (i.e. it is not currently active), do...
+    set +ue # Turn bash strict mode off because that breaks conda
+    source activate "$MASTER_NAME" # Try to activate this env
     if [ ! $? -eq 0 ]; then # If exit statement is not 0, i.e. master conda env hasn't been installed yet, do...
         echo -e "\tInstalling Jovian master environment..."
         conda env create -f $PATH_JOVIAN_MASTER_YAML # Create the env from the specified yaml file
         source activate $MASTER_NAME
         echo -e "DONE"
     fi
-    set -u # Turn bash strict mode on again
+    set -ue # Turn bash strict mode on again
 fi
 
 ### Parse the jovian commandline arguments, if they are not part of jovian, they get send to Snakemake
