@@ -113,9 +113,12 @@ Pipeline software, databases and Jupyter Notebook need to be downloaded, install
   - We advise you to setup automatic `crontab` scripts to update these databases every week, please contact your own IT support for help with this.  
 
 #### NCBI new_taxdump database  
-- See: infra/ansible/files/crontab_update_new_taxdump.sh  
-- Use the script to download new_taxdump  
-- Text new_taxdump `rankedlineage` and `host`  
+This section is work in progress, will be automated in the bash wrapper, see issue #7.  
+- Download `new_taxdump` from https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/   
+- Extract it, it should contain the `rankedlineage` and `host` files.
+- Then change the delimiters via this one liner:
+ **N.B. execute this command from the directory where these `*.dmp` files are located**  
+ `for file in *.dmp; do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim; done`  
 - When you run a Jovian analysis, update the pathing information in [profile/pipeline_parameters.yaml](profile/pipeline_parameters.yaml) to your local pathing.  
 
 #### Krona resources  
