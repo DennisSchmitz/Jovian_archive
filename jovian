@@ -167,14 +167,14 @@ elif [ "${INSTALL_IGVJS:-}" == "TRUE" ]; then
 elif [ "${INSTALL_DB:-}" == "TRUE" ]; then
     echo -e "Installing databases, this can take hours for a fresh installation..."
     if [[ $PATH != *$HELPER_NAME* ]]; then # If helper env is not in your path (i.e. it is not currently active), do...
-        set +u # Turn bash strict mode off because that breaks conda
+        set +ue # Turn bash strict mode off because that breaks conda
         source activate $HELPER_NAME # Try to activate this env
         if [ ! $? -eq 0 ]; then # If exit statement is not 0, i.e. helper conda env hasn't been installed yet, do...
             echo -e "\tInstalling Jovian helper environment..."
             conda env create -f $PATH_JOVIAN_HELPER_YAML # Create the env from the specified yaml file
             source activate $HELPER_NAME
         fi
-        set -u # Turn bash strict mode on again
+        set -ue # Turn bash strict mode on again
     fi
     echo -e "PLACEHOLDER for the actual DB update scripts"
     # The rest of the code is performed in the helper env, not in the master env. 
@@ -185,6 +185,12 @@ fi
 
 ### Pass other CLI arguments along to Snakemake
 # if INPUT_DIR/*.[fq|fastq].gz, then parallel gunzip ::: input
+if [ ! -d ${INPUT_DIR} ]; then
+    echo -e "The input directory specified does not exist"
+    echo -e "Please specify an existing input directory"
+    exit 1
+fi
+
 ZIPFILES=(${INPUT_DIR}*.gz)
 
 if [ -e $ZIPFILES ]; then
