@@ -109,13 +109,15 @@ set -- "${POSITIONAL[@]:-}" # Restores the positional arguments (i.e. without th
 
 ### Check the jovian CLI arguments and do stuff
 if [ "${CLEAN:-}" == "TRUE" ]; then
+    echo -e "The following files and folders will be deleted:\ndata/\nlogs/\nresults/\nsample_sheet.yaml\n\n"
     read -r -p "Are you sure you wish to permanently delete these files and folders? [y/N] " response
     response=${response,,}
     if [[ "$response" =~ ^(yes|y)$ ]]; then
-        echo -e "Removing Jovian output: data/ logs/ results/"
+        echo -e "Removing Jovian output: data/ logs/ results/ sample_sheet.yaml"
         rm -rf data/
         rm -rf logs/
         rm -rf results/
+        rm sample_sheet.yaml
     fi
     exit 0
 elif [ "${JOVIAN_HELP:-}" == "TRUE" ]; then # Print Jovian help message
@@ -183,5 +185,49 @@ fi
 
 ### Pass other CLI arguments along to Snakemake
 # if INPUT_DIR/*.[fq|fastq].gz, then parallel gunzip ::: input
-echo -e "bin/generate_sample_sheet.py ${INPUT_DIR:-} > sample_sheet.yaml"
-snakemake -s Snakefile --profile ${PROFILE} ${@}
+ZIPFILES=(${INPUT_DIR}*.gz)
+
+if [ -e $ZIPFILES ]; then
+    echo -e "Gzipped files have been found in your input directory"
+    parallel gunzip ::: ${INPUT_DIR}*.gz &
+        PID=$!
+        i=1
+        sp="/-\|"
+        echo "Unzipping files"
+        echo -n ' '
+        while [ -d /proc/$PID ] do
+            printf "\b${sp:i++%${#sp}:1}";
+            sleep 0.5;
+        done
+    echo -e "\n\n\nDone with unzipping"
+fi
+
+FASTQFILES=(${INPUT_DIR}*.fastq)
+FQFILES=(${INPUT_DIR}*.fq)
+if [ -e $FASTQFILES ]; then
+    echo -e "Files in input directory have .fastq format"
+    echo -e "Generating sample sheet..."
+    bin/generate_sample_sheet.py ${INPUT_DIR:-} > sample_sheet.yaml
+elif [ -e $FQFILES ]; then
+    echo -e "Files in input directory have .fq format"
+    echo -e "Generating sample sheet..."
+    bin/generate_sample_sheet.py ${INPUT_DIR:-} > sample_sheet.yaml
+else
+    echo -e "Couldn't find files in the input directory that ended up being in a .FASTQ or .FQ format"
+    echo -e "Please inspect the input directory and make sure the files are in one of the formats listed below"
+    echo -e ".fastq.gz (Zipped Fastq)"
+    echo -e ".fq.gz (Zipped Fq)"
+    echo -e ".fastq (Unzipped Fastq)"
+    echo -e ".fq (unzipped Fq)"
+    exit 1
+fi
+
+if [ -e sample_sheet.yaml ]; then
+    echo -e "Starting snakemake"
+    snakemake -s Snakefile --profile "${PROFILE}" ${@}
+else
+    echo -e "Sample_sheet.yaml could not be found"
+    echo -e "This also means that Jovian was unable to generate a new sample sheet for you"
+    echo -e "Please inspect the input directory and make sure the right files are present"
+    exit 1
+fi
