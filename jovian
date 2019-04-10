@@ -195,8 +195,8 @@ if [ -e $ZIPFILES ]; then
         sp="/-\|"
         echo "Unzipping files"
         echo -n ' '
-        while [ -d /proc/$PID ] do
-            printf "\b${sp:i++%${#sp}:1}";
+        while [ -d /proc/$PID ]; do
+            printf "\b${sp:i++%${#sp}:1}"
             sleep 0.5;
         done
     echo -e "\n\n\nDone with unzipping"
