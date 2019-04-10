@@ -76,9 +76,6 @@ Jovian has two software dependency; miniConda and IGVjs. It also depends on seve
 |:---|:---|:---|  
 |```miniConda```|https://conda.io/docs/user-guide/install/linux.html|Installation of pipeline dependencies.|  
 
-`IGVjs` is installed using this [script](bin/install_IGVjs.sh) provided alongside the Jovian installation and can be installed by doing...  
-- First move to the Jovian installation directory, then do ```bin/install_IGVjs.sh ```. N.B. this can take some time (~30 minutes).  
-
 ### Databases  
 |Database name|Link|Installation instructions|
 |:---|:---|:---|
@@ -99,6 +96,9 @@ Pipeline software, databases and Jupyter Notebook need to be downloaded, install
 - Navigate to a directory where you want to analyse your datasets and download the pipeline via `git clone https://github.com/DennisSchmitz/Jovian.git`  
 - Navigate to the newly created `Jovian` folder. Install the [Jovian_master_environment](envs/Jovian_master_environment.yaml) and [Jovian_helper_environment](envs/Jovian_helper_environment.yaml) software environments via `conda-env create -f envs/Jovian_master_environment.yaml` and `conda-env create -f envs/Jovian_helper_environment.yaml`, respectively.   
 - Activate the `Jovian_master` environment via `source activate Jovian_master`, the environment name should appear before your command prompt, i.e. `$ (Jovian_master) [username@server /] `  
+#### Installing IGVjs
+`IGVjs` is installed using this [script](bin/install_IGVjs.sh) from the Jovian installation directory with this command:  
+```bin/install_IGVjs.sh ``` N.B. this can take some time (~30 minutes).  
 
 ### Database configuration  
 **N.B. These databases should be updated simulatenously, otherwise the taxonomy IDs might not be valid.**  
