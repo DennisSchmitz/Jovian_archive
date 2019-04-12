@@ -3,10 +3,12 @@ set -euo pipefail
 #set -v
 #set -x
 
-echo -e "\nThis wrapper is a work in progress, use at your own risk!\n"
+VERSION="0.9.0"
+INSTALL_LOG="jovian_installation_log.txt"
+
+###### TO-DO'S
 # read-length code van Anita
 # optie voor MiSeq of NextSeq
-# Sample_sheet script
 # Databases aanmaken en controleren
 # Zippen output
 # Checken of alle dbs bestaan --> anders error
@@ -16,7 +18,22 @@ echo -e "\nThis wrapper is a work in progress, use at your own risk!\n"
 # Start nginx?
 # Render jup NB?
 
+next() {
+    printf "%-70s\n" "#" | sed 's/\s/#/g'
+}
+## Introduction
+
+clear
+next
+    echo -e "Welcome to Jovian, the easy and user-friendly metagenomics pipeline"
+    echo -e "You are using Jovian version $VERSION\n\n"
+    echo -e "Please keep in mind that this pipeline is still a work-in-progress"
+    echo -e "It is expected that several portions are unstable until release 1.0.0"
+next
+
+
 ### Pre-flight check: Assess availability of required files, conda and Jovian_master environment
+
 PATH_JOVIAN_MASTER_YAML="envs/Jovian_master_environment.yaml"
 MASTER_NAME=$(head -n 1 $PATH_JOVIAN_MASTER_YAML | cut -f2 -d ' ') # Extract Conda environment name as specified in yaml file
 PATH_JOVIAN_HELPER_YAML="envs/Jovian_helper_environment.yaml"
@@ -33,35 +50,77 @@ elif [ ! -e "${PROFILE}/config.yaml" ]; then # If this profile folder containing
     echo -e "ERROR: Missing file \"${PROFILE}/config.yaml\""
     exit 1
 elif [ ! -e "${HOME}/.ncbirc" ]; then # If the BLAST required ~/.ncbirc does not exist, give error.
-    echo -e "ERROR: Missing file \"~/.ncbirc\". This is config file is required for BLAST to function, contains the locations to the BLAST databases on your local system. It should be in your home directory."
+    echo -e "ERROR: Missing file \"~/.ncbirc\". \nThis is config file is required for BLAST to function, contains the locations to the BLAST databases on your local system. It should be in your home directory."
     exit 1
 elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. the `conda` command is not available), if true, install it in ~/tmp. Otherwise, proceed.
-    #echo "Miniconda missing. Exiting. Please install Miniconda first: https://repo.continuum.io/miniconda/"
-    #exit 1
-# STILL NEED TO TEST THE BELOW BLOCK OF CODE ON A CLEAN INSTALLATION
-    echo -e "Miniconda missing. Installing, can take up to 15 minutes..." 
-    curl -o latest.sh -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
-    chmod +x latest.sh
-    sh latest.sh -b -p "${HOME}/tmp/Miniconda3"
-    rm latest.sh
-    #export PATH=${HOME}/tmp/Miniconda3/bin:$PATH
-    echo "PATH=$PATH:${HOME}/tmp/Miniconda3/bin" >> "${HOME}/.bash_profile"
-    source "${HOME}/.bash_profile"
-    echo -e "DONE"
-#    export PYTHONPATH=~/tmp/Miniconda3/pkgs/   # Don't know if this is needed, have to ask Anita
-#    export PERL5LIB=~/tmp/Miniconda3/lib/perl5/site_perl/5.22.0   # Don't know if this is needed, have to ask Anita
+
+    ### confirmation of conda installation
+    echo -e "\n\n"
+    echo -e "Miniconda missing. Installing Miniconda can take up to 15 minutes..."
+    read -r -p "Do you wish to install (mini)conda now? [y/N] " response
+    response=${response,,}
+    if [[ "$response" =~ ^(yes|y)$ ]]; then
+        echo "Jovian $VERSION" > $INSTALL_LOG
+        next | tee -a $INSTALL_LOG
+        curl -o latest.sh -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+        chmod +x latest.sh
+        sh latest.sh -b -p "${HOME}/tmp/Miniconda3" | tee -a $INSTALL_LOG
+        rm latest.sh
+        clear
+        next
+    else
+        echo -e "Conda is a requirement for Jovian to run."
+        echo -e "Exiting because conda isn't installed and automatic installation of conda was declined by user"
+        exit 1
+    fi
+    
+    ### conda has been installed by previous step, confirm addition to PATH
+    echo -e "Conda is installed but not yet added to PATH, do you wish to add conda to your PATH?"
+    read -r -p "The conda PATH will be added to your ~/.bash_profile and will only affect you. [y/N] " answer
+    answer=${answer,,}
+    if [[ "$answer" =~ ^(yes|y)$ ]]; then
+        echo "PATH=$PATH:${HOME}/tmp/Miniconda3/bin" >> "${HOME}/.bash_profile" | tee -a $INSTALL_LOG
+        source ${HOME}/.bash_profile | tee -a $INSTALL_LOG
+        clear
+        next
+        echo -e "Conda succesfully added to PATH"
+    else
+        export PATH=${HOME}/tmp/Miniconda3/bin:$PATH | tee -a $INSTALL_LOG
+        clear
+        next
+        echo -e "Conda has not been permanently added to PATH, this means you cannot use the conda command once this session closes."
+    fi
+    
+    echo -e "\n"
+    echo -e "Installation of Conda is done"
+    source ${HOME}/.bash_profile
+
+    echo -e "\n\nContinuing..."
+    sleep 5
+    clear
+    next
+        #export PYTHONPATH=~/tmp/Miniconda3/pkgs/   # Don't know if this is needed, have to ask Anita
+        #export PERL5LIB=~/tmp/Miniconda3/lib/perl5/site_perl/5.22.0   # Don't know if this is needed, have to ask Anita
 fi
 
 if [[ $PATH != *$MASTER_NAME* ]]; then # If the master environment is not in your path (i.e. it is not currently active), do...
     set +ue # Turn bash strict mode off because that breaks conda
     source activate "$MASTER_NAME" # Try to activate this env
     if [ ! $? -eq 0 ]; then # If exit statement is not 0, i.e. master conda env hasn't been installed yet, do...
-        echo -e "\tInstalling Jovian master environment..."
-        conda env create -f $PATH_JOVIAN_MASTER_YAML # Create the env from the specified yaml file
-        source activate $MASTER_NAME
-        echo -e "DONE"
+        read -r -p "The Jovian_master environment hasn't been installed yet, do you want to install this environment now? [y/N] " envanswer
+        envanswer=${envanswer,,}
+        if [[ "$envanswer" =~ ^(yes|y)$ ]]; then
+            echo -e "\tInstalling Jovian master environment..." | tee -a $INSTALL_LOG   
+            conda env create -f $PATH_JOVIAN_MASTER_YAML | tee -a $INSTALL_LOG # Create the env from the specified yaml file
+            source activate $MASTER_NAME
+            echo -e "DONE"
+        else
+            echo -e "The Jovian_master environment is a requirement. Exiting because Jovian cannot continue without this environment"
+            exit 1
+        fi
     fi
     set -ue # Turn bash strict mode on again
+    echo -e "Succesfully activated Jovian_master environment"
 fi
 
 ### Parse the jovian commandline arguments, if they are not part of jovian, they get send to Snakemake
@@ -128,7 +187,6 @@ Input:
   --input -i DIR               This is the folder containing your input fastq files.
                                N.B. pathing must be relative from current directory.
                                N.B. It is only designed for Illumina paired-end data.
-                               N.B. It can not (yet) handle gzipped input files.
 Output:
   data/                        Contains detailed intermediate files
   logs/                        Contains all log files
