@@ -1,10 +1,13 @@
 #!/bin/bash
-set -euo pipefail
+#set -euo pipefail
 #set -v
 #set -x
 
 VERSION="0.9.0"
 INSTALL_LOG="jovian_installation_log.txt"
+
+#Default INPUT_DIR
+INPUT_DIR="raw_data/"
 
 ###### TO-DO'S
 # read-length code van Anita
@@ -81,12 +84,12 @@ elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e
     if [[ "$answer" =~ ^(yes|y)$ ]]; then
         echo "PATH=$PATH:${HOME}/tmp/Miniconda3/bin" >> "${HOME}/.bash_profile" | tee -a $INSTALL_LOG
         source ${HOME}/.bash_profile | tee -a $INSTALL_LOG
-        clear
+        tput reset
         next
         echo -e "Conda succesfully added to PATH"
     else
         export PATH=${HOME}/tmp/Miniconda3/bin:$PATH | tee -a $INSTALL_LOG
-        clear
+        tput reset
         next
         echo -e "Conda has not been permanently added to PATH, this means you cannot use the conda command once this session closes."
     fi
@@ -97,7 +100,7 @@ elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e
 
     echo -e "\n\nContinuing..."
     sleep 5
-    clear
+    tput reset
     next
         #export PYTHONPATH=~/tmp/Miniconda3/pkgs/   # Don't know if this is needed, have to ask Anita
         #export PERL5LIB=~/tmp/Miniconda3/lib/perl5/site_perl/5.22.0   # Don't know if this is needed, have to ask Anita
@@ -242,43 +245,30 @@ elif [ "${INSTALL_DB:-}" == "TRUE" ]; then
 fi
 
 ### Pass other CLI arguments along to Snakemake
-# if INPUT_DIR/*.[fq|fastq].gz, then parallel gunzip ::: input
 if [ ! -d ${INPUT_DIR} ]; then
-    echo -e "The input directory specified does not exist"
+    echo -e "The input directory specified (${INPUT_DIR}) does not exist"
     echo -e "Please specify an existing input directory"
     exit 1
 fi
 
 ZIPFILES=(${INPUT_DIR}*.gz)
-
-if [ -e $ZIPFILES ]; then
-    echo -e "Gzipped files have been found in your input directory"
-    parallel gunzip ::: ${INPUT_DIR}*.gz &
-        PID=$!
-        i=1
-        sp="/-\|"
-        echo "Unzipping files"
-        echo -n ' '
-        while [ -d /proc/$PID ]; do
-            printf "\b${sp:i++%${#sp}:1}"
-            sleep 0.5;
-        done
-    echo -e "\n\n\nDone with unzipping"
-fi
-
 FASTQFILES=(${INPUT_DIR}*.fastq)
 FQFILES=(${INPUT_DIR}*.fq)
 if [ -e $FASTQFILES ]; then
-    echo -e "Files in input directory have .fastq format"
+    echo -e "Files in input directory (${INPUT_DIR}) have .fastq format"
     echo -e "Generating sample sheet..."
-    bin/generate_sample_sheet.py ${INPUT_DIR:-} > sample_sheet.yaml
+    bin/generate_sample_sheet.py ${INPUT_DIR} > sample_sheet.yaml
 elif [ -e $FQFILES ]; then
-    echo -e "Files in input directory have .fq format"
+    echo -e "Files in input directory (${INPUT_DIR}) have .fq format"
     echo -e "Generating sample sheet..."
-    bin/generate_sample_sheet.py ${INPUT_DIR:-} > sample_sheet.yaml
+    bin/generate_sample_sheet.py ${INPUT_DIR} > sample_sheet.yaml
+elif [ -e $ZIPFILES ]; then
+    echo -e "Files in input directory (${INPUT_DIR}) are gzipped"
+    echo -e "Generating sample sheet..."
+    bin/generate_sample_sheet.py ${INPUT_DIR} > sample_sheet.yaml
 else
-    echo -e "Couldn't find files in the input directory that ended up being in a .FASTQ or .FQ format"
-    echo -e "Please inspect the input directory and make sure the files are in one of the formats listed below"
+    echo -e "Couldn't find files in the input directory that ended up being in a .FASTQ, .FQ or .GZ format"
+    echo -e "Please inspect the input directory (${INPUT_DIR}) and make sure the files are in one of the formats listed below"
     echo -e ".fastq.gz (Zipped Fastq)"
     echo -e ".fq.gz (Zipped Fq)"
     echo -e ".fastq (Unzipped Fastq)"
@@ -292,6 +282,6 @@ if [ -e sample_sheet.yaml ]; then
 else
     echo -e "Sample_sheet.yaml could not be found"
     echo -e "This also means that Jovian was unable to generate a new sample sheet for you"
-    echo -e "Please inspect the input directory and make sure the right files are present"
+    echo -e "Please inspect the input directory (${INPUT_DIR}) and make sure the right files are present"
     exit 1
 fi
