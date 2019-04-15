@@ -15,8 +15,6 @@ be a sample sheet in YAML, for example:
       path/to/sample_R2.fq.gz
   sample2_id:
   ...
-
-Author: Mark Kroon, adapted from the Gastro pipeline on 20190321 (hash: 9fcd2b75)
 """
 
 import argparse
@@ -24,15 +22,18 @@ import pathlib
 import re
 import yaml
 
-yaml.warnings({'YAMLLoadWarning': False})
 
 fq_pattern = re.compile("(.*)_R(1|2).*")
 
 
 def main(args):
     assert args.dir.is_dir(), "Argument must be a directory."
+    
+    try:
+      files = list(args.dir.glob("*_R?*.f*q"))
+    except:
+      files = list(args.dir.glob("*_R?*.gz"))
 
-    files = list(args.dir.glob("*_R?*.f*q"))
     samples = {}
     for file_ in files:
         match = fq_pattern.fullmatch(file_.name)
@@ -47,4 +48,3 @@ if __name__ == "__main__":
     parser.add_argument("dir", type=pathlib.Path, 
                        help="Directory where input files are located")
     main(parser.parse_args())
-
