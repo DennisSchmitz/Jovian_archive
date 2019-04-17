@@ -184,8 +184,8 @@ if [ "${CLEAN:-}" == "TRUE" ]; then
     exit 0
 elif [ "${JOVIAN_HELP:-}" == "TRUE" ]; then # Print Jovian help message
     cat <<HELP_USAGE
-Jovian, version 0.9.0, built with Snakemake
-  Usage: $0 -i <INPUT_DIR> <arguments>
+Jovian, version $VERSION, built with Snakemake
+  Usage: bash $0 -i <INPUT_DIR> <arguments>
 Input:
   --input -i DIR               This is the folder containing your input fastq files.
                                N.B. pathing must be relative from current directory.
@@ -251,6 +251,7 @@ if [ ! -d ${INPUT_DIR} ]; then
     exit 1
 fi
 
+SHEET_SUCCESS="FALSE"
 ZIPFILES=(${INPUT_DIR}*.gz)
 FASTQFILES=(${INPUT_DIR}*.fastq)
 FQFILES=(${INPUT_DIR}*.fq)
@@ -258,14 +259,23 @@ if [ -e $FASTQFILES ]; then
     echo -e "Files in input directory (${INPUT_DIR}) have .fastq format"
     echo -e "Generating sample sheet..."
     bin/generate_sample_sheet.py ${INPUT_DIR} > sample_sheet.yaml
-elif [ -e $FQFILES ]; then
+    SHEET_SUCCESS="TRUE"
+fi
+if [ -e $FQFILES ]; then
     echo -e "Files in input directory (${INPUT_DIR}) have .fq format"
     echo -e "Generating sample sheet..."
     bin/generate_sample_sheet.py ${INPUT_DIR} > sample_sheet.yaml
-elif [ -e $ZIPFILES ]; then
+    SHEET_SUCCESS="TRUE"
+fi
+if [ -e $ZIPFILES ]; then
     echo -e "Files in input directory (${INPUT_DIR}) are gzipped"
     echo -e "Generating sample sheet..."
-    bin/generate_sample_sheet.py ${INPUT_DIR} > sample_sheet.yaml
+    bin/generate_sample_sheet_zip.py ${INPUT_DIR} >> sample_sheet.yaml
+    SHEET_SUCCESS="TRUE"
+fi
+
+if [ "$SHEET_SUCCESS" == "TRUE" ]; then
+    echo -e "Succesfully generated the sample sheet"
 else
     echo -e "Couldn't find files in the input directory that ended up being in a .FASTQ, .FQ or .GZ format"
     echo -e "Please inspect the input directory (${INPUT_DIR}) and make sure the files are in one of the formats listed below"
@@ -278,10 +288,14 @@ fi
 
 if [ -e sample_sheet.yaml ]; then
     echo -e "Starting snakemake"
+    set +ue #turn of bash strict mode because snakemake and conda can't work with it properly
     snakemake -s Snakefile --profile "${PROFILE}" ${@}
+    set -ue #turn bash strict mode back on
 else
     echo -e "Sample_sheet.yaml could not be found"
     echo -e "This also means that Jovian was unable to generate a new sample sheet for you"
     echo -e "Please inspect the input directory (${INPUT_DIR}) and make sure the right files are present"
     exit 1
 fi
+
+exit
