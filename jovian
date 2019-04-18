@@ -29,9 +29,23 @@ SHEET_SUCCESS="FALSE"
 # Start nginx?
 # Render jup NB?
 
+#functions
 next() {
     printf "%-70s\n" "#" | sed 's/\s/#/g'
 }
+spinner() {
+    PID=$!
+    i=1
+    sp="/-\|"
+    echo -n ' '
+    while [ -d /proc/$PID ]
+    do
+        printf "\b${sp:i++%${#sp}:1}"
+        sleep 0.5
+    done
+    printf "\b"
+}
+
 ## Introduction
 
 clear
@@ -76,6 +90,10 @@ do
         ;;
         --clean)
         CLEAN="TRUE"
+        shift # Next
+        ;;
+        --archive)
+        ARCHIVE="TRUE"
         shift # Next
         ;;
         *) # Any other option
@@ -131,6 +149,63 @@ Installation:
   --install-databases -id      Install required databases
 HELP_USAGE
     exit 0
+fi
+
+if [ "${ARCHIVE:-}" == "TRUE" ]; then
+    echo -e "\n\nArchiving the Jovian data and results can take several hours depending on the size of your dataset(s)."
+    echo -e "This archiving process will NOT include the raw dataset in the final archive"
+    echo -e "\nIt is advised to run the archiving process overnight, it is strongly advised to not stop the process once you started it"
+    read -r -p "Do you want to start the Jovian archiving process now? [y/N] " archive_answer
+    archive_answer=${archive_answer,,}
+    if [[ "$archive_answer" =~ ^(yes|y)$ ]]; then
+        echo -e "\n\nStarting the archiving process\n\n"
+        
+        if [ -e data/ ]; then
+            echo -e "Found the 'data/' folder, appending to archive..."
+            (tar --append --file=archive.tar data/) &
+            spinner
+        else
+            echo -e "Couldn't find the 'data/' folder in this working directory, skipping this folder in archiving"
+        fi
+
+        if [ -e logs/ ]; then
+            echo -e "Found the 'logs/' folder, appending to archive..."
+            (tar --append --file=archive.tar logs/) &
+            spinner
+        else
+            echo -e "Couldn't find the 'data/' folder in this working directory, skipping this folder in archiving"
+        fi
+        
+        if [ -e results/ ]; then
+            echo -e "Found the 'results/' folder, appending to archive..."
+            (tar --append --file=archive.tar results/) &
+            spinner
+        else
+            echo -e "Couldn't find the 'results/' folder in this working directory, skipping this folder in archiving"
+        fi
+        
+        if [ -e sample_sheet.yaml ]; then
+            echo -e "Found 'sample_sheet.yaml', appending to archive..."
+            (tar --append --file=archive.tar sample_sheet.yaml) &
+            spinner
+        else
+            echo -e "Couldn't find the file 'sample_sheet.yaml' in this working directory, skipping this file in archiving"
+        fi
+        
+        if [ -e archive.tar ]; then
+            echo -e "\n\nFiles and folders have been appended to the archive."
+            echo -e "Compressing archive..."
+            (gzip archive.tar) &
+            spinner
+        else
+            echo "No files and folders could be found for archiving."
+            exit 1
+        fi
+    else
+        echo -e "Aborting the archiving proces..."
+        exit 0
+    fi
+exit 0
 fi
 
 ### Pre-flight check: Assess availability of required files, conda and Jovian_master environment
@@ -314,4 +389,4 @@ else
     exit 1
 fi
 
-exit
+exit 0
