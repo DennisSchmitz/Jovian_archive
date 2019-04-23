@@ -90,7 +90,7 @@ ___
 ## Configuration  
 Pipeline software, databases and Jupyter Notebook need to be downloaded, installed and configured as described below.  
 
-**2019-03-29 --> Will be made easier via automation at a later date.**
+**2019-04-23 --> Jovian wrapper is added, should make installation much easier. N.B. It is still a work in progress.**
 
 ### Installing the pipeline  
 - Navigate to a directory where you want to analyse your datasets and download the pipeline via `git clone https://github.com/DennisSchmitz/Jovian.git`  
