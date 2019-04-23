@@ -1,4 +1,4 @@
-# Jovian, user-friendly metagenomics   
+# Jovian, user-friendly metagenomics  
 
 **IMPORTANT: Do not share the code without my express permission as it is unpublished (manuscript in preparation)**  
 
