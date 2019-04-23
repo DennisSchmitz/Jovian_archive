@@ -29,7 +29,7 @@ fq_pattern = re.compile("(.*)_R(1|2).*")
 def main(args):
     assert args.dir.is_dir(), "Argument must be a directory."
     
-    files = list(args.dir.glob("*_R?*.f*q"))
+    files = list(args.dir.glob("*_R?*.gz"))
 
     samples = {}
     for file_ in files:
