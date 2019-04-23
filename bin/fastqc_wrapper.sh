@@ -17,7 +17,7 @@ LOG="$5"
 
 # Generate sample basename (i.e. remove everything before the last '/' and then remove everything after the '.')
 SAMPLE_TEMP="${INPUT_FILE##*/}"
-SAMPLE_NAME="${SAMPLE_TEMP%.*}"
+SAMPLE_NAME="${SAMPLE_TEMP%%.*}"
 
 # These are the output files that fastqc implicitly generates (based on the input file basename)
 REAL_OUTPUT_HTML="${OUTPUT_DIR}${SAMPLE_NAME}_fastqc.html"

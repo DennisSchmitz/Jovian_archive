@@ -6,8 +6,16 @@
 VERSION="0.9.0"
 INSTALL_LOG="jovian_installation_log.txt"
 
-#Default INPUT_DIR
+#Default values
 INPUT_DIR="raw_data/"
+JOVIAN_HELP="FALSE"
+SNAKEMAKE_HELP="FALSE"
+INSTALL_CONDA="FALSE"
+INSTALL_IGVJS="FALSE"
+INSTALL_DB="FALSE"
+CLEAN="FALSE"
+SHEET_SUCCESS="FALSE"
+
 
 ###### TO-DO'S
 # read-length code van Anita
@@ -21,9 +29,23 @@ INPUT_DIR="raw_data/"
 # Start nginx?
 # Render jup NB?
 
+#functions
 next() {
     printf "%-70s\n" "#" | sed 's/\s/#/g'
 }
+spinner() {
+    PID=$!
+    i=1
+    sp="/-\|"
+    echo -n ' '
+    while [ -d /proc/$PID ]
+    do
+        printf "\b${sp:i++%${#sp}:1}"
+        sleep 0.5
+    done
+    printf "\b"
+}
+
 ## Introduction
 
 clear
@@ -34,6 +56,157 @@ next
     echo -e "It is expected that several portions are unstable until release 1.0.0"
 next
 
+
+### Parse the jovian commandline arguments, if they are not part of jovian, they get send to Snakemake
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+    case $key in
+        -i|--input)
+        INPUT_DIR="$2"
+        shift # Next
+        shift # Next
+        ;;
+        -h|--help)
+        JOVIAN_HELP="TRUE"
+        shift # Next
+        ;;
+        -sh|--snakemake-help)
+        SNAKEMAKE_HELP="TRUE"
+        shift # Next
+        ;;
+        -ic|--install-dependencies)
+        INSTALL_CONDA="TRUE"
+        shift # Next
+        ;;
+        -ii|--install-igvjs)
+        INSTALL_IGVJS="TRUE"
+        shift # Next
+        ;;
+        -id|--install-databases)
+        INSTALL_DB="TRUE"
+        shift # Next
+        ;;
+        --clean)
+        CLEAN="TRUE"
+        shift # Next
+        ;;
+        --archive)
+        ARCHIVE="TRUE"
+        shift # Next
+        ;;
+        *) # Any other option
+        POSITIONAL+=("$1") # save in array
+        shift # Next
+        ;;
+    esac
+done
+set -- "${POSITIONAL[@]:-}" # Restores the positional arguments (i.e. without the case arguments above) which then can be called via `$@` or `$[0-9]` etc. These parameters are send to Snakemake.
+
+### Check the jovian CLI arguments and do stuff
+if [ "${CLEAN:-}" == "TRUE" ]; then
+    echo -e "The following files and folders will be deleted:\ndata/\nlogs/\nresults/\nsample_sheet.yaml\n\n"
+    read -r -p "Are you sure you wish to permanently delete these files and folders? [y/N] " response
+    response=${response,,}
+    if [[ "$response" =~ ^(yes|y)$ ]]; then
+        echo -e "Removing Jovian output: data/ logs/ results/ sample_sheet.yaml"
+        rm -rf data/
+        rm -rf logs/
+        rm -rf results/
+        rm sample_sheet.yaml
+    fi
+    exit 0
+fi
+if [ "${JOVIAN_HELP:-}" == "TRUE" ]; then # Print Jovian help message
+    cat <<HELP_USAGE
+Jovian, version $VERSION, built with Snakemake
+  Usage: bash $0 -i <INPUT_DIR> <arguments>
+Input:
+  --input -i DIR               This is the folder containing your input fastq files.
+                               N.B. pathing must be relative from current directory.
+                               N.B. It is only designed for Illumina paired-end data.
+Output:
+  data/                        Contains detailed intermediate files
+  logs/                        Contains all log files
+  results/                     Contains all final results, these are visualized via the
+                               web-report (Notebook_report.ipynb)
+Parameters:
+  --help -h                    Print the Jovian help document
+  --snakemake-help -sh         Print the Snakemake help document
+  --clean                      Removes Jovian output
+  --keep-going -k              Useful snakemake command: Go on with independent jobs if
+                               a job fails.
+  --dry-run -n                 Useful snakemake command: Do not execute anything, and
+                               display what would be done.
+  --unlock                     Useful snakemake command: Remove a lock on the working
+                               directory.
+  --quiet -q                   Useful snakemake command: Do not output any progress or
+                               rule information.
+Installation:
+  --install-dependencies -ic   Install the required software dependencies
+  --install-igvjs -ii          Install IGVjs dependency
+  --install-databases -id      Install required databases
+HELP_USAGE
+    exit 0
+fi
+
+if [ "${ARCHIVE:-}" == "TRUE" ]; then
+    echo -e "\n\nArchiving the Jovian data and results can take several hours depending on the size of your dataset(s)."
+    echo -e "This archiving process will NOT include the raw dataset in the final archive"
+    echo -e "\nIt is advised to run the archiving process overnight, it is strongly advised to not stop the process once you started it"
+    read -r -p "Do you want to start the Jovian archiving process now? [y/N] " archive_answer
+    archive_answer=${archive_answer,,}
+    if [[ "$archive_answer" =~ ^(yes|y)$ ]]; then
+        echo -e "\n\nStarting the archiving process\n\n"
+        
+        if [ -e data/ ]; then
+            echo -e "Found the 'data/' folder, appending to archive..."
+            (tar --append --file=archive.tar data/) &
+            spinner
+        else
+            echo -e "Couldn't find the 'data/' folder in this working directory, skipping this folder in archiving"
+        fi
+
+        if [ -e logs/ ]; then
+            echo -e "Found the 'logs/' folder, appending to archive..."
+            (tar --append --file=archive.tar logs/) &
+            spinner
+        else
+            echo -e "Couldn't find the 'data/' folder in this working directory, skipping this folder in archiving"
+        fi
+        
+        if [ -e results/ ]; then
+            echo -e "Found the 'results/' folder, appending to archive..."
+            (tar --append --file=archive.tar results/) &
+            spinner
+        else
+            echo -e "Couldn't find the 'results/' folder in this working directory, skipping this folder in archiving"
+        fi
+        
+        if [ -e sample_sheet.yaml ]; then
+            echo -e "Found 'sample_sheet.yaml', appending to archive..."
+            (tar --append --file=archive.tar sample_sheet.yaml) &
+            spinner
+        else
+            echo -e "Couldn't find the file 'sample_sheet.yaml' in this working directory, skipping this file in archiving"
+        fi
+        
+        if [ -e archive.tar ]; then
+            echo -e "\n\nFiles and folders have been appended to the archive."
+            echo -e "Compressing archive..."
+            (gzip archive.tar) &
+            spinner
+        else
+            echo "No files and folders could be found for archiving."
+            exit 1
+        fi
+    else
+        echo -e "Aborting the archiving proces..."
+        exit 0
+    fi
+exit 0
+fi
 
 ### Pre-flight check: Assess availability of required files, conda and Jovian_master environment
 
@@ -51,9 +224,6 @@ elif [ ! -e "$PATH_JOVIAN_HELPER_YAML" ]; then # If this yaml file does not exis
     exit 1
 elif [ ! -e "${PROFILE}/config.yaml" ]; then # If this profile folder containing config.yaml does not exist, give error.
     echo -e "ERROR: Missing file \"${PROFILE}/config.yaml\""
-    exit 1
-elif [ ! -e "${HOME}/.ncbirc" ]; then # If the BLAST required ~/.ncbirc does not exist, give error.
-    echo -e "ERROR: Missing file \"~/.ncbirc\". \nThis is config file is required for BLAST to function, contains the locations to the BLAST databases on your local system. It should be in your home directory."
     exit 1
 elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. the `conda` command is not available), if true, install it in ~/tmp. Otherwise, proceed.
 
@@ -125,107 +295,7 @@ if [[ $PATH != *$MASTER_NAME* ]]; then # If the master environment is not in you
     set -ue # Turn bash strict mode on again
     echo -e "Succesfully activated Jovian_master environment"
 fi
-
-### Parse the jovian commandline arguments, if they are not part of jovian, they get send to Snakemake
-POSITIONAL=()
-while [[ $# -gt 0 ]]
-do
-    key="$1"
-    case $key in
-        -i|--input)
-        INPUT_DIR="$2"
-        shift # Next
-        shift # Next
-        ;;
-        -h|--help)
-        JOVIAN_HELP="TRUE"
-        shift # Next
-        ;;
-        -sh|--snakemake-help)
-        SNAKEMAKE_HELP="TRUE"
-        shift # Next
-        ;;
-        -ic|--install-dependencies)
-        INSTALL_CONDA="TRUE"
-        shift # Next
-        ;;
-        -ii|--install-igvjs)
-        INSTALL_IGVJS="TRUE"
-        shift # Next
-        ;;
-        -id|--install-databases)
-        INSTALL_DB="TRUE"
-        shift # Next
-        ;;
-        --clean)
-        CLEAN="TRUE"
-        shift # Next
-        ;;
-        *) # Any other option
-        POSITIONAL+=("$1") # save in array
-        shift # Next
-        ;;
-    esac
-done
-set -- "${POSITIONAL[@]:-}" # Restores the positional arguments (i.e. without the case arguments above) which then can be called via `$@` or `$[0-9]` etc. These parameters are send to Snakemake.
-
-### Check the jovian CLI arguments and do stuff
-if [ "${CLEAN:-}" == "TRUE" ]; then
-    echo -e "The following files and folders will be deleted:\ndata/\nlogs/\nresults/\nsample_sheet.yaml\n\n"
-    read -r -p "Are you sure you wish to permanently delete these files and folders? [y/N] " response
-    response=${response,,}
-    if [[ "$response" =~ ^(yes|y)$ ]]; then
-        echo -e "Removing Jovian output: data/ logs/ results/ sample_sheet.yaml"
-        rm -rf data/
-        rm -rf logs/
-        rm -rf results/
-        rm sample_sheet.yaml
-    fi
-    exit 0
-elif [ "${JOVIAN_HELP:-}" == "TRUE" ]; then # Print Jovian help message
-    cat <<HELP_USAGE
-Jovian, version 0.9.0, built with Snakemake
-  Usage: $0 -i <INPUT_DIR> <arguments>
-Input:
-  --input -i DIR               This is the folder containing your input fastq files.
-                               N.B. pathing must be relative from current directory.
-                               N.B. It is only designed for Illumina paired-end data.
-Output:
-  data/                        Contains detailed intermediate files
-  logs/                        Contains all log files
-  results/                     Contains all final results, these are visualized via the
-                               web-report (Notebook_report.ipynb)
-Parameters:
-  --help -h                    Print the Jovian help document
-  --snakemake-help -sh         Print the Snakemake help document
-  --clean                      Removes Jovian output
-  --keep-going -k              Useful snakemake command: Go on with independent jobs if
-                               a job fails.
-  --dry-run -n                 Useful snakemake command: Do not execute anything, and
-                               display what would be done.
-  --unlock                     Useful snakemake command: Remove a lock on the working
-                               directory.
-  --quiet -q                   Useful snakemake command: Do not output any progress or
-                               rule information.
-Installation:
-  --install-dependencies -ic   Install the required software dependencies
-  --install-igvjs -ii          Install IGVjs dependency
-  --install-databases -id      Install required databases
-HELP_USAGE
-    exit 0
-elif [ "${SNAKEMAKE_HELP:-}" == "TRUE" ]; then
-    snakemake --help
-    exit 0
-elif [ "${INSTALL_CONDA:-}" == "TRUE" ]; then
-    echo -e "\nInstalling required conda environments, this can take up to an hour..."
-    snakemake --use-conda --create-envs-only --profile $PROFILE
-    exit 0
-elif [ "${INSTALL_IGVJS:-}" == "TRUE" ]; then
-    echo -e "Installing IGVjs software, this can take up to 15 minutes..."
-    bash bin/install_IGVjs.sh
-    echo -e "DONE"
-    exit 0
-elif [ "${INSTALL_DB:-}" == "TRUE" ]; then
+if [ "${INSTALL_DB:-}" == "TRUE" ]; then
     echo -e "Installing databases, this can take hours for a fresh installation..."
     if [[ $PATH != *$HELPER_NAME* ]]; then # If helper env is not in your path (i.e. it is not currently active), do...
         set +ue # Turn bash strict mode off because that breaks conda
@@ -244,6 +314,28 @@ elif [ "${INSTALL_DB:-}" == "TRUE" ]; then
     exit 0
 fi
 
+if [ "${SNAKEMAKE_HELP:-}" == "TRUE" ]; then
+    snakemake --help
+    exit 0
+fi
+
+if [ "${INSTALL_CONDA:-}" == "TRUE" ]; then
+    echo -e "\nInstalling required conda environments, this can take up to an hour..."
+    snakemake --use-conda --create-envs-only --profile $PROFILE
+    exit 0
+fi
+if [ "${INSTALL_IGVJS:-}" == "TRUE" ]; then
+    echo -e "Installing IGVjs software, this can take up to 15 minutes..."
+    bash bin/install_IGVjs.sh
+    echo -e "DONE"
+    exit 0
+fi
+
+if [ ! -e "${HOME}/.ncbirc" ]; then # If the BLAST required ~/.ncbirc does not exist, give error.
+    echo -e "ERROR: Missing file \"~/.ncbirc\". \nThis is config file is required for BLAST to function, contains the locations to the BLAST databases on your local system. It should be in your home directory."
+    exit 1
+fi
+
 ### Pass other CLI arguments along to Snakemake
 if [ ! -d ${INPUT_DIR} ]; then
     echo -e "The input directory specified (${INPUT_DIR}) does not exist"
@@ -258,14 +350,23 @@ if [ -e $FASTQFILES ]; then
     echo -e "Files in input directory (${INPUT_DIR}) have .fastq format"
     echo -e "Generating sample sheet..."
     bin/generate_sample_sheet.py ${INPUT_DIR} > sample_sheet.yaml
-elif [ -e $FQFILES ]; then
+    SHEET_SUCCESS="TRUE"
+fi
+if [ -e $FQFILES ]; then
     echo -e "Files in input directory (${INPUT_DIR}) have .fq format"
     echo -e "Generating sample sheet..."
     bin/generate_sample_sheet.py ${INPUT_DIR} > sample_sheet.yaml
-elif [ -e $ZIPFILES ]; then
+    SHEET_SUCCESS="TRUE"
+fi
+if [ -e $ZIPFILES ]; then
     echo -e "Files in input directory (${INPUT_DIR}) are gzipped"
     echo -e "Generating sample sheet..."
-    bin/generate_sample_sheet.py ${INPUT_DIR} > sample_sheet.yaml
+    bin/generate_sample_sheet_zip.py ${INPUT_DIR} >> sample_sheet.yaml
+    SHEET_SUCCESS="TRUE"
+fi
+
+if [ "$SHEET_SUCCESS" == "TRUE" ]; then
+    echo -e "Succesfully generated the sample sheet"
 else
     echo -e "Couldn't find files in the input directory that ended up being in a .FASTQ, .FQ or .GZ format"
     echo -e "Please inspect the input directory (${INPUT_DIR}) and make sure the files are in one of the formats listed below"
@@ -278,10 +379,14 @@ fi
 
 if [ -e sample_sheet.yaml ]; then
     echo -e "Starting snakemake"
+    set +ue #turn of bash strict mode because snakemake and conda can't work with it properly
     snakemake -s Snakefile --profile "${PROFILE}" ${@}
+    set -ue #turn bash strict mode back on
 else
     echo -e "Sample_sheet.yaml could not be found"
     echo -e "This also means that Jovian was unable to generate a new sample sheet for you"
     echo -e "Please inspect the input directory (${INPUT_DIR}) and make sure the right files are present"
     exit 1
 fi
+
+exit 0
