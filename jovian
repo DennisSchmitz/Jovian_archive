@@ -364,6 +364,20 @@ if [ "${SNAKEMAKE_HELP:-}" == "TRUE" ]; then
     exit 0
 fi
 
+if [ "${INSTALL_IGVJS:-}" == "TRUE" ]; then
+    minispacer
+    line
+    echo -e "Installing IGVjs software, this can take up to 15 minutes..."
+    bash bin/install_IGVjs.sh
+    echo -e "DONE"
+    exit 0
+fi
+
+if [ ! -e "${HOME}/.ncbirc" ]; then # If the BLAST required ~/.ncbirc does not exist, give error.
+    echo -e "ERROR: Missing file \"~/.ncbirc\". \nThis is config file is required for BLAST to function, contains the locations to the BLAST databases on your local system. It should be in your home directory."
+    exit 1
+fi
+
 if [ "${INSTALL_CONDA:-}" == "TRUE" ]; then
     minispacer
     line
@@ -378,19 +392,6 @@ if [ "${INSTALL_CONDA:-}" == "TRUE" ]; then
     rm sample_sheet.yaml
     rm -rf installer_files
     exit 0
-fi
-if [ "${INSTALL_IGVJS:-}" == "TRUE" ]; then
-    minispacer
-    line
-    echo -e "Installing IGVjs software, this can take up to 15 minutes..."
-    bash bin/install_IGVjs.sh
-    echo -e "DONE"
-    exit 0
-fi
-
-if [ ! -e "${HOME}/.ncbirc" ]; then # If the BLAST required ~/.ncbirc does not exist, give error.
-    echo -e "ERROR: Missing file \"~/.ncbirc\". \nThis is config file is required for BLAST to function, contains the locations to the BLAST databases on your local system. It should be in your home directory."
-    exit 1
 fi
 
 ### Pass other CLI arguments along to Snakemake
