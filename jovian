@@ -17,46 +17,6 @@ CLEAN="FALSE"
 SHEET_SUCCESS="FALSE"
 
 
-###### TO-DO'S
-# read-length code van Anita
-# optie voor MiSeq of NextSeq
-# Databases aanmaken en controleren
-# Zippen output
-# Checken of alle dbs bestaan --> anders error
-# pipeline parameters via CLI meegeven ipv config.yaml
-# start the jupyter notebook, if already running, then print token.
-### Update theme and plugins
-# Start nginx?
-# Render jup NB?
-
-#functions
-next() {
-    printf "%-70s\n" "#" | sed 's/\s/#/g'
-}
-spinner() {
-    PID=$!
-    i=1
-    sp="/-\|"
-    echo -n ' '
-    while [ -d /proc/$PID ]
-    do
-        printf "\b${sp:i++%${#sp}:1}"
-        sleep 0.5
-    done
-    printf "\b"
-}
-
-## Introduction
-
-clear
-next
-    echo -e "Welcome to Jovian, the easy and user-friendly metagenomics pipeline"
-    echo -e "You are using Jovian version $VERSION\n\n"
-    echo -e "Please keep in mind that this pipeline is still a work-in-progress"
-    echo -e "It is expected that several portions are unstable until release 1.0.0"
-next
-
-
 ### Parse the jovian commandline arguments, if they are not part of jovian, they get send to Snakemake
 POSITIONAL=()
 while [[ $# -gt 0 ]]
@@ -104,8 +64,67 @@ do
 done
 set -- "${POSITIONAL[@]:-}" # Restores the positional arguments (i.e. without the case arguments above) which then can be called via `$@` or `$[0-9]` etc. These parameters are send to Snakemake.
 
+
+###### TO-DO'S
+# read-length code van Anita
+# optie voor MiSeq of NextSeq
+# Databases aanmaken en controleren
+# Checken of alle dbs bestaan --> anders error
+# pipeline parameters via CLI meegeven ipv config.yaml
+# start the jupyter notebook, if already running, then print token.
+### Update theme and plugins
+# Start nginx?
+# Render jup NB?
+
+#functions
+line() {
+    printf "%-70s\n" "#" | sed 's/\s/#/g'
+}
+spacer() {
+    echo -e "\n\n"
+}
+spinner() {
+    PID=$!
+    i=1
+    sp="/-\|"
+    echo -n ' '
+    while [ -d /proc/$PID ]
+    do
+        printf "\b${sp:i++%${#sp}:1}"
+        sleep 0.5
+    done
+    printf "\b"
+}
+installer_intro() {
+    tput reset
+    line
+    echo -e "Welcome to the interactive installation process of Jovian"
+    echo -e "You are seeing this because one or multiple dependencies of Jovian are missing on your system."
+    echo -e "You are using Jovian version $VERSION"
+    spacer
+    echo -e "Please keep in mind that this pipeline is still a work-in-progress"
+    echo -e "It is expected that several portions are unstable until release 1.0.0"
+    line
+    spacer
+}
+ready_for_start() {
+    spacer
+    line
+    echo -e "All pre-flight checks of Jovian have been completed"
+    echo -e "You are using Jovian version $VERSION"
+    echo -e "Please keep in mind that this pipeline is still a work-in-progress"
+    echo -e "It is expected that several portions are unstable until release 1.0.0"
+    line
+    spacer
+}
+
+
+## Introduction
+
 ### Check the jovian CLI arguments and do stuff
 if [ "${CLEAN:-}" == "TRUE" ]; then
+    line
+    spacer
     echo -e "The following files and folders will be deleted:\ndata/\nlogs/\nresults/\nsample_sheet.yaml\n\n"
     read -r -p "Are you sure you wish to permanently delete these files and folders? [y/N] " response
     response=${response,,}
@@ -119,6 +138,7 @@ if [ "${CLEAN:-}" == "TRUE" ]; then
     exit 0
 fi
 if [ "${JOVIAN_HELP:-}" == "TRUE" ]; then # Print Jovian help message
+    line
     cat <<HELP_USAGE
 Jovian, version $VERSION, built with Snakemake
   Usage: bash $0 -i <INPUT_DIR> <arguments>
@@ -152,6 +172,8 @@ HELP_USAGE
 fi
 
 if [ "${ARCHIVE:-}" == "TRUE" ]; then
+    line
+    spacer
     echo -e "\n\nArchiving the Jovian data and results can take several hours depending on the size of your dataset(s)."
     echo -e "This archiving process will NOT include the raw dataset in the final archive"
     echo -e "\nIt is advised to run the archiving process overnight, it is strongly advised to not stop the process once you started it"
@@ -173,7 +195,7 @@ if [ "${ARCHIVE:-}" == "TRUE" ]; then
             (tar --append --file=archive.tar logs/) &
             spinner
         else
-            echo -e "Couldn't find the 'data/' folder in this working directory, skipping this folder in archiving"
+            echo -e "Couldn't find the 'logs/' folder in this working directory, skipping this folder in archiving"
         fi
         
         if [ -e results/ ]; then
@@ -202,7 +224,7 @@ if [ "${ARCHIVE:-}" == "TRUE" ]; then
             exit 1
         fi
     else
-        echo -e "Aborting the archiving proces..."
+        echo -e "Aborting the archiving process..."
         exit 0
     fi
 exit 0
@@ -217,18 +239,24 @@ HELPER_NAME=$(head -n 1 $PATH_JOVIAN_HELPER_YAML | cut -f2 -d ' ') # Extract Con
 PROFILE="profile"
 
 if [ ! -e "$PATH_JOVIAN_MASTER_YAML" ]; then # If this yaml file does not exist, give error.
+    line
+    spacer
     echo -e "ERROR: Missing file \"${PATH_JOVIAN_MASTER_YAML}\""
     exit 1
 elif [ ! -e "$PATH_JOVIAN_HELPER_YAML" ]; then # If this yaml file does not exist, give error.
+    line
+    spacer
     echo -e "ERROR: Missing file \"${PATH_JOVIAN_HELPER_YAML}\""
     exit 1
 elif [ ! -e "${PROFILE}/config.yaml" ]; then # If this profile folder containing config.yaml does not exist, give error.
+    line
+    spacer
     echo -e "ERROR: Missing file \"${PROFILE}/config.yaml\""
     exit 1
 elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. the `conda` command is not available), if true, install it in ~/tmp. Otherwise, proceed.
 
     ### confirmation of conda installation
-    echo -e "\n\n"
+    installer_intro
     echo -e "Miniconda missing. Installing Miniconda can take up to 15 minutes..."
     read -r -p "Do you wish to install (mini)conda now? [y/N] " response
     response=${response,,}
@@ -239,7 +267,7 @@ elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e
         chmod +x latest.sh
         sh latest.sh -b -p "${HOME}/tmp/Miniconda3" | tee -a $INSTALL_LOG
         rm latest.sh
-        clear
+        tput reset
         next
     else
         echo -e "Conda is a requirement for Jovian to run."
@@ -255,12 +283,18 @@ elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e
         echo "PATH=$PATH:${HOME}/tmp/Miniconda3/bin" >> "${HOME}/.bash_profile" | tee -a $INSTALL_LOG
         source ${HOME}/.bash_profile | tee -a $INSTALL_LOG
         tput reset
-        next
+        line
+        installer_intro
+        line
+        spacer
         echo -e "Conda succesfully added to PATH"
     else
         export PATH=${HOME}/tmp/Miniconda3/bin:$PATH | tee -a $INSTALL_LOG
         tput reset
-        next
+        line
+        installer_intro
+        line
+        spacer
         echo -e "Conda has not been permanently added to PATH, this means you cannot use the conda command once this session closes."
     fi
     
@@ -270,16 +304,22 @@ elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e
 
     echo -e "\n\nContinuing..."
     sleep 5
-    tput reset
-    next
+
+    installer_intro
+    line
+    spacer
         #export PYTHONPATH=~/tmp/Miniconda3/pkgs/   # Don't know if this is needed, have to ask Anita
         #export PERL5LIB=~/tmp/Miniconda3/lib/perl5/site_perl/5.22.0   # Don't know if this is needed, have to ask Anita
 fi
 
 if [[ $PATH != *$MASTER_NAME* ]]; then # If the master environment is not in your path (i.e. it is not currently active), do...
+    line
+    spacer
     set +ue # Turn bash strict mode off because that breaks conda
     source activate "$MASTER_NAME" # Try to activate this env
     if [ ! $? -eq 0 ]; then # If exit statement is not 0, i.e. master conda env hasn't been installed yet, do...
+        installer_intro
+
         read -r -p "The Jovian_master environment hasn't been installed yet, do you want to install this environment now? [y/N] " envanswer
         envanswer=${envanswer,,}
         if [[ "$envanswer" =~ ^(yes|y)$ ]]; then
@@ -296,6 +336,8 @@ if [[ $PATH != *$MASTER_NAME* ]]; then # If the master environment is not in you
     echo -e "Succesfully activated Jovian_master environment"
 fi
 if [ "${INSTALL_DB:-}" == "TRUE" ]; then
+    spacer
+    line
     echo -e "Installing databases, this can take hours for a fresh installation..."
     if [[ $PATH != *$HELPER_NAME* ]]; then # If helper env is not in your path (i.e. it is not currently active), do...
         set +ue # Turn bash strict mode off because that breaks conda
@@ -315,16 +357,21 @@ if [ "${INSTALL_DB:-}" == "TRUE" ]; then
 fi
 
 if [ "${SNAKEMAKE_HELP:-}" == "TRUE" ]; then
+    line
     snakemake --help
     exit 0
 fi
 
 if [ "${INSTALL_CONDA:-}" == "TRUE" ]; then
+    spacer
+    line
     echo -e "\nInstalling required conda environments, this can take up to an hour..."
     snakemake --use-conda --create-envs-only --profile $PROFILE
     exit 0
 fi
 if [ "${INSTALL_IGVJS:-}" == "TRUE" ]; then
+    spacer
+    line
     echo -e "Installing IGVjs software, this can take up to 15 minutes..."
     bash bin/install_IGVjs.sh
     echo -e "DONE"
@@ -367,6 +414,7 @@ fi
 
 if [ "$SHEET_SUCCESS" == "TRUE" ]; then
     echo -e "Succesfully generated the sample sheet"
+    ready_for_start
 else
     echo -e "Couldn't find files in the input directory that ended up being in a .FASTQ, .FQ or .GZ format"
     echo -e "Please inspect the input directory (${INPUT_DIR}) and make sure the files are in one of the formats listed below"
