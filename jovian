@@ -272,7 +272,6 @@ elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e
         rm latest.sh
         tput reset
         installer_intro
-        line
     else
         echo -e "Conda is a requirement for Jovian to run."
         echo -e "Exiting because conda isn't installed and automatic installation of conda was declined by user"
@@ -289,8 +288,6 @@ elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e
         tput reset
         line
         installer_intro
-        line
-        spacer
         echo -e "Conda succesfully added to PATH"
     else
         export PATH=${HOME}/tmp/Miniconda3/bin:$PATH | tee -a $INSTALL_LOG
@@ -304,6 +301,7 @@ elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e
     
     echo -e "\n"
     echo -e "Installation of Conda is done"
+    echo -e "If you wish to use conda then it might be necessary to restart your terminal session"
     source ${HOME}/.bashrc
 
     echo -e "\n\nContinuing..."
