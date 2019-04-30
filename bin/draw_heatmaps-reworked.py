@@ -19,7 +19,7 @@
 #  - Bokeh
 #  - argparse
 
-#IMPORT required libraries---------------------------------
+# IMPORT required libraries--------------------------------
 import sys
 import argparse
 import numpy as np
@@ -27,7 +27,18 @@ import pandas as pd
 from bokeh.plotting import figure, output_file, save
 from bokeh.models import HoverTool, ColumnDataSource
 
-#Define FUNCTIONS------------------------------------------
+
+# Set global VARIABLES-------------------------------------
+RANKS = [ "superkingdom", "phylum", "class", "order",
+          "family", "genus", "species" ]
+PHAGE_FAMILY_LIST = [ "Myoviridae", "Siphoviridae", "Podoviridae", "Lipothrixviridae", 
+              "Rudiviridae", "Ampullaviridae", "Bicaudaviridae", "Clavaviridae", 
+              "Corticoviridae", "Cystoviridae", "Fuselloviridae", "Globuloviridae", 
+              "Guttaviridae", "Inoviridae", "Leviviridae", "Microviridae", 
+              "Plasmaviridae", "Tectiviridae" ]
+
+
+# Define FUNCTIONS-----------------------------------------
 def parse_arguments():
     """
     Parse the arguments from the command line, i.e.:
@@ -70,10 +81,18 @@ def parse_arguments():
                           type=str,
                           help="Multiqc Trimmomatic file with read numbers")
 
+    required.add_argument('-sq',
+                          '--super-quantities',
+                          dest="super_quantities",
+                          metavar='',
+                          required=True,
+                          type=str,
+                          help="Table with superkingdom quantities per sample")
+
     optional = parser.add_argument_group("Optional arguments")
 
     optional.add_argument('-col',
-                          "--colour",
+                          '--colour',
                           dest="colour",
                           metavar='',
                           required=False,
@@ -85,6 +104,7 @@ def parse_arguments():
     (args, extra_args) = parser.parse_known_args()
 
     return(args)
+
 
 def read_numbers(infile):
     """
@@ -99,6 +119,7 @@ def read_numbers(infile):
     numbers_df["Sample"] = numbers_df.Sample.apply(lambda x: x[:x.rfind("_R1")]) # On every value in column named "Sample" perform function that chops off "_R1" and any character after it
     
     return(numbers_df)
+
 
 def read_classifications(infile):
     """
@@ -132,10 +153,53 @@ def read_classifications(infile):
     
     return(classifications_df)
 
+
+def filter_taxa(df, taxon, rank):
+    """
+    Filter taxa of interest of a certain rank from
+    a dataframe.
+    (taxon may be a single taxon as string, or a list of taxa)
+    """
+    if isinstance(taxon, str):
+        # If a string is provided, continue as intended
+        subset_df = df[df[rank] == taxon]
+    elif isinstance(taxon, list) and len(taxon) == 1:
+        # If a single-entry list is provided, use taxon as string
+        taxon = taxon[0]
+        subset_df = df[df[rank] == taxon]
+    else:
+        # If a list is provided, filter all given taxa
+        taxa_list = taxon
+        subset_df = df[df[rank].isin(taxa_list)]
+
+    return(subset_df)
+
+
+def remove_taxa(df, taxon, rank):
+    """
+    Negative filter of taxa of a certain rank from
+    a dataframe: remove them and keep the rest.
+    (taxon may be a single taxon as string, or a list of taxa)
+    """
+    if isinstance(taxon, str):
+        # If a string is provided, continue as intended
+        subset_df = df[~df[rank] == taxon]
+    elif isinstance(taxon, list) and len(taxon) == 1:
+        # If a single-entry list is provided, use taxon as string
+        taxon = taxon[0]
+        subset_df = df[~df[rank] == taxon]
+    else:
+        # If a list is provided, filter all given taxa
+        taxa_list = taxon
+        subset_df = df[~df[rank].isin(taxa_list)]
+
+    return(subset_df)
+
 def main():
     """
     Main execution of the script
     """
+    #1. Parse and show arguments
     arguments = parse_arguments()
 
     message =  ("\n"
@@ -143,13 +207,17 @@ def main():
                 "  INPUT:\n"
                 "classified = {0},\n"
                 "numbers = {1}\n"
+                "  OUTPUT:\n"
+                "super_quantities = {2}\n"
                 "  OPTIONAL PARAMETERS:\n"
-                "colour = {2}\n".format(arguments.classified,
+                "colour = {3}\n".format(arguments.classified,
                              arguments.numbers,
+                             arguments.super_quantities,
                              arguments.colour))
 
     print(message)
     
+    #2. Read input files and make dataframes
     numbers_df = read_numbers(arguments.numbers)
     classifications_df = read_classifications(arguments.classified)
 
@@ -158,7 +226,49 @@ def main():
 
     print(merged_df.head()[["#ID", "reads", "read_pairs", "Percentage"]])
     print(merged_df.info())
+
+    #3. Create chunks of information required for the heatmaps
+    #3.1. Aggregate superkingdom-rank information
+    #Count the percentages of Archaea, Bacteria, Eukaryota and Viruses per sample:
+    superkingdom_sums = pd.DataFrame(merged_df.groupby(
+                        [ "Sample_name", "superkingdom" ]).sum()
+                        [[ "reads", "Percentage" ]])
+    superkingdom_sums.reset_index(inplace=True) #to use MultiIndex "Sample_name" and "superkingdom" as columns
     
+    missing_superkingdoms = { "Sample_name": [],
+                            "superkingdom": [],
+                            "reads": [],
+                            "Percentage": []}
+    
+    #Check for missing taxa:
+    for sample in set(superkingdom_sums["Sample_name"]):
+        subset = superkingdom_sums.loc[superkingdom_sums.Sample_name == sample, ["superkingdom"]]
+        for taxon in [ "Archaea", "Bacteria", "Eukaryota", "Viruses" ]:
+            if taxon not in subset.values:
+                missing_superkingdoms["Sample_name"].append(sample)
+                missing_superkingdoms["superkingdom"].append(taxon)
+                missing_superkingdoms["reads"].append(0)
+                missing_superkingdoms["Percentage"].append(0)
+
+    complete_superkingdoms = pd.concat([superkingdom_sums, pd.DataFrame(missing_superkingdoms)])
+    complete_superkingdoms.sort_values(by=["Sample_name", "superkingdom"], inplace=True)
+    complete_superkingdoms.reset_index(inplace=True)
+    complete_superkingdoms["reads"] = complete_superkingdoms["reads"].astype(int)
+
+    complete_superkingdoms.to_csv(arguments.super_quantities, index=False)
+
+    print(complete_superkingdoms)
+    
+    virus_df = filter_taxa(df = merged_df, taxon = "Viruses", rank = "superkingdom")
+    virus_df = remove_taxa(df = virus_df, taxon = PHAGE_FAMILY_LIST, rank = "family")
+    # Remove the phages from the virus df to make less cluttered heatmaps
+    phage_df = filter_taxa(df = merged_df, taxon = PHAGE_FAMILY_LIST, rank = "family")
+    bacterium_df = filter_taxa(df = merged_df, taxon = "Bacteria", rank = "superkingdom")
+
+    print(virus_df.head())
+    print(phage_df.head())
+    print(bacterium_df.head())
+
 
 #EXECUTE script--------------------------------------------
 if __name__ == "__main__":
