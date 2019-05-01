@@ -17,10 +17,8 @@
 # Required Python packages:
 #  - Pandas
 #  - Bokeh
-#  - argparse
 
 # IMPORT required libraries--------------------------------
-import sys
 import argparse
 import numpy as np
 import pandas as pd
@@ -29,13 +27,14 @@ from bokeh.models import HoverTool, ColumnDataSource
 
 
 # Set global VARIABLES-------------------------------------
-RANKS = [ "superkingdom", "phylum", "class", "order",
-          "family", "genus", "species" ]
-PHAGE_FAMILY_LIST = [ "Myoviridae", "Siphoviridae", "Podoviridae", "Lipothrixviridae", 
+RANKS = ["superkingdom", "phylum", "class", "order",
+          "family", "genus", "species"]
+
+PHAGE_FAMILY_LIST = ["Myoviridae", "Siphoviridae", "Podoviridae", "Lipothrixviridae", 
               "Rudiviridae", "Ampullaviridae", "Bicaudaviridae", "Clavaviridae", 
               "Corticoviridae", "Cystoviridae", "Fuselloviridae", "Globuloviridae", 
               "Guttaviridae", "Inoviridae", "Leviviridae", "Microviridae", 
-              "Plasmaviridae", "Tectiviridae" ]
+              "Plasmaviridae", "Tectiviridae"]
 
 
 # Define FUNCTIONS-----------------------------------------
@@ -58,10 +57,9 @@ def parse_arguments():
     """
     parser = argparse.ArgumentParser(prog="draw heatmaps",
              description="Draw heatmps for the Jovian taxonomic output",
-             usage="draw_heatmaps.py -c -n -s -v -p -b -sq -st -vs -ps -bs"
+             usage="draw_heatmaps.py -c -n -s -v -p -b -sq -st -vs -ps -bs -col"
              "[-h / --help]",
              add_help=False)
-
 
     required = parser.add_argument_group("Required arguments")
 
@@ -89,6 +87,38 @@ def parse_arguments():
                           type=str,
                           help="Table with superkingdom quantities per sample")
 
+    required.add_argument('-st',
+                          '--stats',
+                          dest="stats",
+                          metavar='',
+                          required=True,
+                          type=str,
+                          help="Table with taxonomic rank statistics")
+
+    required.add_argument('-vs',
+                          '--vir-stats',
+                          dest="vir_stats",
+                          metavar='',
+                          required=True,
+                          type=str,
+                          help="Table with virual taxonomic rank statistics")
+
+    required.add_argument('-ps',
+                          '--phage-stats',
+                          dest="phage_stats",
+                          metavar='',
+                          required=True,
+                          type=str,
+                          help="Table with phage taxonomic rank statistics")
+
+    required.add_argument('-bs',
+                          '--bact-stats',
+                          dest="bact_stats",
+                          metavar='',
+                          required=True,
+                          type=str,
+                          help="Table with bacterial taxonomic rank statistics")
+
     optional = parser.add_argument_group("Optional arguments")
 
     optional.add_argument('-col',
@@ -111,7 +141,7 @@ def read_numbers(infile):
     Input: Tabular text file (.tsv) with number of reads/read pairs per sample
     Output: Pandas Dataframe with sample names and numbers in columns
     """
-    #Read the number of read pairs per read set/sample
+    # Read the number of read pairs per read set/sample
     numbers_df = pd.read_csv(infile, delimiter='\t')
     numbers_df = numbers_df[[ "Sample", "input_read_pairs" ]]
     numbers_df = numbers_df.rename(columns={"input_read_pairs" : "read_pairs"})
@@ -128,15 +158,15 @@ def read_classifications(infile):
       for _all samples analysed in the same run_
     Output: Pandas Dataframe with the information of the classified scaffolds
     """
-    #Initialise the dataframe with taxonomic classifications
+    # Initialise the dataframe with taxonomic classifications
     # and numbers of reads mapped to the scaffolds (i.e.
     # the result/output of the pipeline).
     classifications_df = pd.read_csv(infile, delimiter='\t')
 
-    #Check column names for debugging:
+    # Check column names for debugging:
     #print(classifications_df.columns)
 
-    #Select only relevant columns:
+    # Select only relevant columns:
     classifications_df = classifications_df[[ "Sample_name", "#ID", "taxID", 
                                              "tax_name", "superkingdom", 
                                              "kingdom", "phylum", "class", 
@@ -145,9 +175,9 @@ def read_classifications(infile):
                                              "Minus_reads", "Avg_fold", "Length" 
                                             ]]
 
-    #Calculate the number of read pairs matched to each scaffold
+    # Calculate the number of read pairs matched to each scaffold
     # by averaging the plus and minus reads.
-    #N.B. This is an imperfect approximation.
+    # N.B. This is an imperfect approximation.
     classifications_df["reads"] = round((classifications_df.Plus_reads +
                                        classifications_df.Minus_reads) / 2 )
     
@@ -195,6 +225,27 @@ def remove_taxa(df, taxon, rank):
 
     return(subset_df)
 
+def report_taxonomic_statistics(df, outfile):
+    """
+    Input: dataframe with classifications of scaffolds, a name for an output file (txt)
+    Output: a list of statistics in a text file, like:
+        superkingdom 4
+        phylum 50
+        class 99
+        order 220
+        family 373
+        genus 649
+        species 337
+    """
+    header="taxonomic_level\tnumber_found\n"
+    with open(outfile, 'w') as f:
+        f.write(header)
+        # Count how many taxa have been reported
+        for t in [ "superkingdom", "phylum", "class", "order", "family", "genus", "species" ]:
+            f.write("%s\t%i\n" % (t, df[t].nunique()))
+    
+    return(None)
+
 def main():
     """
     Main execution of the script
@@ -209,11 +260,19 @@ def main():
                 "numbers = {1}\n"
                 "  OUTPUT:\n"
                 "super_quantities = {2}\n"
+                "stats = {3}\n"
+                "vir_stats = {4}\n"
+                "phage_stats = {5}\n"
+                "bact_stats = {6}\n"
                 "  OPTIONAL PARAMETERS:\n"
-                "colour = {3}\n".format(arguments.classified,
-                             arguments.numbers,
-                             arguments.super_quantities,
-                             arguments.colour))
+                "colour = {7}\n".format(arguments.classified,
+                                        arguments.numbers,
+                                        arguments.super_quantities,
+                                        arguments.stats,
+                                        arguments.vir_stats,
+                                        arguments.phage_stats,
+                                        arguments.bact_stats,
+                                        arguments.colour))
 
     print(message)
     
@@ -229,7 +288,7 @@ def main():
 
     #3. Create chunks of information required for the heatmaps
     #3.1. Aggregate superkingdom-rank information
-    #Count the percentages of Archaea, Bacteria, Eukaryota and Viruses per sample:
+    # Count the percentages of Archaea, Bacteria, Eukaryota and Viruses per sample:
     superkingdom_sums = pd.DataFrame(merged_df.groupby(
                         [ "Sample_name", "superkingdom" ]).sum()
                         [[ "reads", "Percentage" ]])
@@ -240,7 +299,7 @@ def main():
                             "reads": [],
                             "Percentage": []}
     
-    #Check for missing taxa:
+    # Check for missing taxa:
     for sample in set(superkingdom_sums["Sample_name"]):
         subset = superkingdom_sums.loc[superkingdom_sums.Sample_name == sample, ["superkingdom"]]
         for taxon in [ "Archaea", "Bacteria", "Eukaryota", "Viruses" ]:
@@ -259,15 +318,30 @@ def main():
 
     print(complete_superkingdoms)
     
-    virus_df = filter_taxa(df = merged_df, taxon = "Viruses", rank = "superkingdom")
-    virus_df = remove_taxa(df = virus_df, taxon = PHAGE_FAMILY_LIST, rank = "family")
+    #3.2. Filter viruses from the table
+    virus_df = filter_taxa(df=merged_df, taxon="Viruses", rank="superkingdom")
     # Remove the phages from the virus df to make less cluttered heatmaps
-    phage_df = filter_taxa(df = merged_df, taxon = PHAGE_FAMILY_LIST, rank = "family")
-    bacterium_df = filter_taxa(df = merged_df, taxon = "Bacteria", rank = "superkingdom")
+    virus_df = remove_taxa(df=virus_df, taxon=PHAGE_FAMILY_LIST, rank="family")
+    
+    #3.3. Filter phages
+    phage_df = filter_taxa(df=merged_df, taxon=PHAGE_FAMILY_LIST, rank="family")
+
+    #3.4. Filter bacteria
+    bacterium_df = filter_taxa(df=merged_df, taxon="Bacteria", rank="superkingdom")
 
     print(virus_df.head())
     print(phage_df.head())
     print(bacterium_df.head())
+
+    #4. Write taxonomic rank statistics to a file, for each chunk
+    #4.1. All taxa
+    report_taxonomic_statistics(df = merged_df, outfile = arguments.stats)
+    #4.2. Viruses
+    report_taxonomic_statistics(df = virus_df, outfile = arguments.vir_stats)
+    #4.3. Phages
+    report_taxonomic_statistics(df = phage_df, outfile = arguments.phage_stats)
+    #4.4. Bacteria
+    report_taxonomic_statistics(df = bacterium_df, outfile = arguments.bact_stats)
 
 
 #EXECUTE script--------------------------------------------
