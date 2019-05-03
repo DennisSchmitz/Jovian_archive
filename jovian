@@ -15,6 +15,8 @@ INSTALL_IGVJS="FALSE"
 INSTALL_DB="FALSE"
 CLEAN="FALSE"
 SHEET_SUCCESS="FALSE"
+UNIQUE_ID=$(bin/generate_id.sh)
+SET_HOSTNAME=$(bin/gethostname.sh)
 
 
 ### Parse the jovian commandline arguments, if they are not part of jovian, they get send to Snakemake
@@ -120,7 +122,21 @@ ready_for_start() {
     line
     spacer
 }
-
+parse_yaml() {
+   local prefix=$2
+   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+   sed -ne "s|^\($s\)\($w\)$s:$s\"\(.*\)\"$s\$|\1$fs\2$fs\3|p" \
+        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
+   awk -F$fs '{
+      indent = length($1)/7;
+      vname[indent] = $2;
+      for (i in vname) {if (i > indent) {delete vname[i]}}
+      if (length($3) > 0) {
+         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+         printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
+      }
+   }'
+}
 
 ## Introduction
 
@@ -438,7 +454,11 @@ fi
 
 if [ -e sample_sheet.yaml ]; then
     echo -e "Starting snakemake"
-    set +ue #turn of bash strict mode because snakemake and conda can't work with it properly
+    set +ue #turn off bash strict mode because snakemake and conda can't work with it properly
+    echo -e "Jovian_run:\n    identifier: $UNIQUE_ID" > profile/variables.yaml
+    echo -e "Server_host:\n    hostname: http://$SET_HOSTNAME" >> profile/variables.yaml
+    eval $(parse_yaml profile/variables.yaml "config_")
+    echo "Unique identifier for this Jovian run is: $config_Jovian_run_identifier "
     snakemake -s Snakefile --profile "${PROFILE}" ${@}
     set -ue #turn bash strict mode back on
 else
