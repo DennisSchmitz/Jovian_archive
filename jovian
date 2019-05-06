@@ -455,8 +455,8 @@ fi
 if [ -e sample_sheet.yaml ]; then
     echo -e "Starting snakemake"
     set +ue #turn off bash strict mode because snakemake and conda can't work with it properly
-    echo -e "Jovian_run:\n    identifier: $UNIQUE_ID" > profile/variables.yaml
-    echo -e "Server_host:\n    hostname: http://$SET_HOSTNAME" >> profile/variables.yaml
+    echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > profile/variables.yaml
+    echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> profile/variables.yaml
     eval $(parse_yaml profile/variables.yaml "config_")
     echo "Unique identifier for this Jovian run is: $config_Jovian_run_identifier "
     snakemake -s Snakefile --profile "${PROFILE}" ${@}

@@ -789,24 +789,8 @@ rule Generate_index_html:
         port=config["server_info"]["port"],
     shell:
         """
-parse_yaml() {
-   local prefix=$2
-   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
-   sed -ne "s|^\($s\)\($w\)$s:$s\"\(.*\)\"$s\$|\1$fs\2$fs\3|p" \
-        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
-   awk -F$fs '{
-      indent = length($1)/7;
-      vname[indent] = $2;
-      for (i in vname) {if (i > indent) {delete vname[i]}}
-      if (length($3) > 0) {
-         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
-         printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
-      }
-   }'
-}
-eval $(parse_yaml profile/variables.yaml "config_")
 tree -H "heatmaps" -L 1 -T "{params.heatmap_title}" --noreport --charset utf-8 -P "*.html" -o {output.heatmap_index} results/heatmaps/ > {log} 2>&1 
-tree -H "{params.http_adress}:{params.port}/$config_Jovian_run_identifier/Jovian/data/scaffolds_filtered" -L 1 -T "{params.igvjs_title}" --noreport --charset utf-8 -P "*.html" -o {output.IGVjs_index} data/scaffolds_filtered/ >> {log} 2>&1
+bin/create_igv_index.sh
         """
 
 rule Concat_TT_files:
