@@ -114,12 +114,6 @@ server {
 }
 EOF
 
-   # make link to igv software
-   if [ ! -h $CONDA_PREFIX/etc/nginx/default-site/igv ]
-   then
-      ln -s "$(pwd)/bin/software/igv.js" "$CONDA_PREFIX/etc/nginx/default-site/igv"
-   fi
-
    nginx&
    sleep 3
 
