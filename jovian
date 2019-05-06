@@ -265,7 +265,7 @@ elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e
     response=${response,,}
     if [[ "$response" =~ ^(yes|y)$ ]]; then
         echo "Jovian $VERSION" > $INSTALL_LOG
-        next | tee -a $INSTALL_LOG
+        line | tee -a $INSTALL_LOG
         curl -o latest.sh -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
         chmod +x latest.sh
         sh latest.sh -b -p "${HOME}/tmp/Miniconda3" | tee -a $INSTALL_LOG
