@@ -14,7 +14,7 @@ Changelog, examples, installation guide and explanation on:
 shell.executable("/bin/bash")
 
 configfile: "profile/pipeline_parameters.yaml"
-configfile: "profile/variables.yaml"
+configfile: "bin/variables.yaml"
 
 import pprint
 import os

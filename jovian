@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+#set -euo pipefail
 #set -v
 #set -x
 
@@ -281,7 +281,7 @@ elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e
     response=${response,,}
     if [[ "$response" =~ ^(yes|y)$ ]]; then
         echo "Jovian $VERSION" > $INSTALL_LOG
-        next | tee -a $INSTALL_LOG
+        line | tee -a $INSTALL_LOG
         curl -o latest.sh -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
         chmod +x latest.sh
         sh latest.sh -b -p "${HOME}/tmp/Miniconda3" | tee -a $INSTALL_LOG
@@ -455,9 +455,9 @@ fi
 if [ -e sample_sheet.yaml ]; then
     echo -e "Starting snakemake"
     set +ue #turn off bash strict mode because snakemake and conda can't work with it properly
-    echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > profile/variables.yaml
-    echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> profile/variables.yaml
-    eval $(parse_yaml profile/variables.yaml "config_")
+    echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > bin/variables.yaml
+    echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> bin/variables.yaml
+    eval $(parse_yaml bin/variables.yaml "config_")
     echo "Unique identifier for this Jovian run is: $config_Jovian_run_identifier "
     snakemake -s Snakefile --profile "${PROFILE}" ${@}
     set -ue #turn bash strict mode back on

@@ -49,7 +49,6 @@ databases: # Location of NT, NR and TaxDB are stored via an alias in your home d
 #    BLAST_ncbirc: ~/.ncbirc
 
 server_info: # This is used for IGVjs, discuss this with your IT department, depends on your local setup
-    http_adress: http://rivm-biohn-l01p.rivm.ssc-campus.nl
     port: 8083
 
 ######################################

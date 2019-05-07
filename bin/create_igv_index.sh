@@ -16,7 +16,7 @@ parse_yaml() {
    }'
 }
 
-eval $(parse_yaml profile/variables.yaml "vars_")
+eval $(parse_yaml bin/variables.yaml "vars_")
 eval $(parse_yaml profile/pipeline_parameters.yaml "params_")
 
 tree -H "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/Jovian/data/scaffolds_filtered" -L 1 -T "${params_HTML_index_titles_IGVjs_title}" --noreport --charset utf-8 -P "*.html" -o results/IGVjs_index.html data/scaffolds_filtered/

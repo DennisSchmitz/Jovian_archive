@@ -14,3 +14,4 @@ dependencies:
     - bedtools==2.27.1
     - gawk==4.2.1
     - igvtools==2.3.93
+    - r-base==3.5.1
