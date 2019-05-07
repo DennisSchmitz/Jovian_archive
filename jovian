@@ -3,7 +3,7 @@ set -euo pipefail
 #set -v
 #set -x
 
-VERSION="Active dev branch for v0.9.2"
+VERSION=$(git tag)
 INSTALL_LOG="jovian_installation_log.txt"
 
 #Default values
@@ -103,7 +103,7 @@ installer_intro() {
     line
     echo -e "Welcome to the interactive installation process of Jovian"
     echo -e "You are seeing this because one or multiple dependencies of Jovian are missing on your system."
-    echo -e "You are using Jovian version $VERSION"
+    echo -e "You are using Jovian $VERSION"
     spacer
     echo -e "Please keep in mind that this pipeline is still a work-in-progress"
     echo -e "It is expected that several portions are unstable until release 1.0.0"
