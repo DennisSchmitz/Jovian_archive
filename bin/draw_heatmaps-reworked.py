@@ -43,7 +43,7 @@ def parse_arguments():
     Parse the arguments from the command line, i.e.:
      -c/--classified = table with taxonomic classifications
      -n/--numbers = file with (MultiQC, Trimmomatic's) read numbers
-     -s/--super = output files for superkingdoms heatmap (as list)
+     -s/--super = output file for superkingdoms heatmap
      -v/--virus = output files for virus heatmaps (as list)
      -p/--phage = output files for phage heatmaps (as list)
      -b/--bact = output files for bacteria heatmaps (as list)
@@ -56,9 +56,9 @@ def parse_arguments():
      -h/--help = show help
     """
     parser = argparse.ArgumentParser(prog="draw heatmaps",
-             description="Draw heatmps for the Jovian taxonomic output",
+             description="Draw heatamps for the Jovian taxonomic output",
              usage="draw_heatmaps.py -c -n -s -v -p -b -sq -st -vs -ps -bs -col"
-             "[-h / --help]",
+             " [-h / --help]",
              add_help=False)
 
     required = parser.add_argument_group("Required arguments")
@@ -119,6 +119,41 @@ def parse_arguments():
                           type=str,
                           help="Table with bacterial taxonomic rank statistics")
 
+    required.add_argument('-s',
+                          '--super',
+                          dest="super",
+                          metavar='',
+                          required=True,
+                          type=str,
+                          help="File name for superkingdoms heatmap")
+
+    required.add_argument('-v',
+                          '--virus',
+                          dest="virus",
+                          metavar='',
+                          required=True,
+                          type=str,
+                          nargs='+',
+                          help="Virus heatmap file name list")
+
+    required.add_argument('-p',
+                          '--phage',
+                          dest="phage",
+                          metavar='',
+                          required=True,
+                          type=str,
+                          nargs='+',
+                          help="Phage heatmap file name list")
+
+    required.add_argument('-b',
+                          '--bact',
+                          dest="bact",
+                          metavar='',
+                          required=True,
+                          type=str,
+                          nargs='+',
+                          help="Bacterium heatmap file names")
+
     optional = parser.add_argument_group("Optional arguments")
 
     optional.add_argument('-col',
@@ -130,6 +165,11 @@ def parse_arguments():
                           nargs='+',
                           default=[ "#000000" ],
                           help="Colour of the heatmap tiles")
+
+    optional.add_argument('-h',
+                          '--help',
+                          action='help',
+                          help="Show this message and exit.")  
 
     (args, extra_args) = parser.parse_known_args()
 
@@ -244,7 +284,140 @@ def report_taxonomic_statistics(df, outfile):
         for t in [ "superkingdom", "phylum", "class", "order", "family", "genus", "species" ]:
             f.write("%s\t%i\n" % (t, df[t].nunique()))
     
+    print("File %s has been created!" % outfile)
+
     return(None)
+
+def draw_heatmaps(df, outfile, title, taxonomic_rank, colour):
+    """
+    Draw heatmaps for the given input dataframe, to
+    the specified file with the given title.
+    """
+    # If the sample contains only superkingdom information, use that:
+    if taxonomic_rank == "superkingdom":
+        #create source info
+        #and set hovertool tooltip parameters
+        samples = df["Sample_name"].astype(str)
+        assigned = df["superkingdom"].astype(str)
+        reads = df["reads"].astype(int)
+        percent_of_total = df["Percentage"].astype(float)
+
+        colors = len(reads) * colour #multiply to make an equally long list
+
+        max_load = max(percent_of_total)
+        alphas = [ min( x / float(max_load), 0.9) + 0.1 for x in percent_of_total ]
+
+        source = ColumnDataSource(
+            data = dict(samples=samples, assigned=assigned,
+                        reads=reads, percent_of_total=percent_of_total, 
+                        colors=colors, alphas=alphas)
+        )
+
+        y_value = (assigned, "assigned")
+        
+    # Otherwise, create the usual heatmap input info for each 
+    # (relevant) taxonomic rank down to species.
+    else:
+        # Remove 'unclassified' taxa: NaN in dataframe
+        df = df[df[taxonomic_rank].notnull()]
+
+        samples = df["Sample_name"].astype(str)
+        scaffolds = df["#ID"].astype(str)
+        assigned = df["tax_name"].astype(str)
+        taxonomy = df[taxonomic_rank].astype(str)
+        reads = df["reads"].astype(int)
+        total_reads = df["read_pairs"].astype(int)
+        percent_of_total = df["Percentage"].astype(float)
+        coverage = df["Avg_fold"].astype(int)
+        contig_length = df["Length"].astype(int)
+
+        colors = len(reads) * colour #multiply to make an equally long list
+        
+        max_load = max(percent_of_total)
+        alphas = [ min( x / float(max_load), 0.9) + 0.1 for x in percent_of_total ]
+        
+        source = ColumnDataSource(
+            data = dict(samples=samples, scaffolds=scaffolds,
+                        assigned=assigned, taxonomy=taxonomy,
+                        reads=reads, total_reads=total_reads,
+                        percent_of_total=percent_of_total, 
+                        coverage=coverage,
+                        contig_length=contig_length,
+                        colors=colors, alphas=alphas)
+        )
+
+        y_value = (taxonomy, "taxonomy")
+
+    TOOLS = "hover, save, pan, box_zoom, wheel_zoom, reset"
+
+    p = figure(title = title,
+                # If desired, the sample can be displayed as "Run x, sample y"
+                # -> uncomment the next line
+                #x_range = [ "Run %s, sample %s" % (x.split('_')[0], x.split('_')[1]) for x in list(sorted(set(samples))) ],
+                x_range = list(sorted(set(df["Sample_name"]))),
+                y_range = list(reversed(sorted(set(y_value[0])))), #reverse to order 'from top to bottom'
+                x_axis_location = "above",
+                toolbar_location="right",
+                tools = TOOLS)
+
+    # Edit the size of the heatmap when there are many samples and/or taxa
+    if len(set(samples)) > 20:
+        p.plot_width = int(len(set(samples)) * 25)
+    else:
+        pass
+    # Adjust heatmap sizes depending on the number of 
+    # taxa observed (not applicable for superkingdom heatmap)
+    if taxonomic_rank != "superkingdom":
+        if len(set(taxonomy)) > 100:
+            p.plot_height = int(p.plot_height * 3)
+            p.plot_width = int(p.plot_width * 1.5)
+        elif len(set(taxonomy)) > 50:
+            p.plot_height = int(p.plot_height * 2)
+            p.plot_width = int(p.plot_width * 1.2)
+        elif len(set(taxonomy)) > 25:
+            p.plot_height = int(p.plot_height * 1.2)
+        else:
+            pass
+
+        # And set tooltip depending on superkingdoms    
+        p.select_one(HoverTool).tooltips = [
+        ('Sample', "@samples"),
+        ('Scaffold', "@scaffolds"),
+        ('Taxon' , "@assigned"),
+        ('Number of reads', "@reads (@percent_of_total % of sample total)"),
+        ('Scaffold length', "@contig_length"),
+        ('Average Depth of Coverage', "@coverage")
+    ]
+    else:
+        p.select_one(HoverTool).tooltips = [
+            ('Sample', "@samples"),
+            ('Taxon' , "@assigned"),
+            ('Number of reads', "@reads"),
+            ('Percentage of total',  "@percent_of_total %")
+        ]
+    
+    p.grid.grid_line_color = None
+    p.axis.axis_line_color = None
+    p.axis.major_tick_line_color = None
+    if len(set(assigned)) > 15:
+        p.axis.major_label_text_font_size = "10pt"
+    else:
+        p.axis.major_label_text_font_size = "12pt"
+    p.axis.major_label_standoff = 0
+    p.xaxis.major_label_orientation = np.pi/4
+    p.title.text_color = colour[0]
+    p.title.text_font_size = "16pt"
+    p.title.align = 'right'
+
+    p.rect("samples", y_value[1], 1, 1, source=source,
+            color="colors", alpha="alphas", line_color=None)
+
+    output_file(outfile, title=title)
+    save(p)
+    print("The heatmap %s has been created and written to: %s" % (title, outfile))
+
+    return(None)
+
 
 def main():
     """
@@ -259,14 +432,16 @@ def main():
                 "classified = {0},\n"
                 "numbers = {1}\n"
                 "  OUTPUT:\n"
-                "super_quantities = {2}\n"
-                "stats = {3}\n"
-                "vir_stats = {4}\n"
-                "phage_stats = {5}\n"
-                "bact_stats = {6}\n"
+                "super = {2}\n"
+                "super_quantities = {3}\n"
+                "stats = {4}\n"
+                "vir_stats = {5}\n"
+                "phage_stats = {6}\n"
+                "bact_stats = {7}\n"
                 "  OPTIONAL PARAMETERS:\n"
-                "colour = {7}\n".format(arguments.classified,
+                "colour = {8}\n".format(arguments.classified,
                                         arguments.numbers,
+                                        arguments.super,
                                         arguments.super_quantities,
                                         arguments.stats,
                                         arguments.vir_stats,
@@ -282,9 +457,6 @@ def main():
 
     merged_df = classifications_df.merge(numbers_df, left_on="Sample_name", right_on="Sample")
     merged_df["Percentage"] = merged_df.reads / merged_df.read_pairs * 100
-
-    print(merged_df.head()[["#ID", "reads", "read_pairs", "Percentage"]])
-    print(merged_df.info())
 
     #3. Create chunks of information required for the heatmaps
     #3.1. Aggregate superkingdom-rank information
@@ -315,9 +487,8 @@ def main():
     complete_superkingdoms["reads"] = complete_superkingdoms["reads"].astype(int)
 
     complete_superkingdoms.to_csv(arguments.super_quantities, index=False)
+    print("File %s has been created!" % arguments.super_quantities)
 
-    print(complete_superkingdoms)
-    
     #3.2. Filter viruses from the table
     virus_df = filter_taxa(df=merged_df, taxon="Viruses", rank="superkingdom")
     # Remove the phages from the virus df to make less cluttered heatmaps
@@ -329,10 +500,6 @@ def main():
     #3.4. Filter bacteria
     bacterium_df = filter_taxa(df=merged_df, taxon="Bacteria", rank="superkingdom")
 
-    print(virus_df.head())
-    print(phage_df.head())
-    print(bacterium_df.head())
-
     #4. Write taxonomic rank statistics to a file, for each chunk
     #4.1. All taxa
     report_taxonomic_statistics(df = merged_df, outfile = arguments.stats)
@@ -343,6 +510,43 @@ def main():
     #4.4. Bacteria
     report_taxonomic_statistics(df = bacterium_df, outfile = arguments.bact_stats)
 
+    #5. Draw heatmaps for each chunk
+    #5.1. All taxa: superkingdoms
+    draw_heatmaps(df = complete_superkingdoms,
+                  outfile=arguments.super, 
+                  title="Superkingdoms heatmap", 
+                  taxonomic_rank="superkingdom", 
+                  colour = arguments.colour)
+
+    #5.2. Viruses
+    for rank in RANKS[3:]:
+        # Create heatmaps for each rank below 'class'
+        print("Trying to make virus heatmap of taxonomic rank: %s" % rank)
+    draw_heatmaps(df=virus_df,
+                  outfile=arguments.virus[0],
+                  title="Virus demo heatmap",
+                  taxonomic_rank="family",
+                  colour=arguments.colour)
+
+    #5.3. Phages
+    for rank in RANKS[3:]:
+        # Create heatmaps for each rank below 'class'
+        print("Trying to make phage heatmap of taxonomic rank: %s" % rank)
+    draw_heatmaps(df=phage_df,
+                  outfile=arguments.phage[0],
+                  title="Phage demo heatmap",
+                  taxonomic_rank="family",
+                  colour=arguments.colour)
+
+    #5.4. Bacteria
+    for rank in RANKS[1:]:
+        # Create heatmaps for each rank below 'superkingdom'
+        print("Trying to make bacterium heatmap of taxonomic rank: %s" % rank)
+    draw_heatmaps(df=bacterium_df,
+                  outfile=arguments.bact[0],
+                  title="Bacteria demo heatmap",
+                  taxonomic_rank="phylum",
+                  colour=arguments.colour)
 
 #EXECUTE script--------------------------------------------
 if __name__ == "__main__":
