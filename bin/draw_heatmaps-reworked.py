@@ -433,15 +433,21 @@ def main():
                 "numbers = {1}\n"
                 "  OUTPUT:\n"
                 "super = {2}\n"
-                "super_quantities = {3}\n"
-                "stats = {4}\n"
-                "vir_stats = {5}\n"
-                "phage_stats = {6}\n"
-                "bact_stats = {7}\n"
+                "virus = {3}\n"
+                "phage = {4}\n"
+                "bact = {5}\n"
+                "super_quantities = {6}\n"
+                "stats = {7}\n"
+                "vir_stats = {8}\n"
+                "phage_stats = {9}\n"
+                "bact_stats = {10}\n"
                 "  OPTIONAL PARAMETERS:\n"
-                "colour = {8}\n".format(arguments.classified,
+                "colour = {11}\n".format(arguments.classified,
                                         arguments.numbers,
                                         arguments.super,
+                                        arguments.virus,
+                                        arguments.phage,
+                                        arguments.bact,
                                         arguments.super_quantities,
                                         arguments.stats,
                                         arguments.vir_stats,
@@ -521,32 +527,38 @@ def main():
     #5.2. Viruses
     for rank in RANKS[3:]:
         # Create heatmaps for each rank below 'class'
-        print("Trying to make virus heatmap of taxonomic rank: %s" % rank)
-    draw_heatmaps(df=virus_df,
-                  outfile=arguments.virus[0],
-                  title="Virus demo heatmap",
-                  taxonomic_rank="family",
-                  colour=arguments.colour)
+        outfile_base = arguments.virus[0].split('.')[0]
+        outfile_extension = arguments.virus[0].split('.')[1]
+        outfile_new = outfile_base + "-%s." % rank + outfile_extension
+        draw_heatmaps(df=virus_df,
+                      outfile=outfile_new,
+                      title="Virus %s heatmap" % rank,
+                      taxonomic_rank=rank,
+                      colour=arguments.colour)
 
     #5.3. Phages
     for rank in RANKS[3:]:
         # Create heatmaps for each rank below 'class'
-        print("Trying to make phage heatmap of taxonomic rank: %s" % rank)
-    draw_heatmaps(df=phage_df,
-                  outfile=arguments.phage[0],
-                  title="Phage demo heatmap",
-                  taxonomic_rank="family",
-                  colour=arguments.colour)
+        outfile_base = arguments.phage[0].split('.')[0]
+        outfile_extension = arguments.phage[0].split('.')[1]
+        outfile_new = outfile_base + "-%s." % rank + outfile_extension
+        draw_heatmaps(df=phage_df,
+                      outfile=outfile_new,
+                      title="Phage %s heatmap" % rank,
+                      taxonomic_rank=rank,
+                      colour=arguments.colour)
 
     #5.4. Bacteria
     for rank in RANKS[1:]:
         # Create heatmaps for each rank below 'superkingdom'
-        print("Trying to make bacterium heatmap of taxonomic rank: %s" % rank)
-    draw_heatmaps(df=bacterium_df,
-                  outfile=arguments.bact[0],
-                  title="Bacteria demo heatmap",
-                  taxonomic_rank="phylum",
-                  colour=arguments.colour)
+        outfile_base = arguments.bact[0].split('.')[0]
+        outfile_extension = arguments.bact[0].split('.')[1]
+        outfile_new = outfile_base + "-%s." % rank + outfile_extension
+        draw_heatmaps(df=bacterium_df,
+                      outfile=outfile_new,
+                      title="Bacterium %s heatmap" % rank,
+                      taxonomic_rank=rank,
+                      colour=arguments.colour)
 
 #EXECUTE script--------------------------------------------
 if __name__ == "__main__":
