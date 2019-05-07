@@ -240,6 +240,7 @@ MASTER_NAME=$(head -n 1 $PATH_JOVIAN_MASTER_YAML | cut -f2 -d ' ') # Extract Con
 PATH_JOVIAN_HELPER_YAML="envs/Jovian_helper_environment.yaml"
 HELPER_NAME=$(head -n 1 $PATH_JOVIAN_HELPER_YAML | cut -f2 -d ' ') # Extract Conda environment name as specified in yaml file
 PROFILE="profile"
+IGVJS_LOCATION="bin/software/"
 
 if [ ! -e "$PATH_JOVIAN_MASTER_YAML" ]; then # If this yaml file does not exist, give error.
     line
@@ -337,6 +338,34 @@ if [[ $PATH != *$MASTER_NAME* ]]; then # If the master environment is not in you
     set -ue # Turn bash strict mode on again
     echo -e "Succesfully activated Jovian_master environment"
 fi
+
+if [ ! -e ${IGVJS_LOCATION} ]; then
+    installer_intro
+    echo -e "IGVjs hasn't been installed in this working directory yet... \n\nIGVjs is the piece of software which is used for the interactive scaffold viewer in the Jupyter notebook reports"
+    echo -e "\nIGVjs is necessary when you wish to view these reports. However, if you wish to only use Jovian on the command line this software isn't necessary."
+    echo -e "It's advised to install IGVjs now unless you only wish to use Jovian on the command line. It's alway possible to install IGVjs at a later moment with 'bash jovian -ii'\n"
+    read -r -p "Do you wish to install IGVjs to this working directory now? [y/N] " igvanswer
+    igvanswer=${igvanswer,,}
+    if [[ "$igvanswer" =~ ^(yes|y)$ ]]; then
+        echo -e "Starting with installing IGVjs, this can take up to 15 minutes..."
+        bin/install_IGVjs.sh
+        echo -e "DONE with installing IGVjs"
+    else
+        echo -e "Skipping the installation of IGVjs..."
+        sleep 3
+    fi
+fi
+
+
+if [ "${INSTALL_IGVJS:-}" == "TRUE" ]; then
+    minispacer
+    line
+    echo -e "Installing IGVjs software, this can take up to 15 minutes..."
+    bash bin/install_IGVjs.sh
+    echo -e "DONE"
+    exit 0
+fi
+
 if [ "${INSTALL_DB:-}" == "TRUE" ]; then
     spacer
     line
@@ -361,15 +390,6 @@ fi
 if [ "${SNAKEMAKE_HELP:-}" == "TRUE" ]; then
     line
     snakemake --help
-    exit 0
-fi
-
-if [ "${INSTALL_IGVJS:-}" == "TRUE" ]; then
-    minispacer
-    line
-    echo -e "Installing IGVjs software, this can take up to 15 minutes..."
-    bash bin/install_IGVjs.sh
-    echo -e "DONE"
     exit 0
 fi
 
