@@ -65,8 +65,4 @@ threads:
     Fragment_length_analysis: 4
     quantify_output: 4
 
-typingtool_http:
-    NoV_TT_http: https://www.rivm.nl/mpf/typingservice/norovirus
-    EV_TT_http: https://www.rivm.nl/mpf/typingservice/enterovirus
-
 remove_temp: 1 # For development and debug only. If you set this to no you will keep the HuGo alignment data --> Patient privacy concern.

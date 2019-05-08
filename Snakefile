@@ -1,5 +1,5 @@
 """
-Authors: Dennis Schmitz, Sam Nooij, Robert Verhagen, Thierry Janssens, Jeroen Cremer, Mark Kroon
+Authors: Dennis Schmitz, Sam Nooij, Robert Verhagen, Thierry Janssens, Jeroen Cremer, Florian Zwagemaker, Mark Kroon, Erwin van Wieringen, Annelies Kroneman, Harry Vennema, Marion Koopmans
 Organisation: Rijksinstituut voor Volksgezondheid en Milieu (RIVM)
 Department: Virology - Emerging and Endemic Viruses (EEV)
 Date: 23-08-2018
@@ -59,9 +59,7 @@ localrules:
     Generate_index_html,
     Generate_IGVjs_html_file,
     quantify_output,
-    Viral_typing,
     Concat_files,
-    Concat_TT_files,
     Concat_filtered_SNPs,
 
 rule all:
@@ -76,8 +74,7 @@ rule all:
         expand("data/scaffolds_filtered/{sample}_IGVjs.html", sample = SAMPLES), # IGVjs html's
         expand("data/taxonomic_classification/{sample}.blastn", sample = SAMPLES), # MegablastN output
         expand("data/tables/{sample}_{extension}", sample = SAMPLES, extension = [ 'taxClassified.tsv', 'taxUnclassified.tsv', 'virusHost.tsv' ]), # Tab seperated tables with merged data
-        expand("data/virus_typing_tables/{sample}_{virus}.{extension}", sample = SAMPLES, virus = [ 'NoV', 'EV' ], extension = [ 'fa', 'xml', 'csv' ]), # Virus typingtool output tables
-        expand("results/{file}", file = [ 'all_taxClassified.tsv', 'all_taxUnclassified.tsv', 'all_virusHost.tsv', 'all_NoV-TT.tsv', 'all_EV-TT.tsv', 'all_filtered_SNPs.tsv' ]), # Concatenated classification, virus host and typing tool tables
+        expand("results/{file}", file = [ 'all_taxClassified.tsv', 'all_taxUnclassified.tsv', 'all_virusHost.tsv', 'all_filtered_SNPs.tsv' ]), # Concatenated classification, virus host and typing tool tables
         expand("results/{file}", file = [ 'heatmaps/Superkingdoms_heatmap.html', 'Sample_composition_graph.html', 'Taxonomic_rank_statistics.tsv', 'Virus_rank_statistics.tsv', 'Phage_rank_statistics.tsv', 'Bacteria_rank_statistics.tsv' ]), # Taxonomic profile and heatmap output
         expand("results/heatmaps/Virus_{rank}_heatmap.html", rank=[ "order", "family", "genus", "species" ]), # Virus (excl. phages) order|family|genus|species level heatmap for the entire run
         expand("results/heatmaps/Phage_{rank}_heatmap.html", rank=[ "order", "family", "genus", "species" ]), # Phage order|family|genus|species heatmaps for the entire run (based on a selection of phage families)
@@ -550,52 +547,9 @@ blastn -task megablast \
     ##### Send scaffolds to their respective typingtools                    #####
     #############################################################################
 
-rule Viral_typing:
-    input:
-        "data/tables/{sample}_taxClassified.tsv",
-    output:
-        query_scaffolds_for_NoV_TT="data/virus_typing_tables/{sample}_NoV.fa",
-        query_scaffolds_for_EV_TT="data/virus_typing_tables/{sample}_EV.fa",
-        XML_result_NoV_TT="data/virus_typing_tables/{sample}_NoV.xml",
-        XML_result_EV_TT="data/virus_typing_tables/{sample}_EV.xml",
-        parsed_CSV_result_NoV_TT="data/virus_typing_tables/{sample}_NoV.csv",
-        parsed_CSV_result_EV_TT="data/virus_typing_tables/{sample}_EV.csv"
-    resources:
-        TT_connections=1
-    conda:
-        "envs/data_wrangling.yaml"
-    benchmark:
-        "logs/benchmark/Viral_typing_{sample}.txt"
-    threads: 1
-    params:
-        NoV_TT_http=config["typingtool_http"]["NoV_TT_http"],
-        EV_TT_http=config["typingtool_http"]["EV_TT_http"],
-    log:
-        "logs/Viral_typing_{sample}.log"
-    shell: 
-        """
-awk -F "\\t" '$6 == "Norwalk virus" {{print ">" $2 "\\n" $24}}' < {input} 2> {log} 1> {output.query_scaffolds_for_NoV_TT}
-if [ -s "{output.query_scaffolds_for_NoV_TT}" ]
-then
-    curl -s --data-urlencode fasta-sequence@{output.query_scaffolds_for_NoV_TT} {params.NoV_TT_http} 2>> {log} 1> {output.XML_result_NoV_TT}
-    python bin/typingtool_NoV_XML_to_csv_parser.py {wildcards.sample} {output.XML_result_NoV_TT} {output.parsed_CSV_result_NoV_TT} 2>> {log}
-else
-    echo -e "No scaffolds with species == Norwalk Virus in sample:\t{wildcards.sample}." >> {log}
-    touch {output.XML_result_NoV_TT}
-    touch {output.parsed_CSV_result_NoV_TT}
-fi
-
-awk -F "\\t" '$8 == "Picornaviridae" {{print ">" $2 "\\n" $24}}' < {input} 2>> {log} 1> {output.query_scaffolds_for_EV_TT}
-if [ -s "{output.query_scaffolds_for_EV_TT}" ]
-then
-    curl -s --data-urlencode fasta-sequence@{output.query_scaffolds_for_EV_TT} {params.EV_TT_http} 2>> {log} 1> {output.XML_result_EV_TT}
-    python bin/typingtool_EV_XML_to_csv_parser.py {wildcards.sample} {output.XML_result_EV_TT} {output.parsed_CSV_result_EV_TT} 2>> {log}
-else
-    echo -e "No scaffolds with family == Picornaviridae in sample:\t {wildcards.sample}." >> {log}
-    touch {output.XML_result_EV_TT}
-    touch {output.parsed_CSV_result_EV_TT}
-fi
-        """
+# See issue #29 (https://github.com/DennisSchmitz/Jovian/issues/29)
+#    Will be added to the pipeline again at a later date.
+#    For now, these analysis can be done via the Jovian_report when needed
 
     #############################################################################
     ##### Generate interactive taxonomy plot. LCA, magnitudes and plot      #####
@@ -792,27 +746,6 @@ tree -H "heatmaps" -L 1 -T "{params.heatmap_title}" --noreport --charset utf-8 -
 tree -H "{params.http_adress}:{params.port}/igv/Jovian/data/scaffolds_filtered" -L 1 -T "{params.igvjs_title}" --noreport --charset utf-8 -P "*.html" -o {output.IGVjs_index} data/scaffolds_filtered/ >> {log} 2>&1
         """
 
-rule Concat_TT_files:
-    input:
-        expand("data/virus_typing_tables/{sample}_{virus}.csv", sample = SAMPLES, virus = ['NoV','EV'])
-    output:
-        NoV="results/all_NoV-TT.tsv",
-        EV="results/all_EV-TT.tsv",
-    benchmark:
-        "logs/benchmark/Concat_TT_files.txt"
-    threads: 1
-    log:
-        "logs/Concat_TT_files.log"
-    params:
-        search_folder="data/virus_typing_tables/",
-        NoV_glob="*_NoV.csv",
-        EV_glob="*_EV.csv",
-    shell:
-        """
-find {params.search_folder} -type f -name "{params.NoV_glob}" -exec awk 'NR==1 || FNR!=1' {{}} + 2> {log} 1> {output.NoV}
-find {params.search_folder} -type f -name "{params.EV_glob}" -exec awk 'NR==1 || FNR!=1' {{}} + 2>> {log} 1> {output.EV} 
-        """
-
 rule Concat_filtered_SNPs:
     input:
         expand("data/scaffolds_filtered/{sample}_filtered.vcf", sample = SAMPLES)
@@ -861,9 +794,6 @@ else
 #    echo -e "\t\tValue is 0 --> {config[remove_temp]}"   # DEBUG only
     echo -e "\t\tYou chose to not remove temp files: the human genome alignment files are not removed."
 fi
-
-echo -e "\tRemoving empty typing tool files..."
-find data/virus_typing_tables/ -type f -empty -delete
 
 echo -e "\tGenerating methodological hash (fingerprint)..."
 echo -e "This is the link to the code used for this analysis:\thttps://github.com/DennisSchmitz/Jovian/tree/$(git log -n 1 --pretty=format:"%H")" > results/git_log.txt

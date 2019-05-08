@@ -33,14 +33,14 @@ extract_fasta() {
     local output="${2}"
     local capture_name="${3}"
     local capture_field="${4}"
-
+    # Extract the scaffold name and sequence of a certain taxonomic rank from the complete Jovian taxonomic output and write it as a fasta
     awk -F "\t" -v name="${capture_name}" -v field="${capture_field}" '$field == name {print ">" $2 "\n" $24}' < ${input} > ${output}
 }
 submit_query_fasta() {
     local input="${1}"
     local output="${2}"
     local url="${3}"
-
+    # Send the extracted taxonomic slice fasta to the specified public typing tool and wait for the XML results
     curl -s --data-urlencode fasta-sequence@${input} ${url} > ${output}
 }
 typingtool() {
@@ -86,6 +86,7 @@ typingtool() {
     local tt_xml=${query_fasta/.fa/.xml}
     local tt_csv=${tt_xml/.xml/.csv}
 
+    # Extract taxonomic slice fasta, send to TT, parse the results XML into csv
     extract_fasta "${file_path}" "${query_fasta}" "${extract_name}" "${extract_field}"
     if [ -s "${query_fasta}" ]
     then
@@ -97,7 +98,7 @@ typingtool() {
     fi
 }
 
-# Body
+# Perform all typingtool functions for each input file in the glob below (standard Jovian output)
 echo -e "Starting with ${WHICH_TT} typingtool analysis.\nN.B. depending on the size of your dataset, and the load of the virus typingtool webservice, this might take some time...\n"
 for FILE in data/tables/*_taxClassified.tsv
 do
