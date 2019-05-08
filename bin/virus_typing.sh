@@ -49,30 +49,38 @@ typingtool() {
     local which_tt="${3}"
     local sample_name=${basename/_taxClassified.tsv/}   # Base sample name without path and suffixes
 
-    # Set proper variables depending on chosen typingtool (either 'NoV', 'EV' or 'HAV')
+    # Set proper variables depending on chosen typingtool (either 'NoV', 'EV', 'HAV' or 'HEV')
     if [ "${which_tt}" == "NoV" ]; then
         local tt_url="https://www.rivm.nl/mpf/typingservice/norovirus/"
         local parser_py="bin/typingtool_NoV_XML_to_csv_parser.py"
         local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_NoV.fa}
         local extract_name="Norwalk virus"
         local extract_field="6"
-        local nothing_found_message="\tNo scaffolds with species == Norwalk virus in sample:\t${sample_name}."
+        local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with species == Norwalk virus found."
     elif [ "${which_tt}" == "EV" ]; then
         local tt_url="https://www.rivm.nl/mpf/typingservice/enterovirus/"
         local parser_py="bin/typingtool_EV_XML_to_csv_parser.py"
         local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_EV.fa}
-        local extract_name="Picornaviridae"
-        local extract_field="8"
-        local nothing_found_message="\tNo scaffolds with family == Picornaviridae in sample:\t${sample_name}."
+        local extract_name="Picornaviridae" # Family
+        local extract_field="8" # Family
+        local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with family == Picornaviridae found."
     elif [ "${which_tt}" == "HAV" ]; then
         local tt_url="https://www.rivm.nl/mpf/typingservice/hav/"
         local parser_py="bin/typingtool_HAV_XML_to_csv_parser.py"
         local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_HAV.fa}
-        local extract_name="Hepatovirus"
-        local extract_field="7"
-        local nothing_found_message="\tNo scaffolds with genus == Hepatovirus in sample:\t${sample_name}."
+        local extract_name="Hepatovirus" # Genus
+        local extract_field="7" # Genus
+        local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with genus == Hepatovirus found."
+    elif [ "${which_tt}" == "HEV" ]; then
+        local tt_url="https://www.rivm.nl/mpf/typingservice/hev/"
+        local parser_py="bin/typingtool_HEV_XML_to_csv_parser.py"
+        local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_HEV.fa}
+        local extract_name="Orthohepevirus" # Genus
+        local extract_field="7" # Genus
+        local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with genus == Orthohepevirus found."
     else
-        echo -e "Unknown typingtool specified, please specify either 'NoV', 'EV' or 'HAV'"
+        echo -e "Unknown typingtool specified, please specify either 'NoV', 'EV', 'HAV' or 'HEV'"
+        exit 1
     fi
 
     local tt_xml=${query_fasta/.fa/.xml}
@@ -81,7 +89,7 @@ typingtool() {
     extract_fasta "${file_path}" "${query_fasta}" "${extract_name}" "${extract_field}"
     if [ -s "${query_fasta}" ]
     then
-        echo -e "\t${which_tt} contigs found and sent to typingtool, this may take a while..."
+        echo -e "Sample:\t${sample_name}\t${which_tt} scaffolds found and sent to typingtool, waiting for results... This may take a while..."
         submit_query_fasta "${query_fasta}" "${tt_xml}" "${tt_url}"
         python ${parser_py} "${sample_name}" "${tt_xml}" "${tt_csv}"
     else
@@ -94,10 +102,9 @@ echo -e "Starting with ${WHICH_TT} typingtool analysis.\nN.B. depending on the s
 for FILE in data/tables/*_taxClassified.tsv
 do
     BASENAME=${FILE##*/}   # Filename without path but WITH suffixes
-    echo -e "Processing sample ${BASENAME/_taxClassified.tsv/}"
     typingtool "${FILE}" "${BASENAME}" "${WHICH_TT}"
 done
 
 # Cleanup, remove empty files
 find data/virus_typing_tables/ -type f -empty -delete
-echo -e "Finished"
+echo -e "\nFinished"
