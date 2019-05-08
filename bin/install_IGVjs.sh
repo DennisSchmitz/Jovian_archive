@@ -1,4 +1,4 @@
-#
+#!/bin/bash
 # script downloads and build IGVjs
 #
 # https://github.com/igvteam/igv.js?files=1
