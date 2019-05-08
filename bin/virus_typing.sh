@@ -1,4 +1,14 @@
 #!/bin/bash
+#####################################################################################################################
+### This script interacts with the public web-based virus typingtools hosted by the RIVM:                         ###
+###    Norovirus:   https://www.rivm.nl/mpf/typingservice/norovirus/                                              ###
+###    Enterovirus: https://www.rivm.nl/mpf/typingservice/enterovirus/                                            ###
+###    Hepatitis A: https://www.rivm.nl/mpf/typingservice/hav/                                                    ###
+###    Hepatitis E: https://www.rivm.nl/mpf/typingservice/hev/                                                    ###
+###    Rotavirus:   [work in progress, coming soon]                                                               ###
+###                                                                                                               ###
+### Usage: bin/fastqc_wrapper.sh {NoV|EV|HAV|HEV}                                                                 ###
+#####################################################################################################################
 
 # Check commandline argument, throw error if wrong, parse argument if right
 if [ -z "${1}" ] || [ $# -ne 1 ]
@@ -72,8 +82,8 @@ typingtool() {
     if [ -s "${query_fasta}" ]
     then
         echo -e "\t${which_tt} contigs found and sent to typingtool, this may take a while..."
-        #submit_query_fasta "${query_fasta}" "${tt_xml}" "${tt_url}"
-        #python ${parser_py} "${sample_name}" "${tt_xml}" "${tt_csv}"
+        submit_query_fasta "${query_fasta}" "${tt_xml}" "${tt_url}"
+        python ${parser_py} "${sample_name}" "${tt_xml}" "${tt_csv}"
     else
         echo -e "${nothing_found_message}"
     fi
@@ -84,9 +94,10 @@ echo -e "Starting with ${WHICH_TT} typingtool analysis.\nN.B. depending on the s
 for FILE in data/tables/*_taxClassified.tsv
 do
     BASENAME=${FILE##*/}   # Filename without path but WITH suffixes
-    echo -e "Processing sample ${BASENAME}"
+    echo -e "Processing sample ${BASENAME/_taxClassified.tsv/}"
     typingtool "${FILE}" "${BASENAME}" "${WHICH_TT}"
 done
 
 # Cleanup, remove empty files
 find data/virus_typing_tables/ -type f -empty -delete
+echo -e "Finished"
