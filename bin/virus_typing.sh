@@ -23,12 +23,14 @@ extract_fasta() {
     local output="${2}"
     local capture_name="${3}"
     local capture_field="${4}"
+
     awk -F "\t" -v name="${capture_name}" -v field="${capture_field}" '$field == name {print ">" $2 "\n" $24}' < ${input} > ${output}
 }
 submit_query_fasta() {
     local input="${1}"
     local output="${2}"
     local url="${3}"
+
     curl -s --data-urlencode fasta-sequence@${input} ${url} > ${output}
 }
 typingtool() {
@@ -56,10 +58,9 @@ typingtool() {
         local tt_url="https://www.rivm.nl/mpf/typingservice/hav/"
         local parser_py="bin/typingtool_HAV_XML_to_csv_parser.py"
         local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_HAV.fa}
-        local extract_name="Hepatovirus A" # TODO
-        local extract_field="x" # TODO
-        local nothing_found_message="\tNo scaffolds with x == xxx in sample:\t${sample_name}."
-        echo -e "HAV TODO"
+        local extract_name="Hepatovirus"
+        local extract_field="7"
+        local nothing_found_message="\tNo scaffolds with genus == Hepatovirus in sample:\t${sample_name}."
     else
         echo -e "Unknown typingtool specified, please specify either 'NoV', 'EV' or 'HAV'"
     fi
@@ -71,15 +72,15 @@ typingtool() {
     if [ -s "${query_fasta}" ]
     then
         echo -e "\t${which_tt} contigs found and sent to typingtool, this may take a while..."
-        submit_query_fasta "${query_fasta}" "${tt_xml}" "${tt_url}"
-        python ${parser_py} "${sample_name}" "${tt_xml}" "${tt_csv}"
+        #submit_query_fasta "${query_fasta}" "${tt_xml}" "${tt_url}"
+        #python ${parser_py} "${sample_name}" "${tt_xml}" "${tt_csv}"
     else
         echo -e "${nothing_found_message}"
     fi
 }
 
 # Body
-echo -e "Starting with ${WHICH_TT} typingtool analysis. \nN.B. depending on the size of your dataset, and the load of the virus typingtool webservice, this might take some time...\n"
+echo -e "Starting with ${WHICH_TT} typingtool analysis.\nN.B. depending on the size of your dataset, and the load of the virus typingtool webservice, this might take some time...\n"
 for FILE in data/tables/*_taxClassified.tsv
 do
     BASENAME=${FILE##*/}   # Filename without path but WITH suffixes
