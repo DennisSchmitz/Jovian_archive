@@ -32,7 +32,6 @@ with open(config["sample_sheet"]) as sample_sheet_file:
 ##### The `onstart` checker codeblock                                       #####
 #################################################################################
 
-# Need to add checker for ~/.ncbirc --> , config["databases"]["BLAST_ncbirc"] --> doesn't work
 onstart:
     try:
         print("Checking if all specified files are accessible...")
@@ -88,8 +87,6 @@ rule all:
     #############################################################################
     ##### Data quality control and cleaning                                 #####
     #############################################################################
-
-
 
 rule QC_raw_data:
     input:
