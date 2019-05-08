@@ -80,9 +80,7 @@ rule all:
         expand("data/virus_typing_tables/{sample}_{virus}.{extension}", sample = SAMPLES, virus = [ 'NoV', 'EV' ], extension = [ 'fa', 'xml', 'csv' ]), # Virus typingtool output tables
         expand("results/{file}", file = [ 'all_taxClassified.tsv', 'all_taxUnclassified.tsv', 'all_virusHost.tsv', 'all_NoV-TT.tsv', 'all_EV-TT.tsv', 'all_filtered_SNPs.tsv' ]), # Concatenated classification, virus host and typing tool tables
         expand("results/{file}", file = [ 'heatmaps/Superkingdoms_heatmap.html', 'Sample_composition_graph.html', 'Taxonomic_rank_statistics.tsv', 'Virus_rank_statistics.tsv', 'Phage_rank_statistics.tsv', 'Bacteria_rank_statistics.tsv' ]), # Taxonomic profile and heatmap output
-        expand("results/heatmaps/Virus_{rank}_heatmap.html", rank=[ "order", "family", "genus", "species" ]), # Virus (excl. phages) order|family|genus|species level heatmap for the entire run
-        expand("results/heatmaps/Phage_{rank}_heatmap.html", rank=[ "order", "family", "genus", "species" ]), # Phage order|family|genus|species heatmaps for the entire run (based on a selection of phage families)
-        expand("results/heatmaps/Bacteria_{rank}_heatmap.html", rank=[ "phylum", "class", "order", "family", "genus", "species" ]), # Bacteria phylum|class|order|family|genus|species level heatmap for the entire run
+        expand("results/heatmaps/{levels}_heatmap.html", levels=[ "Superkingdoms", "Virus", "Phage", "Bacteria" ]),
         expand("results/{file}.html", file = [ 'multiqc', 'krona', 'Heatmap_index', 'IGVjs_index' ]), # Reports and heatmap and IGVjs index.html
 
 #################################################################################
@@ -690,7 +688,7 @@ rule draw_heatmaps:
         classified = "results/all_taxClassified.tsv",
         numbers = "results/multiqc_data/multiqc_trimmomatic.txt"
     output:
-        super_quantities="results/Superkingdoms_quantities_per_sample.csv"
+        super_quantities="results/Superkingdoms_quantities_per_sample.csv",
         super="results/heatmaps/Superkingdoms_heatmap.html",
         virus="results/heatmaps/Virus_heatmap.html",
         phage="results/heatmaps/Phage_heatmap.html",
@@ -786,7 +784,7 @@ find {params.search_folder} -type f -name "{params.virusHost_glob}" -exec awk 'N
 rule Generate_index_html:
     input:
         "results/heatmaps/Superkingdoms_heatmap.html",
-        expand("results/heatmaps/Virus_{rank}_heatmap.html", rank=[ "order", "family", "genus", "species" ]),
+        expand("results/heatmaps/{levels}_heatmap.html", levels=[ "Superkingdoms", "Virus", "Phage", "Bacteria" ]),
         expand("data/scaffolds_filtered/{sample}_IGVjs.html", sample = SAMPLES),
     output:
         heatmap_index="results/Heatmap_index.html",
