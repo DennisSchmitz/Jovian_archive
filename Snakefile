@@ -14,6 +14,7 @@ Changelog, examples, installation guide and explanation on:
 shell.executable("/bin/bash")
 
 configfile: "profile/pipeline_parameters.yaml"
+configfile: "bin/variables.yaml"
 
 import pprint
 import os
@@ -798,12 +799,12 @@ rule Generate_index_html:
     params:
         heatmap_title=config["HTML_index_titles"]["heatmap_title"],
         igvjs_title=config["HTML_index_titles"]["IGVjs_title"],
-        http_adress=config["server_info"]["http_adress"],
+        http_adress=config["Server_host"]["hostname"],
         port=config["server_info"]["port"],
     shell:
         """
 tree -H "heatmaps" -L 1 -T "{params.heatmap_title}" --noreport --charset utf-8 -P "*.html" -o {output.heatmap_index} results/heatmaps/ > {log} 2>&1 
-tree -H "{params.http_adress}:{params.port}/igv/Jovian/data/scaffolds_filtered" -L 1 -T "{params.igvjs_title}" --noreport --charset utf-8 -P "*.html" -o {output.IGVjs_index} data/scaffolds_filtered/ >> {log} 2>&1
+bin/create_igv_index.sh
         """
 
 rule Concat_TT_files:
@@ -886,6 +887,9 @@ echo -e "This code with unique fingerprint $(git log -n1 --pretty=format:"%H") w
 echo -e "\tGenerating Snakemake report..."
 snakemake --unlock --config sample_sheet=sample_sheet.yaml
 snakemake --report results/snakemake_report.html --config sample_sheet=sample_sheet.yaml
+
+echo -e "\tCreating symlinks to make the interactive reports work"
+bin/set_symlink.sh
          """)
     
 # perORFcoverage output file van de bbtools scaffold metrics nog importeren in data wrangling part!
