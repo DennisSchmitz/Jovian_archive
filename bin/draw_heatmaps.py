@@ -56,7 +56,7 @@ def parse_arguments():
      -h/--help = show help
     """
     parser = argparse.ArgumentParser(prog="draw heatmaps",
-             description="Draw heatamps for the Jovian taxonomic output",
+             description="Draw heatmaps for the Jovian taxonomic output",
              usage="draw_heatmaps.py -c -n -s -v -p -b -sq -st -vs -ps -bs -col"
              " [-h / --help]",
              add_help=False)
