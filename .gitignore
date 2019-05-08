@@ -15,8 +15,4 @@ LSF_Snakemake.*
 private_*
 .github/
 .vscode/
-<<<<<<< HEAD
 bin/variables.yaml
-=======
-profile/variables.yaml
->>>>>>> v0.9.2-dev
