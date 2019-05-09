@@ -546,7 +546,7 @@ blastn -task megablast \
 
 # See issue #29 (https://github.com/DennisSchmitz/Jovian/issues/29)
 #    Will be added to the pipeline again at a later date.
-#    For now, these analysis can be done via the Jovian_report when needed
+#    For now, these analysis can be done via the scripts attached along with Jovian when needed. For instructions, see the link above.
 
     #############################################################################
     ##### Generate interactive taxonomy plot. LCA, magnitudes and plot      #####
