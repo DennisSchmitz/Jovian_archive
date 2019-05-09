@@ -41,7 +41,7 @@ Wetlab personnel can start, configure and interpret results via interactive Jupy
   - Classification: Every nucleic acid containing biological entity is determined up to species level.  
   <i>NB. Lowest Common Ancestor (LCA) analysis moves ambigious results up to their last common ancestor.</i>  
   <i>E.g. if a scaffold is found in both bacteria and phages with similar certainty, it is moved to their LCA: the root of all life.</i>  
-  - Viral typing: Norovirus and Enterovirus scaffolds are automatically typing, i.e. sub-species annotation.  
+  - Viral typing: Norovirus, Enterovirus, Hepatitis A and Hepatitis E scaffolds are automatically typing, i.e. sub-species annotation.  
 - Viral scaffolds are cross-referenced against the Virus-Host interaction database and NCBI host metadata and reported.  
 - Scaffold metrics are generated, e.g. GC content, depth of coverage (DoC), breadth of coverage (BoC), taxonomic E-value, complete taxonomic lineage.  
 - Fragment length analysis.  
@@ -51,9 +51,9 @@ Wetlab personnel can start, configure and interpret results via interactive Jupy
 ### Pipeline visualizations  
 All data is visualized via interactive Jupyter Notebooks, interactive websites with embedded code that contain the following graphics:  
 - Taxonomic results are presented on three levels:  
-  - For an entire (multi sample) run, interactive heatmaps are made. Heatmaps are stratified to different taxonomic levels.  
+  - For an entire (multi sample) run, interactive heatmaps are made for non-phage viruses, phages and bacteria. They are stratified to different taxonomic levels.  
   - For a sample level overview, Krona interactive taxonomic piecharts are generated.  
-  - For detailed information, interactive qgrid tables are generated. Similar to popular spreadsheet applications.  
+  - For detailed information, interactive tables are generated. Similar to popular spreadsheet applications.  
 - Interactive genome browser: Allows in-depth alignment inspection, including predicted ORFs and detected minority variants.  
   
 ### Audit trail  
@@ -69,12 +69,15 @@ ___
 ___
 
 ## Pipeline requirements
-Jovian has two software dependency; miniConda and IGVjs. It also depends on several databases that you have to download yourself, as decribed below. And it requires some configuration, explained below.  
+Jovian has two software dependencies, miniConda and IGVjs, which will be automatically installed by the pipeline on first use. It also depends on several databases that you have to download yourself, as decribed below. And it requires some configuration, also explained below.  
 
 ### Software  
-|Software name|Installation instructions|Reason|  
+|Software name|Installation instructions|Note|  
 |:---|:---|:---|  
-|```miniConda```|https://conda.io/docs/user-guide/install/linux.html|Installation of pipeline dependencies.|  
+|```git```|https://git-scm.com/downloads|Is usually already installed on Linux systems.|  
+|```curl```|https://curl.haxx.se/|Should already be included in most (all?) Linux distro's.|
+|```which```|http://savannah.gnu.org/projects/which|Should already be included in most (all?) Linux distro's.|
+|```bzip2```|http://www.bzip.org/|Should already be included in most (all?) Linux distro's.|
 
 ### Databases  
 |Database name|Link|Installation instructions|
@@ -90,15 +93,11 @@ ___
 ## Configuration  
 Pipeline software, databases and Jupyter Notebook need to be downloaded, installed and configured as described below.  
 
-**2019-04-23 --> Jovian wrapper has been added, should make installation much easier. N.B. It is still a work in progress.**
-
 ### Installing the pipeline  
 - Navigate to a directory where you want to analyse your datasets and download the pipeline via `git clone https://github.com/DennisSchmitz/Jovian.git`  
-- Navigate to the newly created `Jovian` folder. Install the [Jovian_master_environment](envs/Jovian_master_environment.yaml) and [Jovian_helper_environment](envs/Jovian_helper_environment.yaml) software environments via `conda-env create -f envs/Jovian_master_environment.yaml` and `conda-env create -f envs/Jovian_helper_environment.yaml`, respectively.   
-- Activate the `Jovian_master` environment via `source activate Jovian_master`, the environment name should appear before your command prompt, i.e. `$ (Jovian_master) [username@server /] `  
+- Navigate to the newly created `Jovian` folder. **TODO @Flo**  
 #### Installing IGVjs
-`IGVjs` is installed using this [script](bin/install_IGVjs.sh) from the Jovian installation directory with this command:  
-```bin/install_IGVjs.sh ``` N.B. this can take some time (~30 minutes).  
+**TODO @Flo** N.B. this can take some time (~30 minutes).  
 
 ### Database configuration  
 **N.B. These databases should be updated simulatenously, otherwise the taxonomy IDs might not be valid.**  
@@ -186,14 +185,9 @@ Currently, the method to launch analyses via the Jupyter Notebook requires some 
 - Follow the instructions in this notebook to start an analysis.  
 
 <b>Command-line interface method:</b>  
-- Go to the `Jovian` folder [created above](#installing-the-pipeline) and activate the `Jovian_master` Conda environment via `source activate Jovian_master`.  
-- N.B. The pipeline is not compatible with zipped input files, first manually extract them. This functionality will be added later.  
-- Generate a sample sheet via:  
-  - `bin/generate_sample_sheet.py [raw_data_folder] > sample_sheet.yaml` N.B. if your input files are zipped this file will be empty and you will get an error when you try to start the analysis!  
-    - You can unzip them via `cd [raw_data_folder]; parallel gunzip ::: *.gz`  
+- Go to the `Jovian` folder [created above](#installing-the-pipeline) and **TODO @Flo**
 - Configure pipeline parameters by changing the [profile/pipeline_parameters.yaml](profile/pipeline_parameters.yaml) file. Either via Jupyter Notebook or via command line editors.  
-  - You can also configure the snakemake flags by editing the [profile/config.yaml](profile/config.yaml) file.  
-- First do a dry-run via ```snakemake -n --profile profile```. If no errors are found, perform the actual analysis via `snakemake --profile profile`.  
+  - We recommended you do a `dry-run` before each analysis to check if there are any typo's, missing files or other errors. This can be done via `bash jovian -i <input_directory> -n`
 - After the pipeline finished, open `Notebook_report.ipynb` via your browser. Click on `Cell` in the toolbar, then press `Run all` and wait for data to be imported.  
   - N.B. You need to have a Jupyter notebook process running in the background, as described [here](#starting-the-jupyter-notebook-server-process); i.e. `jupyter notebook`.  
     
@@ -267,6 +261,7 @@ ___
 |tree|NA|http://mama.indstate.edu/users/ice/tree/|
 |Trimmomatic|Bolger, A.M., M. Lohse, and B. Usadel, Trimmomatic: a flexible trimmer for Illumina sequence data. Bioinformatics, 2014. 30(15): p. 2114-20.|www.usadellab.org/cms/?page=trimmomatic|
 |Virus-Host Database|Mihara, T., Nishimura, Y., Shimizu, Y., Nishiyama, H., Yoshikawa, G., Uehara, H., ... & Ogata, H. (2016). Linking virus genomes with host taxonomy. Viruses, 8(3), 66.|http://www.genome.jp/virushostdb/note.html|
+|Virus typing tools|Kroneman, A., Vennema, H., Deforche, K., Avoort, H. V. D., Penaranda, S., Oberste, M. S., ... & Koopmans, M. (2011). An automated genotyping tool for enteroviruses and noroviruses. Journal of Clinical Virology, 51(2), 121-125.|https://www.ncbi.nlm.nih.gov/pubmed/21514213|
 
 #### Authors:
 - Dennis Schmitz ([RIVM](https://www.rivm.nl/en) and [EMC](https://www6.erasmusmc.nl/viroscience/))  
@@ -275,8 +270,12 @@ ___
 - Thierry Janssens ([RIVM](https://www.rivm.nl/en))  
 - Jeroen Cremer ([RIVM](https://www.rivm.nl/en))  
 - Florian Zwagemaker ([RIVM](https://www.rivm.nl/en))  
+- Mark Kroon ([RIVM](https://www.rivm.nl/en))  
+- Erwin van Wieringen ([RIVM](https://www.rivm.nl/en))  
 - Harry Vennema ([RIVM](https://www.rivm.nl/en))  
 - Annelies Kroneman ([RIVM](https://www.rivm.nl/en))  
 - Marion Koopmans ([EMC](https://www6.erasmusmc.nl/viroscience/))  
 
+____
+_This project/research has received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement No. 643476._
 ____
