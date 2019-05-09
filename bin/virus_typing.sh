@@ -17,6 +17,7 @@ then
    echo -e "\t'NoV' for Norovirus"
    echo -e "\t'EV' for Enterovirus"
    echo -e "\t'HAV' for Hepatitis A"
+   echo -e "\t'HEV' for Hepatitis E"
    echo -e "Please note, these parameters are case-sensitive."
    exit 1
 else
@@ -54,8 +55,8 @@ typingtool() {
         local tt_url="https://www.rivm.nl/mpf/typingservice/norovirus/"
         local parser_py="bin/typingtool_NoV_XML_to_csv_parser.py"
         local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_NoV.fa}
-        local extract_name="Norwalk virus"
-        local extract_field="6"
+        local extract_name="Caliciviridae" # Family
+        local extract_field="8" # Family
         local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with species == Norwalk virus found."
     elif [ "${which_tt}" == "EV" ]; then
         local tt_url="https://www.rivm.nl/mpf/typingservice/enterovirus/"
@@ -106,6 +107,11 @@ do
     typingtool "${FILE}" "${BASENAME}" "${WHICH_TT}"
 done
 
-# Cleanup, remove empty files
+# Concat individual outputs into one combined output, the awk magic is to not repeat headers
+gawk 'FNR==1 && NR!=1 { next; } { print }' data/virus_typing_tables/*_${WHICH_TT}.csv > results/all_${WHICH_TT}-TT.csv
+
+# Cleanup
 find data/virus_typing_tables/ -type f -empty -delete
+rm data/virus_typing_tables/*_${WHICH_TT}.fa
+rm data/virus_typing_tables/*_${WHICH_TT}.xml
 echo -e "\nFinished"
