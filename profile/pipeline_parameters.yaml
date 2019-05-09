@@ -11,8 +11,8 @@ HuGo_removal:
     alignment_type: --local # Choose if you want to do "local" or "global" alignment. Keep this as "--local" unless you know what you're doing.
 
 SPAdes:
-#    kmersizes: 21,33,55,77 # uncomment this line if you want to use the pipeline for short Illumina reads (<250 nt in length). Then also comment the line below.
-    kmersizes: 21,33,55,77,99,127 # uncomment this line if you want to use the pipeline for longer Illumina reads (>250 nt in length). Then also comment the line above.
+    kmersizes: 21,33,55,77 # uncomment this line if you want to use the pipeline for short Illumina reads (<250 nt in length). Then also comment the line below.
+#    kmersizes: 21,33,55,77,99,127 # uncomment this line if you want to use the pipeline for longer Illumina reads (>250 nt in length). Then also comment the line above.
 
 scaffold_minLen_filter:
     minlen: 500 # Minimum allowed scaffold size to be allowed for downstream processessing. Advice, use a minimum length that is atleast 1nt greater than your Illumina read length
