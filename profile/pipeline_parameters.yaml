@@ -48,7 +48,6 @@ databases: # Location of NT, NR and TaxDB are stored via an alias in your home d
     NCBI_new_taxdump_host: /mnt/db/new_taxdump/host.dmp.delim # Location of the NCBI's "new_taxdump" file "host.dmp", see ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/
 
 server_info: # This is used for IGVjs, discuss this with your IT department, depends on your local setup
-    http_adress: http://rivm-biohn-l01p.rivm.ssc-campus.nl
     port: 8083
 
 ######################################
