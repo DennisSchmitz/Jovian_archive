@@ -355,6 +355,25 @@ if [[ $PATH != *$MASTER_NAME* ]]; then # If the master environment is not in you
     echo -e "Succesfully activated Jovian_master environment"
 fi
 
+###############################################################################################################
+##### From this point onwards you can safely assume Conda is installed and Jovian_master is activated     #####
+###############################################################################################################
+
+if [ "${VIRUS_TYPING:-}" == "TRUE" ]; then
+    if [[ "${WHICH_TT}" =~ ^(NoV|EV|HAV|HEV)$ ]]; then
+        if [ -e data/tables/ ]; then
+            bash bin/virus_typing.sh ${WHICH_TT}
+            exit 0
+        else
+            echo -e "No 'data/tables' folder found. Virus typing can only be performed after a completed Jovian analysis."
+            exit 1
+        fi
+    else
+        echo -e "\nVirus typing error (--virus-typing), unknown parameter '"${WHICH_TT}"'.\n\tPlease specify either 'NoV', 'EV', 'HAV' or 'HEV'."
+        exit 1
+    fi
+fi
+
 if [ "${INSTALL_DB:-}" == "TRUE" ]; then
     spacer
     line
@@ -374,16 +393,6 @@ if [ "${INSTALL_DB:-}" == "TRUE" ]; then
     # source deactivate # if you need to go back to the master_env. N.B. Wrap this command with set +u and set -u when working in strict bash mode.
     echo -e "DONE"
     exit 0
-fi
-
-if [ "${VIRUS_TYPING:-}" == "TRUE" ]; then
-    if [ -e data/tables/ ]; then
-        bash bin/virus_typing.sh ${WHICH_TT}
-        exit 0
-    else
-        echo -e "No 'data/tables' folder found. Virus typing can only be performed after a completed Jovian analysis."
-        exit 1
-    fi
 fi
 
 if [ "${SNAKEMAKE_HELP:-}" == "TRUE" ]; then
