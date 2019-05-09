@@ -302,6 +302,7 @@ elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e
     if [[ "${answer}" =~ ^(yes|y)$ ]]; then
         echo "PATH=$PATH:${HOME}/tmp/Miniconda3/bin" >> "${HOME}/.bashrc" | tee -a ${INSTALL_LOG}
         source ${HOME}/.bashrc | tee -a ${INSTALL_LOG}
+        export PATH=${HOME}/tmp/Miniconda3/bin:$PATH
         tput reset
         line
         installer_intro
