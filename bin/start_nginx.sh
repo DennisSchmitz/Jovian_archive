@@ -1,4 +1,4 @@
-#
+#!/bin/bash
 # make CORS enabled nginx config (https://enable-cors.org/server_nginx.html)
 # and start nginx in background
 # parameter start or stop
@@ -6,7 +6,26 @@
 # changes
 # 22-11-2018, rv, from 8080 to port 8083 because jupyter notebook is using this port
 
-port=8083
+parse_yaml() {
+   local prefix=$2
+   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+   sed -ne "s|^\($s\)\($w\)$s:$s\"\(.*\)\"$s\$|\1$fs\2$fs\3|p" \
+        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
+   awk -F$fs '{
+      indent = length($1)/7;
+      vname[indent] = $2;
+      for (i in vname) {if (i > indent) {delete vname[i]}}
+      if (length($3) > 0) {
+         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+         printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
+      }
+   }'
+}
+
+eval $(parse_yaml profile/pipeline_parameters.yaml "config_")
+
+echo "Selected port for NGINX is: $config_server_info_port "
+port=$config_server_info_port
 
 #set -x
 
@@ -94,12 +113,6 @@ server {
 
 }
 EOF
-
-   # make link to igv software
-   if [ ! -h $CONDA_PREFIX/etc/nginx/default-site/igv ]
-   then
-      ln -s "$(pwd)/bin/software/igv.js" "$CONDA_PREFIX/etc/nginx/default-site/igv"
-   fi
 
    nginx&
    sleep 3

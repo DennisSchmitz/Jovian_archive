@@ -1,12 +1,24 @@
 #!/bin/bash
-set -euo pipefail
+#set -euo pipefail
 #set -v
 #set -x
 
-VERSION="0.9.1"
+### Variables
+VERSION=$(git tag)
 INSTALL_LOG="jovian_installation_log.txt"
+PROFILE="profile"
 
-#Default values
+UNIQUE_ID=$(bin/generate_id.sh)
+SET_HOSTNAME=$(bin/gethostname.sh)
+IGVJS_LOCATION="bin/software/"
+
+### Jovian Conda environment names
+PATH_JOVIAN_MASTER_YAML="envs/Jovian_master_environment.yaml"
+MASTER_NAME=$(head -n 1 ${PATH_JOVIAN_MASTER_YAML} | cut -f2 -d ' ') # Extract Conda environment name as specified in yaml file
+PATH_JOVIAN_HELPER_YAML="envs/Jovian_helper_environment.yaml"
+HELPER_NAME=$(head -n 1 ${PATH_JOVIAN_HELPER_YAML} | cut -f2 -d ' ') # Extract Conda environment name as specified in yaml file
+
+### Default values for CLI parameters
 INPUT_DIR="raw_data/"
 JOVIAN_HELP="FALSE"
 SNAKEMAKE_HELP="FALSE"
@@ -14,8 +26,9 @@ INSTALL_CONDA="FALSE"
 INSTALL_IGVJS="FALSE"
 INSTALL_DB="FALSE"
 CLEAN="FALSE"
-SHEET_SUCCESS="FALSE"
-
+VIRUS_TYPING="FALSE"
+ARCHIVE="FALSE"
+SHEET_SUCCESS="FALSE" # Default value for sample_sheet.yaml
 
 ### Parse the jovian commandline arguments, if they are not part of jovian, they get send to Snakemake
 POSITIONAL=()
@@ -56,6 +69,12 @@ do
         ARCHIVE="TRUE"
         shift # Next
         ;;
+        --virus-typing)
+        VIRUS_TYPING="TRUE"
+        WHICH_TT="$2"
+        shift # Next
+        shift # Next
+        ;;
         *) # Any other option
         POSITIONAL+=("$1") # save in array
         shift # Next
@@ -64,19 +83,7 @@ do
 done
 set -- "${POSITIONAL[@]:-}" # Restores the positional arguments (i.e. without the case arguments above) which then can be called via `$@` or `$[0-9]` etc. These parameters are send to Snakemake.
 
-
-###### TO-DO'S
-# read-length code van Anita
-# optie voor MiSeq of NextSeq
-# Databases aanmaken en controleren
-# Checken of alle dbs bestaan --> anders error
-# pipeline parameters via CLI meegeven ipv config.yaml
-# start the jupyter notebook, if already running, then print token.
-### Update theme and plugins
-# Start nginx?
-# Render jup NB?
-
-#functions
+### Functions
 line() {
     printf "%-70s\n" "#" | sed 's/\s/#/g'
 }
@@ -103,7 +110,7 @@ installer_intro() {
     line
     echo -e "Welcome to the interactive installation process of Jovian"
     echo -e "You are seeing this because one or multiple dependencies of Jovian are missing on your system."
-    echo -e "You are using Jovian version $VERSION"
+    echo -e "You are using Jovian $VERSION"
     spacer
     echo -e "Please keep in mind that this pipeline is still a work-in-progress"
     echo -e "It is expected that several portions are unstable until release 1.0.0"
@@ -114,24 +121,38 @@ ready_for_start() {
     spacer
     line
     echo -e "All pre-flight checks of Jovian have been completed"
-    echo -e "You are using Jovian version $VERSION"
+    echo -e "You are using Jovian version ${VERSION}"
     echo -e "Please keep in mind that this pipeline is still a work-in-progress"
     echo -e "It is expected that several portions are unstable until release 1.0.0"
     line
     spacer
 }
-
-
-## Introduction
+parse_yaml() {
+   local prefix=$2
+   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+   sed -ne "s|^\($s\)\($w\)$s:$s\"\(.*\)\"$s\$|\1$fs\2$fs\3|p" \
+        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
+   awk -F$fs '{
+      indent = length($1)/7;
+      vname[indent] = $2;
+      for (i in vname) {if (i > indent) {delete vname[i]}}
+      if (length($3) > 0) {
+         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+         printf("%s%s%s=\"%s\"\n", "'${prefix}'",vn, $2, $3);
+      }
+   }'
+}
 
 ### Check the jovian CLI arguments and do stuff
+
+### Remove all Jovian output
 if [ "${CLEAN:-}" == "TRUE" ]; then
     line
     spacer
     echo -e "The following files and folders will be deleted:\ndata/\nlogs/\nresults/\nsample_sheet.yaml\n\n"
     read -r -p "Are you sure you wish to permanently delete these files and folders? [y/N] " response
     response=${response,,}
-    if [[ "$response" =~ ^(yes|y)$ ]]; then
+    if [[ "${response}" =~ ^(yes|y)$ ]]; then
         echo -e "Removing Jovian output: data/ logs/ results/ sample_sheet.yaml"
         rm -rf data/
         rm -rf logs/
@@ -140,40 +161,48 @@ if [ "${CLEAN:-}" == "TRUE" ]; then
     fi
     exit 0
 fi
-if [ "${JOVIAN_HELP:-}" == "TRUE" ]; then # Print Jovian help message
+
+### Print Jovian help message
+if [ "${JOVIAN_HELP:-}" == "TRUE" ]; then
     line
     cat <<HELP_USAGE
 Jovian, version $VERSION, built with Snakemake
-  Usage: bash $0 -i <INPUT_DIR> <arguments>
+  Usage: bash $0 -i <INPUT_DIR> <parameters>
+  N.B. it is designed for Illumina paired-end data only
+
 Input:
-  --input -i DIR               This is the folder containing your input fastq files.
-                               N.B. pathing must be relative from current directory.
-                               N.B. It is only designed for Illumina paired-end data.
+  --input -i DIR                    This is the folder containing your input fastq files.
+                                    Default is 'raw_data/' and only relative paths are accepted.
 Output:
-  data/                        Contains detailed intermediate files
-  logs/                        Contains all log files
-  results/                     Contains all final results, these are visualized via the
-                               web-report (Notebook_report.ipynb)
+  data/                             Contains detailed intermediate files
+  logs/                             Contains all log files
+  results/                          Contains all final results, these are visualized via the
+                                    web-report (Notebook_report.ipynb)
 Parameters:
-  --help -h                    Print the Jovian help document
-  --snakemake-help -sh         Print the Snakemake help document
-  --clean                      Removes Jovian output
-  --keep-going -k              Useful snakemake command: Go on with independent jobs if
-                               a job fails.
-  --dry-run -n                 Useful snakemake command: Do not execute anything, and
-                               display what would be done.
-  --unlock                     Useful snakemake command: Remove a lock on the working
-                               directory.
-  --quiet -q                   Useful snakemake command: Do not output any progress or
-                               rule information.
+  --virus-typing [NoV|EV|HAV|HEV]   After a Jovian analyses has completed, do viral typing for
+                                    Norovirus (NoV), Enterovirus (EV), Hepatitis A (HAV) or
+                                    Hepatitis E (HEV).
+  --help -h                         Print the Jovian help document
+  --snakemake-help -sh              Print the Snakemake help document
+  --clean                           Removes Jovian output
+  --archive                         Archives the output of a Jovian analysis.
+  --keep-going -k                   Useful snakemake command: Go on with independent jobs if
+                                    a job fails.
+  --dry-run -n                      Useful snakemake command: Do not execute anything, and
+                                    display what would be done.
+  --unlock                          Useful snakemake command: Remove a lock on the working
+                                    directory.
+  --quiet -q                        Useful snakemake command: Do not output any progress or
+                                    rule information.
 Installation:
-  --install-dependencies -ic   Install the required software dependencies
-  --install-igvjs -ii          Install IGVjs dependency
-  --install-databases -id      Install required databases
+  --install-dependencies -ic        Install the required software dependencies
+  --install-igvjs -ii               Install IGVjs dependency
+  --install-databases -id           Install required databases
 HELP_USAGE
     exit 0
 fi
 
+### Archiving of relevant data in a single tar.gz file
 if [ "${ARCHIVE:-}" == "TRUE" ]; then
     line
     spacer
@@ -182,7 +211,7 @@ if [ "${ARCHIVE:-}" == "TRUE" ]; then
     echo -e "\nIt is advised to run the archiving process overnight, it is strongly advised to not stop the process once you started it"
     read -r -p "Do you want to start the Jovian archiving process now? [y/N] " archive_answer
     archive_answer=${archive_answer,,}
-    if [[ "$archive_answer" =~ ^(yes|y)$ ]]; then
+    if [[ "${archive_answer}" =~ ^(yes|y)$ ]]; then
         echo -e "\n\nStarting the archiving process\n\n"
         
         if [ -e data/ ]; then
@@ -217,6 +246,14 @@ if [ "${ARCHIVE:-}" == "TRUE" ]; then
             echo -e "Couldn't find the file 'sample_sheet.yaml' in this working directory, skipping this file in archiving"
         fi
         
+        if [ -e profile/ ]; then
+            echo -e "Found 'profile' folder, appending to archive..."
+            (tar --append --file=archive.tar profile/) &
+            spinner
+        else
+            echo -e "Couldn't find the 'profile' folder in this working directory, skipping this file in archiving"
+        fi
+
         if [ -e archive.tar ]; then
             echo -e "\n\nFiles and folders have been appended to the archive."
             echo -e "Compressing archive..."
@@ -233,20 +270,17 @@ if [ "${ARCHIVE:-}" == "TRUE" ]; then
 exit 0
 fi
 
+###############################################################################################################
+##### Installation block                                                                                  #####
+###############################################################################################################
+
 ### Pre-flight check: Assess availability of required files, conda and Jovian_master environment
-
-PATH_JOVIAN_MASTER_YAML="envs/Jovian_master_environment.yaml"
-MASTER_NAME=$(head -n 1 $PATH_JOVIAN_MASTER_YAML | cut -f2 -d ' ') # Extract Conda environment name as specified in yaml file
-PATH_JOVIAN_HELPER_YAML="envs/Jovian_helper_environment.yaml"
-HELPER_NAME=$(head -n 1 $PATH_JOVIAN_HELPER_YAML | cut -f2 -d ' ') # Extract Conda environment name as specified in yaml file
-PROFILE="profile"
-
-if [ ! -e "$PATH_JOVIAN_MASTER_YAML" ]; then # If this yaml file does not exist, give error.
+if [ ! -e "${PATH_JOVIAN_MASTER_YAML}" ]; then # If this yaml file does not exist, give error.
     line
     spacer
     echo -e "ERROR: Missing file \"${PATH_JOVIAN_MASTER_YAML}\""
     exit 1
-elif [ ! -e "$PATH_JOVIAN_HELPER_YAML" ]; then # If this yaml file does not exist, give error.
+elif [ ! -e "${PATH_JOVIAN_HELPER_YAML}" ]; then # If this yaml file does not exist, give error.
     line
     spacer
     echo -e "ERROR: Missing file \"${PATH_JOVIAN_HELPER_YAML}\""
@@ -263,12 +297,12 @@ elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e
     echo -e "Miniconda missing. Installing Miniconda can take up to 15 minutes..."
     read -r -p "Do you wish to install (mini)conda now? [y/N] " response
     response=${response,,}
-    if [[ "$response" =~ ^(yes|y)$ ]]; then
-        echo "Jovian $VERSION" > $INSTALL_LOG
-        next | tee -a $INSTALL_LOG
+    if [[ "${response}" =~ ^(yes|y)$ ]]; then
+        echo "Jovian ${VERSION}" > ${INSTALL_LOG}
+        line | tee -a ${INSTALL_LOG}
         curl -o latest.sh -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
         chmod +x latest.sh
-        sh latest.sh -b -p "${HOME}/tmp/Miniconda3" | tee -a $INSTALL_LOG
+        sh latest.sh -b -p "${HOME}/tmp/Miniconda3" | tee -a ${INSTALL_LOG}
         rm latest.sh
         tput reset
         installer_intro
@@ -282,15 +316,16 @@ elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e
     echo -e "Conda is installed but not yet added to PATH, do you wish to add conda to your PATH?"
     read -r -p "The conda PATH will be added to your ~/.bashrc and will only affect you. [y/N] " answer
     answer=${answer,,}
-    if [[ "$answer" =~ ^(yes|y)$ ]]; then
-        echo "PATH=$PATH:${HOME}/tmp/Miniconda3/bin" >> "${HOME}/.bashrc" | tee -a $INSTALL_LOG
-        source ${HOME}/.bashrc | tee -a $INSTALL_LOG
+    if [[ "${answer}" =~ ^(yes|y)$ ]]; then
+        echo "PATH=$PATH:${HOME}/tmp/Miniconda3/bin" >> "${HOME}/.bashrc" | tee -a ${INSTALL_LOG}
+        source ${HOME}/.bashrc | tee -a ${INSTALL_LOG}
+        export PATH=${HOME}/tmp/Miniconda3/bin:$PATH
         tput reset
         line
         installer_intro
         echo -e "Conda succesfully added to PATH"
     else
-        export PATH=${HOME}/tmp/Miniconda3/bin:$PATH | tee -a $INSTALL_LOG
+        export PATH=${HOME}/tmp/Miniconda3/bin:$PATH | tee -a ${INSTALL_LOG}
         tput reset
         line
         installer_intro
@@ -310,24 +345,23 @@ elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e
     installer_intro
     line
     spacer
-        #export PYTHONPATH=~/tmp/Miniconda3/pkgs/   # Don't know if this is needed, have to ask Anita
-        #export PERL5LIB=~/tmp/Miniconda3/lib/perl5/site_perl/5.22.0   # Don't know if this is needed, have to ask Anita
 fi
 
-if [[ $PATH != *$MASTER_NAME* ]]; then # If the master environment is not in your path (i.e. it is not currently active), do...
+### Install Jovian_master if it doesn't already exist, afterwards, start Jovian_master
+if [[ $PATH != *${MASTER_NAME}* ]]; then # If the master environment is not in your path (i.e. it is not currently active), do...
     line
     spacer
     set +ue # Turn bash strict mode off because that breaks conda
-    source activate "$MASTER_NAME" # Try to activate this env
+    source activate "${MASTER_NAME}" # Try to activate this env
     if [ ! $? -eq 0 ]; then # If exit statement is not 0, i.e. master conda env hasn't been installed yet, do...
         installer_intro
 
         read -r -p "The Jovian_master environment hasn't been installed yet, do you want to install this environment now? [y/N] " envanswer
         envanswer=${envanswer,,}
-        if [[ "$envanswer" =~ ^(yes|y)$ ]]; then
-            echo -e "\tInstalling Jovian master environment..." | tee -a $INSTALL_LOG   
-            conda env create -f $PATH_JOVIAN_MASTER_YAML | tee -a $INSTALL_LOG # Create the env from the specified yaml file
-            source activate $MASTER_NAME
+        if [[ "${envanswer}" =~ ^(yes|y)$ ]]; then
+            echo -e "\tInstalling Jovian master environment..." | tee -a ${INSTALL_LOG}   
+            conda env create -f ${PATH_JOVIAN_MASTER_YAML} | tee -a ${INSTALL_LOG} # Create the env from the specified yaml file
+            source activate "${MASTER_NAME}"
             echo -e "DONE"
         else
             echo -e "The Jovian_master environment is a requirement. Exiting because Jovian cannot continue without this environment"
@@ -337,17 +371,72 @@ if [[ $PATH != *$MASTER_NAME* ]]; then # If the master environment is not in you
     set -ue # Turn bash strict mode on again
     echo -e "Succesfully activated Jovian_master environment"
 fi
+
+        ###############################################################################################################
+        ##### From this point onwards you can safely assume Conda is installed and Jovian_master is activated     #####
+        ###############################################################################################################
+
+### Checker for if IGVjs is installed, otherwise, ask user if it should be installed
+if [ ! -e ${IGVJS_LOCATION} ]; then
+    installer_intro
+    echo -e "IGVjs hasn't been installed in this working directory yet... \n\nIGVjs is the piece of software which is used for the interactive scaffold viewer in the Jupyter notebook reports"
+    echo -e "\nIGVjs is necessary when you wish to view these reports. However, if you wish to only use Jovian on the command line this software isn't necessary."
+    echo -e "It's advised to install IGVjs now unless you only wish to use Jovian on the command line. It's alway possible to install IGVjs at a later moment with 'bash jovian -ii'\n"
+    read -r -p "Do you wish to install IGVjs to this working directory now? [y/N] " igvanswer
+    igvanswer=${igvanswer,,}
+    if [[ "${igvanswer}" =~ ^(yes|y)$ ]]; then
+        echo -e "Starting with installing IGVjs, this can take up to 15 minutes..."
+        bin/install_IGVjs.sh
+        echo -e "DONE with installing IGVjs"
+    else
+        echo -e "Skipping the installation of IGVjs..."
+        sleep 3
+    fi
+fi
+
+### Install IGVjs, as specified via the CLI argument '-ii'
+if [ "${INSTALL_IGVJS:-}" == "TRUE" ]; then
+    minispacer
+    line
+    echo -e "Installing IGVjs software, this can take up to 15 minutes..."
+    bash bin/install_IGVjs.sh
+    echo -e "DONE"
+    exit 0
+fi
+
+###############################################################################################################
+##### End of installation block, from this point onwards you can safely assume Jovian_master is activated #####
+###############################################################################################################
+
+### Virus typing block, as specified via CLI argument '--virus-typing'
+if [ "${VIRUS_TYPING:-}" == "TRUE" ]; then
+    if [[ "${WHICH_TT}" =~ ^(NoV|EV|HAV|HEV)$ ]]; then
+        if [ -e data/tables/ ]; then
+            bash bin/virus_typing.sh ${WHICH_TT}
+            exit 0
+        else
+            echo -e "No 'data/tables' folder found. Virus typing can only be performed after a completed Jovian analysis."
+            exit 1
+        fi
+    else
+        echo -e "\nVirus typing error (--virus-typing), unknown parameter '"${WHICH_TT}"'.\n\tPlease specify either 'NoV', 'EV', 'HAV' or 'HEV'."
+        exit 1
+    fi
+fi
+
+### Install databases, as specified via CLI argument '-id'
+# Work-in-progress, not finished yet
 if [ "${INSTALL_DB:-}" == "TRUE" ]; then
     spacer
     line
     echo -e "Installing databases, this can take hours for a fresh installation..."
-    if [[ $PATH != *$HELPER_NAME* ]]; then # If helper env is not in your path (i.e. it is not currently active), do...
+    if [[ $PATH != *${HELPER_NAME}* ]]; then # If helper env is not in your path (i.e. it is not currently active), do...
         set +ue # Turn bash strict mode off because that breaks conda
-        source activate $HELPER_NAME # Try to activate this env
+        source activate ${HELPER_NAME} # Try to activate this env
         if [ ! $? -eq 0 ]; then # If exit statement is not 0, i.e. helper conda env hasn't been installed yet, do...
             echo -e "\tInstalling Jovian helper environment..."
-            conda env create -f $PATH_JOVIAN_HELPER_YAML # Create the env from the specified yaml file
-            source activate $HELPER_NAME
+            conda env create -f ${PATH_JOVIAN_HELPER_YAML} # Create the env from the specified yaml file
+            source activate "${HELPER_NAME}"
         fi
         set -ue # Turn bash strict mode on again
     fi
@@ -358,38 +447,36 @@ if [ "${INSTALL_DB:-}" == "TRUE" ]; then
     exit 0
 fi
 
+### Print Snakemake help
 if [ "${SNAKEMAKE_HELP:-}" == "TRUE" ]; then
     line
     snakemake --help
     exit 0
 fi
 
-if [ "${INSTALL_IGVJS:-}" == "TRUE" ]; then
-    minispacer
-    line
-    echo -e "Installing IGVjs software, this can take up to 15 minutes..."
-    bash bin/install_IGVjs.sh
-    echo -e "DONE"
-    exit 0
-fi
-
+### Check if this required BLAST alias file is present in HOME
 if [ ! -e "${HOME}/.ncbirc" ]; then # If the BLAST required ~/.ncbirc does not exist, give error.
     echo -e "ERROR: Missing file \"~/.ncbirc\". \nThis is config file is required for BLAST to function, contains the locations to the BLAST databases on your local system. It should be in your home directory."
     exit 1
 fi
 
+
+### Installation of Jovian specific conda environments
 if [ "${INSTALL_CONDA:-}" == "TRUE" ]; then
     minispacer
     line
     touch sample_sheet.yaml
+    echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > data/variables.yaml
+    echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> data/variables.yaml
     curl -o example_R1.fq -L https://molb7621.github.io/workshop/_downloads/SP1.fq
-    mkdir installer_files
+    mkdir -p installer_files
     mv example_R1.fq installer_files/example_R1.fq
     cp installer_files/example_R1.fq installer_files/example_R2.fq
     echo -e "installer:\n    R1: installer_files/example_R1.fq\n    R2: installer_files/example_R2.fq" >> sample_sheet.yaml
     echo -e "\nInstalling required conda environments, this can take up to an hour..."
-    snakemake --use-conda --create-envs-only --profile $PROFILE
+    snakemake --use-conda --create-envs-only --profile ${PROFILE}
     rm sample_sheet.yaml
+    rm data/variables.yaml
     rm -rf installer_files
     exit 0
 fi
@@ -401,29 +488,35 @@ if [ ! -d ${INPUT_DIR} ]; then
     exit 1
 fi
 
+### Generate sample_sheet, part 1
 ZIPFILES=(${INPUT_DIR}*.gz)
 FASTQFILES=(${INPUT_DIR}*.fastq)
 FQFILES=(${INPUT_DIR}*.fq)
-if [ -e $FASTQFILES ]; then
+if [ -e ${FASTQFILES} ]; then
     echo -e "Files in input directory (${INPUT_DIR}) have .fastq format"
     echo -e "Generating sample sheet..."
     bin/generate_sample_sheet.py ${INPUT_DIR} > sample_sheet.yaml
     SHEET_SUCCESS="TRUE"
 fi
-if [ -e $FQFILES ]; then
+
+### Generate sample_sheet, part 2
+if [ -e ${FQFILES} ]; then
     echo -e "Files in input directory (${INPUT_DIR}) have .fq format"
     echo -e "Generating sample sheet..."
     bin/generate_sample_sheet.py ${INPUT_DIR} > sample_sheet.yaml
     SHEET_SUCCESS="TRUE"
 fi
-if [ -e $ZIPFILES ]; then
+
+### Generate sample_sheet, part 3. N.B. this appends to the output of previous blocks.
+if [ -e ${ZIPFILES} ]; then
     echo -e "Files in input directory (${INPUT_DIR}) are gzipped"
     echo -e "Generating sample sheet..."
     bin/generate_sample_sheet_zip.py ${INPUT_DIR} >> sample_sheet.yaml
     SHEET_SUCCESS="TRUE"
 fi
 
-if [ "$SHEET_SUCCESS" == "TRUE" ]; then
+### Checker for succesfull creation of sample_sheet
+if [ "${SHEET_SUCCESS}" == "TRUE" ]; then
     echo -e "Succesfully generated the sample sheet"
     ready_for_start
 else
@@ -436,9 +529,15 @@ else
     exit 1
 fi
 
+### Actual snakemake command with checkers for required files. N.B. here the UNIQUE_ID and SET_HOSTNAME variables are set!
 if [ -e sample_sheet.yaml ]; then
     echo -e "Starting snakemake"
-    set +ue #turn of bash strict mode because snakemake and conda can't work with it properly
+    set +ue #turn off bash strict mode because snakemake and conda can't work with it properly
+    mkdir -p data
+    echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > data/variables.yaml
+    echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> data/variables.yaml
+    eval $(parse_yaml data/variables.yaml "config_")
+    echo "Unique identifier for this Jovian run is: $config_Jovian_run_identifier "
     snakemake -s Snakefile --profile "${PROFILE}" ${@}
     set -ue #turn bash strict mode back on
 else

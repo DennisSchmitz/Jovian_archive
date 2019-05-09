@@ -14,6 +14,24 @@
 #   indexed="true"
 #   name="7_20688_AGGCAGAAGCGTAAGA_L001_sorted"
 
+parse_yaml() {
+   local prefix=$2
+   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+   sed -ne "s|^\($s\)\($w\)$s:$s\"\(.*\)\"$s\$|\1$fs\2$fs\3|p" \
+        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
+   awk -F$fs '{
+      indent = length($1)/7;
+      vname[indent] = $2;
+      for (i in vname) {if (i > indent) {delete vname[i]}}
+      if (length($3) > 0) {
+         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+         printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
+      }
+   }'
+}
+
+eval $(parse_yaml data/variables.yaml "vars_")
+
 if [ -z "${1}" ] || [ $# -ne 11 ]
 then
    echo "give the following parameters:"
@@ -22,15 +40,15 @@ then
 else
    pwd="${6}"
    id="${1}"
-   fastaURL="/igv/${pwd}/${2}"
-   url_bam="/igv/${pwd}/${3}"
-   indexURL_bam="/igv/${pwd}/${4}"
+   fastaURL="/${vars_Jovian_run_identifier}/${pwd}/${2}"
+   url_bam="/${vars_Jovian_run_identifier}/${pwd}/${3}"
+   indexURL_bam="/${vars_Jovian_run_identifier}/${pwd}/${4}"
    htmlname="${5}"
-   url_vcf="/igv/${pwd}/${7}"
-   indexURL_vcf="/igv/${pwd}/${8}"
-   url_gff3="/igv/${pwd}/${9}"
-   indexURL_gff3="/igv/${pwd}/${10}"
-   GCcontentBedGraph="/igv/${pwd}/${11}"
+   url_vcf="/${vars_Jovian_run_identifier}/${pwd}/${7}"
+   indexURL_vcf="/${vars_Jovian_run_identifier}/${pwd}/${8}"
+   url_gff3="/${vars_Jovian_run_identifier}/${pwd}/${9}"
+   indexURL_gff3="/${vars_Jovian_run_identifier}/${pwd}/${10}"
+   GCcontentBedGraph="/${vars_Jovian_run_identifier}/${pwd}/${11}"
 fi
 
 a="$(cat << EOF
@@ -47,7 +65,7 @@ a="$(cat << EOF
     <title>igv.js</title>
 
     <!-- IGV JS-->
-    <script src="/igv/dist/igv.min.js"></script>
+    <script src="/${vars_Jovian_run_identifier}/dist/igv.min.js"></script>
 
 </head>
 
