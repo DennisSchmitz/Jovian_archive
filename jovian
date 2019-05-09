@@ -377,7 +377,6 @@ if [ "${INSTALL_DB:-}" == "TRUE" ]; then
 fi
 
 if [ "${VIRUS_TYPING:-}" == "TRUE" ]; then
-    # checker for Jovian_master
     if [ -e data/tables/ ]; then
         bash bin/virus_typing.sh ${WHICH_TT}
         exit 0
