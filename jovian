@@ -466,6 +466,7 @@ if [ "${INSTALL_CONDA:-}" == "TRUE" ]; then
     minispacer
     line
     touch sample_sheet.yaml
+    mkdir -p data
     echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > data/variables.yaml
     echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> data/variables.yaml
     curl -o example_R1.fq -L https://molb7621.github.io/workshop/_downloads/SP1.fq
@@ -478,6 +479,7 @@ if [ "${INSTALL_CONDA:-}" == "TRUE" ]; then
     rm sample_sheet.yaml
     rm data/variables.yaml
     rm -rf installer_files
+    echo -e "Done with creating the required conda environments, you can now start your analysis"
     exit 0
 fi
 
