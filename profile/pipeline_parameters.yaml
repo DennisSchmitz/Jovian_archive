@@ -11,8 +11,8 @@ HuGo_removal:
     alignment_type: --local # Choose if you want to do "local" or "global" alignment. Keep this as "--local" unless you know what you're doing.
 
 SPAdes:
-    kmersizes: 21,33,55,77 # uncomment this line if you want to use the pipeline for short Illumina reads (<250 nt in length). Then also comment the line below.
-#    kmersizes: 21,33,55,77,99,127 # uncomment this line if you want to use the pipeline for longer Illumina reads (>250 nt in length). Then also comment the line above.
+#    kmersizes: 21,33,55,77 # uncomment this line if you want to use the pipeline for short Illumina reads (<250 nt in length). Then also comment the line below.
+    kmersizes: 21,33,55,77,99,127 # uncomment this line if you want to use the pipeline for longer Illumina reads (>250 nt in length). Then also comment the line above.
 
 scaffold_minLen_filter:
     minlen: 500 # Minimum allowed scaffold size to be allowed for downstream processessing. Advice, use a minimum length that is atleast 1nt greater than your Illumina read length
@@ -46,7 +46,6 @@ databases: # Location of NT, NR and TaxDB are stored via an alias in your home d
     virusHostDB: /mnt/db/Virus-Host_interaction_DB/virushostdb.tsv # Location of the Virus-Host interaction database, see http://www.genome.jp/virushostdb/note.html
     NCBI_new_taxdump_rankedlineage: /mnt/db/new_taxdump/rankedlineage.dmp.delim # Location of the NCBI's "new_taxdump" file "rankedlineage.dmp", see ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/
     NCBI_new_taxdump_host: /mnt/db/new_taxdump/host.dmp.delim # Location of the NCBI's "new_taxdump" file "host.dmp", see ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/
-#    BLAST_ncbirc: ~/.ncbirc
 
 server_info: # This is used for IGVjs, discuss this with your IT department, depends on your local setup
     port: 8083
@@ -63,9 +62,5 @@ threads:
     SNP_calling: 12
     Fragment_length_analysis: 4
     quantify_output: 4
-
-typingtool_http:
-    NoV_TT_http: https://www.rivm.nl/mpf/typingservice/norovirus
-    EV_TT_http: https://www.rivm.nl/mpf/typingservice/enterovirus
 
 remove_temp: 1 # For development and debug only. If you set this to no you will keep the HuGo alignment data --> Patient privacy concern.

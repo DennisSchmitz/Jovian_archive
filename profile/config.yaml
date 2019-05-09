@@ -8,8 +8,6 @@
 #notemp: true
 local-cores: 4
 cores: 120
-resources:
-    TT_connections=2
 config:
    sample_sheet=sample_sheet.yaml
 latency-wait: 60

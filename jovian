@@ -58,6 +58,12 @@ do
         ARCHIVE="TRUE"
         shift # Next
         ;;
+        --virus-typing)
+        VIRUS_TYPING="TRUE"
+        WHICH_TT="$2"
+        shift # Next
+        shift # Next
+        ;;
         *) # Any other option
         POSITIONAL+=("$1") # save in array
         shift # Next
@@ -71,7 +77,6 @@ set -- "${POSITIONAL[@]:-}" # Restores the positional arguments (i.e. without th
 # read-length code van Anita
 # optie voor MiSeq of NextSeq
 # Databases aanmaken en controleren
-# Checken of alle dbs bestaan --> anders error
 # pipeline parameters via CLI meegeven ipv config.yaml
 # start the jupyter notebook, if already running, then print token.
 ### Update theme and plugins
@@ -156,36 +161,42 @@ if [ "${CLEAN:-}" == "TRUE" ]; then
     fi
     exit 0
 fi
+
 if [ "${JOVIAN_HELP:-}" == "TRUE" ]; then # Print Jovian help message
     line
     cat <<HELP_USAGE
 Jovian, version $VERSION, built with Snakemake
-  Usage: bash $0 -i <INPUT_DIR> <arguments>
+  Usage: bash $0 -i <INPUT_DIR> <parameters>
+  N.B. it is designed for Illumina paired-end data only
+
 Input:
-  --input -i DIR               This is the folder containing your input fastq files.
-                               N.B. pathing must be relative from current directory.
-                               N.B. It is only designed for Illumina paired-end data.
+  --input -i DIR                    This is the folder containing your input fastq files.
+                                    Default is 'raw_data/' and only relative paths are accepted.
 Output:
-  data/                        Contains detailed intermediate files
-  logs/                        Contains all log files
-  results/                     Contains all final results, these are visualized via the
-                               web-report (Notebook_report.ipynb)
+  data/                             Contains detailed intermediate files
+  logs/                             Contains all log files
+  results/                          Contains all final results, these are visualized via the
+                                    web-report (Notebook_report.ipynb)
 Parameters:
-  --help -h                    Print the Jovian help document
-  --snakemake-help -sh         Print the Snakemake help document
-  --clean                      Removes Jovian output
-  --keep-going -k              Useful snakemake command: Go on with independent jobs if
-                               a job fails.
-  --dry-run -n                 Useful snakemake command: Do not execute anything, and
-                               display what would be done.
-  --unlock                     Useful snakemake command: Remove a lock on the working
-                               directory.
-  --quiet -q                   Useful snakemake command: Do not output any progress or
-                               rule information.
+  --virus-typing [NoV|EV|HAV|HEV]   After a Jovian analyses has completed, do viral typing for
+                                    Norovirus (NoV), Enterovirus (EV), Hepatitis A (HAV) or
+                                    Hepatitis E (HEV).
+  --help -h                         Print the Jovian help document
+  --snakemake-help -sh              Print the Snakemake help document
+  --clean                           Removes Jovian output
+  --archive                         Archives the output of a Jovian analysis.
+  --keep-going -k                   Useful snakemake command: Go on with independent jobs if
+                                    a job fails.
+  --dry-run -n                      Useful snakemake command: Do not execute anything, and
+                                    display what would be done.
+  --unlock                          Useful snakemake command: Remove a lock on the working
+                                    directory.
+  --quiet -q                        Useful snakemake command: Do not output any progress or
+                                    rule information.
 Installation:
-  --install-dependencies -ic   Install the required software dependencies
-  --install-igvjs -ii          Install IGVjs dependency
-  --install-databases -id      Install required databases
+  --install-dependencies -ic        Install the required software dependencies
+  --install-igvjs -ii               Install IGVjs dependency
+  --install-databases -id           Install required databases
 HELP_USAGE
     exit 0
 fi
@@ -234,6 +245,14 @@ if [ "${ARCHIVE:-}" == "TRUE" ]; then
             echo -e "Couldn't find the file 'sample_sheet.yaml' in this working directory, skipping this file in archiving"
         fi
         
+        if [ -e profile/ ]; then
+            echo -e "Found 'profile' folder, appending to archive..."
+            (tar --append --file=archive.tar profile/) &
+            spinner
+        else
+            echo -e "Couldn't find the 'profile' folder in this working directory, skipping this file in archiving"
+        fi
+
         if [ -e archive.tar ]; then
             echo -e "\n\nFiles and folders have been appended to the archive."
             echo -e "Compressing archive..."
@@ -329,8 +348,6 @@ elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e
     installer_intro
     line
     spacer
-        #export PYTHONPATH=~/tmp/Miniconda3/pkgs/   # Don't know if this is needed, have to ask Anita
-        #export PERL5LIB=~/tmp/Miniconda3/lib/perl5/site_perl/5.22.0   # Don't know if this is needed, have to ask Anita
 fi
 
 if [[ $PATH != *${MASTER_NAME}* ]]; then # If the master environment is not in your path (i.e. it is not currently active), do...
@@ -357,9 +374,24 @@ if [[ $PATH != *${MASTER_NAME}* ]]; then # If the master environment is not in y
     echo -e "Succesfully activated Jovian_master environment"
 fi
 
-######################
-# from this point, all commands/functions/arguments/blocks below are executed within the Jovian_master environment
-######################
+###############################################################################################################
+##### From this point onwards you can safely assume Conda is installed and Jovian_master is activated     #####
+###############################################################################################################
+
+if [ "${VIRUS_TYPING:-}" == "TRUE" ]; then
+    if [[ "${WHICH_TT}" =~ ^(NoV|EV|HAV|HEV)$ ]]; then
+        if [ -e data/tables/ ]; then
+            bash bin/virus_typing.sh ${WHICH_TT}
+            exit 0
+        else
+            echo -e "No 'data/tables' folder found. Virus typing can only be performed after a completed Jovian analysis."
+            exit 1
+        fi
+    else
+        echo -e "\nVirus typing error (--virus-typing), unknown parameter '"${WHICH_TT}"'.\n\tPlease specify either 'NoV', 'EV', 'HAV' or 'HEV'."
+        exit 1
+    fi
+fi
 
 if [ ! -e ${IGVJS_LOCATION} ]; then
     installer_intro
