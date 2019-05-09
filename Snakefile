@@ -810,8 +810,9 @@ echo -e "\tGenerating Snakemake report..."
 snakemake --unlock --config sample_sheet=sample_sheet.yaml
 snakemake --report results/snakemake_report.html --config sample_sheet=sample_sheet.yaml
 
-echo -e "\tCreating symlinks for the interactive genome viewer"
+echo -e "\tCreating symlinks for the interactive genome viewer..."
 bin/set_symlink.sh
+echo -e "Finished"
          """)
     
 # perORFcoverage output file van de bbtools scaffold metrics nog importeren in data wrangling part!
