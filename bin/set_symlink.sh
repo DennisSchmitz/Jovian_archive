@@ -15,7 +15,7 @@ parse_yaml() {
    }'
 }
 
-eval $(parse_yaml bin/variables.yaml "config_")
+eval $(parse_yaml data/variables.yaml "config_")
 
 
 if [ ! -h $CONDA_PREFIX/etc/nginx/default-site/$config_Jovian_run_identifier ]

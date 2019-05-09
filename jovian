@@ -190,6 +190,7 @@ HELP_USAGE
     exit 0
 fi
 
+# Archiving of relevant data in a single tar.gz file
 if [ "${ARCHIVE:-}" == "TRUE" ]; then
     line
     spacer
@@ -356,6 +357,10 @@ if [[ $PATH != *${MASTER_NAME}* ]]; then # If the master environment is not in y
     echo -e "Succesfully activated Jovian_master environment"
 fi
 
+######################
+# from this point, all commands/functions/arguments/blocks below are executed within the Jovian_master environment
+######################
+
 if [ ! -e ${IGVJS_LOCATION} ]; then
     installer_intro
     echo -e "IGVjs hasn't been installed in this working directory yet... \n\nIGVjs is the piece of software which is used for the interactive scaffold viewer in the Jupyter notebook reports"
@@ -415,18 +420,23 @@ if [ ! -e "${HOME}/.ncbirc" ]; then # If the BLAST required ~/.ncbirc does not e
     exit 1
 fi
 
+
+#installation of conda environments
 if [ "${INSTALL_CONDA:-}" == "TRUE" ]; then
     minispacer
     line
     touch sample_sheet.yaml
+    echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > data/variables.yaml
+    echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> data/variables.yaml
     curl -o example_R1.fq -L https://molb7621.github.io/workshop/_downloads/SP1.fq
-    mkdir installer_files
+    mkdir -p installer_files
     mv example_R1.fq installer_files/example_R1.fq
     cp installer_files/example_R1.fq installer_files/example_R2.fq
     echo -e "installer:\n    R1: installer_files/example_R1.fq\n    R2: installer_files/example_R2.fq" >> sample_sheet.yaml
     echo -e "\nInstalling required conda environments, this can take up to an hour..."
     snakemake --use-conda --create-envs-only --profile ${PROFILE}
     rm sample_sheet.yaml
+    rm data/variables.yaml
     rm -rf installer_files
     exit 0
 fi
@@ -476,9 +486,9 @@ fi
 if [ -e sample_sheet.yaml ]; then
     echo -e "Starting snakemake"
     set +ue #turn off bash strict mode because snakemake and conda can't work with it properly
-    echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > bin/variables.yaml
-    echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> bin/variables.yaml
-    eval $(parse_yaml bin/variables.yaml "config_")
+    echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > data/variables.yaml
+    echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> data/variables.yaml
+    eval $(parse_yaml data/variables.yaml "config_")
     echo "Unique identifier for this Jovian run is: $config_Jovian_run_identifier "
     snakemake -s Snakefile --profile "${PROFILE}" ${@}
     set -ue #turn bash strict mode back on

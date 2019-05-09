@@ -15,4 +15,4 @@ LSF_Snakemake.*
 private_*
 .github/
 .vscode/
-bin/variables.yaml
+data/variables.yaml
