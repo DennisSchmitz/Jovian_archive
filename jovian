@@ -4,7 +4,7 @@
 #set -x
 
 ### Variables
-VERSION=$(git tag)
+VERSION=$(git describe --tags)
 INSTALL_LOG="jovian_installation_log.txt"
 PROFILE="profile"
 
@@ -466,9 +466,8 @@ if [ "${INSTALL_CONDA:-}" == "TRUE" ]; then
     minispacer
     line
     touch sample_sheet.yaml
-    mkdir -p data
-    echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > data/variables.yaml
-    echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> data/variables.yaml
+    echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > profile/variables.yaml
+    echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> profile/variables.yaml
     curl -o example_R1.fq -L https://molb7621.github.io/workshop/_downloads/SP1.fq
     mkdir -p installer_files
     mv example_R1.fq installer_files/example_R1.fq
@@ -477,7 +476,7 @@ if [ "${INSTALL_CONDA:-}" == "TRUE" ]; then
     echo -e "\nInstalling required conda environments, this can take up to an hour..."
     snakemake --use-conda --create-envs-only --profile ${PROFILE}
     rm sample_sheet.yaml
-    rm data/variables.yaml
+    rm profile/variables.yaml
     rm -rf installer_files
     echo -e "Done with creating the required conda environments, you can now start your analysis"
     exit 0
@@ -536,9 +535,9 @@ if [ -e sample_sheet.yaml ]; then
     echo -e "Starting snakemake"
     set +ue #turn off bash strict mode because snakemake and conda can't work with it properly
     mkdir -p data
-    echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > data/variables.yaml
-    echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> data/variables.yaml
-    eval $(parse_yaml data/variables.yaml "config_")
+    echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > profile/variables.yaml
+    echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> profile/variables.yaml
+    eval $(parse_yaml profile/variables.yaml "config_")
     echo "Unique identifier for this Jovian run is: $config_Jovian_run_identifier "
     snakemake -s Snakefile --profile "${PROFILE}" ${@}
     set -ue #turn bash strict mode back on

@@ -30,7 +30,7 @@ parse_yaml() {
    }'
 }
 
-eval $(parse_yaml data/variables.yaml "vars_")
+eval $(parse_yaml profile/variables.yaml "vars_")
 
 if [ -z "${1}" ] || [ $# -ne 11 ]
 then
