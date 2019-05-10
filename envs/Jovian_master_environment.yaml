@@ -10,6 +10,8 @@ dependencies:
   - qgrid==1.1.1
   - nb_conda==2.2.1
   - nb_conda_kernels==2.2.1
+  - notebook==5.7.5 # Bugfix for https://github.com/DennisSchmitz/Jovian/issues/10
+  - tornado==5.1.1 # Bugfix for https://github.com/DennisSchmitz/Jovian/issues/10
   - jupyter==1.0.0
   - jupyter_contrib_nbextensions==0.5.1
   - jupyterthemes==0.20.0
