@@ -166,16 +166,41 @@ def sum_superkingdoms(classified_file):
     [ "Sample_name", "superkingdom" ]).sum()
                          [[ "reads" ]])
     
-    #And make these into a proper dataframe:
-    superkingdom_sums.reset_index(inplace=True)
-    superkingdom_sums = pd.DataFrame(
-        superkingdom_sums.pivot(index="Sample_name",
-                                columns="superkingdom",
-                                values="reads"))
-    superkingdom_sums.reset_index(drop=True, inplace=True)
-    superkingdom_sums.fillna(0, inplace=True)
+    #Check all samples and superkingdoms to find out for which superkingdoms there is no data
+    samples_superkingdoms_dict = {}
+    for i in superkingdom_sums.index:
+        if i[0] not in samples_superkingdoms_dict.keys():
+            #If the sample name is not yet in the dictionary, add it with the corresponding superkingdom
+            samples_superkingdoms_dict[i[0]] = [i[1]]
+        else:
+            #If the sample is there already, add the current superkingdom
+            samples_superkingdoms_dict[i[0]].append(i[1])
     
-    return(superkingdom_sums)
+    #Make a dataframe for the missing data
+    newdata = pd.DataFrame(index=superkingdom_sums.index, columns = [])
+
+    for key, value in samples_superkingdoms_dict.items():
+        for superkingdom in [ "Archaea", "Bacteria", "Eukaryota", "Viruses", "not classified" ]:
+            if superkingdom not in value:
+                newdata.loc[(key, superkingdom), "reads"] = 0
+            else:
+                pass
+    
+    #Concatenate the missing data into the dataframe
+    new_df = pd.concat([superkingdom_sums, newdata])
+    new_df.reset_index(inplace=True)
+    new_df = new_df.sort_values(by=['Sample_name', 'superkingdom'])
+    new_df = new_df.dropna()
+    new_df.reset_index(inplace=True, drop=True)
+    
+    #And make these into a proper dataframe:
+    final_df = pd.DataFrame(
+        new_df.pivot(index = "Sample_name",
+                      columns="superkingdom",
+                                values="reads"))
+    final_df.reset_index(inplace=True)
+    
+    return(final_df)
 
 def sum_unclassified(unclassified_file):
     """
