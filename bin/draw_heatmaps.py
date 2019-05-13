@@ -321,32 +321,45 @@ def draw_heatmaps(df, outfile, title, taxonomic_rank, colour):
         # Remove 'unclassified' taxa: NaN in dataframe
         df = df[df[taxonomic_rank].notnull()]
 
-        samples = df["Sample_name"].astype(str)
-        scaffolds = df["#ID"].astype(str)
-        assigned = df["tax_name"].astype(str)
-        taxonomy = df[taxonomic_rank].astype(str)
-        reads = df["reads"].astype(int)
-        total_reads = df["read_pairs"].astype(int)
-        percent_of_total = df["Percentage"].astype(float)
-        coverage = df["Avg_fold"].astype(int)
-        contig_length = df["Length"].astype(int)
+        # Check if the dataframe is empty
+        if df.empty:
+        # If so, warn the user and exit
+            with open(outfile, 'w') as out:
+                out.write("No contigs found for rank %s!\n" % taxonomic_rank)
 
-        colors = len(reads) * colour #multiply to make an equally long list
-        
-        max_load = max(percent_of_total)
-        alphas = [ min( x / float(max_load), 0.9) + 0.1 for x in percent_of_total ]
-        
-        source = ColumnDataSource(
-            data = dict(samples=samples, scaffolds=scaffolds,
-                        assigned=assigned, taxonomy=taxonomy,
-                        reads=reads, total_reads=total_reads,
-                        percent_of_total=percent_of_total, 
-                        coverage=coverage,
-                        contig_length=contig_length,
-                        colors=colors, alphas=alphas)
-        )
+            print("\n---\nThere are no contigs for the given %s. Heatmap %s could not be made.\n---\n" % (taxonomic_rank, outfile))
 
-        y_value = (taxonomy, "taxonomy")
+            return(None)
+
+        else:
+            #If it is not empty, continue normally
+
+            samples = df["Sample_name"].astype(str)
+            scaffolds = df["#ID"].astype(str)
+            assigned = df["tax_name"].astype(str)
+            taxonomy = df[taxonomic_rank].astype(str)
+            reads = df["reads"].astype(int)
+            total_reads = df["read_pairs"].astype(int)
+            percent_of_total = df["Percentage"].astype(float)
+            coverage = df["Avg_fold"].astype(int)
+            contig_length = df["Length"].astype(int)
+
+            colors = len(reads) * colour #multiply to make an equally long list
+            
+            max_load = max(percent_of_total)
+            alphas = [ min( x / float(max_load), 0.9) + 0.1 for x in percent_of_total ]
+            
+            source = ColumnDataSource(
+                data = dict(samples=samples, scaffolds=scaffolds,
+                            assigned=assigned, taxonomy=taxonomy,
+                            reads=reads, total_reads=total_reads,
+                            percent_of_total=percent_of_total, 
+                            coverage=coverage,
+                            contig_length=contig_length,
+                            colors=colors, alphas=alphas)
+            )
+
+            y_value = (taxonomy, "taxonomy")
 
     TOOLS = "hover, save, pan, box_zoom, wheel_zoom, reset"
 
