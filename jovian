@@ -456,10 +456,9 @@ if [ "${INSTALL_CONDA:-}" == "TRUE" ]; then
     touch sample_sheet.yaml
     echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > profile/variables.yaml
     echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> profile/variables.yaml
-    curl -o example_R1.fq -L https://molb7621.github.io/workshop/_downloads/SP1.fq
     mkdir -p installer_files
-    mv example_R1.fq installer_files/example_R1.fq
-    cp installer_files/example_R1.fq installer_files/example_R2.fq
+    echo -e "@example_read1\nGATTACA\n+\nAAAAAAA\n" > installer_files/example_R1.fq
+    echo -e "@example_read2\nGATTACA\n+\nAAAAAAA\n" > installer_files/example_R2.fq
     echo -e "installer:\n    R1: installer_files/example_R1.fq\n    R2: installer_files/example_R2.fq" >> sample_sheet.yaml
     echo -e "\nInstalling required conda environments, this can take up to an hour..."
     snakemake --use-conda --create-envs-only --profile ${PROFILE}
