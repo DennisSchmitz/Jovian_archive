@@ -473,36 +473,23 @@ fi
 
 ### Pass other CLI arguments along to Snakemake
 if [ ! -d ${INPUT_DIR} ]; then
+    minispacer
     echo -e "The input directory specified (${INPUT_DIR}) does not exist"
     echo -e "Please specify an existing input directory"
     exit 1
 fi
 
-### Generate sample_sheet, part 1
-ZIPFILES=(${INPUT_DIR}*.gz)
-FASTQFILES=(${INPUT_DIR}*.fastq)
-FQFILES=(${INPUT_DIR}*.fq)
-if [ -e ${FASTQFILES} ]; then
-    echo -e "Files in input directory (${INPUT_DIR}) have .fastq format"
+### Generate sample sheet
+if [ -n "$(ls -A ${INPUT_DIR})" ]; then
+    minispacer
+    echo -e "Files in input directory (${INPUT_DIR}) are present"
     echo -e "Generating sample sheet..."
     bin/generate_sample_sheet.py ${INPUT_DIR} > sample_sheet.yaml
     SHEET_SUCCESS="TRUE"
-fi
-
-### Generate sample_sheet, part 2
-if [ -e ${FQFILES} ]; then
-    echo -e "Files in input directory (${INPUT_DIR}) have .fq format"
-    echo -e "Generating sample sheet..."
-    bin/generate_sample_sheet.py ${INPUT_DIR} > sample_sheet.yaml
-    SHEET_SUCCESS="TRUE"
-fi
-
-### Generate sample_sheet, part 3. N.B. this appends to the output of previous blocks.
-if [ -e ${ZIPFILES} ]; then
-    echo -e "Files in input directory (${INPUT_DIR}) are gzipped"
-    echo -e "Generating sample sheet..."
-    bin/generate_sample_sheet_zip.py ${INPUT_DIR} >> sample_sheet.yaml
-    SHEET_SUCCESS="TRUE"
+else
+    minispacer
+    echo -e "The input directory you specified (${INPUT_DIR}) exists but is empty...\nPlease specify a directory with input-data."
+    exit 0
 fi
 
 ### Checker for succesfull creation of sample_sheet
