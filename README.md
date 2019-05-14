@@ -65,7 +65,7 @@ An audit trail, used for clinical reproducability and logging, is generated and 
 
 ___
 
-![Jovian_rulegraph.png](files/GitHub_images/rulegraph_Jovian.png)
+![Jovian_rulegraph.png](../assets/images/rulegraph_Jovian.png)
 ___
 
 ## Pipeline requirements
@@ -74,19 +74,19 @@ Jovian has two software dependencies, miniConda and IGVjs, which will be automat
 ### Software  
 |Software name|Installation instructions|Note|  
 |:---|:---|:---|  
-|```git```|https://git-scm.com/downloads|Is usually already installed on Linux systems.|  
-|```curl```|https://curl.haxx.se/|Should already be included in most (all?) Linux distro's.|
-|```which```|http://savannah.gnu.org/projects/which|Should already be included in most (all?) Linux distro's.|
-|```bzip2```|http://www.bzip.org/|Should already be included in most (all?) Linux distro's.|
+|```git```| https://git-scm.com/downloads | Is usually already installed on Linux systems.|  
+|```curl```| https://curl.haxx.se/ | Should already be included in most (all?) Linux distro's.|
+|```which```| http://savannah.gnu.org/projects/which | Should already be included in most (all?) Linux distro's.|
+|```bzip2```| http://www.bzip.org/ | Should already be included in most (all?) Linux distro's.|
 
 ### Databases  
 |Database name|Link|Installation instructions|
 |:---|:---|:---|
-|```NCBI NT & NR```|ftp://ftp.ncbi.nlm.nih.gov/blast/db/|[link](#blast-nt-nr-and-taxdb-databases)|
-|```NCBI Taxdump```|ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/|[link](#blast-nt-nr-and-taxdb-databases)|
-|```NCBI New_taxdump```|ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/|[link](#ncbi-new_taxdump-database)|
-|```Latest Human Genome```|https://support.illumina.com/sequencing/sequencing_software/igenome.html|[link](#human-genome)|
-|```Virus-Host interaction database```|http://www.genome.jp/virushostdb/note.html|[link](#virus-host-interaction-database)|
+|```NCBI NT & NR```| ftp://ftp.ncbi.nlm.nih.gov/blast/db/ | [link](#blast-nt-nr-and-taxdb-databases)|
+|```NCBI Taxdump```| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/ | [link](#blast-nt-nr-and-taxdb-databases)|
+|```NCBI New_taxdump```| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/ | [link](#ncbi-new_taxdump-database)|
+|```Latest Human Genome```| https://support.illumina.com/sequencing/sequencing_software/igenome.html | [link](#human-genome)|
+|```Virus-Host interaction database```| http://www.genome.jp/virushostdb/note.html | [link](#virus-host-interaction-database)|
 
 ___
 
