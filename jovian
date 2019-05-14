@@ -74,6 +74,10 @@ do
         ARCHIVE="TRUE"
         shift # Next
         ;;
+        -v|--version)
+        SHOW_VERSION="TRUE"
+        shift # Next
+        ;;
         --start-nginx)
         START_NGINX="TRUE"
         shift # Next
@@ -97,6 +101,12 @@ done
 set -- "${POSITIONAL[@]:-}" # Restores the positional arguments (i.e. without the case arguments above) which then can be called via `$@` or `$[0-9]` etc. These parameters are send to Snakemake.
 
 ### Check the jovian CLI arguments and do stuff
+
+### Show Jovian version
+if [ "${SHOW_VERSION}" == "TRUE" ]; then
+    echo -e "Jovian ${VERSION}"
+    exit 0
+fi
 
 ### Remove all Jovian output
 if [ "${CLEAN:-}" == "TRUE" ]; then
