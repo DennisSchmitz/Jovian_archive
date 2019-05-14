@@ -3,6 +3,9 @@
 #set -v
 #set -x
 
+#load in functions
+source bin/functions.sh
+
 ### Variables
 VERSION=$(git describe --tags)
 INSTALL_LOG="jovian_installation_log.txt"
@@ -10,7 +13,7 @@ PROFILE="profile"
 
 UNIQUE_ID=$(bin/generate_id.sh)
 SET_HOSTNAME=$(bin/gethostname.sh)
-IGVJS_LOCATION="bin/software/"
+IGVJS_LOCATION="bin/software/igv.js/dist/igv.min.js"
 
 ### Jovian Conda environment names
 PATH_JOVIAN_MASTER_YAML="envs/Jovian_master_environment.yaml"
@@ -83,81 +86,22 @@ do
 done
 set -- "${POSITIONAL[@]:-}" # Restores the positional arguments (i.e. without the case arguments above) which then can be called via `$@` or `$[0-9]` etc. These parameters are send to Snakemake.
 
-### Functions
-line() {
-    printf "%-70s\n" "#" | sed 's/\s/#/g'
-}
-spacer() {
-    printf "\n\n"
-}
-minispacer() {
-    printf "\n"
-}
-spinner() {
-    PID=$!
-    i=1
-    sp="/-\|"
-    echo -n ' '
-    while [ -d /proc/$PID ]
-    do
-        printf "\b${sp:i++%${#sp}:1}"
-        sleep 0.5
-    done
-    printf "\b"
-}
-installer_intro() {
-    tput reset
-    line
-    echo -e "Welcome to the interactive installation process of Jovian"
-    echo -e "You are seeing this because one or multiple dependencies of Jovian are missing on your system."
-    echo -e "You are using Jovian $VERSION"
-    spacer
-    echo -e "Please keep in mind that this pipeline is still a work-in-progress"
-    echo -e "It is expected that several portions are unstable until release 1.0.0"
-    line
-    spacer
-}
-ready_for_start() {
-    spacer
-    line
-    echo -e "All pre-flight checks of Jovian have been completed"
-    echo -e "You are using Jovian version ${VERSION}"
-    echo -e "Please keep in mind that this pipeline is still a work-in-progress"
-    echo -e "It is expected that several portions are unstable until release 1.0.0"
-    line
-    spacer
-}
-parse_yaml() {
-   local prefix=$2
-   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
-   sed -ne "s|^\($s\)\($w\)$s:$s\"\(.*\)\"$s\$|\1$fs\2$fs\3|p" \
-        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
-   awk -F$fs '{
-      indent = length($1)/7;
-      vname[indent] = $2;
-      for (i in vname) {if (i > indent) {delete vname[i]}}
-      if (length($3) > 0) {
-         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
-         printf("%s%s%s=\"%s\"\n", "'${prefix}'",vn, $2, $3);
-      }
-   }'
-}
-
 ### Check the jovian CLI arguments and do stuff
 
 ### Remove all Jovian output
 if [ "${CLEAN:-}" == "TRUE" ]; then
     line
     spacer
-    echo -e "The following files and folders will be deleted:\ndata/\nlogs/\nresults/\nsample_sheet.yaml\n\n"
+    echo -e "The following files and folders will be deleted:\ndata/\nlogs/\nresults/\nprofile/variables.yaml\nsample_sheet.yaml\n\n"
     read -r -p "Are you sure you wish to permanently delete these files and folders? [y/N] " response
     response=${response,,}
     if [[ "${response}" =~ ^(yes|y)$ ]]; then
-        echo -e "Removing Jovian output: data/ logs/ results/ sample_sheet.yaml"
+        echo -e "Removing Jovian output: data/ logs/ results/ profile/variables.yaml sample_sheet.yaml"
         rm -rf data/
         rm -rf logs/
         rm -rf results/
         rm sample_sheet.yaml
+        rm profile/variables.yaml
     fi
     exit 0
 fi
@@ -280,17 +224,27 @@ if [ ! -e "${PATH_JOVIAN_MASTER_YAML}" ]; then # If this yaml file does not exis
     spacer
     echo -e "ERROR: Missing file \"${PATH_JOVIAN_MASTER_YAML}\""
     exit 1
-elif [ ! -e "${PATH_JOVIAN_HELPER_YAML}" ]; then # If this yaml file does not exist, give error.
+fi
+if [ ! -e "${PATH_JOVIAN_HELPER_YAML}" ]; then # If this yaml file does not exist, give error.
     line
     spacer
     echo -e "ERROR: Missing file \"${PATH_JOVIAN_HELPER_YAML}\""
     exit 1
-elif [ ! -e "${PROFILE}/config.yaml" ]; then # If this profile folder containing config.yaml does not exist, give error.
+fi
+if [ ! -e "${PROFILE}/config.yaml" ]; then # If this profile folder containing config.yaml does not exist, give error.
     line
     spacer
     echo -e "ERROR: Missing file \"${PROFILE}/config.yaml\""
     exit 1
-elif ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. the `conda` command is not available), if true, install it in ~/tmp. Otherwise, proceed.
+fi
+
+if [ ! -e "${HOME}/.jovian_installchoice" ]; then
+    echo -e "installeranswers:\n    igvjs: U" > ${HOME}/.jovian_installchoice
+fi
+
+eval $(parse_yaml ${HOME}/.jovian_installchoice "choices_")
+
+if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. the `conda` command is not available), if true, install it in ~/tmp. Otherwise, proceed.
 
     ### confirmation of conda installation
     installer_intro
@@ -377,21 +331,35 @@ fi
         ###############################################################################################################
 
 ### Checker for if IGVjs is installed, otherwise, ask user if it should be installed
-if [ ! -e ${IGVJS_LOCATION} ]; then
-    installer_intro
-    echo -e "IGVjs hasn't been installed in this working directory yet... \n\nIGVjs is the piece of software which is used for the interactive scaffold viewer in the Jupyter notebook reports"
-    echo -e "\nIGVjs is necessary when you wish to view these reports. However, if you wish to only use Jovian on the command line this software isn't necessary."
-    echo -e "It's advised to install IGVjs now unless you only wish to use Jovian on the command line. It's alway possible to install IGVjs at a later moment with 'bash jovian -ii'\n"
-    read -r -p "Do you wish to install IGVjs to this working directory now? [y/N] " igvanswer
-    igvanswer=${igvanswer,,}
-    if [[ "${igvanswer}" =~ ^(yes|y)$ ]]; then
-        echo -e "Starting with installing IGVjs, this can take up to 15 minutes..."
-        bin/install_IGVjs.sh
-        echo -e "DONE with installing IGVjs"
-    else
-        echo -e "Skipping the installation of IGVjs..."
-        sleep 3
+if [ "$choices_installeranswers_igvjs" == "U" ]; then
+    if [ ! -e ${IGVJS_LOCATION} ]; then
+        installer_intro
+        echo -e "IGVjs hasn't been installed in this working directory yet... \n\nIGVjs is the piece of software which is used for the interactive scaffold viewer in the Jupyter notebook reports"
+        echo -e "\nIGVjs is necessary when you wish to view these reports. However, if you wish to only use Jovian on the command line this software isn't necessary."
+        echo -e "It's advised to install IGVjs now unless you only wish to use Jovian on the command line. It's alway possible to install IGVjs at a later moment with 'bash jovian -ii'\n"
+        read -r -p "Do you wish to install IGVjs to this working directory now? [y/N] " igvanswer
+        igvanswer=${igvanswer,,}
+        if [[ "${igvanswer}" =~ ^(yes|y)$ ]]; then
+            echo -e "Starting with installing IGVjs, this can take up to 15 minutes..."
+            bin/install_IGVjs.sh
+            echo -e "DONE with installing IGVjs"
+            echo -e "installeranswers:\n    igvjs: Y" > ${HOME}/.jovian_installchoice
+        else
+            echo -e "Skipping the installation of IGVjs..."
+            echo -e "installeranswers:\n    igvjs: N" > ${HOME}/.jovian_installchoice
+            sleep 3
+        fi
     fi
+elif [ "$choices_installeranswers_igvjs" == "Y" ]; then
+    if [ ! -e ${IGVJS_LOCATION} ]; then
+        echo -e "Installing IGVjs in your working directory..."
+        echo -e "This can take up to 15 minutes"
+        bin/install_IGVjs.sh
+        echo -e "Done with installing IGVjs"
+    fi
+elif [ "$choices_installeranswers_igvjs" == "N" ]; then
+    echo -e "Skipping installation of IGVjs in your working directory\nIf you want to use IGVjs then please use the jovian command to install it in your working directory. \nSee the Jovian manual for more information and instructions."
+    sleep 5
 fi
 
 ### Install IGVjs, as specified via the CLI argument '-ii'
@@ -534,7 +502,6 @@ fi
 if [ -e sample_sheet.yaml ]; then
     echo -e "Starting snakemake"
     set +ue #turn off bash strict mode because snakemake and conda can't work with it properly
-    mkdir -p data
     echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > profile/variables.yaml
     echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> profile/variables.yaml
     eval $(parse_yaml profile/variables.yaml "config_")
