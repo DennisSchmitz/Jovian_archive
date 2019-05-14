@@ -57,7 +57,7 @@ fi
 if [ "${1}" == "start" ]
 then
    # check if nginx already runs
-   if [ ! -z "$(ps -ef| grep nginx| grep -v grep| grep -v start_nginx)" ]
+   if [ ! -z "$(ps -ef| grep nginx| grep worker)" ]
    then
        echo "nginx is already running"
        exit 1

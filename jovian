@@ -31,6 +31,8 @@ INSTALL_DB="FALSE"
 CLEAN="FALSE"
 VIRUS_TYPING="FALSE"
 ARCHIVE="FALSE"
+START_NGINX="FALSE"
+STOP_NGINX="FALSE"
 SHEET_SUCCESS="FALSE" # Default value for sample_sheet.yaml
 
 ### Parse the jovian commandline arguments, if they are not part of jovian, they get send to Snakemake
@@ -70,6 +72,14 @@ do
         ;;
         --archive)
         ARCHIVE="TRUE"
+        shift # Next
+        ;;
+        --start-nginx)
+        START_NGINX="TRUE"
+        shift # Next
+        ;;
+        --stop-nginx)
+        STOP_NGINX="TRUE"
         shift # Next
         ;;
         --virus-typing)
@@ -447,6 +457,17 @@ if [ "${INSTALL_CONDA:-}" == "TRUE" ]; then
     rm profile/variables.yaml
     rm -rf installer_files
     echo -e "Done with creating the required conda environments, you can now start your analysis"
+    exit 0
+fi
+
+if [ "${START_NGINX}" == "TRUE" ]; then
+    (bin/start_nginx.sh start)
+    exit 0
+fi
+
+if [ "${STOP_NGINX}" == "TRUE" ]; then
+    nginx -s quit
+    echo "nginx has been stopped"
     exit 0
 fi
 
