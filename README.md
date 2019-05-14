@@ -82,11 +82,11 @@ Jovian has two software dependencies, miniConda and IGVjs, which will be automat
 ### Databases  
 |Database name|Link|Installation instructions|
 |:---|:---|:---|
-|```NCBI NT & NR```| [ftp://ftp.ncbi.nlm.nih.gov/blast/db/](ftp://ftp.ncbi.nlm.nih.gov/blast/db/) | [link](#blast-nt-nr-and-taxdb-databases)|
-|```NCBI Taxdump```| [ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/](ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/) | [link](#blast-nt-nr-and-taxdb-databases)|
-|```NCBI New_taxdump```| [ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/](ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/) | [link](#ncbi-new_taxdump-database)|
-|```Latest Human Genome```| [https://support.illumina.com/sequencing/sequencing_software/igenome.html](https://support.illumina.com/sequencing/sequencing_software/igenome.html) | [link](#human-genome)|
-|```Virus-Host interaction database```| [http://www.genome.jp/virushostdb/note.html](http://www.genome.jp/virushostdb/note.html) | [link](#virus-host-interaction-database)|
+|```NCBI NT & NR```| ftp://ftp.ncbi.nlm.nih.gov/blast/db/ | [link](#blast-nt-nr-and-taxdb-databases)|
+|```NCBI Taxdump```| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/ | [link](#blast-nt-nr-and-taxdb-databases)|
+|```NCBI New_taxdump```| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/ | [link](#ncbi-new_taxdump-database)|
+|```Latest Human Genome```| https://support.illumina.com/sequencing/sequencing_software/igenome.html | [link](#human-genome)|
+|```Virus-Host interaction database```| http://www.genome.jp/virushostdb/note.html | [link](#virus-host-interaction-database)|
 
 ___
 
