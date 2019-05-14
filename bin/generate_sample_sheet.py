@@ -23,16 +23,16 @@ import re
 import yaml
 
 
-fq_pattern = re.compile("(.*)_R(1|2).*")
+fq_pattern = re.compile("(.*)_R?(1|2)\.f(ast)?q(\.gz)?")
 
 
 def main(args):
     assert args.dir.is_dir(), "Argument must be a directory."
     
-    files = list(args.dir.glob("*_R?*.f*q"))
-
     samples = {}
-    for file_ in files:
+    for file_ in args.dir.iterdir():
+        if file_.is_dir():
+            continue
         match = fq_pattern.fullmatch(file_.name)
         sample = samples.setdefault(match.group(1), {})
         sample["R{}".format(match.group(2))] = str(file_)
