@@ -4,7 +4,7 @@
 
 ___
 
-<img align="right" src="files/GitHub_images/Jovian_logo.png">  
+<img align="right" src="../assets/images/Jovian_logo.png">
 
 ## Table of content  
 - [Pipeline description](#pipeline-description)  
