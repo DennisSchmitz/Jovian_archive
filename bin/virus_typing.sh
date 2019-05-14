@@ -107,11 +107,14 @@ do
     typingtool "${FILE}" "${BASENAME}" "${WHICH_TT}"
 done
 
-# Concat individual outputs into one combined output, the awk magic is to not repeat headers
-gawk 'FNR==1 && NR!=1 { next; } { print }' data/virus_typing_tables/*_${WHICH_TT}.csv > results/all_${WHICH_TT}-TT.csv
+# https://stackoverflow.com/questions/2937407/test-whether-a-glob-has-any-matches-in-bash
+# now it gives errors like, No such file or directory, for rm. And for gawk, fatal: cannot open file `data/virus_typing_tables/*_HAV.csv` for reading (no such file or dir)
 
-# Cleanup
-find data/virus_typing_tables/ -type f -empty -delete
-rm data/virus_typing_tables/*_${WHICH_TT}.fa
-rm data/virus_typing_tables/*_${WHICH_TT}.xml
-echo -e "\nFinished"
+    # Concat individual outputs into one combined output, the awk magic is to not repeat headers
+    gawk 'FNR==1 && NR!=1 { next; } { print }' data/virus_typing_tables/*_${WHICH_TT}.csv > results/all_${WHICH_TT}-TT.csv
+
+    # Cleanup
+    find data/virus_typing_tables/ -type f -empty -delete
+    rm data/virus_typing_tables/*_${WHICH_TT}.fa
+    rm data/virus_typing_tables/*_${WHICH_TT}.xml
+    echo -e "\nFinished"
