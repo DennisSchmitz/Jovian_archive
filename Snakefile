@@ -776,6 +776,12 @@ python bin/concat_filtered_vcf.py {params.vcf_folder_glob} {output} > {log} 2>&1
 ##### These are the conditional cleanup rules                               #####
 #################################################################################
 
+onerror:
+    shell("""
+    rm -f data/scaffolds_filtered/*.html
+    rm -f results/IGVjs_index.html
+    """)
+
 onsuccess:
     shell("""
 echo -e "\nCleaning up..."
@@ -806,12 +812,13 @@ echo -e "\tGenerating methodological hash (fingerprint)..."
 echo -e "This is the link to the code used for this analysis:\thttps://github.com/DennisSchmitz/Jovian/tree/$(git log -n 1 --pretty=format:"%H")" > results/git_log.txt
 echo -e "This code with unique fingerprint $(git log -n1 --pretty=format:"%H") was committed by $(git log -n1 --pretty=format:"%an <%ae>") at $(git log -n1 --pretty=format:"%ad")" >> results/git_log.txt
 
+echo -e "\tCreating symlinks for the interactive genome viewer..."
+bin/set_symlink.sh
+
 echo -e "\tGenerating Snakemake report..."
 snakemake --unlock --config sample_sheet=sample_sheet.yaml
 snakemake --report results/snakemake_report.html --config sample_sheet=sample_sheet.yaml
 
-echo -e "\tCreating symlinks for the interactive genome viewer..."
-bin/set_symlink.sh
 echo -e "Finished"
          """)
     
