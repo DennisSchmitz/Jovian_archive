@@ -100,21 +100,21 @@ typingtool() {
 }
 
 # Perform all typingtool functions for each input file in the glob below (standard Jovian output)
-echo -e "Starting with ${WHICH_TT} typingtool analysis.\nN.B. depending on the size of your dataset, and the load of the virus typingtool webservice, this might take some time...\n"
+echo -e "\nStarting with ${WHICH_TT} typingtool analysis.\nN.B. depending on the size of your dataset, and the load of the virus typingtool webservice, this might take some time...\n"
 for FILE in data/tables/*_taxClassified.tsv
 do
     BASENAME=${FILE##*/}   # Filename without path but WITH suffixes
     typingtool "${FILE}" "${BASENAME}" "${WHICH_TT}"
 done
 
-# https://stackoverflow.com/questions/2937407/test-whether-a-glob-has-any-matches-in-bash
-# now it gives errors like, No such file or directory, for rm. And for gawk, fatal: cannot open file `data/virus_typing_tables/*_HAV.csv` for reading (no such file or dir)
-
-    # Concat individual outputs into one combined output, the awk magic is to not repeat headers
+if test -n "$(find data/virus_typing_tables/ -maxdepth 1 -name "*_${WHICH_TT}.csv" -print -quit)"
+then
+    # If any files were created in the first place; concat individual outputs into one combined output, the awk magic is to not repeat headers
     gawk 'FNR==1 && NR!=1 { next; } { print }' data/virus_typing_tables/*_${WHICH_TT}.csv > results/all_${WHICH_TT}-TT.csv
+fi
 
-    # Cleanup
-    find data/virus_typing_tables/ -type f -empty -delete
-    rm data/virus_typing_tables/*_${WHICH_TT}.fa
-    rm data/virus_typing_tables/*_${WHICH_TT}.xml
-    echo -e "\nFinished"
+# Cleanup
+find data/virus_typing_tables/ -type f -empty -delete
+#rm -f data/virus_typing_tables/*_${WHICH_TT}.fa # Commented this out for debugging purposes, should be activated in v.1.0
+#rm -f data/virus_typing_tables/*_${WHICH_TT}.xml # Commented this out for debugging purposes, should be activated in v.1.0
+echo -e "\nFinished"
