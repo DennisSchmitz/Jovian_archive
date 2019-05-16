@@ -40,7 +40,7 @@ minispacer
 
 
 
-if [ ! -h $CONDA_PREFIX/etc/nginx/default-site/$vars_Jovian_run_identifier ]; then
+if [ ! -h /tmp/etc/nginx/default-site/$vars_Jovian_run_identifier ]; then
     echo -e "Setting symlink..."
     bin/set_symlink.sh
 else
