@@ -97,7 +97,7 @@ typingtool() {
         # Sadly, the current version of the typingtool service has some issues, resulting in errors because it can't handle the request.
         ### One of two things can happen; you get a terse xml output that states "502 Proxy Error" or you get a verbose html output that states "Error reading from remote server". Hence, the double grep OR statement...
         if grep -q -e "502 Proxy Error" -e "Error reading from remote server" ${tt_xml}; then
-            echo -e "Sample:\t${sample_name}\tQuery cannot be handled by typingtool... See this thread for further explanation: https://github.com/DennisSchmitz/Jovian/issues/51"
+            echo -e "Sample:\t${sample_name}\tQuery cannot currently be handled by typingtool... Please try again later, for further information, see: https://github.com/DennisSchmitz/Jovian/issues/51"
         else
             # If error code is not found; parse the XML
             python ${parser_py} "${sample_name}" "${tt_xml}" "${tt_csv}"
