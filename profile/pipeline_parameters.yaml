@@ -41,11 +41,16 @@ HTML_index_titles:
 ######################################################
 
 databases: # Location of NT, NR and TaxDB are stored via an alias in your home directory (~/.ncbirc). They should work with keywords "nt" "nr" "taxdb"
-    HuGo_ref: /mnt/db/Reference_genomes/Homo_sapiens/NCBI/GRCh38/Sequence/Bowtie2Index_without_EBV_virus_chr/genome.fa # Location of HuGo assembly GRCH38 from which I manually removed the EBV chromosome, see the README.md for explanation  
-    Krona_taxonomy: /mnt/db/taxonomy_krona/ # Location of the Krona taxonomy files; installable with the helper script attached along with Jovian
-    virusHostDB: /mnt/db/Virus-Host_interaction_DB/virushostdb.tsv # Location of the Virus-Host interaction database, see http://www.genome.jp/virushostdb/note.html
-    NCBI_new_taxdump_rankedlineage: /mnt/db/new_taxdump/rankedlineage.dmp.delim # Location of the NCBI's "new_taxdump" file "rankedlineage.dmp", see ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/
-    NCBI_new_taxdump_host: /mnt/db/new_taxdump/host.dmp.delim # Location of the NCBI's "new_taxdump" file "host.dmp", see ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/
+    # Location of HuGo assembly GRCH38 from which I manually removed the EBV chromosome, see the README.md for explanation  
+    HuGo_ref: /mnt/db/Reference_genomes/Homo_sapiens/NCBI/GRCh38/Sequence/Bowtie2Index_without_EBV_virus_chr/genome.fa
+    # Location of the Krona taxonomy files; installable with the helper script attached along with Jovian
+    Krona_taxonomy: /mnt/db/taxonomy_krona/
+    # Location of the Virus-Host interaction database, see http://www.genome.jp/virushostdb/note.html
+    virusHostDB: /mnt/db/Virus-Host_interaction_DB/virushostdb.tsv
+    # Location of the NCBI's "new_taxdump" file "rankedlineage.dmp", see ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/
+    NCBI_new_taxdump_rankedlineage: /mnt/db/new_taxdump/rankedlineage.dmp.delim
+     # Location of the NCBI's "new_taxdump" file "host.dmp", see ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/
+    NCBI_new_taxdump_host: /mnt/db/new_taxdump/host.dmp.delim
 
 server_info: # This is used for IGVjs, discuss this with your IT department, depends on your local setup
     port: 8083
