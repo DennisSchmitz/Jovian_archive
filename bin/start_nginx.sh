@@ -45,13 +45,15 @@ then
    exit 1
 fi
 
-if [ ! -f "$CONDA_PREFIX/etc/nginx/sites.d/default-site.conf" ] || [ ! -f "$CONDA_PREFIX/bin/nginx" ]
+mkdir -p /tmp/etc/nginx/sites.d/
+cp $CONDA_PREFIX/etc/nginx/sites.d/default-site.conf /tmp/etc/nginx/sites.d/default-site.conf
+
+if [ ! -f "/tmp/etc/nginx/sites.d/default-site.conf" ] || [ ! -f "$CONDA_PREFIX/bin/nginx" ]
 then
    echo "nginx/cfg not found"
    echo "conda install nginx?"
    exit 1
 fi
-
 
 # make config and start nginx
 if [ "${1}" == "start" ]
@@ -63,13 +65,13 @@ then
        exit 1
    fi
 
-   cat << EOF > $CONDA_PREFIX/etc/nginx/sites.d/default-site.conf
+   cat << EOF > /tmp/etc/nginx/sites.d/default-site.conf
 server {
     listen       ${port};
     server_name  localhost;
 
     location / {
-        root   etc/nginx/default-site/;
+        root   /tmp/etc/nginx/default-site/;
         index  index.html index.htm;
 
         if (\$request_method = 'OPTIONS') {
@@ -108,7 +110,7 @@ server {
     # redirect server error pages to the static page /50x.html
     error_page   500 502 503 504  /50x.html;
     location = /50x.html {
-        root   etc/nginx/default-site/;
+        root   /tmp/etc/nginx/default-site/;
     }
 
 }
