@@ -63,4 +63,4 @@ threads:
     Fragment_length_analysis: 4
     quantify_output: 4
 
-remove_temp: 1 # For development and debug only. If you set this to no you will keep the HuGo alignment data --> Patient privacy concern.
+remove_temp: 1 # For development and debug only. If you set this to `0` you will keep the HuGo alignment data which leads to patient privacy concern.
