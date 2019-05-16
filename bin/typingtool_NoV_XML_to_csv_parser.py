@@ -29,8 +29,8 @@ input_fields = [ 'result', 'start', 'end', 'nucleotides', 'conclusion' ]
 
 output_fields = [ 'Sample_name', 'Query_name', 'start', 'length', 'end', 'blast_concluded-name',
                  'blast_absolute-similarity', 'blast_refseq', 'blast_reverse-complement',
-                 'ORF1_type', 'ORF1_type_support', 'ORF1_subtype', 'ORF1_subtype_support',
-                 'ORF2_type', 'ORF2_type_support', 'ORF2_subtype', 'ORF2_subtype_support',
+                 'polymerase_type', 'polymerase_type_support', 'polymerase_subtype', 'polymerase_subtype_support',
+                 'capsid_type', 'capsid_type_support', 'capsid_subtype', 'capsid_subtype_support',
                  'nucleotides' ]
 
 for elem in parsedXML.findall('.//sequence'):
@@ -56,18 +56,18 @@ for elem in parsedXML.findall('.//sequence'):
                 tmp_conclusion_type = item.attrib.get('type')
                 tmp_conclusion_id = item.attrib.get('id')
                 tmp_conclusion_region = item.attrib.get('region')
-                if tmp_conclusion_type=="simple" and tmp_conclusion_id=="type" and tmp_conclusion_region=="ORF1":
-                    inner_dict['ORF1_type'] = item.find('.//name').text
-                    inner_dict['ORF1_type_support'] = item.find('.//support').text
-                elif tmp_conclusion_type=="simple" and tmp_conclusion_id=="subtype" and tmp_conclusion_region=="ORF1":
-                    inner_dict['ORF1_subtype'] = item.find('.//name').text
-                    inner_dict['ORF1_subtype_support'] = item.find('.//support').text
-                elif tmp_conclusion_type=="simple" and tmp_conclusion_id=="type" and tmp_conclusion_region=="ORF2":
-                    inner_dict['ORF2_type'] = item.find('.//name').text
-                    inner_dict['ORF2_type_support'] = item.find('.//support').text
-                elif tmp_conclusion_type=="simple" and tmp_conclusion_id=="subtype" and tmp_conclusion_region=="ORF2":
-                    inner_dict['ORF2_subtype'] = item.find('.//name').text
-                    inner_dict['ORF2_subtype_support'] = item.find('.//support').text
+                if tmp_conclusion_type=="simple" and tmp_conclusion_id=="type" and tmp_conclusion_region=="region1":
+                    inner_dict['polymerase_type'] = item.find('.//name').text
+                    inner_dict['polymerase_type_support'] = item.find('.//support').text
+                elif tmp_conclusion_type=="simple" and tmp_conclusion_id=="subtype" and tmp_conclusion_region=="region1":
+                    inner_dict['polymerase_subtype'] = item.find('.//name').text
+                    inner_dict['polymerase_subtype_support'] = item.find('.//support').text
+                elif tmp_conclusion_type=="simple" and tmp_conclusion_id=="type" and tmp_conclusion_region=="region2":
+                    inner_dict['capsid_type'] = item.find('.//name').text
+                    inner_dict['capsid_type_support'] = item.find('.//support').text
+                elif tmp_conclusion_type=="simple" and tmp_conclusion_id=="subtype" and tmp_conclusion_region=="region2":
+                    inner_dict['capsid_subtype'] = item.find('.//name').text
+                    inner_dict['capsid_subtype_support'] = item.find('.//support').text
             else:
                 inner_dict[item.tag] = item.text
     csv_data.append(inner_dict)
