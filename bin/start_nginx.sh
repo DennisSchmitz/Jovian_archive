@@ -118,7 +118,7 @@ EOF
    sleep 3
 
    # check if nginx runs
-   if [ -z "$(ps -ef| grep nginx| grep -v grep| grep -v start_nginx)" ]
+   if [ -z "$(ps -ef| grep nginx| grep worker)" ]
    then
        echo "nginx is not running"
        exit 1
@@ -129,7 +129,7 @@ fi
 if [ "${1}" == "stop" ]
 then
    # check if nginx  runs
-   if [ -z "$(ps -ef| grep nginx| grep -v grep| grep -v start_nginx)" ]
+   if [ -z "$(ps -ef| grep nginx| grep worker)" ]
    then
        echo "nginx is not running"
        exit 1

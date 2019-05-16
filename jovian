@@ -33,6 +33,7 @@ VIRUS_TYPING="FALSE"
 ARCHIVE="FALSE"
 START_NGINX="FALSE"
 STOP_NGINX="FALSE"
+REBUILD_ARCHIVE="FALSE"
 SHEET_SUCCESS="FALSE" # Default value for sample_sheet.yaml
 
 ### Parse the jovian commandline arguments, if they are not part of jovian, they get send to Snakemake
@@ -84,6 +85,10 @@ do
         ;;
         --stop-nginx)
         STOP_NGINX="TRUE"
+        shift # Next
+        ;;
+        --rebuild-archive)
+        REBUILD_ARCHIVE="TRUE"
         shift # Next
         ;;
         --virus-typing)
@@ -368,7 +373,7 @@ if [ "$choices_installeranswers_igvjs" == "U" ]; then
         else
             echo -e "Skipping the installation of IGVjs..."
             echo -e "installeranswers:\n    igvjs: N" > ${HOME}/.jovian_installchoice
-            sleep 3
+            sleep 1
         fi
     fi
 elif [ "$choices_installeranswers_igvjs" == "Y" ]; then
@@ -380,7 +385,6 @@ elif [ "$choices_installeranswers_igvjs" == "Y" ]; then
     fi
 elif [ "$choices_installeranswers_igvjs" == "N" ]; then
     echo -e "Skipping installation of IGVjs in your working directory\nIf you want to use IGVjs then please use the jovian command to install it in your working directory. \nSee the Jovian manual for more information and instructions."
-    sleep 5
 fi
 
 ### Install IGVjs, as specified via the CLI argument '-ii'
@@ -413,6 +417,15 @@ if [ "${VIRUS_TYPING:-}" == "TRUE" ]; then
     fi
 fi
 
+if [ "${REBUILD_ARCHIVE}" == "TRUE" ]; then
+    if [ -e archive_*.tar.gz ]; then
+        bin/rebuild_archive.sh
+    exit 0
+    else
+        echo -e "There's no Jovian-archive present."
+    exit 0
+    fi
+fi
 ### Install databases, as specified via CLI argument '-id'
 # Work-in-progress, not finished yet
 if [ "${INSTALL_DB:-}" == "TRUE" ]; then
@@ -533,4 +546,4 @@ else
     exit 1
 fi
 
-exit 0
+exit 0 
