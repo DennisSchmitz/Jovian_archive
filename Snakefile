@@ -72,7 +72,7 @@ onstart:
         done
     """)
 
-#    shell("\n\t\tPlacholder for .ncbirc BLAST db aliases.\n\t\tPlaceholder for Jupyter config checker.\n\t\tPlaceholder Jupyter Notebook theme settings\n'")
+#    shell("\n\t\tPlaceholder for Jupyter config checker.\n\t\tPlaceholder Jupyter Notebook theme settings\n'")
 
 #################################################################################
 ##### Specify Jovian's final output:                                        #####
@@ -92,7 +92,7 @@ rule all:
         expand("data/scaffolds_raw/{sample}/scaffolds.fasta", sample = SAMPLES), # SPAdes assembly output
         expand("data/scaffolds_filtered/{sample}_scaffolds_ge{len}nt.{extension}", sample = SAMPLES, len = config["scaffold_minLen_filter"]["minlen"], extension = [ 'fasta', 'fasta.fai' ]), # Filtered SPAdes Scaffolds
         expand("data/scaffolds_filtered/{sample}_sorted.bam", sample = SAMPLES), # BWA mem alignment for fragment length analysis
-        expand("data/scaffolds_filtered/{sample}_{extension}", sample = SAMPLES, extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi' ]), # Prodigal ORF prediction output
+        expand("data/scaffolds_filtered/{sample}_{extension}", sample = SAMPLES, extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi', 'contig_ORF_count_list.txt' ]), # Prodigal ORF prediction output
         expand("data/scaffolds_filtered/{sample}_{extension}", sample = SAMPLES, extension = [ 'unfiltered.vcf', 'filtered.vcf', 'filtered.vcf.gz', 'filtered.vcf.gz.tbi' ]), # SNP calling output
         expand("data/scaffolds_filtered/{sample}_GC.bedgraph", sample = SAMPLES), # Percentage GC content per specified window
         expand("data/scaffolds_filtered/{sample}_IGVjs.html", sample = SAMPLES), # IGVjs html's
@@ -387,6 +387,7 @@ rule ORF_analysis:
         ORF_annotation_gff="data/scaffolds_filtered/{sample}_annotation.gff",
         zipped_gff3="data/scaffolds_filtered/{sample}_annotation.gff.gz",
         index_zipped_gff3="data/scaffolds_filtered/{sample}_annotation.gff.gz.tbi",
+        contig_ORF_count_list="data/scaffolds_filtered/{sample}_contig_ORF_count_list.txt"
     conda:
         "envs/scaffold_analyses.yaml"
     log:
@@ -407,6 +408,8 @@ prodigal -q -i {input} \
 -f {params.output_format} > {log} 2>&1
 bgzip -c {output.ORF_annotation_gff} 2>> {log} 1> {output.zipped_gff3}
 tabix -p gff {output.zipped_gff3} >> {log} 2>&1
+
+egrep "^>" {output.ORF_NT_fasta} | sed 's/_/ /6' | tr -d ">" | cut -f 1 -d " " | uniq -c > {output.contig_ORF_count_list}
         """
 
 rule Generate_contigs_metrics:
