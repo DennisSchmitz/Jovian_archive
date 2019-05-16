@@ -45,6 +45,7 @@ onstart:
     else:
         print("\tAll specified files are present!")
     shell("""
+        mkdir -p results
         echo -e "\nLogging pipeline settings..."
 
         echo -e "\tGenerating methodological hash (fingerprint)..."
