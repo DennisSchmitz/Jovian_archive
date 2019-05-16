@@ -23,7 +23,7 @@ import re
 import yaml
 
 
-fq_pattern = re.compile("(.*)_R?(1|2)\.f(ast)?q(\.gz)?")
+fq_pattern = re.compile("(.*)_R?(1|2).*\.f(ast)?q(\.gz)?")
 
 
 def main(args):
