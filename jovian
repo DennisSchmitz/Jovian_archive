@@ -186,7 +186,7 @@ if [ "${ARCHIVE:-}" == "TRUE" ]; then
         
         if [ -e data/ ]; then
             echo -e "Found the 'data/' folder, appending to archive..."
-            (tar --append --file=archive_${config_Jovian_run_identifier}.tar data/) &
+            (tar --append --file=archive_${config_Jovian_run_identifier}_jovian-${VERSION}.tar data/) &
             spinner
         else
             echo -e "Couldn't find the 'data/' folder in this working directory, skipping this folder in archiving"
@@ -194,7 +194,7 @@ if [ "${ARCHIVE:-}" == "TRUE" ]; then
 
         if [ -e logs/ ]; then
             echo -e "Found the 'logs/' folder, appending to archive..."
-            (tar --append --file=archive_${config_Jovian_run_identifier}.tar logs/) &
+            (tar --append --file=archive_${config_Jovian_run_identifier}_jovian-${VERSION}.tar logs/) &
             spinner
         else
             echo -e "Couldn't find the 'logs/' folder in this working directory, skipping this folder in archiving"
@@ -202,7 +202,7 @@ if [ "${ARCHIVE:-}" == "TRUE" ]; then
         
         if [ -e results/ ]; then
             echo -e "Found the 'results/' folder, appending to archive..."
-            (tar --append --file=archive_${config_Jovian_run_identifier}.tar results/) &
+            (tar --append --file=archive_${config_Jovian_run_identifier}_jovian-${VERSION}.tar results/) &
             spinner
         else
             echo -e "Couldn't find the 'results/' folder in this working directory, skipping this folder in archiving"
@@ -210,7 +210,7 @@ if [ "${ARCHIVE:-}" == "TRUE" ]; then
         
         if [ -e sample_sheet.yaml ]; then
             echo -e "Found 'sample_sheet.yaml', appending to archive..."
-            (tar --append --file=archive_${config_Jovian_run_identifier}.tar sample_sheet.yaml) &
+            (tar --append --file=archive_${config_Jovian_run_identifier}_jovian-${VERSION}.tar sample_sheet.yaml) &
             spinner
         else
             echo -e "Couldn't find the file 'sample_sheet.yaml' in this working directory, skipping this file in archiving"
@@ -218,16 +218,16 @@ if [ "${ARCHIVE:-}" == "TRUE" ]; then
         
         if [ -e profile/ ]; then
             echo -e "Found 'profile' folder, appending to archive..."
-            (tar --append --file=archive_${config_Jovian_run_identifier}.tar profile/) &
+            (tar --append --file=archive_${config_Jovian_run_identifier}_jovian-${VERSION}.tar profile/) &
             spinner
         else
             echo -e "Couldn't find the 'profile' folder in this working directory, skipping this file in archiving"
         fi
 
-        if [ -e archive_${config_Jovian_run_identifier}.tar ]; then
+        if [ -e archive_${config_Jovian_run_identifier}_jovian-${VERSION}.tar ]; then
             echo -e "\n\nFiles and folders have been appended to the archive."
             echo -e "Compressing archive..."
-            (gzip archive_${config_Jovian_run_identifier}.tar) &
+            (gzip archive_${config_Jovian_run_identifier}_jovian-${VERSION}.tar) &
             spinner
         else
             echo "No files and folders could be found for archiving."
