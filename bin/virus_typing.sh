@@ -5,9 +5,9 @@
 ###    Enterovirus: https://www.rivm.nl/mpf/typingservice/enterovirus/                                            ###
 ###    Hepatitis A: https://www.rivm.nl/mpf/typingservice/hav/                                                    ###
 ###    Hepatitis E: https://www.rivm.nl/mpf/typingservice/hev/                                                    ###
-###    Rotavirus:   [work in progress, coming soon]                                                               ###
+###    Rotavirus:   https://www.rivm.nl/mpf/typingservice/rotavirusa/                                             ###
 ###                                                                                                               ###
-### Usage: bin/fastqc_wrapper.sh {NoV|EV|HAV|HEV}                                                                 ###
+### Usage: bin/fastqc_wrapper.sh {NoV|EV|HAV|HEV|RVA}                                                             ###
 #####################################################################################################################
 
 # Check commandline argument, throw error if wrong, parse argument if right
@@ -18,6 +18,7 @@ then
    echo -e "\t'EV' for Enterovirus"
    echo -e "\t'HAV' for Hepatitis A"
    echo -e "\t'HEV' for Hepatitis E"
+   echo -e "\t'RVA' for Rotavirus A"
    echo -e "Please note, these parameters are case-sensitive."
    exit 1
 else
@@ -79,8 +80,15 @@ typingtool() {
         local extract_name="Orthohepevirus" # Genus
         local extract_field="7" # Genus
         local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with genus == Orthohepevirus found."
+    elif [ "${which_tt}" == "RVA" ]; then
+        local tt_url="https://www.rivm.nl/mpf/typingservice/rotavirusa/"
+        local parser_py="bin/typingtool_RVA_XML_to_csv_parser.py"
+        local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_RVA.fa}
+        local extract_name="Rotavirus" # Genus
+        local extract_field="7" # Genus
+        local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with genus == Rotavirus found."
     else
-        echo -e "Unknown typingtool specified, please specify either 'NoV', 'EV', 'HAV' or 'HEV'"
+        echo -e "Unknown typingtool specified, please specify either 'NoV', 'EV', 'HAV', 'HEV' or 'RVA'."
         exit 1
     fi
 
