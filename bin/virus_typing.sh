@@ -91,9 +91,18 @@ typingtool() {
     extract_fasta "${file_path}" "${query_fasta}" "${extract_name}" "${extract_field}"
     if [ -s "${query_fasta}" ]
     then
-        echo -e "Sample:\t${sample_name}\t${which_tt} scaffolds found and sent to typingtool, waiting for results... This may take a while..."
+        echo -e "Sample:\t${sample_name}\tScaffolds compatible with the ${which_tt} tool found, sent to typingtool service, waiting for results... This may take a while..."
         submit_query_fasta "${query_fasta}" "${tt_xml}" "${tt_url}"
-        python ${parser_py} "${sample_name}" "${tt_xml}" "${tt_csv}"
+
+        # Sadly, the current version of the typingtool service has some issues, resulting in errors because it can't handle the request.
+        ### One of two things can happen; you get a terse xml output that states "502 Proxy Error" or you get a verbose html output that states "Error reading from remote server". Hence, the double grep OR statement...
+        if grep -q -e "502 Proxy Error" -e "Error reading from remote server" ${tt_xml}; then
+            echo -e "Sample:\t${sample_name}\tQuery cannot be handled by typingtool... See this thread for further explanation: https://github.com/DennisSchmitz/Jovian/issues/51"
+        else
+            # If error code is not found; parse the XML
+            python ${parser_py} "${sample_name}" "${tt_xml}" "${tt_csv}"
+        fi
+
     else
         echo -e "${nothing_found_message}"
     fi
@@ -107,7 +116,7 @@ do
     typingtool "${FILE}" "${BASENAME}" "${WHICH_TT}"
 done
 
-if test -n "$(find data/virus_typing_tables/ -maxdepth 1 -name "*_${WHICH_TT}.csv" -print -quit)"
+if [ -n "$( find data/virus_typing_tables/ -maxdepth 1 -name "*_${WHICH_TT}.csv" -print -quit )" ]
 then
     # If any files were created in the first place; concat individual outputs into one combined output, the awk magic is to not repeat headers
     gawk 'FNR==1 && NR!=1 { next; } { print }' data/virus_typing_tables/*_${WHICH_TT}.csv > results/all_${WHICH_TT}-TT.csv
