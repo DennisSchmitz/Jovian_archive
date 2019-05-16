@@ -423,7 +423,7 @@ if [ "${REBUILD_ARCHIVE}" == "TRUE" ]; then
     exit 0
     else
         echo -e "There's no Jovian-archive present."
-    exit 0
+        exit 0
     fi
 fi
 ### Install databases, as specified via CLI argument '-id'
