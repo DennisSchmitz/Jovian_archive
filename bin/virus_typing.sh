@@ -5,9 +5,9 @@
 ###    Enterovirus: https://www.rivm.nl/mpf/typingservice/enterovirus/                                            ###
 ###    Hepatitis A: https://www.rivm.nl/mpf/typingservice/hav/                                                    ###
 ###    Hepatitis E: https://www.rivm.nl/mpf/typingservice/hev/                                                    ###
-###    Rotavirus:   [work in progress, coming soon]                                                               ###
+###    Rotavirus:   https://www.rivm.nl/mpf/typingservice/rotavirusa/                                             ###
 ###                                                                                                               ###
-### Usage: bin/fastqc_wrapper.sh {NoV|EV|HAV|HEV}                                                                 ###
+### Usage: bin/fastqc_wrapper.sh {NoV|EV|HAV|HEV|RVA}                                                             ###
 #####################################################################################################################
 
 # Check commandline argument, throw error if wrong, parse argument if right
@@ -18,6 +18,7 @@ then
    echo -e "\t'EV' for Enterovirus"
    echo -e "\t'HAV' for Hepatitis A"
    echo -e "\t'HEV' for Hepatitis E"
+   echo -e "\t'RVA' for Rotavirus A"
    echo -e "Please note, these parameters are case-sensitive."
    exit 1
 else
@@ -79,8 +80,15 @@ typingtool() {
         local extract_name="Orthohepevirus" # Genus
         local extract_field="7" # Genus
         local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with genus == Orthohepevirus found."
+    elif [ "${which_tt}" == "RVA" ]; then
+        local tt_url="https://www.rivm.nl/mpf/typingservice/rotavirusa/"
+        local parser_py="bin/typingtool_RVA_XML_to_csv_parser.py"
+        local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_RVA.fa}
+        local extract_name="Rotavirus" # Genus
+        local extract_field="7" # Genus
+        local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with genus == Rotavirus found."
     else
-        echo -e "Unknown typingtool specified, please specify either 'NoV', 'EV', 'HAV' or 'HEV'"
+        echo -e "Unknown typingtool specified, please specify either 'NoV', 'EV', 'HAV', 'HEV' or 'RVA'."
         exit 1
     fi
 
@@ -97,7 +105,7 @@ typingtool() {
         # Sadly, the current version of the typingtool service has some issues, resulting in errors because it can't handle the request.
         ### One of two things can happen; you get a terse xml output that states "502 Proxy Error" or you get a verbose html output that states "Error reading from remote server". Hence, the double grep OR statement...
         if grep -q -e "502 Proxy Error" -e "Error reading from remote server" ${tt_xml}; then
-            echo -e "Sample:\t${sample_name}\tQuery cannot be handled by typingtool... See this thread for further explanation: https://github.com/DennisSchmitz/Jovian/issues/51"
+            echo -e "Sample:\t${sample_name}\tQuery cannot currently be handled by typingtool... Please try again later, for further information, see: https://github.com/DennisSchmitz/Jovian/issues/51"
         else
             # If error code is not found; parse the XML
             python ${parser_py} "${sample_name}" "${tt_xml}" "${tt_csv}"

@@ -403,7 +403,7 @@ fi
 
 ### Virus typing block, as specified via CLI argument '--virus-typing'
 if [ "${VIRUS_TYPING:-}" == "TRUE" ]; then
-    if [[ "${WHICH_TT}" =~ ^(NoV|EV|HAV|HEV)$ ]]; then
+    if [[ "${WHICH_TT}" =~ ^(NoV|EV|HAV|HEV|RVA)$ ]]; then
         if [ -e data/tables/ ]; then
             bash bin/virus_typing.sh ${WHICH_TT}
             exit 0
@@ -412,7 +412,7 @@ if [ "${VIRUS_TYPING:-}" == "TRUE" ]; then
             exit 1
         fi
     else
-        echo -e "\nVirus typing error (--virus-typing), unknown parameter '"${WHICH_TT}"'.\n\tPlease specify either 'NoV', 'EV', 'HAV' or 'HEV'."
+        echo -e "\nVirus typing error (--virus-typing), unknown parameter '"${WHICH_TT}"'.\n\tPlease specify either 'NoV', 'EV', 'HAV', 'HEV' or 'RVA'."
         exit 1
     fi
 fi
