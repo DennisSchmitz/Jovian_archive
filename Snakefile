@@ -25,10 +25,6 @@ SAMPLES = {}
 with open(config["sample_sheet"]) as sample_sheet_file:
     SAMPLES = yaml.load(sample_sheet_file) # SAMPLES is a dict with sample in the form sample > read number > file. E.g.: SAMPLES["sample_1"]["R1"] = "x_R1.gz"
 
-# Pretty-print sample sheet for debugging / logging.
-#print("Samples:")
-#pprint.pprint(SAMPLES)
-
 #################################################################################
 ##### The `onstart` checker codeblock                                       #####
 #################################################################################
@@ -47,8 +43,36 @@ onstart:
         print("This file is not available or accessible: %s" % e)
         sys.exit(1)
     else:
-        print("...All specified files are present!")
-#    shell("echo -e '\n\tSnakemake is starting...\n\t\tPlaceholder for required configfile checker code.\n\t\tPlacholder for .ncbirc BLAST db aliases.\n\t\tPlaceholder for Jupyter config checker.\n\t\tPlaceholder Jupyter Notebook theme settings\n'")
+        print("\tAll specified files are present!")
+    shell("""
+        mkdir -p results
+        echo -e "\nLogging pipeline settings..."
+
+        echo -e "\tGenerating methodological hash (fingerprint)..."
+        echo -e "This is the link to the code used for this analysis:\thttps://github.com/DennisSchmitz/Jovian/tree/$(git log -n 1 --pretty=format:"%H")" > results/log_git.txt
+        echo -e "This code with unique fingerprint $(git log -n1 --pretty=format:"%H") was committed by $(git log -n1 --pretty=format:"%an <%ae>") at $(git log -n1 --pretty=format:"%ad")" >> results/log_git.txt
+
+        echo -e "\tGenerating full software list of current Conda environment (\"Jovian_master\")..."
+        conda list > results/log_conda.txt
+
+        echo -e "\tGenerating used databases log..."
+        echo -e "==> Homo Sapiens NCBI GRch38 NO DECOY genome: <==\n$(ls -lah $(grep "    HuGo_ref:" profile/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" > results/log_db.txt
+        echo -e "\n==> Virus-Host Interaction Database: <==\n$(ls -lah $(grep "    virusHostDB:" profile/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> results/log_db.txt
+        echo -e "\n==> Krona Taxonomy Database: <==\n$(ls -lah $(grep "    Krona_taxonomy:" profile/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> results/log_db.txt
+        echo -e "\n==> NCBI new_taxdump Database: <==\n$(ls -lah $(grep "    NCBI_new_taxdump_rankedlineage:" profile/pipeline_parameters.yaml | cut -f 2 -d ":") $(grep "    NCBI_new_taxdump_host:" profile/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> results/log_db.txt
+        echo -e "\n==> NCBI Databases as specified in ~/.ncbirc: <==\n$(ls -lah $(grep "BLASTDB=" ~/.ncbirc | cut -f 2 -d "=" | tr "::" " "))\n" >> results/log_db.txt
+        
+        echo -e "\tGenerating config file log..."
+        rm -f results/log_config.txt
+        for file in profile/*.yaml
+        do
+            echo -e "\n==> Contents of file \"${{file}}\": <==" >> results/log_config.txt
+            cat ${{file}} >> results/log_config.txt
+            echo -e "\n\n" >> results/log_config.txt
+        done
+    """)
+
+#    shell("\n\t\tPlaceholder for Jupyter config checker.\n\t\tPlaceholder Jupyter Notebook theme settings\n'")
 
 #################################################################################
 ##### Specify Jovian's final output:                                        #####
@@ -68,7 +92,7 @@ rule all:
         expand("data/scaffolds_raw/{sample}/scaffolds.fasta", sample = SAMPLES), # SPAdes assembly output
         expand("data/scaffolds_filtered/{sample}_scaffolds_ge{len}nt.{extension}", sample = SAMPLES, len = config["scaffold_minLen_filter"]["minlen"], extension = [ 'fasta', 'fasta.fai' ]), # Filtered SPAdes Scaffolds
         expand("data/scaffolds_filtered/{sample}_sorted.bam", sample = SAMPLES), # BWA mem alignment for fragment length analysis
-        expand("data/scaffolds_filtered/{sample}_{extension}", sample = SAMPLES, extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi' ]), # Prodigal ORF prediction output
+        expand("data/scaffolds_filtered/{sample}_{extension}", sample = SAMPLES, extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi', 'contig_ORF_count_list.txt' ]), # Prodigal ORF prediction output
         expand("data/scaffolds_filtered/{sample}_{extension}", sample = SAMPLES, extension = [ 'unfiltered.vcf', 'filtered.vcf', 'filtered.vcf.gz', 'filtered.vcf.gz.tbi' ]), # SNP calling output
         expand("data/scaffolds_filtered/{sample}_GC.bedgraph", sample = SAMPLES), # Percentage GC content per specified window
         expand("data/scaffolds_filtered/{sample}_IGVjs.html", sample = SAMPLES), # IGVjs html's
@@ -363,6 +387,7 @@ rule ORF_analysis:
         ORF_annotation_gff="data/scaffolds_filtered/{sample}_annotation.gff",
         zipped_gff3="data/scaffolds_filtered/{sample}_annotation.gff.gz",
         index_zipped_gff3="data/scaffolds_filtered/{sample}_annotation.gff.gz.tbi",
+        contig_ORF_count_list="data/scaffolds_filtered/{sample}_contig_ORF_count_list.txt"
     conda:
         "envs/scaffold_analyses.yaml"
     log:
@@ -383,6 +408,8 @@ prodigal -q -i {input} \
 -f {params.output_format} > {log} 2>&1
 bgzip -c {output.ORF_annotation_gff} 2>> {log} 1> {output.zipped_gff3}
 tabix -p gff {output.zipped_gff3} >> {log} 2>&1
+
+egrep "^>" {output.ORF_NT_fasta} | sed 's/_/ /6' | tr -d ">" | cut -f 1 -d " " | uniq -c > {output.contig_ORF_count_list}
         """
 
 rule Generate_contigs_metrics:
@@ -778,48 +805,44 @@ python bin/concat_filtered_vcf.py {params.vcf_folder_glob} {output} > {log} 2>&1
 
 onerror:
     shell("""
-    rm -f data/scaffolds_filtered/*.html
-    rm -f results/IGVjs_index.html
+        rm -f data/scaffolds_filtered/*.html
+        rm -f results/IGVjs_index.html
     """)
 
 onsuccess:
     shell("""
-echo -e "\nCleaning up..."
-echo -e "\tRemoving empty folders..."
-find data -depth -type d -not \( -path data/scaffolds_raw -prune \) -empty -delete
+        echo -e "\nCleaning up..."
+        echo -e "\tRemoving empty folders..."
+        find data -depth -type d -not \( -path data/scaffolds_raw -prune \) -empty -delete
 
-echo -e "\tRemoving temporary files..."
-if [ "{config[remove_temp]}" != "0" ]
-then
-#    echo -e "\t\tValue is NOT 0 --> {config[remove_temp]}"   # DEBUG only
-    rm -rf data/FastQC_pretrim/
-    rm -rf data/FastQC_posttrim/
-    rm -rf data/cleaned_fastq/fastq_without_HuGo_removal/
-    rm -f data/scaffolds_filtered/*_insert_size_histogram.pdf
-    rm -f data/scaffolds_filtered/*_insert_size_metrics.txt
-    rm -f data/scaffolds_filtered/*_MinLenFiltSummary.stats
-    rm -f data/scaffolds_filtered/*_perMinLenFiltScaffold.stats
-    rm -f data/scaffolds_filtered/*nt.fasta.sizes
-    rm -f data/scaffolds_filtered/*.windows
-    rm -f data/taxonomic_classification/*.taxtab
-    rm -f data/taxonomic_classification/*.taxMagtab
-else
-#    echo -e "\t\tValue is 0 --> {config[remove_temp]}"   # DEBUG only
-    echo -e "\t\tYou chose to not remove temp files: the human genome alignment files are not removed."
-fi
+        echo -e "\tRemoving temporary files..."
+        if [ "{config[remove_temp]}" != "0" ]
+        then
+        #    echo -e "\t\tValue is NOT 0 --> {config[remove_temp]}"   # DEBUG only
+            rm -rf data/FastQC_pretrim/
+            rm -rf data/FastQC_posttrim/
+            rm -rf data/cleaned_fastq/fastq_without_HuGo_removal/
+            rm -f data/scaffolds_filtered/*_insert_size_histogram.pdf
+            rm -f data/scaffolds_filtered/*_insert_size_metrics.txt
+            rm -f data/scaffolds_filtered/*_MinLenFiltSummary.stats
+            rm -f data/scaffolds_filtered/*_perMinLenFiltScaffold.stats
+            rm -f data/scaffolds_filtered/*nt.fasta.sizes
+            rm -f data/scaffolds_filtered/*.windows
+            rm -f data/taxonomic_classification/*.taxtab
+            rm -f data/taxonomic_classification/*.taxMagtab
+        else
+        #    echo -e "\t\tValue is 0 --> {config[remove_temp]}"   # DEBUG only
+            echo -e "\t\tYou chose to not remove temp files: the human genome alignment files are not removed."
+        fi
 
-echo -e "\tGenerating methodological hash (fingerprint)..."
-echo -e "This is the link to the code used for this analysis:\thttps://github.com/DennisSchmitz/Jovian/tree/$(git log -n 1 --pretty=format:"%H")" > results/git_log.txt
-echo -e "This code with unique fingerprint $(git log -n1 --pretty=format:"%H") was committed by $(git log -n1 --pretty=format:"%an <%ae>") at $(git log -n1 --pretty=format:"%ad")" >> results/git_log.txt
+        echo -e "\tCreating symlinks for the interactive genome viewer..."
+        bin/set_symlink.sh
 
-echo -e "\tCreating symlinks for the interactive genome viewer..."
-bin/set_symlink.sh
+        echo -e "\tGenerating Snakemake report..."
+        snakemake --unlock --config sample_sheet=sample_sheet.yaml
+        snakemake --report results/snakemake_report.html --config sample_sheet=sample_sheet.yaml
 
-echo -e "\tGenerating Snakemake report..."
-snakemake --unlock --config sample_sheet=sample_sheet.yaml
-snakemake --report results/snakemake_report.html --config sample_sheet=sample_sheet.yaml
-
-echo -e "Finished"
-         """)
+        echo -e "Finished"
+    """)
     
 # perORFcoverage output file van de bbtools scaffold metrics nog importeren in data wrangling part!
