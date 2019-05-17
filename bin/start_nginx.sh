@@ -23,6 +23,8 @@ parse_yaml() {
 }
 
 eval $(parse_yaml profile/pipeline_parameters.yaml "config_")
+currentuser=$(whoami)
+
 
 echo "Selected port for NGINX is: $config_server_info_port "
 port=$config_server_info_port
@@ -116,10 +118,8 @@ server {
 EOF
 
 cp /tmp/etc/nginx/sites.d/default-site.conf $CONDA_PREFIX/etc/nginx/sites.d/default-site.conf
-chmod 777 /tmp/etc/nginx/sites.d/
-chmod 777 /tmp/etc/nginx/sites.d/*
-chmod 777 /tmp/etc/nginx/default-site/
-chmod 777 /tmp/etc/nginx/default-site/*
+
+find /tmp/etc/nginx/ -user ${currentuser} -exec chmod 777 {} \;
    nginx&
    sleep 3
 
