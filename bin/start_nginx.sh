@@ -116,6 +116,8 @@ server {
 EOF
 
 cp /tmp/etc/nginx/sites.d/default-site.conf $CONDA_PREFIX/etc/nginx/sites.d/default-site.conf
+chmod 775 /tmp/etc/nginx/sites.d/
+chmod 775 /tmp/etc/nginx/default-site/
    nginx&
    sleep 3
 
