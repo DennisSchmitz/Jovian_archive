@@ -69,9 +69,8 @@ then
 server {
     listen       ${port};
     server_name  localhost;
-
+    root   /tmp/etc/nginx/default-site/;
     location / {
-        root   /tmp/etc/nginx/default-site/;
         index  index.html index.htm;
 
         if (\$request_method = 'OPTIONS') {
@@ -116,6 +115,7 @@ server {
 }
 EOF
 
+cp /tmp/etc/nginx/sites.d/default-site.conf $CONDA_PREFIX/etc/nginx/sites.d/default-site.conf
    nginx&
    sleep 3
 

@@ -384,7 +384,9 @@ elif [ "$choices_installeranswers_igvjs" == "Y" ]; then
         echo -e "Done with installing IGVjs"
     fi
 elif [ "$choices_installeranswers_igvjs" == "N" ]; then
+    if [ ! -e ${IGVJS_LOCATION} ]; then
     echo -e "Skipping installation of IGVjs in your working directory\nIf you want to use IGVjs then please use the jovian command to install it in your working directory. \nSee the Jovian manual for more information and instructions."
+    fi
 fi
 
 ### Install IGVjs, as specified via the CLI argument '-ii'
