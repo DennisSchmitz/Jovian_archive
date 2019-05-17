@@ -48,7 +48,10 @@ for elem in parsedXML.findall('.//sequence'):
                 if tmp_result_id=="blast":
                     inner_dict['blast_concluded-name'] = item.find('.//concluded-name').text
                     inner_dict['blast_absolute-similarity'] = item.find('.//absolute-similarity').text
-                    inner_dict['blast_refseq'] = item.find('.//refseq').text
+                    try:
+                        inner_dict['blast_refseq'] = item.find('.//refseq').text
+                    except:
+                        inner_dict['blast_refseq'] = item.find('.//refseq')
                     inner_dict['blast_reverse-complement'] = item.find('.//reverse-compliment').text
             elif item.tag=='conclusion':
                 tmp_conclusion_type = item.attrib.get('type')

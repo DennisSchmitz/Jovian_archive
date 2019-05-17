@@ -1,11 +1,3 @@
-### Profiles parameters: (See: https://snakemake.readthedocs.io/en/stable/executable.html?highlight=profile#profiles AND https://github.com/snakemake-profiles/doc )
-#dryrun: false
-#verbose: false
-#printshellcmds: true
-#quiet: false
-#reason: true
-#keep-going: false
-#notemp: true
 local-cores: 4
 cores: 120
 config:

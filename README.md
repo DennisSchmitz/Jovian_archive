@@ -4,7 +4,7 @@
 
 ___
 
-<img align="right" src="files/GitHub_images/Jovian_logo.png">  
+<img align="right" src="../assets/images/Jovian_logo.png">
 
 ## Table of content  
 - [Pipeline description](#pipeline-description)  
@@ -65,28 +65,32 @@ An audit trail, used for clinical reproducability and logging, is generated and 
 
 ___
 
-![Jovian_rulegraph.png](files/GitHub_images/rulegraph_Jovian.png)
+![Jovian_rulegraph.png](../assets/images/rulegraph_Jovian.png)
 ___
 
 ## Pipeline requirements
 Jovian has two software dependencies, miniConda and IGVjs, which will be automatically installed by the pipeline on first use. It also depends on several databases that you have to download yourself, as decribed below. And it requires some configuration, also explained below.  
 
+### System rights
+In order to run Jovian there are very little additional system rights necessary, Root and/or sudo-rights are not required.  
+It is however necessary to have read and write access to the `/tmp` folder on your system. This won't be a problem most of the time since the `/tmp` folder is usually free to read from and write to. However, it is best to check this with your system administrator(s).
+
 ### Software  
 |Software name|Installation instructions|Note|  
 |:---|:---|:---|  
-|```git```|https://git-scm.com/downloads|Is usually already installed on Linux systems.|  
-|```curl```|https://curl.haxx.se/|Should already be included in most (all?) Linux distro's.|
-|```which```|http://savannah.gnu.org/projects/which|Should already be included in most (all?) Linux distro's.|
-|```bzip2```|http://www.bzip.org/|Should already be included in most (all?) Linux distro's.|
+|```git```| https://git-scm.com/downloads | Is usually already installed on Linux systems.|  
+|```curl```| https://curl.haxx.se/ | Should already be included in most (all?) Linux distro's.|
+|```which```| http://savannah.gnu.org/projects/which | Should already be included in most (all?) Linux distro's.|
+|```bzip2```| http://www.bzip.org/ | Should already be included in most (all?) Linux distro's.|
 
 ### Databases  
 |Database name|Link|Installation instructions|
 |:---|:---|:---|
-|```NCBI NT & NR```|ftp://ftp.ncbi.nlm.nih.gov/blast/db/|[link](#blast-nt-nr-and-taxdb-databases)|
-|```NCBI Taxdump```|ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/|[link](#blast-nt-nr-and-taxdb-databases)|
-|```NCBI New_taxdump```|ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/|[link](#ncbi-new_taxdump-database)|
-|```Latest Human Genome```|https://support.illumina.com/sequencing/sequencing_software/igenome.html|[link](#human-genome)|
-|```Virus-Host interaction database```|http://www.genome.jp/virushostdb/note.html|[link](#virus-host-interaction-database)|
+|```NCBI NT & NR```| ftp://ftp.ncbi.nlm.nih.gov/blast/db/ | [link](#blast-nt-nr-and-taxdb-databases)|
+|```NCBI Taxdump```| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/ | [link](#blast-nt-nr-and-taxdb-databases)|
+|```NCBI New_taxdump```| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/ | [link](#ncbi-new_taxdump-database)|
+|```Latest Human Genome```| https://support.illumina.com/sequencing/sequencing_software/igenome.html | [link](#human-genome)|
+|```Virus-Host interaction database```| http://www.genome.jp/virushostdb/note.html | [link](#virus-host-interaction-database)|
 
 ___
 

@@ -16,3 +16,5 @@ private_*
 .github/
 .vscode/
 profile/variables.yaml
+archive_*.tar.gz
+.nfs*
