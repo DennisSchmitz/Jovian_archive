@@ -120,6 +120,7 @@ EOF
 cp /tmp/etc/nginx/sites.d/default-site.conf $CONDA_PREFIX/etc/nginx/sites.d/default-site.conf
 
 find /tmp/etc/nginx/ -user ${currentuser} -exec chmod 777 {} \;
+
    nginx&
    sleep 3
 
