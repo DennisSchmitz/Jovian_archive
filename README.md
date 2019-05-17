@@ -71,6 +71,10 @@ ___
 ## Pipeline requirements
 Jovian has two software dependencies, miniConda and IGVjs, which will be automatically installed by the pipeline on first use. It also depends on several databases that you have to download yourself, as decribed below. And it requires some configuration, also explained below.  
 
+### System rights
+In order to run Jovian there are very little additional system rights necessary, Root and/or sudo-rights are not required.  
+It is however necessary to have read and write access to the `/tmp` folder on your system. This won't be a problem most of the time since the `/tmp` folder is usually free to read from and write to. However, it is best to check this with your system administrator(s).
+
 ### Software  
 |Software name|Installation instructions|Note|  
 |:---|:---|:---|  
