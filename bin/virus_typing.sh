@@ -36,7 +36,7 @@ extract_fasta() {
     local capture_name="${3}"
     local capture_field="${4}"
     # Extract the scaffold name and sequence of a certain taxonomic rank from the complete Jovian taxonomic output and write it as a fasta
-    gawk -F "\t" -v name="${capture_name}" -v field="${capture_field}" '$field == name {print ">" $2 "\n" $24}' < ${input} > ${output}
+    gawk -F "\t" -v name="${capture_name}" -v field="${capture_field}" '$field == name {print ">" $2 "\n" $25}' < ${input} > ${output}
 }
 submit_query_fasta() {
     local input="${1}"

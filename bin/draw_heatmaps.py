@@ -207,7 +207,7 @@ def read_classifications(infile):
     #print(classifications_df.columns)
 
     # Select only relevant columns:
-    classifications_df = classifications_df[[ "Sample_name", "#ID", "taxID", 
+    classifications_df = classifications_df[[ "Sample_name", "Scaffold_name", "taxID", 
                                              "tax_name", "superkingdom", 
                                              "kingdom", "phylum", "class", 
                                              "order", "family", "genus",
@@ -335,7 +335,7 @@ def draw_heatmaps(df, outfile, title, taxonomic_rank, colour):
             #If it is not empty, continue normally
 
             samples = df["Sample_name"].astype(str)
-            scaffolds = df["#ID"].astype(str)
+            scaffolds = df["Scaffold_name"].astype(str)
             assigned = df["tax_name"].astype(str)
             taxonomy = df[taxonomic_rank].astype(str)
             reads = df["reads"].astype(int)
