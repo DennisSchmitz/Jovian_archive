@@ -143,18 +143,17 @@ Input:
   --input -i DIR                    This is the folder containing your input fastq files.
                                     Default is 'raw_data/' and only relative paths are accepted.
 Output:
-  data/                             Contains detailed intermediate files
-  logs/                             Contains all log files
+  data/                             Contains detailed intermediate files.
+  logs/                             Contains all log files.
   results/                          Contains all final results, these are visualized via the
-                                    web-report (Notebook_report.ipynb)
+                                    web-report (Notebook_report.ipynb).
 Parameters:
   --virus-typing [NoV|EV|HAV|HEV]   After a Jovian analyses has completed, do viral typing for
                                     Norovirus (NoV), Enterovirus (EV), Hepatitis A (HAV) or
                                     Hepatitis E (HEV).
-  --help -h                         Print the Jovian help document
-  --snakemake-help -sh              Print the Snakemake help document
-  --clean                           Removes Jovian output
-  --archive                         Archives the output of a Jovian analysis.
+  --help -h                         Print the Jovian help document.
+  --snakemake-help -sh              Print the Snakemake help document.
+  --clean                           Removes Jovian output.
   --keep-going -k                   Useful snakemake command: Go on with independent jobs if
                                     a job fails.
   --dry-run -n                      Useful snakemake command: Do not execute anything, and
@@ -163,10 +162,22 @@ Parameters:
                                     directory.
   --quiet -q                        Useful snakemake command: Do not output any progress or
                                     rule information.
+Archiving Jovian results:
+  --archive                         Archives the output of a Jovian analysis into single
+                                    compressed file.
+  --rebuild-archive                 Rebuilds Jovian results and logs from a previously made 
+                                    archive. It is important to use the same version of Jovian
+                                    as was initially used to build the archive. N.B. databases
+                                    are not restored.
 Installation:
-  --install-dependencies -ic        Install the required software dependencies
-  --install-igvjs -ii               Install IGVjs dependency
-  --install-databases -id           Install required databases
+  --install-dependencies -ic        Install the required software dependencies.
+  --install-igvjs -ii               Install IGVjs dependency.
+  --install-databases -id           Install required databases.
+Nginx (debug only):
+  --start-nginx                     Starts the nginx process.
+  --stop-nginx                      Stops the nginx process.
+Other:
+  --version -v                      Prints the version of Jovian.
 HELP_USAGE
     exit 0
 fi
