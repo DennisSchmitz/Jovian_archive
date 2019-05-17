@@ -148,9 +148,9 @@ Output:
   results/                          Contains all final results, these are visualized via the
                                     web-report (Notebook_report.ipynb).
 Parameters:
-  --virus-typing [NoV|EV|HAV|HEV]   After a Jovian analyses has completed, do viral typing for
-                                    Norovirus (NoV), Enterovirus (EV), Hepatitis A (HAV) or
-                                    Hepatitis E (HEV).
+  --virus-typing [NoV|EV|HAV|       After a Jovian analyses has completed, do viral typing for
+                  HEV|RVA]          Norovirus (NoV), Enterovirus (EV), Hepatitis A (HAV), 
+                                    Hepatitis E (HEV) or Rotavirus A (RVA).
   --help -h                         Print the Jovian help document.
   --snakemake-help -sh              Print the Snakemake help document.
   --clean                           Removes Jovian output.
