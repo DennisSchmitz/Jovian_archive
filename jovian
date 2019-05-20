@@ -91,6 +91,10 @@ do
         REBUILD_ARCHIVE="TRUE"
         shift # Next
         ;;
+        --configure-jupyter)
+        CONFIG_JUP="TRUE"
+        shift # Next
+        ;;
         --virus-typing)
         VIRUS_TYPING="TRUE"
         WHICH_TT="$2"
@@ -504,6 +508,24 @@ fi
 if [ "${STOP_NGINX}" == "TRUE" ]; then
     nginx -s quit
     echo "nginx has been stopped"
+    exit 0
+fi
+
+if [ "${CONFIG_JUP}" == "TRUE" ]; then
+    jt -t grade3 -fs 95 -altp -tfs 11 -nfs 115 -cellw 88% -T
+    sed -i '1704,1706d' ~/.jupyter/custom/custom.css
+    sed -i '35,55d' ~/.jupyter/custom/custom.css
+    cat files/Jupyter_notebook/overrides.css >> ~/.jupyter/custom/custom.css
+    jupyter notebook --generate-config
+    sed -i "s/#c.NotebookApp.allow_remote_access = False/c.NotebookApp.allow_remote_access = True/g" ~/.jupyter/jupyter_notebook_config.py
+    sed -i "s/#c.NotebookApp.ip = 'localhost'/c.NotebookApp.ip = '${SET_HOSTNAME}'/g" ~/.jupyter/jupyter_notebook_config.py
+    sed -i "s/#c.NotebookApp.port = 8888/c.NotebookApp.port = 8890/g" ~/.jupyter/jupyter_notebook_config.py
+    sed -i "s@#c.ContentsManager.root_dir = '/'@c.ContentsManager.root_dir = '/'@g" ~/.jupyter/jupyter_notebook_config.py
+    sed -i "s/#c.NotebookApp.open_browser = True/c.NotebookApp.open_browser = False/g" ~/.jupyter/jupyter_notebook_config.py
+    cp files/Jupyter_notebook/edit.json ~/.jupyter/nbconfig
+    cp files/Jupyter_notebook/notebook.json ~/.jupyter/nbconfig
+    cp files/Jupyter_notebook/tree.json ~/.jupyter/nbconfig
+    echo "Done - Jupyter notebooks is configured and ready for use"
     exit 0
 fi
 

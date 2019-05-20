@@ -1,0 +1,23 @@
+
+div.output_area {
+    display: -webkit-box;
+    padding: 13px;
+}
+div#maintoolbar {
+    position: relative;
+    width: 100%;
+    background: #333;
+   }
+#maintoolbar {
+    margin-bottom: -3px;
+    margin-top: 0px;
+    border: 0px;
+    min-height: 27px;
+    padding-top: 2px;
+    padding-bottom: 0px;
+   }
+#maintoolbar .container {
+    width: 100%;
+    margin-right: auto;
+    padding-left: 0;
+   }
