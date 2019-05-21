@@ -11,7 +11,8 @@
       "hide_input_all/main": true,
       "toc2/main": true,
       "varInspector/main": true,
-      "splitcell/splitcell": true
+      "splitcell/splitcell": true,
+      "init_cell/main": true
     },
     "ExecuteTime": {
       "clear_timings_on_clear_output": true
