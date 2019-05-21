@@ -31,7 +31,7 @@ ___
 ## Pipeline description  
 
 The pipeline automatically processes raw Illumina NGS data from human clinical matrices (faeces, serum, etc.) into clinically relevant information such as taxonomic classification, viral typing and minority variant identification (quasispecies).
-Wetlab personnel can start, configure and interpret results via interactive Jupyter Notebook websites that are included in the pipeline. This makes doing metagenomics analyses much more accessible and user-friendly since minimal command-line skills are required.  
+Wetlab personnel can start, configure and interpret results via an interactive web-report. This makes doing metagenomics analyses much more accessible and user-friendly since minimal command-line skills are required.  
 
 ### Pipeline features    
 - Data quality control (QC) and cleaning.  
@@ -65,23 +65,23 @@ An audit trail, used for clinical reproducability and logging, is generated and 
 
 ___
 
-![Jovian_rulegraph.png](../assets/images/rulegraph_Jovian.png)
+![Jovian_rulegraph.png](../assets/images/rulegraph_Jovian.png?raw=true)
 ___
 
 ## Pipeline requirements
-Jovian has two software dependencies, miniConda and IGVjs, which will be automatically installed by the pipeline on first use. It also depends on several databases that you have to download yourself, as decribed below. And it requires some configuration, also explained below.  
+Jovian has two major software dependencies, miniConda and IGVjs. On first usage, you will be asked if you want to automatically install these. It also depends on the [following software](#software), but most systems will have these installed already. An analysis also depends on several databases that you have to download yourself, as [described below](#databases). And it requires some configuration, as explained [here](#configuration).  
 
 ### System rights
 In order to run Jovian there are very little additional system rights necessary, Root and/or sudo-rights are not required.  
 It is however necessary to have read and write access to the `/tmp` folder on your system. This won't be a problem most of the time since the `/tmp` folder is usually free to read from and write to. However, it is best to check this with your system administrator(s).
 
 ### Software  
-|Software name|Installation instructions|Note|  
-|:---|:---|:---|  
-|```git```| https://git-scm.com/downloads | Is usually already installed on Linux systems.|  
-|```curl```| https://curl.haxx.se/ | Should already be included in most (all?) Linux distro's.|
-|```which```| http://savannah.gnu.org/projects/which | Should already be included in most (all?) Linux distro's.|
-|```bzip2```| http://www.bzip.org/ | Should already be included in most (all?) Linux distro's.|
+|Software name|Website|  
+|:---|:---|  
+|```git```| https://git-scm.com/downloads |  
+|```curl```| https://curl.haxx.se/ |  
+|```which```| http://savannah.gnu.org/projects/which |  
+|```bzip2```| http://www.bzip.org/ |  
 
 ### Databases  
 |Database name|Link|Installation instructions|
@@ -217,13 +217,61 @@ ___
 - _I don't care about removing the human data, I have cell-lines which are from other species, can I also automatically remove that?_
   - Yes. Although we focus on patient-privacy since it was developed for clinical samples, you can enter any reference sequence you like. You can do that by changing `HuGo_ref: /path/to/file/genome.fa` into the location of your desired background removal organisms in the [config-file](profile/pipeline_parameters.yaml). The only limitations are that it is a `fasta` file and that is indexed via `bowtie2`, although this latter process will be automated in a future version.  
 - _How can some scaffolds still be assigned to `Homo sapiens`? I thought Jovian removed human data?_
-  - The human genome is a consensus genome of people around the globe. It does not capture all diversity in the human gene pool and therefore cannot completely remove all human data. You can improve this by selecting a reference genome that is closer to your target population, e.g. if you sequence mainly Dutch samples, the [GoNL genome](http://www.nlgenome.nl/) might be a better fit.  
+  - The human genome is a consensus genome built from many individuals from around the globe. It does not capture all diversity in the human gene pool and therefore cannot completely remove all human data. You can improve this by selecting a reference genome that is closer to your target population, e.g. if you sequence mainly Dutch samples, the [GoNL genome](http://www.nlgenome.nl/) might be better suited.  
 
 ___
 
-## Screenshots of Jovian report  
+## Description and screenshots of a Jovian report  
+_Data shown below is based on public data, available on ENA via accession ID `PRJNA491626`. It contains Illumina paired-end data of faeces from people with gastroenteritis._  
 
-Will be added at a later date.  
+**MultiQC is used to summarize many pipeline metrics, including read quality, insert-size distribution, biases, etc.:**  
+<br>
+![Jovian_QC-report_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_QC-report_PRJNA491626-public-dataset.PNG?raw=true)
+
+**A summary barchart overview of the entire dataset is also presented:**
+<br>
+![Jovian_barcharts_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_barcharts_PRJNA491626-public-dataset.PNG?raw=true)
+
+**Metagenomics data is presented through three different visualizations, Krona pie-charts give sample level overview:**  
+<br>
+![Jovian_Krona-chart_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_Krona-chart_PRJNA491626-public-dataset.PNG?raw=true)
+
+**Viral and bacterial heatmaps that are stratified to different taxonomic levels give an overview of the complete dataset:**  
+<br>
+![Jovian_heatmap_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_heatmap_PRJNA491626-public-dataset.png?raw=true)
+
+**All classified scaffolds and their metrics are presented through interactive tables that are functionally similar to popular spreadsheet programs. Allowing filtering for certain metrics, e.g. taxonomic level (species up to superkingdom), length, number of ORFs, percentage GC, depth of coverage, etc. to facilitate in-depth analyses:**
+<br>
+![Jovian_classified-scaffolds_PRJNA491626-public-dataset.png](../assets/images/screenshots/Jovian_classified-scaffolds_PRJNA491626-public-dataset.png?raw=true)
+
+**Any scaffold that could not be classified ("dark matter") is reported in a similar interactive table for further investigation:**
+<br>
+![Jovian_dark-matter_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_dark-matter_PRJNA491626-public-dataset.PNG?raw=true)
+
+**All classified scaffolds are also cross-referenced against the NCBI host information and the Virus-Host database:**
+<br>
+![Jovian_host-disease_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_host-disease_PRJNA491626-public-dataset.PNG?raw=true)
+
+**The typing-tool output for Caliciviridae, Picornaviridae, Hepatoviruses, Orthohepeviruses and Rotaviruses containing the genotype information are also presented:**
+<br>
+![Jovian_NoV-TT_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_NoV-TT_PRJNA491626-public-dataset.PNG?raw=true)
+![Jovian_EV-TT_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_EV-TT_PRJNA491626-public-dataset.PNG?raw=true)
+![Jovian_HAV-TT_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_HAV-TT_PRJNA491626-public-dataset.PNG?raw=true)
+![Jovian_RVA-TT_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_RVA-TT_PRJNA491626-public-dataset.PNG?raw=true)
+
+**IGVjs is used to visualize genomes, you can zoom in to individual sites to inspect e.g. minority variants in greater detail. It incorporates and shows the depth of coverage, GC contents, predicted ORFs, minority variants (quasispecies) alongside each individual aligning read:**  
+<br>
+![Jovian_IGVjs_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_IGVjs_PRJNA491626-public-dataset.PNG?raw=true)
+![Jovian_IGVjs-zoom_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_IGVjs-zoom_PRJNA491626-public-dataset.PNG?raw=true)
+
+**The SNP information is also presented through a spreadsheet table for filtering and in-depth analysis:**  
+<br>
+![Jovian_minority-SNP-table_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_minority-SNP-table_PRJNA491626-public-dataset.PNG?raw=true)
+
+**Lastly, the logging of software, databases and pipeline settings are presented to the user. A verbose list containing all software in the current running environment, `Jovian_master`, is reported (not shown). Also, a list containing the timestamps of all used databases are reported (not shown). Via Snakemake a report is created describing exactly what software and which versions were used (shown below), alongside information about how long each step in the pipeline took to complete (not shown). The Git hash is reported, the unique Jovian methodological "fingerprint", which allows exact reproduction of results at a later time (shown below). And pipeline settings for the current analysis are reported (shown below):**  
+<br>
+![Jovian_Snakemake-report_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_Snakemake-report_PRJNA491626-public-dataset.PNG?raw=true)
+![Jovian_logging-git-hash-config_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_logging-git-hash-config_PRJNA491626-public-dataset.PNG?raw=true)
 
 ___
 
