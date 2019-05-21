@@ -1,30 +1,31 @@
 {
-    "load_extensions": {
-      "collapsible_headings/main": true,
-      "highlight_selected_word/main": true,
-      "codefolding/main": true,
-      "execute_time/ExecuteTime": true,
-      "spellchecker/main": true,
-      "toggle_all_line_numbers/main": true,
-      "freeze/main": true,
-      "code_font_size/code_font_size": true,
-      "hide_input_all/main": true,
-      "toc2/main": true,
-      "varInspector/main": true,
-      "splitcell/splitcell": true
-    },
-    "ExecuteTime": {
-      "clear_timings_on_clear_output": true
-    },
-    "toc2": {
-      "number_sections": false
-    },
-    "Cell": {
-      "cm_config": {
-        "lineNumbers": true
-      }
-    },
-    "Notebook": {
-      "Toolbar": true
+  "load_extensions": {
+    "collapsible_headings/main": true,
+    "highlight_selected_word/main": true,
+    "codefolding/main": true,
+    "execute_time/ExecuteTime": true,
+    "spellchecker/main": true,
+    "toggle_all_line_numbers/main": true,
+    "freeze/main": true,
+    "code_font_size/code_font_size": true,
+    "hide_input_all/main": true,
+    "toc2/main": true,
+    "varInspector/main": true,
+    "splitcell/splitcell": true,
+    "init_cell/main": true
+  },
+  "ExecuteTime": {
+    "clear_timings_on_clear_output": true
+  },
+  "toc2": {
+    "number_sections": false
+  },
+  "Cell": {
+    "cm_config": {
+      "lineNumbers": true
     }
+  },
+  "Notebook": {
+    "Toolbar": true
   }
+}
