@@ -5,6 +5,7 @@
 
 #load in functions
 source bin/functions.sh
+eval $(parse_yaml profile/pipeline_parameters.yaml "params_")
 
 ### Variables
 VERSION=$(git describe --tags)
@@ -34,6 +35,7 @@ ARCHIVE="FALSE"
 START_NGINX="FALSE"
 STOP_NGINX="FALSE"
 REBUILD_ARCHIVE="FALSE"
+CONFIG_JUP="FALSE"
 SHEET_SUCCESS="FALSE" # Default value for sample_sheet.yaml
 
 ### Parse the jovian commandline arguments, if they are not part of jovian, they get send to Snakemake
@@ -46,6 +48,11 @@ do
         INPUT_DIR="$2"
         shift # Next
         shift # Next
+        ;;
+        -m|--mode)
+        JOVIAN_MODE="$2"
+        shift #Next
+        shift #Next
         ;;
         -h|--help)
         JOVIAN_HELP="TRUE"
@@ -500,16 +507,17 @@ if [ "${INSTALL_CONDA:-}" == "TRUE" ]; then
     exit 0
 fi
 
+### Start and stop commands for nginx
 if [ "${START_NGINX}" == "TRUE" ]; then
     (bin/start_nginx.sh start)
     exit 0
 fi
-
 if [ "${STOP_NGINX}" == "TRUE" ]; then
     nginx -s quit
     echo "nginx has been stopped"
     exit 0
 fi
+
 
 if [ "${CONFIG_JUP}" == "TRUE" ]; then
     jt -t grade3 -fs 95 -altp -tfs 11 -nfs 115 -cellw 88% -T
@@ -519,14 +527,54 @@ if [ "${CONFIG_JUP}" == "TRUE" ]; then
     jupyter notebook --generate-config
     sed -i "s/#c.NotebookApp.allow_remote_access = False/c.NotebookApp.allow_remote_access = True/g" ~/.jupyter/jupyter_notebook_config.py
     sed -i "s/#c.NotebookApp.ip = 'localhost'/c.NotebookApp.ip = '${SET_HOSTNAME}'/g" ~/.jupyter/jupyter_notebook_config.py
-    sed -i "s/#c.NotebookApp.port = 8888/c.NotebookApp.port = 8890/g" ~/.jupyter/jupyter_notebook_config.py
-    sed -i "s@#c.ContentsManager.root_dir = '/'@c.ContentsManager.root_dir = '/'@g" ~/.jupyter/jupyter_notebook_config.py
+    sed -i "s/#c.NotebookApp.port = 8888/c.NotebookApp.port = 8888/g" ~/.jupyter/jupyter_notebook_config.py
     sed -i "s/#c.NotebookApp.open_browser = True/c.NotebookApp.open_browser = False/g" ~/.jupyter/jupyter_notebook_config.py
+    sed -i "s/#c.NotebookApp.iopub_data_rate_limit = 1000000/c.NotebookApp.iopub_data_rate_limit = 100000000/g" ~/.jupyter/jupyter_notebook_config.py
     cp files/Jupyter_notebook/edit.json ~/.jupyter/nbconfig
     cp files/Jupyter_notebook/notebook.json ~/.jupyter/nbconfig
     cp files/Jupyter_notebook/tree.json ~/.jupyter/nbconfig
     echo "Done - Jupyter notebooks is configured and ready for use"
     exit 0
+fi
+
+if [ "${JOVIAN_MODE}" == "relaxed" ]; then
+    #* Check the settings for the slidingwindow and change it when the setting does not match :5:20
+    if [ "$params_Trimmomatic_quality_trimming_config" != "SLIDINGWINDOW:5:20" ]; then
+        sed -i "s/    quality_trimming_config: $params_Trimmomatic_quality_trimming_config/    quality_trimming_config: SLIDINGWINDOW:5:20/g" profile/pipeline_parameters.yaml
+    fi
+    #* Check the settings for the minlen filtering and change it when the setting does not match 250
+    if [ "$params_scaffold_minLen_filter_minlen" != "250" ]; then
+        sed -i "s/    minlen: $params_scaffold_minLen_filter_minlen/    minlen: 250/g" profile/pipeline_parameters.yaml
+    fi
+    echo -e "Relaxed mode set..."
+
+elif [ "${JOVIAN_MODE}" == "strict" ]; then
+    #* Check the settings for the slidingwindow and change it when the setting does not match :5:30
+    if [ "$params_Trimmomatic_quality_trimming_config" != "SLIDINGWINDOW:5:30" ]; then
+        sed -i "s/    quality_trimming_config: $params_Trimmomatic_quality_trimming_config/    quality_trimming_config: SLIDINGWINDOW:5:30/g" profile/pipeline_parameters.yaml
+    fi
+    #* Check the settings for the minlen filtering and change it when the setting does not match 500
+    if [ "$params_scaffold_minLen_filter_minlen" != "500" ]; then
+        sed -i "s/    minlen: $params_scaffold_minLen_filter_minlen/    minlen: 500/g" profile/pipeline_parameters.yaml
+    fi
+    echo -e "Strict mode set..."
+
+elif [[ ! "${JOVIAN_MODE}" =~ ^(relaxed|strict)$ ]]; then
+    #* Check if parameters match with strict mode
+    if [ "$params_Trimmomatic_quality_trimming_config" == "SLIDINGWINDOW:5:30" ] && [ "$params_scaffold_minLen_filter_minlen" == "500" ]; then
+        echo -e "Jovian is set to run in strict mode"
+        exit 0
+    fi
+    #* Check if parameters match with relaxed mode
+    if [ "$params_Trimmomatic_quality_trimming_config" == "SLIDINGWINDOW:5:20" ] && [ "$params_scaffold_minLen_filter_minlen" == "250" ]; then
+        echo -e "Jovian is set to run in relaxed mode"
+        exit 0
+    fi
+    #* Check if parameters do not match with any of the predefined modes, exit if true
+    if [[ ! "$params_Trimmomatic_quality_trimming_config" =~ ^(SLIDINGWINDOW:5:20|SLIDINGWINDOW:5:30)$ ]]; [[ ! "$params_scaffold_minLen_filter_minlen" =~ ^(250|500)$ ]]; then
+        echo -e "Jovian is set to run with a custom config/mode"
+        exit 0
+    fi
 fi
 
 ### Pass other CLI arguments along to Snakemake
