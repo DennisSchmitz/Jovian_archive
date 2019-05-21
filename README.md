@@ -236,10 +236,10 @@ _Data shown below is based on public data, available in the ENA via accession ID
 **Viral and bacterial heatmaps that are stratified to different taxonomic levels give an overview of the complete dataset:**  
 ![Jovian_heatmap_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_heatmap_PRJNA491626-public-dataset.png?raw=true)
 
-**Lastly, interactive tables that are functionally similar to popular spreadsheet programs allow in-depth analysis and interactive filtering for certain metrics (e.g. taxonomic level (species up to superkingdom), length, number of ORFs, percentage GC, depth of coverage, etc.):**
+**All classified scaffolds and their metrics are presented through interactive tables that are functionally similar to popular spreadsheet programs. Allowing filtering for certain metrics, e.g. taxonomic level (species up to superkingdom), length, number of ORFs, percentage GC, depth of coverage, etc. to facilitate in-depth analyses:**
 ![Jovian_classified-scaffolds_PRJNA491626-public-dataset.png](../assets/images/screenshots/Jovian_classified-scaffolds_PRJNA491626-public-dataset.png?raw=true)
 
-**Likewise, any scaffold that could not be classified ("dark matter") is reported in a similar interactive table for further investigation:**
+**Any scaffold that could not be classified ("dark matter") is reported in a similar interactive table for further investigation:**
 ![Jovian_dark-matter_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_dark-matter_PRJNA491626-public-dataset.PNG?raw=true)
 
 **All classified scaffolds are also cross-referenced against the NCBI host information and the Virus-Host database:**
@@ -258,7 +258,7 @@ _Data shown below is based on public data, available in the ENA via accession ID
 **The SNP information is also presented through a spreadsheet table for filtering and in-depth analysis:**  
 ![Jovian_minority-SNP-table_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_minority-SNP-table_PRJNA491626-public-dataset.PNG?raw=true)
 
-**Lastly, the logging of software, databases and pipeline settings are presented. A verbose list containing all software in the current running environment, `Jovian_master`, is reported (not shown on screenshot shown). Also, a list containing the timestamps of all used databases are reported (not shown on screenshot). Via Snakemake a report is created describing exactly what software and which versions were used (shown below), alongside information about how many minutes each step in the pipeline for each sample took to complete (not shown). We report the Git hash, the unique Jovian methodological "fingerprint", for if you want to exactly reproduce the analysis at a later time (shown below). And we report which pipeline settings were used for this analysis (shown below).**  
+**Lastly, the logging of software, databases and pipeline settings are presented to the user. A verbose list containing all software in the current running environment, `Jovian_master`, is reported (not shown). Also, a list containing the timestamps of all used databases are reported (not shown). Via Snakemake a report is created describing exactly what software and which versions were used (shown below), alongside information about how long each step in the pipeline took to complete (not shown). The Git hash is reported, the unique Jovian methodological "fingerprint", which allows exact reproduction of results at a later time (shown below). And pipeline settings for the current analysis are reported (shown below):**  
 ![Jovian_Snakemake-report_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_Snakemake-report_PRJNA491626-public-dataset.PNG?raw=true)
 ![Jovian_logging-git-hash-config_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_logging-git-hash-config_PRJNA491626-public-dataset.PNG?raw=true)
 
