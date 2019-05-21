@@ -69,7 +69,7 @@ ___
 ___
 
 ## Pipeline requirements
-Jovian has two software dependencies, miniConda and IGVjs, which will be automatically installed by the pipeline on first use. It also depends on several databases that you have to download yourself, as decribed below. And it requires some configuration, also explained below.  
+Jovian has two software dependencies, miniConda and IGVjs, which will be automatically installed by the pipeline on first use. It also depends on several databases that you have to download yourself, as described below. And it requires some configuration, also explained below.  
 
 ### System rights
 In order to run Jovian there are very little additional system rights necessary, Root and/or sudo-rights are not required.  
@@ -217,12 +217,12 @@ ___
 - _I don't care about removing the human data, I have cell-lines which are from other species, can I also automatically remove that?_
   - Yes. Although we focus on patient-privacy since it was developed for clinical samples, you can enter any reference sequence you like. You can do that by changing `HuGo_ref: /path/to/file/genome.fa` into the location of your desired background removal organisms in the [config-file](profile/pipeline_parameters.yaml). The only limitations are that it is a `fasta` file and that is indexed via `bowtie2`, although this latter process will be automated in a future version.  
 - _How can some scaffolds still be assigned to `Homo sapiens`? I thought Jovian removed human data?_
-  - The human genome is a consensus genome of people around the globe. It does not capture all diversity in the human gene pool and therefore cannot completely remove all human data. You can improve this by selecting a reference genome that is closer to your target population, e.g. if you sequence mainly Dutch samples, the [GoNL genome](http://www.nlgenome.nl/) might be a better fit.  
+  - The human genome is a consensus genome built from many individuals from around the globe. It does not capture all diversity in the human gene pool and therefore cannot completely remove all human data. You can improve this by selecting a reference genome that is closer to your target population, e.g. if you sequence mainly Dutch samples, the [GoNL genome](http://www.nlgenome.nl/) might be better suited.  
 
 ___
 
 ## Description and screenshots of a Jovian report  
-_Data shown below is based on public data, available in the ENA via accession ID "PRJNA491626", and is a dataset of Cameroonians presenting with gastroenteritis._  
+_Data shown below is based on public data, available on ENA via accession ID `PRJNA491626`. It contains Illumina paired-end data of faeces from people with gastroenteritis._  
 
 **MultiQC is used to summarize many pipeline metrics, including read quality, insert-size distribution, biases, etc.:**  
 <br>
