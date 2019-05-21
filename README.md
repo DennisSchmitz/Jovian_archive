@@ -221,9 +221,47 @@ ___
 
 ___
 
-## Screenshots of Jovian report  
+## Description and screenshots of a Jovian report  
+_Data shown below is based on public data, available in the ENA via accession ID "PRJNA491626"; a dataset of Cameroonians presenting with gastroenteritis._  
 
-Will be added at a later date.  
+MultiQC is used to summarize many pipeline metrics:  
+![Jovian_QC-report_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_QC-report_PRJNA491626-public-dataset.PNG)
+
+A summary QC overview of the entire dataset is also presented:
+![Jovian_barcharts_PRJNA491626-public-dataset.PNG](..assets/images/screenshots/Jovian_barcharts_PRJNA491626-public-dataset.PNG)
+
+Metagenomics data is presented through three different visualizations, Krona pie-charts give sample level overview:  
+![Jovian_Krona-chart_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_Krona-chart_PRJNA491626-public-dataset.PNG)
+
+Viral and bacterial heatmaps that are stratified to different taxonomic levels give an overview of the complete dataset:  
+![Jovian_Krona-chart_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_Krona-chart_PRJNA491626-public-dataset.PNG)
+
+Lastly, interactive tables that are functionally similar to popular spreadsheet programs allow in-depth analysis and interactive filtering for certain metrics (e.g. taxonomic level (species up to superkingdom), length, number of ORFs, percentage GC, depth of coverage, etc.):
+![Jovian_classified-scaffolds_PRJNA491626-public-dataset.png](..assets/images/screenshots/Jovian_classified-scaffolds_PRJNA491626-public-dataset.png)
+
+Likewise, any scaffold that could not be classified ("dark matter") is reported in a similar interactive table for further investigation:
+![Jovian_dark-matter_PRJNA491626-public-dataset.PNG](..assets/images/screenshots/Jovian_dark-matter_PRJNA491626-public-dataset.PNG)
+
+All classified scaffolds are also cross-referenced against the NCBI host information and the Virus-Host database:
+![Jovian_host-disease_PRJNA491626-public-dataset.PNG](..assets/images/screenshots/Jovian_host-disease_PRJNA491626-public-dataset.PNG)
+
+The typing-tool output for Caliciviridae, Picornaviridae, Hepatoviruses, Orthohepeviruses and Rotaviruses containing the genotype information are also presented:
+![Jovian_NoV-TT_PRJNA491626-public-dataset.PNG](..assets/images/screenshots/Jovian_NoV-TT_PRJNA491626-public-dataset.PNG)
+![Jovian_EV-TT_PRJNA491626-public-dataset.PNG](..assets/images/screenshots/Jovian_EV-TT_PRJNA491626-public-dataset.PNG)
+![Jovian_HAV-TT_PRJNA491626-public-dataset.PNG](..assets/images/screenshots/Jovian_HAV-TT_PRJNA491626-public-dataset.PNG)
+![Jovian_HEV-TT_PRJNA491626-public-dataset.PNG](..assets/images/screenshots/Jovian_HEV-TT_PRJNA491626-public-dataset.PNG)
+![Jovian_RVA-TT_PRJNA491626-public-dataset.PNG](..assets/images/screenshots/Jovian_RVA-TT_PRJNA491626-public-dataset.PNG)
+
+IGVjs is used to visualize genomes, you can zoom in to individual sites to inspect e.g. minority variants in greater detail. It incorporates and shows the depth of coverage, GC contents, predicted ORFs, minority variants (quasispecies) alongside each individual aligning read:  
+![Jovian_IGVjs_PRJNA491626-public-dataset.PNG](..assets/images/screenshots/Jovian_IGVjs_PRJNA491626-public-dataset.PNG)
+![Jovian_IGVjs-zoom_PRJNA491626-public-dataset.PNG](..assets/images/screenshots/Jovian_IGVjs-zoom_PRJNA491626-public-dataset.PNG)
+
+The SNP information is also presented through a spreadsheet table for filtering and in-depth analysis:  
+![Jovian_minority-SNP-table_PRJNA491626-public-dataset.PNG](..assets/images/screenshots/Jovian_minority-SNP-table_PRJNA491626-public-dataset.PNG)
+
+Lastly, the logging of software, databases and pipeline settings are presented. A verbose list containing all software in the current running environment, `Jovian_master`, is reported (not shown on screenshot shown). Also, a list containing the timestamps of all used databases are reported (not shown on screenshot). Via Snakemake a report is created describing exactly what software and which versions were used (shown below), alongside information about how many minutes each step in the pipeline for each sample took to complete (not shown). We report the Git hash, the unique Jovian methodological "fingerprint", for if you want to exactly reproduce the analysis at a later time (shown below). And we report which pipeline settings were used for this analysis (shown below).  
+![Jovian_Snakemake-report_PRJNA491626-public-dataset.PNG](..assets/images/screenshots/Jovian_Snakemake-report_PRJNA491626-public-dataset.PNG)
+![Jovian_logging-git-hash-config_PRJNA491626-public-dataset.PNG](..assets/images/screenshots/Jovian_logging-git-hash-config_PRJNA491626-public-dataset.PNG)
 
 ___
 
