@@ -214,12 +214,17 @@ _____
 ___
 
 ## FAQ
-- Why are there multiple lines per taxid in the host table?  
+- _Why are there multiple lines per taxid in the host table?_  
   - In the Virus-Host interaction database there are sometimes multiple entries for a single taxid, meaning, there are multiple known hosts. Therefore, we follow this formatting and print the different hosts on multiple lines.  
-- Why doesn't the virus typing-tool accept my query?
+- _Why doesn't the virus typing-tool accept my query?_
   - Please see [this](https://github.com/DennisSchmitz/Jovian/issues/29) and [this](https://github.com/DennisSchmitz/Jovian/issues/51) issue. The short answer; they were made for Sanger sequences and are not yet able to to handle NGS datasets. This is a work-in-progress.  
-- I am missing a certain taxa of which I'm sure is in the dataset. How is that possible?
-  - Could be due to multiple reasons. The first one being the stringency of the analysis. The current default values are quite strict, you might have filtered it away. Please try more relaxed settings. The second being the result of the LCA analysis (Lowest Common Ancestor) putting a certain scaffold at a unexpected taxonomic level. Imagine a sequence that is homologous between (pro)phages and bacteria, the lowest common ancestor between phages and bacteria is the theoretical root of all life (i.e. `root` taxonomic level), so you will find it at the taxonomic level (you can try changing the `bitscoreDeltaLCA` to `0` in the [config-file](profile/pipeline_parameters.yaml). It could also be a result of an erroneous entry in the used public databases, to which a scaffold then gets assigned. If it is anything other than these reasons, please let us know by making an [issue](https://github.com/DennisSchmitz/Jovian/issues).  
+- _I am missing a certain taxa of which I'm sure is in the dataset. How is that possible?_
+  - Could be due to multiple reasons. The first one being the stringency of the analysis. The current default values are quite strict, you might have filtered it away. Please try more relaxed settings. The second being the result of the LCA analysis (Lowest Common Ancestor) putting a certain scaffold at a unexpected taxonomic level. Imagine a sequence that is homologous between (pro)phages and bacteria, the lowest common ancestor between phages and bacteria is the theoretical root of all life (i.e. `root` taxonomic level), so you will find it at the taxonomic level (you can try changing the `bitscoreDeltaLCA: 5` to `0` in the [config-file](profile/pipeline_parameters.yaml). It could also be a result of an erroneous entry in the used public databases, to which a scaffold then gets assigned. If it is anything other than these reasons, please let us know by making an [issue](https://github.com/DennisSchmitz/Jovian/issues).  
+- _I don't care about removing the human data, I have cell-lines which are from other species, can I also automatically remove that?_
+  - Yes. Although we focus on patient-privacy since it was developed for clinical samples, you can enter any reference sequence you like. You can do that by changing `HuGo_ref: /path/to/file/genome.fa` into the location of your desired background removal organisms in the [config-file](profile/pipeline_parameters.yaml). The only limitations are that it is a `fasta` file and that is indexed via `bowtie2`, although this latter process will be automated in a future version.  
+- How can some scaffolds still be assigned to `Homo sapiens`? I thought Jovian removed human data?
+  - The human genome is a consensus genome of people around the globe. It does not capture all diversity in the human gene pool and therefore cannot completely remove all human data. You can improve this by selecting a reference genome that is closer to your target population, e.g. if you sequence mainly Dutch samples, the [GoNL genome](http://www.nlgenome.nl/) might be a better fit.  
+
 ___
 
 ## Acknowledgements
