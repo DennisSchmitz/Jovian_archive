@@ -31,7 +31,7 @@ ___
 ## Pipeline description  
 
 The pipeline automatically processes raw Illumina NGS data from human clinical matrices (faeces, serum, etc.) into clinically relevant information such as taxonomic classification, viral typing and minority variant identification (quasispecies).
-Wetlab personnel can start, configure and interpret results via interactive Jupyter Notebook websites that are included in the pipeline. This makes doing metagenomics analyses much more accessible and user-friendly since minimal command-line skills are required.  
+Wetlab personnel can start, configure and interpret results via an interactive web-report. This makes doing metagenomics analyses much more accessible and user-friendly since minimal command-line skills are required.  
 
 ### Pipeline features    
 - Data quality control (QC) and cleaning.  
@@ -69,19 +69,19 @@ ___
 ___
 
 ## Pipeline requirements
-Jovian has two software dependencies, miniConda and IGVjs, which will be automatically installed by the pipeline on first use. It also depends on several databases that you have to download yourself, as described below. And it requires some configuration, also explained below.  
+Jovian has two major software dependencies, miniConda and IGVjs. On first usage, you will be asked if you want to automatically install these. It also depends on the [following software](#software), but most systems will have these installed already. An analysis also depends on several databases that you have to download yourself, as [described below](#databases). And it requires some configuration, as explained [here](#configuration).  
 
 ### System rights
 In order to run Jovian there are very little additional system rights necessary, Root and/or sudo-rights are not required.  
 It is however necessary to have read and write access to the `/tmp` folder on your system. This won't be a problem most of the time since the `/tmp` folder is usually free to read from and write to. However, it is best to check this with your system administrator(s).
 
 ### Software  
-|Software name|Installation instructions|Note|  
-|:---|:---|:---|  
-|```git```| https://git-scm.com/downloads | Is usually already installed on Linux systems.|  
-|```curl```| https://curl.haxx.se/ | Should already be included in most (all?) Linux distro's.|
-|```which```| http://savannah.gnu.org/projects/which | Should already be included in most (all?) Linux distro's.|
-|```bzip2```| http://www.bzip.org/ | Should already be included in most (all?) Linux distro's.|
+|Software name|Website|  
+|:---|:---|  
+|```git```| https://git-scm.com/downloads |  
+|```curl```| https://curl.haxx.se/ |  
+|```which```| http://savannah.gnu.org/projects/which |  
+|```bzip2```| http://www.bzip.org/ |  
 
 ### Databases  
 |Database name|Link|Installation instructions|
