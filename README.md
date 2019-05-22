@@ -78,19 +78,19 @@ It is however necessary to have read and write access to the `/tmp` folder on yo
 ### Software  
 |Software name|Website|  
 |:---|:---|  
-|```git```| https://git-scm.com/downloads |  
-|```curl```| https://curl.haxx.se/ |  
-|```which```| http://savannah.gnu.org/projects/which |  
-|```bzip2```| http://www.bzip.org/ |  
+|`git`| https://git-scm.com/downloads |  
+|`curl`| https://curl.haxx.se/ |  
+|`which`| http://savannah.gnu.org/projects/which |  
+|`bzip2`| http://www.bzip.org/ |  
 
 ### Databases  
 |Database name|Link|Installation instructions|
 |:---|:---|:---|
-|```NCBI NT & NR```| ftp://ftp.ncbi.nlm.nih.gov/blast/db/ | [link](#blast-nt-nr-and-taxdb-databases)|
-|```NCBI Taxdump```| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/ | [link](#blast-nt-nr-and-taxdb-databases)|
-|```NCBI New_taxdump```| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/ | [link](#ncbi-new_taxdump-database)|
-|```Latest Human Genome```| https://support.illumina.com/sequencing/sequencing_software/igenome.html | [link](#human-genome)|
-|```Virus-Host interaction database```| http://www.genome.jp/virushostdb/note.html | [link](#virus-host-interaction-database)|
+|`NCBI NT & NR`| ftp://ftp.ncbi.nlm.nih.gov/blast/db/ | [link](#blast-nt-nr-and-taxdb-databases)|
+|`NCBI Taxdump`| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/ | [link](#blast-nt-nr-and-taxdb-databases)|
+|`NCBI New_taxdump`| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/ | [link](#ncbi-new_taxdump-database)|
+|`Latest Human Genome`| https://support.illumina.com/sequencing/sequencing_software/igenome.html | [link](#human-genome)|
+|`Virus-Host interaction database`| http://www.genome.jp/virushostdb/note.html | [link](#virus-host-interaction-database)|
 
 ___
 
