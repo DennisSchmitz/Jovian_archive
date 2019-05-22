@@ -294,60 +294,64 @@ fi
 eval $(parse_yaml ${HOME}/.jovian_installchoice_igvjs "igvjs_")
 
 if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. the `conda` command is not available), if true, install it in ~/tmp. Otherwise, proceed.
-
-    ### confirmation of conda installation
-    installer_intro
-    echo -e "Miniconda missing. Installing Miniconda can take up to 15 minutes..."
-    read -r -p "Do you wish to install (mini)conda now? [y/N] " response
-    response=${response,,}
-    if [[ "${response}" =~ ^(yes|y)$ ]]; then
-        echo "Jovian ${VERSION}" > ${INSTALL_LOG}
-        line | tee -a ${INSTALL_LOG}
-        curl -o latest.sh -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
-        chmod +x latest.sh
-        sh latest.sh -b -p "${HOME}/tmp/Miniconda3" | tee -a ${INSTALL_LOG}
-        rm latest.sh
-        tput reset
+    if [ ! -e "${HOME}/tmp/Miniconda3" ]; then
+        ### confirmation of conda installation
         installer_intro
-    else
-        echo -e "Conda is a requirement for Jovian to run."
-        echo -e "Exiting because conda isn't installed and automatic installation of conda was declined by user"
-        exit 1
-    fi
+        echo -e "Miniconda missing. Installing Miniconda can take up to 15 minutes..."
+        read -r -p "Do you wish to install (mini)conda now? [y/N] " response
+        response=${response,,}
+        if [[ "${response}" =~ ^(yes|y)$ ]]; then
+            echo "Jovian ${VERSION}" > ${INSTALL_LOG}
+            line | tee -a ${INSTALL_LOG}
+            curl -o latest.sh -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+            chmod +x latest.sh
+            sh latest.sh -b -p "${HOME}/tmp/Miniconda3" | tee -a ${INSTALL_LOG}
+            rm latest.sh
+            tput reset
+            installer_intro
+        else
+            echo -e "Conda is a requirement for Jovian to run."
+            echo -e "Exiting because conda isn't installed and automatic installation of conda was declined by user"
+            exit 1
+        fi
+        
+        ### conda has been installed by previous step, confirm addition to PATH
+        echo -e "Conda is installed but not yet added to PATH, do you wish to add conda to your PATH?"
+        read -r -p "The conda PATH will be added to your ~/.bashrc and will only affect you. [y/N] " answer
+        answer=${answer,,}
+        if [[ "${answer}" =~ ^(yes|y)$ ]]; then
+            echo "PATH=$PATH:${HOME}/tmp/Miniconda3/bin" >> "${HOME}/.bashrc" | tee -a ${INSTALL_LOG}
+            source ${HOME}/.bashrc | tee -a ${INSTALL_LOG}
+            export PATH=${HOME}/tmp/Miniconda3/bin:$PATH
+            tput reset
+            line
+            installer_intro
+            echo -e "Conda succesfully added to PATH"
+        else
+            export PATH=${HOME}/tmp/Miniconda3/bin:$PATH | tee -a ${INSTALL_LOG}
+            tput reset
+            line
+            installer_intro
+            line
+            spacer
+            echo -e "Conda has not been permanently added to PATH, this means you cannot use the conda command once this session closes."
+        fi
     
-    ### conda has been installed by previous step, confirm addition to PATH
-    echo -e "Conda is installed but not yet added to PATH, do you wish to add conda to your PATH?"
-    read -r -p "The conda PATH will be added to your ~/.bashrc and will only affect you. [y/N] " answer
-    answer=${answer,,}
-    if [[ "${answer}" =~ ^(yes|y)$ ]]; then
-        echo "PATH=$PATH:${HOME}/tmp/Miniconda3/bin" >> "${HOME}/.bashrc" | tee -a ${INSTALL_LOG}
-        source ${HOME}/.bashrc | tee -a ${INSTALL_LOG}
-        export PATH=${HOME}/tmp/Miniconda3/bin:$PATH
-        tput reset
-        line
-        installer_intro
-        echo -e "Conda succesfully added to PATH"
-    else
-        export PATH=${HOME}/tmp/Miniconda3/bin:$PATH | tee -a ${INSTALL_LOG}
-        tput reset
-        line
+        echo -e "\n"
+        echo -e "Installation of Conda is done"
+        echo -e "If you wish to use conda then it might be necessary to restart your terminal session"
+        source ${HOME}/.bashrc
+
+        echo -e "\n\nContinuing..."
+        sleep 5
+
         installer_intro
         line
         spacer
-        echo -e "Conda has not been permanently added to PATH, this means you cannot use the conda command once this session closes."
     fi
-    
-    echo -e "\n"
-    echo -e "Installation of Conda is done"
-    echo -e "If you wish to use conda then it might be necessary to restart your terminal session"
-    source ${HOME}/.bashrc
-
-    echo -e "\n\nContinuing..."
-    sleep 5
-
-    installer_intro
-    line
-    spacer
+    if [ -e "${HOME}/tmp/Miniconda3" ]; then
+        export PATH=${HOME}/tmp/Miniconda3/bin:$PATH
+    fi 
 fi
 
 ### Install Jovian_master if it doesn't already exist, afterwards, start Jovian_master
