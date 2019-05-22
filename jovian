@@ -36,6 +36,7 @@ START_NGINX="FALSE"
 STOP_NGINX="FALSE"
 REBUILD_ARCHIVE="FALSE"
 CONFIG_JUP="FALSE"
+JOVIAN_MODE="NONE"
 SHEET_SUCCESS="FALSE" # Default value for sample_sheet.yaml
 
 ### Parse the jovian commandline arguments, if they are not part of jovian, they get send to Snakemake
@@ -286,11 +287,11 @@ if [ ! -e "${PROFILE}/config.yaml" ]; then # If this profile folder containing c
     exit 1
 fi
 
-if [ ! -e "${HOME}/.jovian_installchoice" ]; then
-    echo -e "installeranswers:\n    igvjs: U" > ${HOME}/.jovian_installchoice
+if [ ! -e "${HOME}/.jovian_installchoice_igvjs" ]; then
+    echo -e "installeranswers:\n    igvjs: U" > ${HOME}/.jovian_installchoice_igvjs 
 fi
 
-eval $(parse_yaml ${HOME}/.jovian_installchoice "choices_")
+eval $(parse_yaml ${HOME}/.jovian_installchoice_igvjs "igvjs_")
 
 if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. the `conda` command is not available), if true, install it in ~/tmp. Otherwise, proceed.
 
@@ -379,7 +380,7 @@ fi
         ###############################################################################################################
 
 ### Checker for if IGVjs is installed, otherwise, ask user if it should be installed
-if [ "$choices_installeranswers_igvjs" == "U" ]; then
+if [ "$igvjs_installeranswers_igvjs" == "U" ]; then
     if [ ! -e ${IGVJS_LOCATION} ]; then
         installer_intro
         echo -e "IGVjs hasn't been installed in this working directory yet... \n\nIGVjs is the piece of software which is used for the interactive scaffold viewer in the Jupyter notebook reports"
@@ -391,21 +392,21 @@ if [ "$choices_installeranswers_igvjs" == "U" ]; then
             echo -e "Starting with installing IGVjs, this can take up to 15 minutes..."
             bin/install_IGVjs.sh
             echo -e "DONE with installing IGVjs"
-            echo -e "installeranswers:\n    igvjs: Y" > ${HOME}/.jovian_installchoice
+            echo -e "installeranswers:\n    igvjs: Y" > ${HOME}/.jovian_installchoice_igvjs
         else
             echo -e "Skipping the installation of IGVjs..."
-            echo -e "installeranswers:\n    igvjs: N" > ${HOME}/.jovian_installchoice
+            echo -e "installeranswers:\n    igvjs: N" > ${HOME}/.jovian_installchoice_igvjs
             sleep 1
         fi
     fi
-elif [ "$choices_installeranswers_igvjs" == "Y" ]; then
+elif [ "$igvjs_installeranswers_igvjs" == "Y" ]; then
     if [ ! -e ${IGVJS_LOCATION} ]; then
         echo -e "Installing IGVjs in your working directory..."
         echo -e "This can take up to 15 minutes"
         bin/install_IGVjs.sh
         echo -e "Done with installing IGVjs"
     fi
-elif [ "$choices_installeranswers_igvjs" == "N" ]; then
+elif [ "$igvjs_installeranswers_igvjs" == "N" ]; then
     if [ ! -e ${IGVJS_LOCATION} ]; then
     echo -e "Skipping installation of IGVjs in your working directory\nIf you want to use IGVjs then please use the jovian command to install it in your working directory. \nSee the Jovian manual for more information and instructions."
     fi
@@ -518,7 +519,7 @@ if [ "${STOP_NGINX}" == "TRUE" ]; then
     exit 0
 fi
 
-
+### * Auto configure the jupyter user profile and prepare it for direct use
 if [ "${CONFIG_JUP}" == "TRUE" ]; then
     jt -t grade3 -fs 95 -altp -tfs 11 -nfs 115 -cellw 88% -T
     sed -i '1704,1706d' ~/.jupyter/custom/custom.css
@@ -558,6 +559,20 @@ elif [ "${JOVIAN_MODE}" == "strict" ]; then
         sed -i "s/    minlen: $params_scaffold_minLen_filter_minlen/    minlen: 500/g" profile/pipeline_parameters.yaml
     fi
     echo -e "Strict mode set..."
+
+elif [ "${JOVIAN_MODE}" == "NONE" ]; then
+    #* Check if parameters match with strict mode
+    if [ "$params_Trimmomatic_quality_trimming_config" == "SLIDINGWINDOW:5:30" ] && [ "$params_scaffold_minLen_filter_minlen" == "500" ]; then
+        echo -e "Jovian will run in strict mode..."
+    fi
+    #* Check if parameters match with relaxed mode
+    if [ "$params_Trimmomatic_quality_trimming_config" == "SLIDINGWINDOW:5:20" ] && [ "$params_scaffold_minLen_filter_minlen" == "250" ]; then
+        echo -e "Jovian will run in relaxed mode..."
+    fi
+    #* Check if parameters do not match with any of the predefined modes, exit if true
+    if [[ ! "$params_Trimmomatic_quality_trimming_config" =~ ^(SLIDINGWINDOW:5:20|SLIDINGWINDOW:5:30)$ ]]; [[ ! "$params_scaffold_minLen_filter_minlen" =~ ^(250|500)$ ]]; then
+        echo -e "Jovian will run in a custom mode"
+    fi
 
 elif [[ ! "${JOVIAN_MODE}" =~ ^(relaxed|strict)$ ]]; then
     #* Check if parameters match with strict mode
