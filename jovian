@@ -5,6 +5,7 @@
 
 #load in functions
 source bin/functions.sh
+eval $(parse_yaml profile/pipeline_parameters.yaml "params_")
 
 ### Variables
 VERSION=$(git describe --tags)
@@ -34,6 +35,9 @@ ARCHIVE="FALSE"
 START_NGINX="FALSE"
 STOP_NGINX="FALSE"
 REBUILD_ARCHIVE="FALSE"
+CONFIG_JUP="FALSE"
+JOVIAN_MODE="NONE"
+START_JUPYTER="FALSE"
 SHEET_SUCCESS="FALSE" # Default value for sample_sheet.yaml
 
 ### Parse the jovian commandline arguments, if they are not part of jovian, they get send to Snakemake
@@ -46,6 +50,11 @@ do
         INPUT_DIR="$2"
         shift # Next
         shift # Next
+        ;;
+        -m|--mode)
+        JOVIAN_MODE="$2"
+        shift #Next
+        shift #Next
         ;;
         -h|--help)
         JOVIAN_HELP="TRUE"
@@ -93,6 +102,10 @@ do
         ;;
         --configure-jupyter)
         CONFIG_JUP="TRUE"
+        shift # Next
+        ;;
+        --start-jupyter)
+        START_JUPYTER="TRUE"
         shift # Next
         ;;
         --virus-typing)
@@ -279,67 +292,71 @@ if [ ! -e "${PROFILE}/config.yaml" ]; then # If this profile folder containing c
     exit 1
 fi
 
-if [ ! -e "${HOME}/.jovian_installchoice" ]; then
-    echo -e "installeranswers:\n    igvjs: U" > ${HOME}/.jovian_installchoice
+if [ ! -e "${HOME}/.jovian_installchoice_igvjs" ]; then
+    echo -e "installeranswers:\n    igvjs: U" > ${HOME}/.jovian_installchoice_igvjs 
 fi
 
-eval $(parse_yaml ${HOME}/.jovian_installchoice "choices_")
+eval $(parse_yaml ${HOME}/.jovian_installchoice_igvjs "igvjs_")
 
 if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. the `conda` command is not available), if true, install it in ~/tmp. Otherwise, proceed.
-
-    ### confirmation of conda installation
-    installer_intro
-    echo -e "Miniconda missing. Installing Miniconda can take up to 15 minutes..."
-    read -r -p "Do you wish to install (mini)conda now? [y/N] " response
-    response=${response,,}
-    if [[ "${response}" =~ ^(yes|y)$ ]]; then
-        echo "Jovian ${VERSION}" > ${INSTALL_LOG}
-        line | tee -a ${INSTALL_LOG}
-        curl -o latest.sh -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
-        chmod +x latest.sh
-        sh latest.sh -b -p "${HOME}/tmp/Miniconda3" | tee -a ${INSTALL_LOG}
-        rm latest.sh
-        tput reset
+    if [ ! -e "${HOME}/tmp/Miniconda3" ]; then
+        ### confirmation of conda installation
         installer_intro
-    else
-        echo -e "Conda is a requirement for Jovian to run."
-        echo -e "Exiting because conda isn't installed and automatic installation of conda was declined by user"
-        exit 1
-    fi
+        echo -e "Miniconda missing. Installing Miniconda can take up to 15 minutes..."
+        read -r -p "Do you wish to install (mini)conda now? [y/N] " response
+        response=${response,,}
+        if [[ "${response}" =~ ^(yes|y)$ ]]; then
+            echo "Jovian ${VERSION}" > ${INSTALL_LOG}
+            line | tee -a ${INSTALL_LOG}
+            curl -o latest.sh -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+            chmod +x latest.sh
+            sh latest.sh -b -p "${HOME}/tmp/Miniconda3" | tee -a ${INSTALL_LOG}
+            rm latest.sh
+            tput reset
+            installer_intro
+        else
+            echo -e "Conda is a requirement for Jovian to run."
+            echo -e "Exiting because conda isn't installed and automatic installation of conda was declined by user"
+            exit 1
+        fi
+        
+        ### conda has been installed by previous step, confirm addition to PATH
+        echo -e "Conda is installed but not yet added to PATH, do you wish to add conda to your PATH?"
+        read -r -p "The conda PATH will be added to your ~/.bashrc and will only affect you. [y/N] " answer
+        answer=${answer,,}
+        if [[ "${answer}" =~ ^(yes|y)$ ]]; then
+            echo "PATH=$PATH:${HOME}/tmp/Miniconda3/bin" >> "${HOME}/.bashrc" | tee -a ${INSTALL_LOG}
+            source ${HOME}/.bashrc | tee -a ${INSTALL_LOG}
+            export PATH=${HOME}/tmp/Miniconda3/bin:$PATH
+            tput reset
+            line
+            installer_intro
+            echo -e "Conda succesfully added to PATH"
+        else
+            export PATH=${HOME}/tmp/Miniconda3/bin:$PATH | tee -a ${INSTALL_LOG}
+            tput reset
+            line
+            installer_intro
+            line
+            spacer
+            echo -e "Conda has not been permanently added to PATH, this means you cannot use the conda command once this session closes."
+        fi
     
-    ### conda has been installed by previous step, confirm addition to PATH
-    echo -e "Conda is installed but not yet added to PATH, do you wish to add conda to your PATH?"
-    read -r -p "The conda PATH will be added to your ~/.bashrc and will only affect you. [y/N] " answer
-    answer=${answer,,}
-    if [[ "${answer}" =~ ^(yes|y)$ ]]; then
-        echo "PATH=$PATH:${HOME}/tmp/Miniconda3/bin" >> "${HOME}/.bashrc" | tee -a ${INSTALL_LOG}
-        source ${HOME}/.bashrc | tee -a ${INSTALL_LOG}
-        export PATH=${HOME}/tmp/Miniconda3/bin:$PATH
-        tput reset
-        line
-        installer_intro
-        echo -e "Conda succesfully added to PATH"
-    else
-        export PATH=${HOME}/tmp/Miniconda3/bin:$PATH | tee -a ${INSTALL_LOG}
-        tput reset
-        line
+        echo -e "\n"
+        echo -e "Installation of Conda is done"
+        echo -e "If you wish to use conda then it might be necessary to restart your terminal session"
+        source ${HOME}/.bashrc
+
+        echo -e "\n\nContinuing..."
+        sleep 5
+
         installer_intro
         line
         spacer
-        echo -e "Conda has not been permanently added to PATH, this means you cannot use the conda command once this session closes."
     fi
-    
-    echo -e "\n"
-    echo -e "Installation of Conda is done"
-    echo -e "If you wish to use conda then it might be necessary to restart your terminal session"
-    source ${HOME}/.bashrc
-
-    echo -e "\n\nContinuing..."
-    sleep 5
-
-    installer_intro
-    line
-    spacer
+    if [ -e "${HOME}/tmp/Miniconda3" ]; then
+        export PATH=${HOME}/tmp/Miniconda3/bin:$PATH
+    fi 
 fi
 
 ### Install Jovian_master if it doesn't already exist, afterwards, start Jovian_master
@@ -372,7 +389,7 @@ fi
         ###############################################################################################################
 
 ### Checker for if IGVjs is installed, otherwise, ask user if it should be installed
-if [ "$choices_installeranswers_igvjs" == "U" ]; then
+if [ "$igvjs_installeranswers_igvjs" == "U" ]; then
     if [ ! -e ${IGVJS_LOCATION} ]; then
         installer_intro
         echo -e "IGVjs hasn't been installed in this working directory yet... \n\nIGVjs is the piece of software which is used for the interactive scaffold viewer in the Jupyter notebook reports"
@@ -384,21 +401,21 @@ if [ "$choices_installeranswers_igvjs" == "U" ]; then
             echo -e "Starting with installing IGVjs, this can take up to 15 minutes..."
             bin/install_IGVjs.sh
             echo -e "DONE with installing IGVjs"
-            echo -e "installeranswers:\n    igvjs: Y" > ${HOME}/.jovian_installchoice
+            echo -e "installeranswers:\n    igvjs: Y" > ${HOME}/.jovian_installchoice_igvjs
         else
             echo -e "Skipping the installation of IGVjs..."
-            echo -e "installeranswers:\n    igvjs: N" > ${HOME}/.jovian_installchoice
+            echo -e "installeranswers:\n    igvjs: N" > ${HOME}/.jovian_installchoice_igvjs
             sleep 1
         fi
     fi
-elif [ "$choices_installeranswers_igvjs" == "Y" ]; then
+elif [ "$igvjs_installeranswers_igvjs" == "Y" ]; then
     if [ ! -e ${IGVJS_LOCATION} ]; then
         echo -e "Installing IGVjs in your working directory..."
         echo -e "This can take up to 15 minutes"
         bin/install_IGVjs.sh
         echo -e "Done with installing IGVjs"
     fi
-elif [ "$choices_installeranswers_igvjs" == "N" ]; then
+elif [ "$igvjs_installeranswers_igvjs" == "N" ]; then
     if [ ! -e ${IGVJS_LOCATION} ]; then
     echo -e "Skipping installation of IGVjs in your working directory\nIf you want to use IGVjs then please use the jovian command to install it in your working directory. \nSee the Jovian manual for more information and instructions."
     fi
@@ -500,17 +517,18 @@ if [ "${INSTALL_CONDA:-}" == "TRUE" ]; then
     exit 0
 fi
 
+### Start and stop commands for nginx
 if [ "${START_NGINX}" == "TRUE" ]; then
     (bin/start_nginx.sh start)
     exit 0
 fi
-
 if [ "${STOP_NGINX}" == "TRUE" ]; then
     nginx -s quit
     echo "nginx has been stopped"
     exit 0
 fi
 
+### * Auto configure the jupyter user profile and prepare it for direct use
 if [ "${CONFIG_JUP}" == "TRUE" ]; then
     jt -t grade3 -fs 95 -altp -tfs 11 -nfs 115 -cellw 88% -T
     sed -i '1704,1706d' ~/.jupyter/custom/custom.css
@@ -519,14 +537,81 @@ if [ "${CONFIG_JUP}" == "TRUE" ]; then
     jupyter notebook --generate-config
     sed -i "s/#c.NotebookApp.allow_remote_access = False/c.NotebookApp.allow_remote_access = True/g" ~/.jupyter/jupyter_notebook_config.py
     sed -i "s/#c.NotebookApp.ip = 'localhost'/c.NotebookApp.ip = '${SET_HOSTNAME}'/g" ~/.jupyter/jupyter_notebook_config.py
-    sed -i "s/#c.NotebookApp.port = 8888/c.NotebookApp.port = 8890/g" ~/.jupyter/jupyter_notebook_config.py
-    sed -i "s@#c.ContentsManager.root_dir = '/'@c.ContentsManager.root_dir = '/'@g" ~/.jupyter/jupyter_notebook_config.py
+    sed -i "s/#c.NotebookApp.port = 8888/c.NotebookApp.port = 8888/g" ~/.jupyter/jupyter_notebook_config.py
     sed -i "s/#c.NotebookApp.open_browser = True/c.NotebookApp.open_browser = False/g" ~/.jupyter/jupyter_notebook_config.py
+    sed -i "s/#c.NotebookApp.iopub_data_rate_limit = 1000000/c.NotebookApp.iopub_data_rate_limit = 100000000/g" ~/.jupyter/jupyter_notebook_config.py
     cp files/Jupyter_notebook/edit.json ~/.jupyter/nbconfig
     cp files/Jupyter_notebook/notebook.json ~/.jupyter/nbconfig
     cp files/Jupyter_notebook/tree.json ~/.jupyter/nbconfig
     echo "Done - Jupyter notebooks is configured and ready for use"
     exit 0
+fi
+
+if [ "${START_JUPYTER}" == "TRUE" ]; then
+    cd /
+    line
+    minispacer
+    echo -e "\e[1;91;40mJupyter notebooks will start in a moment                                                      \e[0m"
+    echo -e "\e[1;91;40mPlease take note that Jupyter will keep running until you \e[4mEXPLICITLY\e[24m tell it to stop.         \e[0m"
+    echo -e "\e[1;91;40mYou can stop Jupyter by pressing 'Ctrl + C' on your keyboard \e[4mtwice\e[24m                            \e[0m"
+    minispacer
+    sleep 3
+    jupyter notebook
+    exit 0
+fi
+
+if [ "${JOVIAN_MODE}" == "relaxed" ]; then
+    #* Check the settings for the slidingwindow and change it when the setting does not match :5:20
+    if [ "$params_Trimmomatic_quality_trimming_config" != "SLIDINGWINDOW:5:20" ]; then
+        sed -i "s/    quality_trimming_config: $params_Trimmomatic_quality_trimming_config/    quality_trimming_config: SLIDINGWINDOW:5:20/g" profile/pipeline_parameters.yaml
+    fi
+    #* Check the settings for the minlen filtering and change it when the setting does not match 250
+    if [ "$params_scaffold_minLen_filter_minlen" != "250" ]; then
+        sed -i "s/    minlen: $params_scaffold_minLen_filter_minlen/    minlen: 250/g" profile/pipeline_parameters.yaml
+    fi
+    echo -e "Relaxed mode set..."
+
+elif [ "${JOVIAN_MODE}" == "strict" ]; then
+    #* Check the settings for the slidingwindow and change it when the setting does not match :5:30
+    if [ "$params_Trimmomatic_quality_trimming_config" != "SLIDINGWINDOW:5:30" ]; then
+        sed -i "s/    quality_trimming_config: $params_Trimmomatic_quality_trimming_config/    quality_trimming_config: SLIDINGWINDOW:5:30/g" profile/pipeline_parameters.yaml
+    fi
+    #* Check the settings for the minlen filtering and change it when the setting does not match 500
+    if [ "$params_scaffold_minLen_filter_minlen" != "500" ]; then
+        sed -i "s/    minlen: $params_scaffold_minLen_filter_minlen/    minlen: 500/g" profile/pipeline_parameters.yaml
+    fi
+    echo -e "Strict mode set..."
+
+elif [ "${JOVIAN_MODE}" == "NONE" ]; then
+    #* Check if parameters match with strict mode
+    if [ "$params_Trimmomatic_quality_trimming_config" == "SLIDINGWINDOW:5:30" ] && [ "$params_scaffold_minLen_filter_minlen" == "500" ]; then
+        echo -e "Jovian will run in strict mode..."
+    fi
+    #* Check if parameters match with relaxed mode
+    if [ "$params_Trimmomatic_quality_trimming_config" == "SLIDINGWINDOW:5:20" ] && [ "$params_scaffold_minLen_filter_minlen" == "250" ]; then
+        echo -e "Jovian will run in relaxed mode..."
+    fi
+    #* Check if parameters do not match with any of the predefined modes, exit if true
+    if [[ ! "$params_Trimmomatic_quality_trimming_config" =~ ^(SLIDINGWINDOW:5:20|SLIDINGWINDOW:5:30)$ ]]; [[ ! "$params_scaffold_minLen_filter_minlen" =~ ^(250|500)$ ]]; then
+        echo -e "Jovian will run in a custom mode"
+    fi
+
+elif [[ ! "${JOVIAN_MODE}" =~ ^(relaxed|strict)$ ]]; then
+    #* Check if parameters match with strict mode
+    if [ "$params_Trimmomatic_quality_trimming_config" == "SLIDINGWINDOW:5:30" ] && [ "$params_scaffold_minLen_filter_minlen" == "500" ]; then
+        echo -e "Jovian is set to run in strict mode"
+        exit 0
+    fi
+    #* Check if parameters match with relaxed mode
+    if [ "$params_Trimmomatic_quality_trimming_config" == "SLIDINGWINDOW:5:20" ] && [ "$params_scaffold_minLen_filter_minlen" == "250" ]; then
+        echo -e "Jovian is set to run in relaxed mode"
+        exit 0
+    fi
+    #* Check if parameters do not match with any of the predefined modes, exit if true
+    if [[ ! "$params_Trimmomatic_quality_trimming_config" =~ ^(SLIDINGWINDOW:5:20|SLIDINGWINDOW:5:30)$ ]]; [[ ! "$params_scaffold_minLen_filter_minlen" =~ ^(250|500)$ ]]; then
+        echo -e "Jovian is set to run with a custom config/mode"
+        exit 0
+    fi
 fi
 
 ### Pass other CLI arguments along to Snakemake
