@@ -656,8 +656,20 @@ rule quantify_output:
     threads: config["threads"]["quantify_output"]
     log:
         "logs/quantify_output.log"
-    script:
-        "bin/quantify_profiles.py"
+    shell:
+        """
+python bin/quantify_profiles.py \
+-f {input.fastqc} \
+-t {input.trimmomatic} \
+-hg {input.hugo} \
+-c {input.classified} \
+-u {input.unclassified} \
+-co {output.counts} \
+-p {output.percentages} \
+-g {output.graph} \
+-cpu {threads} \
+-l {log}
+        """
 
     #############################################################################
     ##### Make heatmaps for superkingdoms and viruses                       #####
