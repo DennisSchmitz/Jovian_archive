@@ -436,7 +436,10 @@ pileup.sh in={input.bam} \
 ref={input.fasta} \
 fastaorf={input.ORF_NT_fasta} \
 outorf={output.perORFcoverage} \
-out={output.perScaffold} 2> {output.summary} 1> {log}
+out={output.perScaffold} \
+secondary=f \
+samstreamer=t \
+2> {output.summary} 1> {log}
         """
 
 rule Determine_GC_content:
