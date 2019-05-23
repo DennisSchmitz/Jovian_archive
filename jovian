@@ -37,6 +37,7 @@ STOP_NGINX="FALSE"
 REBUILD_ARCHIVE="FALSE"
 CONFIG_JUP="FALSE"
 JOVIAN_MODE="NONE"
+START_JUPYTER="FALSE"
 SHEET_SUCCESS="FALSE" # Default value for sample_sheet.yaml
 
 ### Parse the jovian commandline arguments, if they are not part of jovian, they get send to Snakemake
@@ -101,6 +102,10 @@ do
         ;;
         --configure-jupyter)
         CONFIG_JUP="TRUE"
+        shift # Next
+        ;;
+        --start-jupyter)
+        START_JUPYTER="TRUE"
         shift # Next
         ;;
         --virus-typing)
@@ -539,6 +544,19 @@ if [ "${CONFIG_JUP}" == "TRUE" ]; then
     cp files/Jupyter_notebook/notebook.json ~/.jupyter/nbconfig
     cp files/Jupyter_notebook/tree.json ~/.jupyter/nbconfig
     echo "Done - Jupyter notebooks is configured and ready for use"
+    exit 0
+fi
+
+if [ "${START_JUPYTER}" == "TRUE" ]; then
+    cd /
+    line
+    minispacer
+    echo -e "\e[1;91;40mJupyter notebooks will start in a moment                                                      \e[0m"
+    echo -e "\e[1;91;40mPlease take note that Jupyter will keep running until you \e[4mEXPLICITLY\e[24m tell it to stop.         \e[0m"
+    echo -e "\e[1;91;40mYou can stop Jupyter by pressing 'Ctrl + C' on your keyboard \e[4mtwice\e[24m                            \e[0m"
+    minispacer
+    sleep 3
+    jupyter notebook
     exit 0
 fi
 
