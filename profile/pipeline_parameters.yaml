@@ -7,7 +7,7 @@ Trimmomatic:
     adapter_removal_config: ILLUMINACLIP:files/trimmomatic_0.36_adapters_lists/NexteraPE-PE.fa:2:30:10:8:true
     # ! test settings for best "relaxed" mode
     # Default: 5 nucleotides window size, minimum average Phred score of 30
-    quality_trimming_config: SLIDINGWINDOW:5:20
+    quality_trimming_config: SLIDINGWINDOW:5:30
     # Default: Remove anything smaller than 50 nucleotides
     minimum_length_config: MINLEN:50
     
@@ -25,7 +25,7 @@ SPAdes:
 scaffold_minLen_filter:
     # ! test settings for best "relaxed" mode
     # Minimum allowed scaffold size to be allowed for downstream processessing. Advice, use a minimum length that is atleast 1nt greater than your Illumina read length
-    minlen: 250
+    minlen: 500
 
 taxonomic_classification: # NT database is hardcoded for now
     evalue: 0.05 # E-value threshold for saving hits
