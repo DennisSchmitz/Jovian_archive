@@ -294,9 +294,6 @@ fi
 eval $(parse_yaml ${HOME}/.jovian_installchoice_igvjs "igvjs_")
 
 if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. the `conda` command is not available), if true, install it in ~/tmp. Otherwise, proceed.
-    if [ -e "${HOME}/tmp/Miniconda3" ]; then
-        export PATH=${HOME}/tmp/Miniconda3/bin:$PATH
-    fi 
     if [ ! -e "${HOME}/tmp/Miniconda3" ]; then
         ### confirmation of conda installation
         installer_intro
@@ -352,6 +349,9 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
         line
         spacer
     fi
+    if [ -e "${HOME}/tmp/Miniconda3" ]; then
+        export PATH=${HOME}/tmp/Miniconda3/bin:$PATH
+    fi 
 fi
 
 ### Install Jovian_master if it doesn't already exist, afterwards, start Jovian_master
