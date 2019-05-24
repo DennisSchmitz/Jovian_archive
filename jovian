@@ -31,6 +31,7 @@ INSTALL_IGVJS="FALSE"
 INSTALL_DB="FALSE"
 CLEAN="FALSE"
 VIRUS_TYPING="FALSE"
+FORCE_OVERWRITE_TT="FALSE"
 ARCHIVE="FALSE"
 START_NGINX="FALSE"
 STOP_NGINX="FALSE"
@@ -114,6 +115,10 @@ do
         shift # Next
         shift # Next
         ;;
+        --force)
+        FORCE_OVERWRITE_TT="TRUE"
+        shift # Next
+        ;;
         *) # Any other option
         POSITIONAL+=("$1") # save in array
         shift # Next
@@ -165,9 +170,12 @@ Output:
   results/                          Contains all final results, these are visualized via the
                                     web-report (Notebook_report.ipynb).
 Parameters:
-  --virus-typing [NoV|EV|HAV|       After a Jovian analyses has completed, do viral typing for
-                  HEV|RVA]          Norovirus (NoV), Enterovirus (EV), Hepatitis A (HAV), 
+  --virus-typing [NoV|EV|RVA|HAV|HEV] (--force)
+                                    After a Jovian analyses has completed, do viral typing for
+                                    Norovirus (NoV), Enterovirus (EV), Hepatitis A (HAV), 
                                     Hepatitis E (HEV) or Rotavirus A (RVA).
+                                    You can add the optional '--force' flag to overwrite 
+                                    existing output.
   --help -h                         Print the Jovian help document.
   --snakemake-help -sh              Print the Snakemake help document.
   --clean                           Removes Jovian output.
@@ -437,20 +445,16 @@ fi
 
 ### Virus typing block, as specified via CLI argument '--virus-typing'
 if [ "${VIRUS_TYPING:-}" == "TRUE" ]; then
-    if [[ "${WHICH_TT}" =~ ^(NoV|EV|HAV|HEV|RVA)$ ]]; then
-        if [ -e data/tables/ ]; then
-            bash bin/virus_typing.sh ${WHICH_TT}
-            exit 0
-        else
-            echo -e "No 'data/tables' folder found. Virus typing can only be performed after a completed Jovian analysis."
-            exit 1
-        fi
+    if [ "${FORCE_OVERWRITE_TT:-}" == "TRUE" ]; then
+        bash bin/virus_typing.sh ${WHICH_TT} --force
+        exit 0
     else
-        echo -e "\nVirus typing error (--virus-typing), unknown parameter '"${WHICH_TT}"'.\n\tPlease specify either 'NoV', 'EV', 'HAV', 'HEV' or 'RVA'."
-        exit 1
+        bash bin/virus_typing.sh ${WHICH_TT}
+        exit 0
     fi
 fi
 
+#TODO the syntax below doesn't work if there are multiple archives. Dangerous.
 if [ "${REBUILD_ARCHIVE}" == "TRUE" ]; then
     if [ -e archive_*.tar.gz ]; then
         bin/rebuild_archive.sh
