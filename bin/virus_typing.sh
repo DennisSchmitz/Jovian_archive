@@ -7,22 +7,49 @@
 ###    Hepatitis E: https://www.rivm.nl/mpf/typingservice/hev/                                                    ###
 ###    Rotavirus:   https://www.rivm.nl/mpf/typingservice/rotavirusa/                                             ###
 ###                                                                                                               ###
-### Usage: bin/fastqc_wrapper.sh {NoV|EV|HAV|HEV|RVA}                                                             ###
+### Usage: bin/fastqc_wrapper.sh {NoV|EV|HAV|HEV|RVA} (--force)                                                   ###
+###     --force     Will redo and force-overwrite previously generated results.                                   ###
 #####################################################################################################################
 
+usage_msg() {
+    echo -e "Wrong parameters"
+}
+
+wrong_tt_keyword_err_msg() {
+    echo -e "\nUnknown parameter '"${1}"' given. Please specify either 'NoV', 'EV', 'HAV', 'HEV' or 'RVA'.\n\tPlease note, these arguments are case-sensitive."
+}
+
+validate_input_tt_keyword() {
+   if [[ "${1}" =~ ^(NoV|EV|HAV|HEV|RVA)$ ]]; then
+        if [ ! -e data/tables/ ]; then
+            echo -e "No 'data/tables' folder found. Virus typing can only be performed after a completed Jovian analysis."
+            exit 1
+        fi
+    else
+        wrong_tt_keyword_err_msg "${1}"
+        exit 1
+    fi
+}
+
 # Check commandline argument, throw error if wrong, parse argument if right
-if [ -z "${1}" ] || [ $# -ne 1 ]
-then
-   echo "Please specify which typingtool you want to use by entering the following parameter:"
-   echo -e "\t'NoV' for Norovirus"
-   echo -e "\t'EV' for Enterovirus"
-   echo -e "\t'HAV' for Hepatitis A"
-   echo -e "\t'HEV' for Hepatitis E"
-   echo -e "\t'RVA' for Rotavirus A"
-   echo -e "Please note, these parameters are case-sensitive."
-   exit 1
+#! If $1 is not empty, and $2 is not empty, and number of arguments is equal to 2
+if [ ! -z "${1}" -a ! -z "${2}" -a $# -eq 2 ]; then
+    validate_input_tt_keyword "${1}"
+    WHICH_TT="${1}"
+    #! If $2 equal the literal --force
+    if [ "${2}" == "--force" ]; then
+        FORCE_FLAG="TRUE"
+    else
+        echo -e "\nUnknown parameter '"${2}"' given. Did you mean '"--force"'?"
+        exit 1
+    fi
+#! If $1 is not empty, and number of arguments is equal to 1
+elif [ ! -z "${1}" -a $# -eq 1 ]; then
+    validate_input_tt_keyword "${1}"
+    WHICH_TT="${1}"
 else
-   WHICH_TT="${1}"
+    usage_msg
+    exit 1
 fi
 
 # Setup
@@ -97,10 +124,10 @@ typingtool() {
 
     #! Check if the files are already generated previously (happens when the TT overloads and some queries fail while others do not)
     #! Also check if the --force flag is ALSO NOT set, then do nothing, else process and send the query
-    if [ -s "${query_fasta}" -a -s "${tt_xml}" -a -s "${tt_csv}" ]
-    then
-        echo -e "Sample:\t${sample_name}\tScaffolds compatible with the ${which_tt} tool were already found and analyzed in earlier analysis. Skipping..."
-    else
+
+    #! If tt_csv doesn't exist, OR, FORCE_FLAG is NOT empty (i.e. force overwrite previously generated output)
+    #TODO this will need to be changed if we remove the tt_csv output in the snakemake script (remove temp chunk/onsuccess)
+    if [ ! -e "${tt_csv}" ] || [ ! -z "${FORCE_FLAG}" ]; then
         # Extract taxonomic slice fasta, send to TT, parse the results XML into csv
         extract_fasta "${file_path}" "${query_fasta}" "${extract_name}" "${extract_field}"
         if [ -s "${query_fasta}" ]
@@ -116,10 +143,14 @@ typingtool() {
                 # If error code is not found; parse the XML
                 python ${parser_py} "${sample_name}" "${tt_xml}" "${tt_csv}"
             fi
-
         else
             echo -e "${nothing_found_message}"
         fi
+    #! If tt_csv is not empty (i.e. it exists and has contents), AND, FORCE_FLAG is empty (i.e. don't force overwrite previously generated output)
+    elif [ -s "${tt_csv}" ] && [ -z "${FORCE_FLAG}" ]; then
+        echo -e "Sample:\t${sample_name}\tScaffolds compatible with the ${which_tt} tool were already found and analyzed in earlier analysis. Skipping..."
+    else
+        echo -e "${nothing_found_message}"
     fi
 }
 
