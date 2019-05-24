@@ -31,6 +31,7 @@ INSTALL_IGVJS="FALSE"
 INSTALL_DB="FALSE"
 CLEAN="FALSE"
 VIRUS_TYPING="FALSE"
+FORCE_OVERWRITE_TT="FALSE"
 ARCHIVE="FALSE"
 START_NGINX="FALSE"
 STOP_NGINX="FALSE"
@@ -114,6 +115,10 @@ do
         shift # Next
         shift # Next
         ;;
+        --force)
+        FORCE_OVERWRITE_TT="TRUE"
+        shift # Next
+        ;;
         *) # Any other option
         POSITIONAL+=("$1") # save in array
         shift # Next
@@ -157,28 +162,42 @@ Jovian, version $VERSION, built with Snakemake
   N.B. it is designed for Illumina paired-end data only
 
 Input:
-  --input -i DIR                    This is the folder containing your input fastq files.
+  -i, --input [DIR]                 This is the folder containing your input fastq files.
                                     Default is 'raw_data/' and only relative paths are accepted.
-Output:
+Output (automatically generated):
   data/                             Contains detailed intermediate files.
   logs/                             Contains all log files.
   results/                          Contains all final results, these are visualized via the
                                     web-report (Notebook_report.ipynb).
 Parameters:
-  --virus-typing [NoV|EV|HAV|       After a Jovian analyses has completed, do viral typing for
-                  HEV|RVA]          Norovirus (NoV), Enterovirus (EV), Hepatitis A (HAV), 
+  -m, --mode [strict|relaxed]       Work-in-progress. Automatically configures Jovian to be
+                                    stringent or relaxed in taxonomic classification of
+                                    scaffolds.
+                                    #TODO add clarification once tested
+  --virus-typing [NoV|EV|RVA|HAV|HEV] (--force)
+                                    After a Jovian analyses has completed, do viral typing for
+                                    Norovirus (NoV), Enterovirus (EV), Hepatitis A (HAV), 
                                     Hepatitis E (HEV) or Rotavirus A (RVA).
-  --help -h                         Print the Jovian help document.
-  --snakemake-help -sh              Print the Snakemake help document.
+                                        You can add the optional '--force' flag to overwrite 
+                                        existing output.
+  -h, --help                        Print the Jovian help document.
+  -sh, --snakemake-help             Print the Snakemake help document.
   --clean                           Removes Jovian output.
-  --keep-going -k                   Useful snakemake command: Go on with independent jobs if
+  -k, --keep-going                  Useful snakemake command: Go on with independent jobs if
                                     a job fails.
-  --dry-run -n                      Useful snakemake command: Do not execute anything, and
+  -n, --dry-run                     Useful snakemake command: Do not execute anything, and
                                     display what would be done.
   --unlock                          Useful snakemake command: Remove a lock on the working
                                     directory.
-  --quiet -q                        Useful snakemake command: Do not output any progress or
+  -q, --quiet                       Useful snakemake command: Do not output any progress or
                                     rule information.
+Jupyter Notebook (for data visualization):
+  --configure-jupyter               Sets the proper Jupyter settings. You only need to do this
+                                    once per user.
+  --start-jupyter                   Starts a Jupyter Notebook process. You must always have this
+                                    running in a separate terminal (or in the background) if you
+                                    want to open the final report with the interactive graphs
+                                    and tables.
 Archiving Jovian results:
   --archive                         Archives the output of a Jovian analysis into single
                                     compressed file.
@@ -187,14 +206,14 @@ Archiving Jovian results:
                                     as was initially used to build the archive. N.B. databases
                                     are not restored.
 Installation:
-  --install-dependencies -ic        Install the required software dependencies.
-  --install-igvjs -ii               Install IGVjs dependency.
-  --install-databases -id           Install required databases.
+  -ic, --install-dependencies       Install the required software dependencies.
+  -ii, --install-igvjs              Install IGVjs dependency.
+  -id, --install-databases          Install required databases.
 Nginx (debug only):
   --start-nginx                     Starts the nginx process.
   --stop-nginx                      Stops the nginx process.
 Other:
-  --version -v                      Prints the version of Jovian.
+  -v, --version                     Prints the version of Jovian.
 HELP_USAGE
     exit 0
 fi
@@ -437,20 +456,16 @@ fi
 
 ### Virus typing block, as specified via CLI argument '--virus-typing'
 if [ "${VIRUS_TYPING:-}" == "TRUE" ]; then
-    if [[ "${WHICH_TT}" =~ ^(NoV|EV|HAV|HEV|RVA)$ ]]; then
-        if [ -e data/tables/ ]; then
-            bash bin/virus_typing.sh ${WHICH_TT}
-            exit 0
-        else
-            echo -e "No 'data/tables' folder found. Virus typing can only be performed after a completed Jovian analysis."
-            exit 1
-        fi
+    if [ "${FORCE_OVERWRITE_TT:-}" == "TRUE" ]; then
+        bash bin/virus_typing.sh ${WHICH_TT} --force
+        exit 0
     else
-        echo -e "\nVirus typing error (--virus-typing), unknown parameter '"${WHICH_TT}"'.\n\tPlease specify either 'NoV', 'EV', 'HAV', 'HEV' or 'RVA'."
-        exit 1
+        bash bin/virus_typing.sh ${WHICH_TT}
+        exit 0
     fi
 fi
 
+#TODO the syntax below doesn't work if there are multiple archives. Dangerous.
 if [ "${REBUILD_ARCHIVE}" == "TRUE" ]; then
     if [ -e archive_*.tar.gz ]; then
         bin/rebuild_archive.sh

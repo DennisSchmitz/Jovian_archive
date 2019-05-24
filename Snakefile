@@ -820,7 +820,6 @@ onsuccess:
         echo -e "\tRemoving temporary files..."
         if [ "{config[remove_temp]}" != "0" ]
         then
-        #    echo -e "\t\tValue is NOT 0 --> {config[remove_temp]}"   # DEBUG only
             rm -rf data/FastQC_pretrim/
             rm -rf data/FastQC_posttrim/
             rm -rf data/cleaned_fastq/fastq_without_HuGo_removal/
@@ -833,12 +832,14 @@ onsuccess:
             rm -f data/taxonomic_classification/*.taxtab
             rm -f data/taxonomic_classification/*.taxMagtab
         else
-        #    echo -e "\t\tValue is 0 --> {config[remove_temp]}"   # DEBUG only
             echo -e "\t\tYou chose to not remove temp files: the human genome alignment files are not removed."
         fi
 
         echo -e "\tCreating symlinks for the interactive genome viewer..."
         bin/set_symlink.sh
+
+        echo -e "\tGenerating HTML index of log files..."
+        tree -hD --dirsfirst -H "../logs" -L 2 -T "Logs overview" --noreport --charset utf-8 -P "*" -o results/logfiles_index.html logs/
 
         echo -e "\tGenerating Snakemake report..."
         snakemake --unlock --config sample_sheet=sample_sheet.yaml
