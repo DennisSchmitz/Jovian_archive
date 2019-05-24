@@ -126,9 +126,9 @@ The installation of IGVjs will now start, this can take up to 30 minutes.
 #### BLAST NT, NR and taxdb databases  
 - Use the `Jovian_helper` environment, i.e. `conda activate Jovian_helper`.  
 - Use the script to download...  
-  - NT: `cd [desired_database_location]; bash ${CONDA_PREFIX}/bin/update_blastdb.pl --decompress nt`  
-  - NR: `cd [desired_database_location]; bash ${CONDA_PREFIX}/bin/update_blastdb.pl --decompress nr`  
-  - Taxdb: `cd [desired_database_location]; bash ${CONDA_PREFIX}/bin/update_blastdb.pl --decompress taxdb`  
+  - NT: `cd [desired_database_location]; perl ${CONDA_PREFIX}/bin/update_blastdb.pl --decompress nt`  
+  - NR: `cd [desired_database_location]; perl ${CONDA_PREFIX}/bin/update_blastdb.pl --decompress nr`  
+  - Taxdb: `cd [desired_database_location]; perl ${CONDA_PREFIX}/bin/update_blastdb.pl --decompress taxdb`  
 - Put a file named [.ncbirc](files/.ncbirc) in your home (`cd ~`) directory. See this example [.ncbirc](files/.ncbirc), remember to update it for your local setup!   
   - We advise you to setup automatic `crontab` scripts to update these databases every week, please contact your own IT support for help with this.  
 
