@@ -7,22 +7,49 @@
 ###    Hepatitis E: https://www.rivm.nl/mpf/typingservice/hev/                                                    ###
 ###    Rotavirus:   https://www.rivm.nl/mpf/typingservice/rotavirusa/                                             ###
 ###                                                                                                               ###
-### Usage: bin/fastqc_wrapper.sh {NoV|EV|HAV|HEV|RVA} (--force)                                                   ###
+### Usage: bin/virus_typing.sh {NoV|EV|HAV|HEV|RVA} (--force)                                                     ###
 ###     --force     Will redo and force-overwrite previously generated results.                                   ###
 #####################################################################################################################
 
+# Setup
+INPUT_FOLDER="data/tables/" # Default Jovian output directory ("data/tables/")
+INPUT_FILES="${INPUT_FOLDER}*_taxClassified.tsv" # Combine the INPUT_FOLDER with the default output file suffix ("*_taxClassified.tsv") into a file glob
+OUTPUT_FOLDER="data/virus_typing_tables/"
+mkdir -p ${OUTPUT_FOLDER}
+
 usage_msg() {
-    echo -e "Wrong parameters"
+    cat <<HELP_USAGE
+Usage: bin/virus_typing.sh [NoV|EV|RVA|HAV|HEV] (--force)
+
+The first argument should always be one of the keyword listed below:
+    N.B. Keywords are case-sensitive
+    -----------------------------------
+    | Keyword | Typeable virusses     |
+    |---------------------------------|
+    | NoV     | Caliciviridae family  |
+    | EV      | Picornaviridae family |
+    | RVA     | Rotavirus genus       |
+    | HAV     | Hepatovirus genus     |
+    | HEV     | Orthohepevirus genus  |
+    -----------------------------------
+
+Optionally, you can force overwrite existing results by adding '--force'.
+HELP_USAGE
 }
 
+#################################################################################
+### Parse CLI argument, throw error if wrong, set proper variables if right #####
+#################################################################################
+
 wrong_tt_keyword_err_msg() {
-    echo -e "\nUnknown parameter '"${1}"' given. Please specify either 'NoV', 'EV', 'HAV', 'HEV' or 'RVA'.\n\tPlease note, these arguments are case-sensitive."
+    echo -e "\nUnknown parameter '"${1}"' given.\n"
+    usage_msg
 }
 
 validate_input_tt_keyword() {
    if [[ "${1}" =~ ^(NoV|EV|HAV|HEV|RVA)$ ]]; then
-        if [ ! -e data/tables/ ]; then
-            echo -e "No 'data/tables' folder found. Virus typing can only be performed after a completed Jovian analysis."
+        if [ ! -d "${INPUT_FOLDER}" ]; then
+            echo -e "No '"${INPUT_FOLDER}"' folder found. Virus typing can only be performed after a completed Jovian analysis."
             exit 1
         fi
     else
@@ -31,7 +58,6 @@ validate_input_tt_keyword() {
     fi
 }
 
-# Check commandline argument, throw error if wrong, parse argument if right
 #! If $1 is not empty, and $2 is not empty, and number of arguments is equal to 2
 if [ ! -z "${1}" -a ! -z "${2}" -a $# -eq 2 ]; then
     validate_input_tt_keyword "${1}"
@@ -48,15 +74,15 @@ elif [ ! -z "${1}" -a $# -eq 1 ]; then
     validate_input_tt_keyword "${1}"
     WHICH_TT="${1}"
 else
+    echo -e "Invalid input parameters, please use one of these parameters:\n"
     usage_msg
     exit 1
 fi
 
-# Setup
-OUTPUT_FOLDER="data/virus_typing_tables/"
-mkdir -p ${OUTPUT_FOLDER}
+#################################################################################
+### Virus typing                                                            #####
+#################################################################################
 
-# Functions
 extract_fasta() {
     local input="${1}"
     local output="${2}"
@@ -122,9 +148,6 @@ typingtool() {
     local tt_xml=${query_fasta/.fa/.xml}
     local tt_csv=${tt_xml/.xml/.csv}
 
-    #! Check if the files are already generated previously (happens when the TT overloads and some queries fail while others do not)
-    #! Also check if the --force flag is ALSO NOT set, then do nothing, else process and send the query
-
     #! If tt_csv doesn't exist, OR, FORCE_FLAG is NOT empty (i.e. force overwrite previously generated output)
     #TODO this will need to be changed if we remove the tt_csv output in the snakemake script (remove temp chunk/onsuccess)
     if [ ! -e "${tt_csv}" ] || [ ! -z "${FORCE_FLAG}" ]; then
@@ -146,7 +169,7 @@ typingtool() {
         else
             echo -e "${nothing_found_message}"
         fi
-    #! If tt_csv is not empty (i.e. it exists and has contents), AND, FORCE_FLAG is empty (i.e. don't force overwrite previously generated output)
+    #! If tt_csv is not empty (i.e. it exists and has content), AND, FORCE_FLAG is empty (i.e. don't force overwrite previously generated output)
     elif [ -s "${tt_csv}" ] && [ -z "${FORCE_FLAG}" ]; then
         echo -e "Sample:\t${sample_name}\tScaffolds compatible with the ${which_tt} tool were already found and analyzed in earlier analysis. Skipping..."
     else
@@ -154,13 +177,17 @@ typingtool() {
     fi
 }
 
-# Perform all typingtool functions for each input file in the glob below (standard Jovian output)
+# Perform all typingtool functions for each input file specified in the glob below, based on the INPUT_FILES variable
 echo -e "\nStarting with ${WHICH_TT} typingtool analysis.\nN.B. depending on the size of your dataset, and the load of the virus typingtool webservice, this might take some time...\n"
-for FILE in data/tables/*_taxClassified.tsv
+for FILE in ${INPUT_FILES}
 do
     BASENAME=${FILE##*/}   # Filename without path but WITH suffixes
     typingtool "${FILE}" "${BASENAME}" "${WHICH_TT}"
 done
+
+#################################################################################
+### Concatenate all indivual files together into one big file               #####
+#################################################################################
 
 if [ -n "$( find data/virus_typing_tables/ -maxdepth 1 -name "*_${WHICH_TT}.csv" -print -quit )" ]
 then
@@ -168,8 +195,10 @@ then
     gawk 'FNR==1 && NR!=1 { next; } { print }' data/virus_typing_tables/*_${WHICH_TT}.csv > results/all_${WHICH_TT}-TT.csv
 fi
 
-# Cleanup
+#################################################################################
+### Cleanup #####
+#################################################################################
 find data/virus_typing_tables/ -type f -empty -delete
-#rm -f data/virus_typing_tables/*_${WHICH_TT}.fa # Commented this out for debugging purposes, should be activated in v.1.0
-#rm -f data/virus_typing_tables/*_${WHICH_TT}.xml # Commented this out for debugging purposes, should be activated in v.1.0
+#TODO rm -f data/virus_typing_tables/*_${WHICH_TT}.fa # Commented this out for debugging purposes, should be activated in v.1.0 (but please first see other #TODO above)
+#TODO rm -f data/virus_typing_tables/*_${WHICH_TT}.xml # Commented this out for debugging purposes, should be activated in v.1.0 (but please first see other #TODO above)
 echo -e "\nFinished"
