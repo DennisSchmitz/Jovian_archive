@@ -1,11 +1,11 @@
 #!/bin/bash
 #####################################################################################################################
 ### This script interacts with the public web-based virus typingtools hosted by the RIVM:                         ###
-###    Norovirus:   https://www.rivm.nl/mpf/typingservice/norovirus/                                              ###
-###    Enterovirus: https://www.rivm.nl/mpf/typingservice/enterovirus/                                            ###
-###    Hepatitis A: https://www.rivm.nl/mpf/typingservice/hav/                                                    ###
-###    Hepatitis E: https://www.rivm.nl/mpf/typingservice/hev/                                                    ###
-###    Rotavirus:   https://www.rivm.nl/mpf/typingservice/rotavirusa/                                             ###
+###    Norovirus:   https://www.rivm.nl/mpf/[typingservice|typingtool]/norovirus/                                 ###
+###    Enterovirus: https://www.rivm.nl/mpf/[typingservice|typingtool]/enterovirus/                               ###
+###    Hepatitis A: https://www.rivm.nl/mpf/[typingservice|typingtool]/hav/                                       ###
+###    Hepatitis E: https://www.rivm.nl/mpf/[typingservice|typingtool]/hev/                                       ###
+###    Rotavirus:   https://www.rivm.nl/mpf/[typingservice|typingtool]/rotavirusa/                                ###
 ###                                                                                                               ###
 ### Usage: bin/virus_typing.sh {NoV|EV|HAV|HEV|RVA} (--force)                                                     ###
 ###     --force     Will redo and force-overwrite previously generated results.                                   ###
