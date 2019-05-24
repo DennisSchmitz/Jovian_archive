@@ -58,7 +58,7 @@ typingtool() {
         local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_NoV.fa}
         local extract_name="Caliciviridae" # Family
         local extract_field="8" # Family
-        local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with species == Norwalk virus found."
+        local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with family == Caliciviridae found."
     elif [ "${which_tt}" == "EV" ]; then
         local tt_url="https://www.rivm.nl/mpf/typingservice/enterovirus/"
         local parser_py="bin/typingtool_EV_XML_to_csv_parser.py"
@@ -95,24 +95,31 @@ typingtool() {
     local tt_xml=${query_fasta/.fa/.xml}
     local tt_csv=${tt_xml/.xml/.csv}
 
-    # Extract taxonomic slice fasta, send to TT, parse the results XML into csv
-    extract_fasta "${file_path}" "${query_fasta}" "${extract_name}" "${extract_field}"
-    if [ -s "${query_fasta}" ]
+    #! Check if the files are already generated previously (happens when the TT overloads and some queries fail while others do not)
+    #! Also check if the --force flag is ALSO NOT set, then do nothing, else process and send the query
+    if [ -s "${query_fasta}" -a -s "${tt_xml}" -a -s "${tt_csv}" ]
     then
-        echo -e "Sample:\t${sample_name}\tScaffolds compatible with the ${which_tt} tool found, sent to typingtool service, waiting for results... This may take a while..."
-        submit_query_fasta "${query_fasta}" "${tt_xml}" "${tt_url}"
-
-        # Sadly, the current version of the typingtool service has some issues, resulting in errors because it can't handle the request.
-        ### One of two things can happen; you get a terse xml output that states "502 Proxy Error" or you get a verbose html output that states "Error reading from remote server". Hence, the double grep OR statement...
-        if grep -q -e "502 Proxy Error" -e "Error reading from remote server" ${tt_xml}; then
-            echo -e "Sample:\t${sample_name}\tQuery cannot currently be handled by typingtool... Please try again later, for further information, see: https://github.com/DennisSchmitz/Jovian/issues/51"
-        else
-            # If error code is not found; parse the XML
-            python ${parser_py} "${sample_name}" "${tt_xml}" "${tt_csv}"
-        fi
-
+        echo -e "Sample:\t${sample_name}\tScaffolds compatible with the ${which_tt} tool were already found and analyzed in earlier analysis. Skipping..."
     else
-        echo -e "${nothing_found_message}"
+        # Extract taxonomic slice fasta, send to TT, parse the results XML into csv
+        extract_fasta "${file_path}" "${query_fasta}" "${extract_name}" "${extract_field}"
+        if [ -s "${query_fasta}" ]
+        then
+            echo -e "Sample:\t${sample_name}\tScaffolds compatible with the ${which_tt} tool found, sent to typingtool service, waiting for results... This may take a while..."
+            submit_query_fasta "${query_fasta}" "${tt_xml}" "${tt_url}"
+
+            # Sadly, the current version of the typingtool service has some issues, resulting in errors because it can't handle the request.
+            ### One of two things can happen; you get a terse xml output that states "502 Proxy Error" or you get a verbose html output that states "Error reading from remote server". Hence, the double grep OR statement...
+            if grep -q -e "502 Proxy Error" -e "Error reading from remote server" ${tt_xml}; then
+                echo -e "Sample:\t${sample_name}\tQuery cannot currently be handled by typingtool... Please try again later, for further information, see: https://github.com/DennisSchmitz/Jovian/issues/51"
+            else
+                # If error code is not found; parse the XML
+                python ${parser_py} "${sample_name}" "${tt_xml}" "${tt_csv}"
+            fi
+
+        else
+            echo -e "${nothing_found_message}"
+        fi
     fi
 }
 
