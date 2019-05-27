@@ -491,8 +491,9 @@ if [ "${INSTALL_DB:-}" == "TRUE" ]; then
         fi
         set -ue # Turn bash strict mode on again
     fi
-    echo -e "PLACEHOLDER for the actual DB update scripts"
-    # The rest of the code is performed in the helper env, not in the master env. 
+    bin/databases.sh
+    # The rest of the code is performed in the helper env, not in the master env.
+    conda deactivate 
     # source deactivate # if you need to go back to the master_env. N.B. Wrap this command with set +u and set -u when working in strict bash mode.
     echo -e "DONE"
     exit 0
