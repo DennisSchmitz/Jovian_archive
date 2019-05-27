@@ -566,9 +566,10 @@ if [ "${START_JUPYTER}" == "TRUE" ]; then
     cd /
     line
     minispacer
-    echo -e "\e[1;91;40mJupyter notebooks will start in a moment                                                      \e[0m"
-    echo -e "\e[1;91;40mPlease take note that Jupyter will keep running until you \e[4mEXPLICITLY\e[24m tell it to stop.         \e[0m"
-    echo -e "\e[1;91;40mYou can stop Jupyter by pressing 'Ctrl + C' on your keyboard \e[4mtwice\e[24m                            \e[0m"
+    # ! Give notices that jupyter is scary >:(
+    printf "\e[1;91;40m\tJupyter notebooks will start in a moment                                                      \e[0m\n"
+    printf "\e[1;91;40m\tPlease take note that Jupyter will keep running until you \e[4mEXPLICITLY\e[24m tell it to stop.         \e[0m\n"
+    printf "\e[1;91;40m\tYou can stop Jupyter by pressing 'Ctrl + C' on your keyboard \e[4mtwice\e[24m                            \e[0m\n"
     minispacer
     sleep 3
     jupyter notebook

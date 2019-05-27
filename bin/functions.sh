@@ -6,6 +6,10 @@ line() {
     printf "%-70s\n" "#" | sed 's/\s/#/g'
 }
 
+thinline() {
+    printf "%-70s\n" "-" | sed 's/\s/-/g'
+}
+
 spacer() {
     printf "\n\n"
 }
@@ -38,6 +42,28 @@ installer_intro() {
     echo -e "It is expected that several portions are unstable until release 1.0.0"
     line
     spacer
+}
+
+database_installer_intro () {
+    tput reset
+    line
+    echo -e "Welcome to the interactive database installation process of Jovian"
+    echo -e "This process will ask you for the locations where to place the specific databases and will download/install them for you"
+    minispacer
+    echo -e "\e[1mWe strongly advise you to contact your local system administrators before continuing. \nIf you're inexperienced with the commandline, or linux computers in general, it is best to leave this installation process to your system administrators.\e[0m"
+    minispacer
+    line
+    minispacer
+}
+
+database_installer () {
+    tput reset
+    line
+    echo -e "Welcome to the interactive database installation process of Jovian"
+    echo -e "This process will ask you for the locations where to place the specific databases and will download/install them for you"
+    minispacer
+    line
+    minispacer
 }
 
 ready_for_start() {
