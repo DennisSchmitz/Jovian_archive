@@ -39,6 +39,7 @@ REBUILD_ARCHIVE="FALSE"
 CONFIG_JUP="FALSE"
 JOVIAN_MODE="NONE"
 START_JUPYTER="FALSE"
+MAKE_SAMPLE_SHEET="FALSE"
 SHEET_SUCCESS="FALSE" # Default value for sample_sheet.yaml
 
 ### Parse the jovian commandline arguments, if they are not part of jovian, they get send to Snakemake
@@ -113,6 +114,10 @@ do
         VIRUS_TYPING="TRUE"
         WHICH_TT="$2"
         shift # Next
+        shift # Next
+        ;;
+        --make-sample-sheet)
+        MAKE_SAMPLE_SHEET="TRUE"
         shift # Next
         ;;
         --force)
@@ -664,6 +669,13 @@ else
     echo -e ".fastq (Unzipped Fastq)"
     echo -e ".fq (unzipped Fq)"
     exit 1
+fi
+
+if [ "${MAKE_SAMPLE_SHEET}" == "TRUE" ]; then
+    echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > profile/variables.yaml
+    echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> profile/variables.yaml
+    echo -e "The sample sheet and variables file has now been created, you can now run the Jovian snakefile manually"
+    exit 0
 fi
 
 ### Actual snakemake command with checkers for required files. N.B. here the UNIQUE_ID and SET_HOSTNAME variables are set!
