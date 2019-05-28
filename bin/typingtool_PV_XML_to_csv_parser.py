@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Parser for the XML output of the papillomavirus (PV) typing tool (TT).
+"""Parser for the XML output of the papillomaviridae (PV) typing tool (TT).
 
 Usage:
   typingtool_PV_XML_to_csv_parser.py <sample_name> <input_PV_XML> <output_PV_csv>
@@ -29,8 +29,7 @@ input_fields = [ 'result', 'start', 'end', 'nucleotides', 'conclusion' ]
 
 output_fields = [ 'Sample_name', 'Query_name', 'start', 'length', 'end', 'blast_concluded-name',
                  'blast_absolute-similarity', 'blast_refseq', 'blast_reverse-complement',
-                 'cluster_result', 'cluster_support', 'region1_subcluster_result', 'region1_subcluster_support',
-                 'region2_subcluster_result', 'region2_subcluster_support', 'nucleotides' ]
+                 'cluster_result', 'cluster_support', 'nucleotides' ]
 
 for elem in parsedXML.findall('.//sequence'):
     inner_dict = OrderedDict({k: None for k in output_fields})
@@ -61,12 +60,6 @@ for elem in parsedXML.findall('.//sequence'):
                 if tmp_conclusion_type=="simple" and tmp_conclusion_id=="type":
                     inner_dict['cluster_result'] = item.find('.//name').text
                     inner_dict['cluster_support'] = item.find('.//support').text
-                elif tmp_conclusion_type=="simple" and tmp_conclusion_id=="subtype" and tmp_conclusion_region=="region1":
-                    inner_dict['region1_subcluster_result'] = item.find('.//name').text
-                    inner_dict['region1_subcluster_support'] = item.find('.//support').text
-                elif tmp_conclusion_type=="simple" and tmp_conclusion_id=="subtype" and tmp_conclusion_region=="region2":
-                    inner_dict['region2_subcluster_result'] = item.find('.//name').text
-                    inner_dict['region2_subcluster_support'] = item.find('.//support').text
             else:
                 inner_dict[item.tag] = item.text
     csv_data.append(inner_dict)
