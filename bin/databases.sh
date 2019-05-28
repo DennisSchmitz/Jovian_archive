@@ -232,74 +232,75 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
         
         if [ "${db_paths_indiv_confirmed}" == "yes" ]; then
 
-            database_installer
+        database_installer
             
-            # ! Set paths
-            DB_PATH_NT="${db_path_indiv_NT_response}/NT_database"
-            DB_PATH_NR="${db_path_indiv_NR_response}/NR_database"
-            DB_PATH_TAX="${db_path_indiv_taxdb_response}/taxdb"
-            DB_PATH_NTAX="${db_path_indiv_ntax_response}/new_taxdump"
-            DB_PATH_KRONA="${db_path_indiv_krona_response}/krona_taxonomy"
-            DB_PATH_VHOST="${db_path_indiv_vhost_response}/Virus-Host_interaction_db"
+        # ! Set paths
+        DB_PATH_NT="${db_path_indiv_NT_response}/NT_database"
+        DB_PATH_NR="${db_path_indiv_NR_response}/NR_database"
+        DB_PATH_TAX="${db_path_indiv_taxdb_response}/taxdb"
+        DB_PATH_NTAX="${db_path_indiv_ntax_response}/new_taxdump"
+        DB_PATH_KRONA="${db_path_indiv_krona_response}/krona_taxonomy"
+        DB_PATH_VHOST="${db_path_indiv_vhost_response}/Virus-Host_interaction_db"
 
 
-            # ! Make folders
-            mkdir -p ${DB_PATH_NT}
-            mkdir -p ${DB_PATH_NR}
-            mkdir -p ${DB_PATH_TAX}
-            mkdir -p ${DB_PATH_NTAX}
-            mkdir -p ${DB_PATH_KRONA}
-            mkdir -p ${DB_PATH_VHOST}
+        # ! Make folders
+        mkdir -p ${DB_PATH_NT}
+        mkdir -p ${DB_PATH_NR}
+        mkdir -p ${DB_PATH_TAX}
+        mkdir -p ${DB_PATH_NTAX}
+        mkdir -p ${DB_PATH_KRONA}
+        mkdir -p ${DB_PATH_VHOST}
 
-            # ! Start downloading databases
-                # ! Download taxdb
-                cd "${DB_PATH_TAX}" || exit
-                printf "\nDownloading taxonomy database... \n"
-                perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress taxdb
+        # ! Start downloading databases
+            # ! Download taxdb
+            cd "${DB_PATH_TAX}" || exit
+            printf "\nDownloading taxonomy database... \n"
+            perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress taxdb
                 
-                # ! download krona LCA db
-                cd "${DB_PATH_KRONA}" || exit
-                printf "\nDownloading Krona LCA database... \n"
-                bash "${CONDA_PREFIX}"/opt/krona/updateTaxonomy.sh ./
-                bash "${CONDA_PREFIX}"/opt/krona/updateAccessions.sh ./
+            # ! download krona LCA db
+            cd "${DB_PATH_KRONA}" || exit
+            printf "\nDownloading Krona LCA database... \n"
+            bash "${CONDA_PREFIX}"/opt/krona/updateTaxonomy.sh ./
+            bash "${CONDA_PREFIX}"/opt/krona/updateAccessions.sh ./
 
-                # ! download VHOST-interaction db
-                cd "${DB_PATH_VHOST}" || exit
-                printf "\nDownloading Virus-Host interaction database... \n"
-                curl -o virushostdb.tsv -L ftp://ftp.genome.jp/pub/db/virushostdb/virushostdb.tsv            
+            # ! download VHOST-interaction db
+            cd "${DB_PATH_VHOST}" || exit
+            printf "\nDownloading Virus-Host interaction database... \n"
+            curl -o virushostdb.tsv -L ftp://ftp.genome.jp/pub/db/virushostdb/virushostdb.tsv            
                 
-                # ! download new_taxdump db
-                cd "${DB_PATH_NTAX}" || exit
-                printf "\nDownloading NCBI New_taxdump database... \n"
-                curl -o new_taxdump.tar.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
-                curl -o new_taxdump.tar.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
-                tar -xzf new_taxdump.tar.gz
-                for file in *.dmp;
-                    do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim;
-                    done
+            # ! download new_taxdump db
+            cd "${DB_PATH_NTAX}" || exit
+            printf "\nDownloading NCBI New_taxdump database... \n"
+            curl -o new_taxdump.tar.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
+            curl -o new_taxdump.tar.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
+            tar -xzf new_taxdump.tar.gz
+            for file in *.dmp;
+                do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim;
+                done
                     
-                # ! download BLAST NT db
-                cd "${DB_PATH_NT}" || exit
-                printf "\nDownloading NCBI BLAST NT database... \n"
-                perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress nt
+            # ! download BLAST NT db
+            cd "${DB_PATH_NT}" || exit
+            printf "\nDownloading NCBI BLAST NT database... \n"
+            perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress nt
                 
-                # ! download BLAST NR db
-                cd "${DB_PATH_NR}" || exit
-                printf "\nDownloding NCBI BLAST NR database... \n"
-                perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress nr
+            # ! download BLAST NR db
+            cd "${DB_PATH_NR}" || exit
+            printf "\nDownloding NCBI BLAST NR database... \n"
+            perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress nr
 
-                sleep 2
-                printf "\nDone with downloading and installing the databases required for Jovian \n"
-                printf "The databases have been placed in the following folders:\n"
-                printf "\e[1m%s/NT_database\e[0m\n" "${db_path_indiv_NT_response}"
-                printf "\e[1m%s/NR_database\e[0m\n" "${db_path_indiv_NR_response}"
-                printf "\e[1m%s/taxdb\e[0m\n" "${db_path_indiv_taxdb_response}"
-                printf "\e[1m%s/new_taxdump\e[0m\n" "${db_path_indiv_ntax_response}"
-                printf "\e[1m%s/krona_taxonomy\e[0m\n" "${db_path_indiv_krona_response}"
-                printf "\e[1m%s/Virus-Host_interaction_db\e[0m\n" "${db_path_indiv_vhost_response}"
+            sleep 2
+            printf "\nDone with downloading and installing the databases required for Jovian \n"
+            printf "The databases have been placed in the following folders:\n"
+            printf "\e[1m%s/NT_database\e[0m\n" "${db_path_indiv_NT_response}"
+            printf "\e[1m%s/NR_database\e[0m\n" "${db_path_indiv_NR_response}"
+            printf "\e[1m%s/taxdb\e[0m\n" "${db_path_indiv_taxdb_response}"
+            printf "\e[1m%s/new_taxdump\e[0m\n" "${db_path_indiv_ntax_response}"
+            printf "\e[1m%s/krona_taxonomy\e[0m\n" "${db_path_indiv_krona_response}"
+            printf "\e[1m%s/Virus-Host_interaction_db\e[0m\n" "${db_path_indiv_vhost_response}"
 
         break
         fi
+
     done
 fi
 
