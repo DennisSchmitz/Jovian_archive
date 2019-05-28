@@ -573,9 +573,9 @@ def main():
                            delimiter = '\t')[[ "Sample", "Total Sequences" ]]
     #Note1: FastQC reports numbers of reads of pre- and post-QC fastq files,
     # I only want to have the pre-QC numbers now:
-    pre_qc = [ col for col in read_nrs.Sample if '_R1' in col ]
+    pre_qc = [ col for col in read_nrs.Sample if '_R1' in col or '_1' in col ]
     read_nrs = read_nrs[read_nrs.Sample.isin(pre_qc)]
-    read_nrs.Sample = read_nrs.Sample.str.replace(r'_R1.*', '') #remove the "_R1" suffix and anything that may be after it
+    read_nrs.Sample = read_nrs.Sample.str.replace(r'_R?1.*', '') #remove the "_R1" or "_1" suffix and anything that may be after it
     
     #Note2: I now only have the number of forward reads. To add reverse,
     # multiply this number by 2:
@@ -588,7 +588,7 @@ def main():
     #3. low-quality reads/sample (by Trimmomatic):
     lowq_nrs = pd.read_csv(arguments.trimmomatic, 
                            delimiter = '\t')[[ "Sample", "forward_only_surviving", "reverse_only_surviving", "dropped" ]]
-    lowq_nrs.Sample = lowq_nrs.Sample.str.replace(r'_R1.*', '') #remove the "_R1" suffix and anything that may be after it
+    lowq_nrs.Sample = lowq_nrs.Sample.str.replace(r'_R?1.*', '') #remove the "_R1" or "_1" suffix and anything that may be after it
     #Note: trimmomatic drops read pairs ("dropped") and for some pairs 
     # only one mate is of sufficiently high quality ("forward/reverse
     # only surviving"). The number of low-quality reads is calculated
