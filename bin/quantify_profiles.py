@@ -365,8 +365,8 @@ def validate_numbers(df, log=False):
              - Eukaryota
              - Viruses
     Output:
-        None of the numbers are within expected margins,
-        Error when the numbers are clearly wrong.
+        None if the numbers are within expected margins,
+        Warning when the numbers are clearly wrong.
     """
     if log:
         with open(log, 'a') as logfile:
