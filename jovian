@@ -474,16 +474,11 @@ fi
 
 ### Virus typing block, as specified via CLI argument '--virus-typing'
 if [ "${VIRUS_TYPING:-}" == "TRUE" ]; then
-<<<<<<< HEAD
     if [ "${VIRUS_TYPING_HELP:-}" == "TRUE" ]; then
         bash bin/virus_typing.sh --help
         exit 0
     elif [ "${FORCE_OVERWRITE_TT:-}" == "TRUE" ]; then
         bash bin/virus_typing.sh ${WHICH_TT} --force
-=======
-    if [ "${FORCE_OVERWRITE_TT:-}" == "TRUE" ]; then
-        bash bin/virus_typing.sh "${WHICH_TT}" --force
->>>>>>> d64f8082a040cf81275aa08e49018fc55d36a6b3
         exit 0
     else
         bash bin/virus_typing.sh "${WHICH_TT}"
