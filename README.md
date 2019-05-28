@@ -35,7 +35,8 @@ Wetlab personnel can start, configure and interpret results via an interactive w
 
 ### Pipeline features    
 - Data quality control (QC) and cleaning.  
-- Removal of human data (patient privacy).  
+- Removal of human* data (patient privacy).  
+  - _* We suggest the latest human genome because Jovian is intended for clinical samples. You can however use any reference you'd like, as [explained here](#faq)._  
 - Assembly of short reads into bigger scaffolds (often full viral genomes).  
 - Taxonomic annotation:  
   - Classification: Every nucleic acid containing biological entity is determined up to species level.  
