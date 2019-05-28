@@ -4,8 +4,9 @@
 #set -x
 
 #load in functions
+# shellcheck disable=SC1091
 source bin/functions.sh
-eval $(parse_yaml profile/pipeline_parameters.yaml "params_")
+eval "$(parse_yaml profile/pipeline_parameters.yaml "params_")"
 
 ### Variables
 VERSION=$(git describe --tags)
@@ -234,11 +235,11 @@ if [ "${ARCHIVE:-}" == "TRUE" ]; then
     archive_answer=${archive_answer,,}
     if [[ "${archive_answer}" =~ ^(yes|y)$ ]]; then
         echo -e "\n\nStarting the archiving process\n\n"
-        eval $(parse_yaml profile/variables.yaml "config_")
+        eval "$(parse_yaml profile/variables.yaml "config_")"
         
         if [ -e data/ ]; then
             echo -e "Found the 'data/' folder, appending to archive..."
-            (tar --append --file=archive_${config_Jovian_run_identifier}_jovian-${VERSION}.tar data/) &
+            (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar data/) &
             spinner
         else
             echo -e "Couldn't find the 'data/' folder in this working directory, skipping this folder in archiving"
@@ -246,7 +247,7 @@ if [ "${ARCHIVE:-}" == "TRUE" ]; then
 
         if [ -e logs/ ]; then
             echo -e "Found the 'logs/' folder, appending to archive..."
-            (tar --append --file=archive_${config_Jovian_run_identifier}_jovian-${VERSION}.tar logs/) &
+            (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar logs/) &
             spinner
         else
             echo -e "Couldn't find the 'logs/' folder in this working directory, skipping this folder in archiving"
@@ -254,7 +255,7 @@ if [ "${ARCHIVE:-}" == "TRUE" ]; then
         
         if [ -e results/ ]; then
             echo -e "Found the 'results/' folder, appending to archive..."
-            (tar --append --file=archive_${config_Jovian_run_identifier}_jovian-${VERSION}.tar results/) &
+            (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar results/) &
             spinner
         else
             echo -e "Couldn't find the 'results/' folder in this working directory, skipping this folder in archiving"
@@ -262,7 +263,7 @@ if [ "${ARCHIVE:-}" == "TRUE" ]; then
         
         if [ -e sample_sheet.yaml ]; then
             echo -e "Found 'sample_sheet.yaml', appending to archive..."
-            (tar --append --file=archive_${config_Jovian_run_identifier}_jovian-${VERSION}.tar sample_sheet.yaml) &
+            (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar sample_sheet.yaml) &
             spinner
         else
             echo -e "Couldn't find the file 'sample_sheet.yaml' in this working directory, skipping this file in archiving"
@@ -270,16 +271,16 @@ if [ "${ARCHIVE:-}" == "TRUE" ]; then
         
         if [ -e profile/ ]; then
             echo -e "Found 'profile' folder, appending to archive..."
-            (tar --append --file=archive_${config_Jovian_run_identifier}_jovian-${VERSION}.tar profile/) &
+            (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar profile/) &
             spinner
         else
             echo -e "Couldn't find the 'profile' folder in this working directory, skipping this file in archiving"
         fi
 
-        if [ -e archive_${config_Jovian_run_identifier}_jovian-${VERSION}.tar ]; then
+        if [ -e archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar ]; then
             echo -e "\n\nFiles and folders have been appended to the archive."
             echo -e "Compressing archive..."
-            (gzip archive_${config_Jovian_run_identifier}_jovian-${VERSION}.tar) &
+            (gzip archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar) &
             spinner
         else
             echo "No files and folders could be found for archiving."
@@ -317,10 +318,10 @@ if [ ! -e "${PROFILE}/config.yaml" ]; then # If this profile folder containing c
 fi
 
 if [ ! -e "${HOME}/.jovian_installchoice_igvjs" ]; then
-    echo -e "installeranswers:\n    igvjs: U" > ${HOME}/.jovian_installchoice_igvjs 
+    echo -e "installeranswers:\n    igvjs: U" > "${HOME}"/.jovian_installchoice_igvjs 
 fi
 
-eval $(parse_yaml ${HOME}/.jovian_installchoice_igvjs "igvjs_")
+eval "$(parse_yaml "${HOME}"/.jovian_installchoice_igvjs "igvjs_")"
 
 if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. the `conda` command is not available), if true, install it in ~/tmp. Otherwise, proceed.
     if [ ! -e "${HOME}/tmp/Miniconda3" ]; then
@@ -350,7 +351,7 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
         answer=${answer,,}
         if [[ "${answer}" =~ ^(yes|y)$ ]]; then
             echo "PATH=$PATH:${HOME}/tmp/Miniconda3/bin" >> "${HOME}/.bashrc" | tee -a ${INSTALL_LOG}
-            source ${HOME}/.bashrc | tee -a ${INSTALL_LOG}
+            source "${HOME}"/.bashrc | tee -a ${INSTALL_LOG}
             export PATH=${HOME}/tmp/Miniconda3/bin:$PATH
             tput reset
             line
@@ -369,7 +370,7 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
         echo -e "\n"
         echo -e "Installation of Conda is done"
         echo -e "If you wish to use conda then it might be necessary to restart your terminal session"
-        source ${HOME}/.bashrc
+        source "${HOME}"/.bashrc
 
         echo -e "\n\nContinuing..."
         sleep 5
@@ -425,10 +426,10 @@ if [ "$igvjs_installeranswers_igvjs" == "U" ]; then
             echo -e "Starting with installing IGVjs, this can take up to 15 minutes..."
             bin/install_IGVjs.sh
             echo -e "DONE with installing IGVjs"
-            echo -e "installeranswers:\n    igvjs: Y" > ${HOME}/.jovian_installchoice_igvjs
+            echo -e "installeranswers:\n    igvjs: Y" > "${HOME}"/.jovian_installchoice_igvjs
         else
             echo -e "Skipping the installation of IGVjs..."
-            echo -e "installeranswers:\n    igvjs: N" > ${HOME}/.jovian_installchoice_igvjs
+            echo -e "installeranswers:\n    igvjs: N" > "${HOME}"/.jovian_installchoice_igvjs
             sleep 1
         fi
     fi
@@ -462,10 +463,10 @@ fi
 ### Virus typing block, as specified via CLI argument '--virus-typing'
 if [ "${VIRUS_TYPING:-}" == "TRUE" ]; then
     if [ "${FORCE_OVERWRITE_TT:-}" == "TRUE" ]; then
-        bash bin/virus_typing.sh ${WHICH_TT} --force
+        bash bin/virus_typing.sh "${WHICH_TT}" --force
         exit 0
     else
-        bash bin/virus_typing.sh ${WHICH_TT}
+        bash bin/virus_typing.sh "${WHICH_TT}"
         exit 0
     fi
 fi
@@ -488,7 +489,7 @@ if [ "${INSTALL_DB:-}" == "TRUE" ]; then
     echo -e "Installing databases, this can take hours for a fresh installation..."
     if [[ $PATH != *${HELPER_NAME}* ]]; then # If helper env is not in your path (i.e. it is not currently active), do...
         set +ue # Turn bash strict mode off because that breaks conda
-        source activate ${HELPER_NAME} # Try to activate this env
+        source activate "${HELPER_NAME}" # Try to activate this env
         if [ ! $? -eq 0 ]; then # If exit statement is not 0, i.e. helper conda env hasn't been installed yet, do...
             echo -e "\tInstalling Jovian helper environment..."
             conda env create -f ${PATH_JOVIAN_HELPER_YAML} # Create the env from the specified yaml file
@@ -637,7 +638,7 @@ elif [[ ! "${JOVIAN_MODE}" =~ ^(relaxed|strict)$ ]]; then
 fi
 
 ### Pass other CLI arguments along to Snakemake
-if [ ! -d ${INPUT_DIR} ]; then
+if [ ! -d "${INPUT_DIR}" ]; then
     minispacer
     echo -e "The input directory specified (${INPUT_DIR}) does not exist"
     echo -e "Please specify an existing input directory"
@@ -645,11 +646,11 @@ if [ ! -d ${INPUT_DIR} ]; then
 fi
 
 ### Generate sample sheet
-if [ -n "$(ls -A ${INPUT_DIR})" ]; then
+if [ -n "$(ls -A "${INPUT_DIR}")" ]; then
     minispacer
     echo -e "Files in input directory (${INPUT_DIR}) are present"
     echo -e "Generating sample sheet..."
-    bin/generate_sample_sheet.py ${INPUT_DIR} > sample_sheet.yaml
+    bin/generate_sample_sheet.py "${INPUT_DIR}" > sample_sheet.yaml
     SHEET_SUCCESS="TRUE"
 else
     minispacer
