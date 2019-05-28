@@ -89,8 +89,9 @@ It is however necessary to have read and write access to the `/tmp` folder on yo
 |`NCBI NT & NR`| ftp://ftp.ncbi.nlm.nih.gov/blast/db/ | [link](#blast-nt-nr-and-taxdb-databases)|
 |`NCBI Taxdump`| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/ | [link](#blast-nt-nr-and-taxdb-databases)|
 |`NCBI New_taxdump`| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/ | [link](#ncbi-new_taxdump-database)|
-|`Latest Human Genome`| https://support.illumina.com/sequencing/sequencing_software/igenome.html | [link](#human-genome)|
+|`Latest Human Genome`*| https://support.illumina.com/sequencing/sequencing_software/igenome.html | [link](#human-genome)|
 |`Virus-Host interaction database`| http://www.genome.jp/virushostdb/note.html | [link](#virus-host-interaction-database)|
+_* We suggest the latest human genome because Jovian is intended for clinical samples. You can however use any reference you'd like, as [explained here](#faq)._
 
 ___
 
@@ -148,6 +149,7 @@ This section is work in progress, will be automated in the bash wrapper, see iss
 - When you run a Jovian analysis, update the pathing information to the Krona resources in [profile/pipeline_parameters.yaml](profile/pipeline_parameters.yaml) to your local pathing.  
 
 #### Human Genome  
+_We suggest the latest human genome because Jovian is intended for clinical samples. You can however use any reference you'd like, as [explained here](#faq)._
 - Download the latest Human Genome version from https://support.illumina.com/sequencing/sequencing_software/igenome.html  
   - Select the NCBI version of `GRCh38`. NB do NOT download the `GRCh38Decoy` version! This version will filter out certain human viruses.  
 - The `GRCh38` version of the human genome still contains an Epstein Barr virus (EBV) contig, this needs to be removed as shown below:  
@@ -215,7 +217,7 @@ ___
 - _I am missing a certain taxa of which I'm sure is in the dataset. How is that possible?_
   - Could be due to multiple reasons. The first one being the stringency of the analysis. The current default values are quite strict, you might have filtered it away. Please try more relaxed settings. The second being the result of the LCA analysis (Lowest Common Ancestor) putting a certain scaffold at a unexpected taxonomic level. Imagine a sequence that is homologous between (pro)phages and bacteria, the lowest common ancestor between phages and bacteria is the theoretical root of all life (i.e. `root` taxonomic level), so you will find it at the taxonomic level (you can try changing the `bitscoreDeltaLCA: 5` to `0` in the [config-file](profile/pipeline_parameters.yaml). It could also be a result of an erroneous entry in the used public databases, to which a scaffold then gets assigned. If it is anything other than these reasons, please let us know by making an [issue](https://github.com/DennisSchmitz/Jovian/issues).  
 - _I don't care about removing the human data, I have cell-lines which are from other species, can I also automatically remove that?_
-  - Yes. Although we focus on patient-privacy since it was developed for clinical samples, you can enter any reference sequence you like. You can do that by changing `HuGo_ref: /path/to/file/genome.fa` into the location of your desired background removal organisms in the [config-file](profile/pipeline_parameters.yaml). The only limitations are that it is a `fasta` file and that is indexed via `bowtie2`, although this latter process will be automated in a future version.  
+  - Yes. Although we focus on patient-privacy since it was developed for clinical samples, you can enter any reference sequence you like. You can do that by changing `background_ref: /path/to/file/genome.fa` into the location of your desired background removal organisms in the [config-file](profile/pipeline_parameters.yaml). The only limitations are that it is a `fasta` file and that is indexed via `bowtie2`, although this latter process will be automated in a future version.  
 - _How can some scaffolds still be assigned to `Homo sapiens`? I thought Jovian removed human data?_
   - The human genome is a consensus genome built from many individuals from around the globe. It does not capture all diversity in the human gene pool and therefore cannot completely remove all human data. You can improve this by selecting a reference genome that is closer to your target population, e.g. if you sequence mainly Dutch samples, the [GoNL genome](http://www.nlgenome.nl/) might be better suited.  
 

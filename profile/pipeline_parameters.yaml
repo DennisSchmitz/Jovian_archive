@@ -51,8 +51,8 @@ HTML_index_titles:
 ######################################################
 
 databases: # Location of NT, NR and TaxDB are stored via an alias in your home directory (~/.ncbirc). They should work with keywords "nt" "nr" "taxdb"  
-    # Location of HuGo assembly GRCH38 from which I manually removed the EBV chromosome, see the README.md for explanation
-    HuGo_ref: /mnt/db/Reference_genomes/Homo_sapiens/NCBI/GRCh38/Sequence/Bowtie2Index_without_EBV_virus_chr/genome.fa
+    # Location of background reference fasta. By default this is the HuGo assembly GRCH38 from which I manually removed the EBV chromosome, see the README.md for explanation
+    background_ref: /mnt/db/Reference_genomes/Homo_sapiens/NCBI/GRCh38/Sequence/Bowtie2Index_without_EBV_virus_chr/genome.fa
     # Location of the Krona taxonomy files; installable with the helper script attached along with Jovian
     Krona_taxonomy: /mnt/db/taxonomy_krona/
     # Location of the Virus-Host interaction database, see http://www.genome.jp/virushostdb/note.html
