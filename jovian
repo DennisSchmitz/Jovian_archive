@@ -110,18 +110,26 @@ do
         START_JUPYTER="TRUE"
         shift # Next
         ;;
-        --virus-typing)
+        -vt|--virus-typing)
         VIRUS_TYPING="TRUE"
         WHICH_TT="$2"
         shift # Next
         shift # Next
         ;;
-        --make-sample-sheet)
-        MAKE_SAMPLE_SHEET="TRUE"
+        -vt-force|--virus-typing-force)
+        VIRUS_TYPING="TRUE"
+        FORCE_OVERWRITE_TT="TRUE"
+        WHICH_TT="$2"
+        shift # Next
         shift # Next
         ;;
-        --force)
-        FORCE_OVERWRITE_TT="TRUE"
+        -vt-help|--virus-typing-help)
+        VIRUS_TYPING="TRUE"
+        VIRUS_TYPING_HELP="TRUE"
+        shift # Next
+        ;;
+        --make-sample-sheet)
+        MAKE_SAMPLE_SHEET="TRUE"
         shift # Next
         ;;
         *) # Any other option
@@ -179,12 +187,16 @@ Parameters:
                                     stringent or relaxed in taxonomic classification of
                                     scaffolds.
                                     #TODO add clarification once tested
-  --virus-typing [NoV|EV|RVA|HAV|HEV] (--force)
+  -vt, --virus-typing-help          Print additional information about the virus-typing, i.e.
+                                    which family/genus is selected and which species are typed.
+  -vt, --virus-typing [NoV|EV|RVA|HAV|HEV|PV|Flavi]
                                     After a Jovian analyses has completed, do viral typing for
                                     Norovirus (NoV), Enterovirus (EV), Hepatitis A (HAV), 
-                                    Hepatitis E (HEV) or Rotavirus A (RVA).
-                                        You can add the optional '--force' flag to overwrite 
-                                        existing output.
+                                    Hepatitis E (HEV), Rotavirus A (RVA), Papillomaviruses (PV),
+                                    Flaviviruses (Flavi).
+                                    For additional explanation, --vt-help
+  -vt-force, --virus-typing-force [NoV|EV|RVA|HAV|HEV|PV|Flavi]
+                                    Same as above, but overwrites existing output. 
   -h, --help                        Print the Jovian help document.
   -sh, --snakemake-help             Print the Snakemake help document.
   --clean                           Removes Jovian output.
@@ -461,7 +473,10 @@ fi
 
 ### Virus typing block, as specified via CLI argument '--virus-typing'
 if [ "${VIRUS_TYPING:-}" == "TRUE" ]; then
-    if [ "${FORCE_OVERWRITE_TT:-}" == "TRUE" ]; then
+    if [ "${VIRUS_TYPING_HELP:-}" == "TRUE" ]; then
+        bash bin/virus_typing.sh --help
+        exit 0
+    elif [ "${FORCE_OVERWRITE_TT:-}" == "TRUE" ]; then
         bash bin/virus_typing.sh ${WHICH_TT} --force
         exit 0
     else
