@@ -352,7 +352,7 @@ def validate_numbers(df, log=False):
     """
     Validates if the numbers add up to a number lower than the total 
     number of raw reads. (I.e. low-quality + human + other taxa +
-    unclassified <= total sequences.) Reports an error when the sum
+    unclassified <= total sequences.) Reports a warning when the sum
     of these groups is too high.
     Input:
         Dataframe with all numbers of reads - profile of:
@@ -390,9 +390,9 @@ def validate_numbers(df, log=False):
         if not total >= reads_sum:
             if log:
                 with open(log, 'a') as logfile:
-                    logfile.write("Error! Sample %s has a bad reads sum: %i > total (%i)\n" % (df.loc[i, "Sample"], reads_sum, total))
+                    logfile.write("Warning! Sample %s has a bad reads sum: %i > total (%i)\n" % (df.loc[i, "Sample"], reads_sum, total))
             else:
-                print("Error! Sample %s has a bad reads sum: %i > total (%i)" % (df.loc[i, "Sample"], reads_sum, total))
+                print("Warning! Sample %s has a bad reads sum: %i > total (%i)" % (df.loc[i, "Sample"], reads_sum, total))
             errors.append(df.loc[i, "Sample"])
         else:
             pass
