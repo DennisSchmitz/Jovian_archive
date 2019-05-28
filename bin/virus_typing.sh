@@ -40,7 +40,13 @@ The first argument should always be one of the keyword listed below:
     |         | - Norwalk virus (GI & GII),           |
     |         | - Sapporo virus                       |
     | EV      | Picornaviridae family                 |
-    |         | -  #TODO Cosaviruses? Coxsackie. PV. HPeV [A-D]? EV [A-L]? Poliovirus. Rhino [A-C]? Aichivirus [A-F]?      |
+    |         | #TODO- Aichivirus X-Y                      |
+    |         | #TODO- Cosavirus A-E                       |
+    |         | #TODO- Coxsackie X-Y                       |
+    |         | #TODO- Enterovirus A-D                     |
+    |         | #TODO- Human Parechovirus A-D              |
+    |         | #TODO- Poliovirus X-Y                      |
+    |         | #TODO- Rhinovirus A-C                      |
     | RVA     | Rotavirus genus;                      |
     |         | - Rotavirus A                         |
     | HAV     | Hepatovirus genus                     |
