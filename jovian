@@ -196,7 +196,7 @@ Parameters:
                                     stringent or relaxed in taxonomic classification of
                                     scaffolds.
                                     #TODO add clarification once tested
-  -vt, --virus-typing-help          Print additional information about the virus-typing, i.e.
+  -vt-help, --virus-typing-help          Print additional information about the virus-typing, i.e.
                                     which family/genus is selected and which species are typed.
   -vt, --virus-typing [NoV|EV|RVA|HAV|HEV|PV|Flavi]
                                     After a Jovian analyses has completed, do viral typing for

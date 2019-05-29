@@ -5,7 +5,11 @@
 Author: Sam Nooij
 Date: 4 December 2018
 
-Script that gathers numbers from the Jovian analysis, i.e.:
+-- 21 May 2019 update: start complete rework to make the script snakemake-independent and fix bugs
+        N.B. For now, the number of threads is still passed by snakemake!
+          It can optionally be provided as command-line argument.
+
+Script that gathers numbers from the PZN analysis, i.e.:
  - number of reads per sample (raw)
  - number of reads removed by trimmomatic
  - number of human reads identified by Bowtie2 (and removed)
@@ -22,7 +26,7 @@ These 7 numbers are collected for each sample and written to a table (.csv file)
 and a stacked bargraph is made to visualise these data.
 
 Input:
-    Requires output files from FastQC, Trimmomatic, Bowtie, and the Jovian taxonomic report:
+    Requires output files from FastQC, Trimmomatic, Bowtie, and the PZN taxonomic report:
      - results/multiqc_data/multiqc_fastqc.txt
      - results/multiqc_data/multiqc_trimmomatic.txt
      - data/HuGo_removal/*.fq
@@ -37,6 +41,9 @@ Output:
 """
 
 ### Import required libraries ------------------------------------
+import argparse
+import datetime
+import os
 import sys
 import pandas as pd
 from bokeh.core.properties import value
@@ -47,13 +54,6 @@ from bokeh.models import ColumnDataSource
 import concurrent.futures
 
 ### Define global variables --------------------------------------
-THREADS = snakemake.threads
-FASTQC_FILE = snakemake.input["fastqc"]
-TRIMMOMATIC_FILE = snakemake.input["trimmomatic"]
-HUGO_FILES = snakemake.input["hugo"]
-CLASSIFIED_FILE = snakemake.input["classified"]
-UNCLASSIFIED_FILE = snakemake.input["unclassified"]
-
 FASTQ_COUNT_WARINING_MESSAGE = """
 Now counting the number of lines in the fastq files from which
 reads have been discarded that were mapped to the human genome 
@@ -70,6 +70,133 @@ COLOURS = [ "#FFDBE5","#7A4900","#0000A6",
 # And Alexey Popkov (https://graphicdesign.stackexchange.com/revisions/3815/8)
 
 ### Create functions that do all the work ------------------------
+def parse_arguments():
+    """
+    Parse the arguments from the command line, i.e.:
+     -f/--fastqc = file with (multiqc) fastqc output
+     -t/--trimmomatic = file with (multiqc) trimmomatic output
+     -h/--hugo = fastq files of extracted human reads
+     -c/--classified = table with taxonomic classifications
+     -u/--unclassified = table with unclassified contigs
+     -h/--help = show help
+    """
+    parser = argparse.ArgumentParser(prog="draw heatmaps",
+             description="Draw heatamps for the Jovian taxonomic output",
+             usage="quantify_profiles.py -f -t -hg -c -u"
+             " [-h / --help]",
+             add_help=False)
+
+    required = parser.add_argument_group("Required arguments")
+
+    required.add_argument('-f',
+                          '--fastqc',
+                          dest="fastqc",
+                          metavar='',
+                          required=True,
+                          type=str,
+                          help="MultiQC-FastQC output file")
+
+    required.add_argument('-t',
+                          '--trimmomatic',
+                          dest="trimmomatic",
+                          metavar='',
+                          required=True,
+                          type=str,
+                          help="MultiQC-Trimmomatic output file")
+   
+    required.add_argument('-hg',
+                          '--hugo',
+                          dest="hugo",
+                          metavar='',
+                          required=True,
+                          type=str,
+                          nargs='+',
+                          help="Fastq files of extracted human reads")
+    
+    required.add_argument('-c',
+                          '--classified',
+                          dest="classified",
+                          metavar='',
+                          required=True,
+                          type=str,
+                          help="Table with taxonomic classifications")
+
+    required.add_argument('-u',
+                          '--unclassified',
+                          dest="unclassified",
+                          metavar='',
+                          required=True,
+                          type=str,
+                          help="Table with unclassified contigs")
+
+    required.add_argument('-co',
+                          '--counts',
+                          dest="counts",
+                          metavar='',
+                          required=True,
+                          type=str,
+                          help="Table of read counts")
+
+    required.add_argument('-p',
+                          '--percentages',
+                          dest="percentages",
+                          metavar='',
+                          required=True,
+                          type=str,
+                          help="Table of read counts as percentages")
+
+    required.add_argument('-g',
+                          '--graph',
+                          dest="graph",
+                          metavar='',
+                          required=True,
+                          type=str,
+                          help="Graph of sample compositions")
+
+    optional = parser.add_argument_group("Optional arguments")
+    
+    optional.add_argument('-l',
+                          '--log',
+                          dest='log',
+                          metavar='',
+                          required=False,
+                          default=False,
+                          type=str,
+                          help="Log file to write warnings to")
+
+    optional.add_argument('-cpu',
+                          '--cpu-cores',
+                          dest="cores",
+                          metavar='',
+                          required=False,
+                          type=int,
+                          default=4,
+                          help="Number of threads to read fastq files")
+
+    optional.add_argument('-col',
+                          '--colours',
+                          dest="colours",
+                          metavar='',
+                          required=False,
+                          type=str,
+                          nargs='+',
+                          default=[ "#FFDBE5","#7A4900","#0000A6",
+                                    "#63FFAC","#B79762","#004D43",
+                                    "#8FB0FF","#997D87" ],
+                          help="Colours (8) of the barchart (stacks)")
+#Colour scheme with distinct colours thanks to Tatarize
+# (https://godsnotwheregodsnot.blogspot.com/2013/11/kmeans-color-quantization-seeding.html)
+# And Alexey Popkov (https://graphicdesign.stackexchange.com/revisions/3815/8)
+
+    optional.add_argument('-h',
+                          '--help',
+                          action='help',
+                          help="Show this message and exit.")  
+
+    (args, extra_args) = parser.parse_known_args()
+
+    return(args)
+
 def count_sequences_in_fastq(infile):
     """
     Input: fastq file
@@ -96,7 +223,7 @@ def progress(count, total, status=''):
     #Adapted above line to also show how many files are counted - Sam
     sys.stdout.flush()  # As suggested by Rom Ruben (see: http://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console/27871113#comment50529068_27871113)
 
-def count_non_human_reads(file_list):
+def count_non_human_reads(file_list, threads):
     """
     Input: list of fastq files after human read filtering
     Output: counts of non-human reads per sample (as pandas dataframe)
@@ -112,7 +239,7 @@ def count_non_human_reads(file_list):
     files_read = 0 #keep track of how many files have been read
     read_counts = {}
     
-    with concurrent.futures.ProcessPoolExecutor(max_workers=THREADS) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=threads) as executor:
         for file, reads in zip(file_list, executor.map(count_sequences_in_fastq, file_list)):
             if "_pR1.fq" in file:
                 sample = file[:file.index("_pR1.fq")].split('/')[-1]
@@ -205,7 +332,7 @@ def sum_superkingdoms(classified_file):
 def sum_unclassified(unclassified_file):
     """
     Input:
-        table of scaffolds that were not classified by Jovian
+        table of scaffolds that were not classified by PZN
         (results/all_taxUnclassified.tsv)
     Output:
         dataframe with the number of reads assigned to 
@@ -221,11 +348,11 @@ def sum_unclassified(unclassified_file):
     
     return(unclas_sums)
 
-def validate_numbers(df):
+def validate_numbers(df, log=False):
     """
     Validates if the numbers add up to a number lower than the total 
     number of raw reads. (I.e. low-quality + human + other taxa +
-    unclassified <= total sequences.) Reports an error when the sum
+    unclassified <= total sequences.) Reports a warning when the sum
     of these groups is too high.
     Input:
         Dataframe with all numbers of reads - profile of:
@@ -238,10 +365,14 @@ def validate_numbers(df):
              - Eukaryota
              - Viruses
     Output:
-        None of the numbers are within expected margins,
-        Error when the numbers are clearly wrong.
+        None if the numbers are within expected margins,
+        Warning when the numbers are clearly wrong.
     """
-    print("Now checking if the numbers add up properly...")
+    if log:
+        with open(log, 'a') as logfile:
+            logfile.write("---\n\nNow checking if numbers add up properly...\n")
+    else:
+        print("Now checking if the numbers add up properly...")
     
     errors = []
     for i in range(len(df)):
@@ -255,23 +386,34 @@ def validate_numbers(df):
                      df.loc[i, "Viruses"] + 
                      df.loc[i, "Unclassified"]
                     )
-
+        
         if not total >= reads_sum:
-            print("Error! Sample %s has a bad reads sum: %i > total (%i)" % (df.loc[i, "Sample"], reads_sum, total))
+            if log:
+                with open(log, 'a') as logfile:
+                    logfile.write("Warning! Sample %s has a bad reads sum: %i > total (%i)\n" % (df.loc[i, "Sample"], reads_sum, total))
+            else:
+                print("Warning! Sample %s has a bad reads sum: %i > total (%i)" % (df.loc[i, "Sample"], reads_sum, total))
             errors.append(df.loc[i, "Sample"])
         else:
             pass
     
-    if len(errors) == 0:
-        print("All numbers okay: no sums are higher than the total!\n")
+    if log:
+        with open(log, 'a') as logfile:
+            if len(errors) == 0:
+                logfile.write("All numbers okay: no sums are higher than the total!\n")
+            else:
+                logfile.write("%i errors have been found, these are from samples: %s\n" % (len(errors), errors))
     else:
-        print("%i errors have been found, these are from samples: %s" % (len(errors), errors))
-        
+        if len(errors) == 0:
+            print("All numbers okay: no sums are higher than the total!\n")
+        else:
+            print("%i errors have been found, these are from samples: %s" % (len(errors), errors))
+                
     return(None)
 
 def draw_stacked_bars(df, perc, sample="", parts=[], outfile="", colours = COLOURS):
     """
-    Takes a file of quantified read annotations by a pipeline (e.g. Jovian)
+    Takes a file of quantified read annotations by a pipeline (e.g. PZN)
     and draws a stacked bar chart using Bokeh, creating an interactive
     HTML file.
     
@@ -352,14 +494,88 @@ def main():
     Output:
       defined at the top (lines 34-37)
     """
-    ## 1: Total (raw) read numbers/sample:
-    read_nrs = pd.read_csv(FASTQC_FILE, 
+    #1. Parse and show arguments
+    arguments = parse_arguments()
+
+    message =  ("\n"
+                "These are the arguments you have provided:\n"
+                "  INPUT:\n"
+                "fastqc = {0},\n"
+                "trimmomatic = {1}\n"
+                "hugo = {2}\n"
+                "classified = {3}\n"
+                "unclassified: {4}\n"
+                "  OUTPUT:\n"
+                "counts = {5}\n"
+                "percentages = {6}\n"
+                "graph = {7}\n"
+                "  OPTIONAL:\n"
+                "log = {8}\n"
+                "cores = {9}\n"
+                "colours = {10}".format(arguments.fastqc,
+                                        arguments.trimmomatic,
+                                        arguments.hugo,
+                                        arguments.classified,
+                                        arguments.unclassified,
+                                        arguments.counts,
+                                        arguments.percentages,
+                                        arguments.graph,
+                                        arguments.log,
+                                        arguments.cores,
+                                        arguments.colours))
+
+    if arguments.log:
+        if os.path.exists(arguments.log) and os.path.getsize(arguments.log) > 0:
+            #File already exists and has been written to
+            header = "\n---\n[{0}] Please find below the log of the current execution.".format(datetime.datetime.now())
+        else:
+            header = "[{0}] Please find below the log of the current execution.".format(datetime.datetime.now())
+        with open(arguments.log, 'a') as logfile:
+            logfile.write("{0}\n---\n".format(header))
+            logfile.write('{0}\n'.format(message))
+    else:
+        print(message)
+
+    threads = arguments.cores
+
+    if arguments.log:
+        with open(arguments.log, 'a') as logfile:
+            try:
+                threads = snakemake.threads
+                logfile.write("Variable 'threads' overwritten by snakemake = %i\n" % snakemake.threads)
+            except:
+                logfile.write("Cores not provided by snakemake,\n")
+                logfile.write("trying to read them from the -cpu argument...\n")
+            
+            if not isinstance(threads, int) or not threads in range(1,32):
+                threads = 4
+            else:
+                pass
+            
+            logfile.write("Continuing with %i threads for reading fastq files.\n" % threads)
+    else:
+        try:
+            threads = snakemake.threads
+            print("\nVariable 'threads' overwritten by snakemake = %i" % snakemake.threads)
+        except:
+            print("\nCores not provided by snakemake,")
+            print("trying to read them from the -cpu argument...")
+        
+        if not isinstance(threads, int) or not threads in range(1,32):
+            threads = 4
+        else:
+            pass
+
+        print("Continuing with %i threads for reading fastq files." % threads)
+
+    #2. Total (raw) read numbers/sample
+    read_nrs = pd.read_csv(arguments.fastqc,
                            delimiter = '\t')[[ "Sample", "Total Sequences" ]]
     #Note1: FastQC reports numbers of reads of pre- and post-QC fastq files,
     # I only want to have the pre-QC numbers now:
-    pre_qc = [ col for col in read_nrs.Sample if '_R1' in col ]
+    pre_qc = [ col for col in read_nrs.Sample if '_R1' in col or '_1' in col ]
     read_nrs = read_nrs[read_nrs.Sample.isin(pre_qc)]
-    read_nrs.Sample = read_nrs.Sample.str[:-3] #remove the "_R1" suffix
+    read_nrs.Sample = read_nrs.Sample.str.replace(r'_R?1.*', '') #remove the "_R1" or "_1" suffix and anything that may be after it
     
     #Note2: I now only have the number of forward reads. To add reverse,
     # multiply this number by 2:
@@ -369,10 +585,10 @@ def main():
     #Debug:
     #print(read_nrs.head())
     
-    ## 2: low-quality reads/sample (by Trimmomatic):
-    lowq_nrs = pd.read_csv(TRIMMOMATIC_FILE, 
+    #3. low-quality reads/sample (by Trimmomatic):
+    lowq_nrs = pd.read_csv(arguments.trimmomatic, 
                            delimiter = '\t')[[ "Sample", "forward_only_surviving", "reverse_only_surviving", "dropped" ]]
-    lowq_nrs.Sample = lowq_nrs.Sample.str[:-3] #remove the "_R1" suffix
+    lowq_nrs.Sample = lowq_nrs.Sample.str.replace(r'_R?1.*', '') #remove the "_R1" or "_1" suffix and anything that may be after it
     #Note: trimmomatic drops read pairs ("dropped") and for some pairs 
     # only one mate is of sufficiently high quality ("forward/reverse
     # only surviving"). The number of low-quality reads is calculated
@@ -386,8 +602,8 @@ def main():
     #Debug:
     #print(lowq_nrs.head())
     
-    ## 3: human reads/sample (Bowtie2 to human genome)
-    human_nrs = count_non_human_reads(HUGO_FILES)
+    #4. human reads/sample (Bowtie2 to human genome)
+    human_nrs = count_non_human_reads(file_list=arguments.hugo, threads=threads)
     #Note: MultiQC does not have complete data for the Bowtie2
     # alignments. Instead I count the number of lines in each
     # of the fastq files that proceed to assembly. (Forward,
@@ -396,29 +612,29 @@ def main():
     
     #Sort the dataframe by Sample ID to make it match the other dataframes
     human_nrs.sort_values(by=["Sample"], inplace=True)
-    human_nrs.reset_index(inplace=True)
+    human_nrs.reset_index(inplace=True, drop=True)
     
     #Debug:
     #print(human_nrs.head())
     
-    ## 4: Reads classified by mapping to scaffolds/sample 
+    #5. Reads classified by mapping to scaffolds/sample 
     ## (Minimap reads to scaffolds > 500 nt long from SPAdes,
     ## that have been classified with Megablast to BLAST nt database
-    ## and the LCA algorithm from Krona (see Jovian methods).)
-    classified_nrs = sum_superkingdoms(CLASSIFIED_FILE)
+    ## and the LCA algorithm from Krona (see PZN methods).)
+    classified_nrs = sum_superkingdoms(arguments.classified)
     
     #Debug:
     #print(classified_nrs.head())
     
-    ## 5: Reads mapped to unclassified scaffolds/sample:
+    #6. Reads mapped to unclassified scaffolds/sample:
     ## (Minimap reads to scaffolds that Megablast could not
     ## assign.)
-    unclassified_nrs = sum_unclassified(UNCLASSIFIED_FILE)
+    unclassified_nrs = sum_unclassified(arguments.unclassified)
     
     #Debug:
     #print(unclassified_nrs.head())
     
-    ## 6: Merge all these data into one dataframe:
+    #7. Merge all these data into one dataframe:
     dfs = [ read_nrs, lowq_nrs, human_nrs,
            classified_nrs, unclassified_nrs ]
 
@@ -466,13 +682,17 @@ def main():
     #Debug:
     #print(nrs_df.head(20))
     
-    validate_numbers(nrs_df)
+    validate_numbers(df=nrs_df, log=arguments.log)
     
-    ## 7: Write the numbers dataframe to a file:
-    nrs_df.to_csv(snakemake.output["counts"], index=False)
-    print("Wrote read-based table to:\t %s" % snakemake.output["counts"])
+    #8. Write the numbers dataframe to a file:
+    nrs_df.to_csv(arguments.counts, index=False)
+    if arguments.log:
+        with open(arguments.log, 'a') as logfile:
+            logfile.write("---\n\nWrote read-based table to:\t %s\n" % arguments.counts)
+    else:
+        print("Wrote read-based table to:\t %s" % arguments.counts)
     
-    ## 8: Create a dataframe with percentages:
+    #9. Create a dataframe with percentages:
     perc_df = pd.DataFrame()
 
     for header in nrs_df.columns:
@@ -486,19 +706,29 @@ def main():
             #Create a percentage column for all other values
             perc_df[header] = nrs_df[header] / nrs_df["Total_reads"] * 100
     
-    perc_df.to_csv(snakemake.output["percentages"], index=False)
-    print("Wrote percentages table to:\t %s" % snakemake.output["percentages"])
+    perc_df.to_csv(arguments.percentages, index=False)
     
-    ## 9: Create a stacked bar chart to visualise annotated reads per sample:
+    if arguments.log:
+        with open(arguments.log, 'a') as logfile:
+            logfile.write("Wrote percentages table to:\t %s\n" % arguments.percentages)
+    else:
+        print("Wrote percentages table to:\t %s" % arguments.percentages)
+    
+    #10. Create a stacked bar chart to visualise annotated reads per sample:
     draw_stacked_bars(df = nrs_df, 
                       perc = perc_df,
                       sample = "Sample",
                       parts = [ "Low-quality", "Human", "Archaea",
                                "Bacteria", "Eukaryota", "Viruses", 
                                "Unclassified", "Remaining" ],
-                      outfile = snakemake.output["graph"]
+                      outfile = arguments.graph
                      )
-    print("Created a read-based stacked bar chart in:\t %s" % snakemake.output["graph"])
+
+    if arguments.log:
+        with open(arguments.log, 'a') as logfile:
+            logfile.write("Created a read-based stacked bar chart in:\t %s\n" % arguments.graph)
+    else:
+        print("Created a read-based stacked bar chart in:\t %s" % arguments.graph)
           
     return(None)
 
