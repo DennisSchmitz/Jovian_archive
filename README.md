@@ -10,6 +10,7 @@ ___
 - [Pipeline description](#pipeline-description)  
   - [Pipeline features](#pipeline-features)  
   - [Pipeline visualizations](#pipeline-visualizations)  
+  - [Virus typing](#virus-typing)  
   - [Audit trail](#audit-trail)  
 - [Pipeline requirements](#pipeline-requirements)  
   - [Software](#software)  
@@ -21,10 +22,11 @@ ___
   - [Starting the Jupyter Notebook server process](#starting-the-jupyter-notebook-server-process)  
   - [Configuration for remote and grid computers](#configuration-for-remote-and-grid-computers)  
 - [How to start a Jovian analysis](#how-to-start-a-jovian-analysis)  
-- [Example output](#example-output)  
-- [Explanation of output files](#explanation-of-output-files)  
+- [Explanation of output folders](#explanation-of-output-folders)  
 - [FAQ](#faq)  
+- [Example Jovian report](#example-jovian-report)  
 - [Acknowledgements](#acknowledgements)  
+- [Authors](#authors)  
 
 ___
 
@@ -35,34 +37,59 @@ Wetlab personnel can start, configure and interpret results via an interactive w
 
 ### Pipeline features    
 - Data quality control (QC) and cleaning.  
+  - Including library fragment length analysis, usefull for sample preparation QC.  
 - Removal of human* data (patient privacy).  
-  - _* We suggest the latest human genome because Jovian is intended for clinical samples. You can however use any reference you'd like, as [explained here](#faq)._  
+  - _* You can use whichever reference you would like, as [explained here](#faq). However, since Jovian is intended for human clinical samples, we suggest using a human reference._  
 - Assembly of short reads into bigger scaffolds (often full viral genomes).  
-- Taxonomic annotation:  
-  - Classification: Every nucleic acid containing biological entity is determined up to species level.  
-  <i>NB. Lowest Common Ancestor (LCA) analysis moves ambigious results up to their last common ancestor.</i>  
-  <i>E.g. if a scaffold is found in both bacteria and phages with similar certainty, it is moved to their LCA: the root of all life.</i>  
-  - Viral typing: Norovirus, Enterovirus, Hepatitis A, Hepatitis E and Rotavirus A scaffolds can be  automatically typed, resulting in sub-species level annotation.  
-- Viral scaffolds are cross-referenced against the Virus-Host interaction database and NCBI host metadata and reported.  
-- Scaffold metrics are generated, e.g. GC content, depth of coverage (DoC), breadth of coverage (BoC), taxonomic E-value, complete taxonomic lineage.  
-- Fragment length analysis.  
-- Open reading frame (ORF) prediction.  
-- Minority variants (quasispecies) identification.  
+- Taxonomic classification:  
+  - Every nucleic acid containing biological entity (i.e. not only viruses) is determined up to species level.  
+  - Lowest Common Ancestor (LCA) analysis is performed to move ambiguous results up to their last common ancestor, which makes results more robust.  
+- Viral typing:
+  - Several viral families and genera can be taxonomically labelled at the sub-species level as described [here](#virus-typing).  
+- Viral scaffolds are cross-referenced against the Virus-Host interaction database and NCBI host database.  
+- Scaffolds are detailedly annotated:  
+  - Depth of coverage.  
+  - GC content.  
+  - Open reading frames (ORFs) are predicted.  
+  - Minority variants (quasispecies) are identified.  
+- Importantly, results of all processes listed above are presented via an [interactive web-report](#pipeline-visualizations) which includes an [audit trail](#audit-trail).  
 
 ### Pipeline visualizations  
-All data is visualized via interactive Jupyter Notebooks, interactive websites with embedded code that contain the following graphics:  
+All data are visualized via an interactive web-report, [as shown here](#example-jovian-report), which includes:  
+- A collation of interactive QC graphs via `MultiQC`.  
 - Taxonomic results are presented on three levels:  
   - For an entire (multi sample) run, interactive heatmaps are made for non-phage viruses, phages and bacteria. They are stratified to different taxonomic levels.  
-  - For a sample level overview, Krona interactive taxonomic piecharts are generated.  
-  - For detailed information, interactive tables are generated. Similar to popular spreadsheet applications.  
-- Interactive genome browser: Allows in-depth alignment inspection, including predicted ORFs and detected minority variants.  
+  - For a sample level overview, `Krona` interactive taxonomic piecharts are generated.  
+  - For more detailed analyses, interactive tables are included. Similar to popular spreadsheet applications (e.g. Microsoft Excel).  
+    - Classified scaffolds  
+    - Unclassified scaffolds (i.e. "Dark Matter")  
+- Virus typing results are presented via interactive spreadsheet-like tables.  
+- An interactive scaffold alignment viewer (`IGVjs`) is included, containing:  
+  - Detailed alignment information.  
+  - Depth of coverage graph.  
+  - GC content graph.
+  - Predicted open reading frames (ORFs).  
+  - Identified minority variants (quasispecies).  
+- All SNP metrics are presented via interactive spreadsheet-like tables, allowing detailed analysis.  
+
+### Virus typing
+After a Jovian analysis is finished you can perform virus-typing (i.e. sub-species level taxonomic labelling). These analyses can be started by the command `bash jovian -vt [virus keyword]`, where `[virus keyword]` can be: `NoV` (Caliciviridae), `EV` (Picornaviridae), `RVA` (_Rotavirus A_), `HAV` (_Hepatovirus A | Hepatitis A_), `HEV` (_Orthohepevirus A | Hepatitis E_), `PV` (Papillomaviridae) or `Flavi` (Flaviviridae). More detailed information is given upon the command `bash jovian -vt-help`.  
   
 ### Audit trail  
 An audit trail, used for clinical reproducability and logging, is generated and contains:  
 - A unique methodological fingerprint of the code is generated and accessible via GitHub: allowing to exactly reproduce the analysis, even retrospectively by reverting to old versions of the pipeline code.  
 - The following information is also logged:  
   - Database timestamps  
-  - Pipeline parameters  
+  - (user-specified) Pipeline parameters  
+
+However, several things are out-of-scope for Jovian logging:
+- The `IGVjs` version  
+- The `virus typing-tools` version  
+  - Currently we depend on a public web-tool hosted by the [RIVM](https://www.rivm.nl/en). These are developed in close collaboration with - *but independently of* - Jovian. A versioning system for the `virus typing-tools` is being worked on, however, this is not trivial and will take some time.  
+- The database versions  
+  - We only save the timestamps of the database files, this is because the databases used by Jovian have no official versioning. Any versioning scheme is therefore out-of-scope for Jovian and a responsibility of the end-user.  
+- Input files
+  - We only save the names and location of input files at the time the analysis was performed. Long-term storage of the data, and documenting their location over time, is the responsibility of the end-user.  
 
 ___
 
@@ -195,7 +222,7 @@ Currently, the method to launch analyses via the Jupyter Notebook requires some 
 `bash jovian -i <input_directory>` 
 - After the pipeline has finished, open `Notebook_report.ipynb` via your browser. Click on `Cell` in the toolbar, then press `Run all` and wait for data to be imported.  
   - N.B. You need to have a Jupyter notebook process running in the background, as described [here](#starting-the-jupyter-notebook-server-process); i.e. `jupyter notebook`.  
-    
+
 _____
 
 ## Explanation of output folders  
@@ -209,9 +236,12 @@ _____
 |`profile/` | Contains the files with Snakemake and pipeline parameters |
 |`results/` | This contains all files that are important for end-users and are imported by the Jupyter Report |
 
+Also, a hidden folder named `.snakemake` is generated. Do not remove or edit this folder. Jovian was built via `Snakemake` and this folder contains all the software and file-metadata required for proper pipeline functionality.  
 ___
 
 ## FAQ
+- _I get an error saying the directory is locked, what should I do?_
+  - Probably an earlier analysis crashed and/or was cancelled by the user while the pipeline was still running. You can unlock the directory by typing `bash jovian --unlock`.  
 - _Why are there multiple lines per taxid in the host table?_  
   - In the Virus-Host interaction database there are sometimes multiple entries for a single taxid, meaning, there are multiple known hosts. Therefore, we follow this formatting and print the different hosts on multiple lines.  
 - _Why doesn't the virus typing-tool accept my query?_
@@ -225,7 +255,7 @@ ___
 
 ___
 
-## Description and screenshots of a Jovian report  
+## Example Jovian report  
 _Data shown below is based on public data, available on ENA via accession ID `PRJNA491626`. It contains Illumina paired-end data of faeces from people with gastroenteritis._  
 
 **MultiQC is used to summarize many pipeline metrics, including read quality, insert-size distribution, biases, etc.:**  
