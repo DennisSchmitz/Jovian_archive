@@ -7,6 +7,7 @@
 # shellcheck disable=SC1091
 source bin/functions.sh
 eval "$(parse_yaml profile/pipeline_parameters.yaml "params_")"
+eval "$(parse_yaml profile/config.yaml "configuration_")"
 
 ### Variables
 VERSION=$(git describe --tags)
@@ -15,6 +16,7 @@ PROFILE="profile"
 
 UNIQUE_ID=$(bin/generate_id.sh)
 SET_HOSTNAME=$(bin/gethostname.sh)
+AVAILABLE_CORES=$(grep -c ^processor /proc/cpuinfo)
 IGVJS_LOCATION="bin/software/igv.js/dist/igv.min.js"
 
 ### Jovian Conda environment names
@@ -39,6 +41,7 @@ STOP_NGINX="FALSE"
 REBUILD_ARCHIVE="FALSE"
 CONFIG_JUP="FALSE"
 JOVIAN_MODE="NONE"
+COMPUTING_MODE="NONE"
 START_JUPYTER="FALSE"
 MAKE_SAMPLE_SHEET="FALSE"
 SHEET_SUCCESS="FALSE" # Default value for sample_sheet.yaml
@@ -61,6 +64,11 @@ do
         ;;
         -h|--help)
         JOVIAN_HELP="TRUE"
+        shift # Next
+        ;;
+        -cm | --computing-mode)
+        COMPUTING_MODE="$2"
+        shift # Next
         shift # Next
         ;;
         -sh|--snakemake-help)
@@ -635,6 +643,17 @@ elif [[ ! "${JOVIAN_MODE}" =~ ^(relaxed|strict)$ ]]; then
         echo -e "Jovian is set to run with a custom config/mode"
         exit 0
     fi
+fi
+
+if [[ "${COMPUTING_MODE}" =~ ^(standalone)$ ]]; then
+    sed -i '/drmaa/{s|^|#|};' profile/config.yaml
+    sed -ie "s/cores: 120/cores: ${AVAILABLE_CORES}/g" profile/config.yaml
+    exit 0
+elif [[ "${COMPUTING_MODE}" =~ ^(grid)$ ]]; then
+    # TODO: do something here
+    echo -e "This doesn't function yet"
+    echo -e "A proper computing switcher will be included in another version (hopefully)"
+    exit 0
 fi
 
 ### Pass other CLI arguments along to Snakemake
