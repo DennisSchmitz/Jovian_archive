@@ -1,14 +1,17 @@
 #!/bin/bash
 #####################################################################################################################
 ### This script interacts with the public web-based virus typingtools hosted by the RIVM:                         ###
-###    Norovirus:   https://www.rivm.nl/mpf/[typingservice|typingtool]/norovirus/                                 ###
-###    Enterovirus: https://www.rivm.nl/mpf/[typingservice|typingtool]/enterovirus/                               ###
-###    Hepatitis A: https://www.rivm.nl/mpf/[typingservice|typingtool]/hav/                                       ###
-###    Hepatitis E: https://www.rivm.nl/mpf/[typingservice|typingtool]/hev/                                       ###
-###    Rotavirus:   https://www.rivm.nl/mpf/[typingservice|typingtool]/rotavirusa/                                ###
+###    Norovirus:      https://www.rivm.nl/mpf/[typingservice|typingtool]/norovirus/                              ###
+###    Enterovirus:    https://www.rivm.nl/mpf/[typingservice|typingtool]/enterovirus/                            ###
+###    Hepatitis A:    https://www.rivm.nl/mpf/[typingservice|typingtool]/hav/                                    ###
+###    Hepatitis E:    https://www.rivm.nl/mpf/[typingservice|typingtool]/hev/                                    ###
+###    Rotavirus:      https://www.rivm.nl/mpf/[typingservice|typingtool]/rotavirusa/                             ###
+###    Papillomavirus: https://www.rivm.nl/mpf/[typingservice|typingtool]/papillomavirus/                         ###
+###    Flavivirus:     https://www.rivm.nl/mpf/[typingservice|typingtool]/flavivirus/                             ###
 ###                                                                                                               ###
-### Usage: bin/virus_typing.sh {NoV|EV|HAV|HEV|RVA} (--force)                                                     ###
+### Usage: bin/virus_typing.sh {NoV|EV|HAV|HEV|RVA|PV|Flavi} (--force)                                            ###
 ###     --force     Will redo and force-overwrite previously generated results.                                   ###
+###     --help      Will print the help message and exit.                                                         ###
 #####################################################################################################################
 
 # Setup
@@ -19,21 +22,48 @@ mkdir -p ${OUTPUT_FOLDER}
 
 usage_msg() {
     cat <<HELP_USAGE
-Usage: bin/virus_typing.sh [NoV|EV|RVA|HAV|HEV] (--force)
+Usage: bash jovian -vt [virus-keyword]
+
+Mandatory arguments:
+[virus-keyword]                         A virus keyword as specified below.
+
+Optional arguments:
+bash jovian -vt-force [virus-keyword]   Force overwrite existing output.
+bash jovian -vt-help                    Print this help message.
 
 The first argument should always be one of the keyword listed below:
     N.B. Keywords are case-sensitive
-    -----------------------------------
-    | Keyword | Typeable virusses     |
-    |---------------------------------|
-    | NoV     | Caliciviridae family  |
-    | EV      | Picornaviridae family |
-    | RVA     | Rotavirus genus       |
-    | HAV     | Hepatovirus genus     |
-    | HEV     | Orthohepevirus genus  |
-    -----------------------------------
-
-Optionally, you can force overwrite existing results by adding '--force'.
+    ---------------------------------------------------
+    | Keyword | Typeable virusses                     |
+    |-------------------------------------------------|
+    | NoV     | Caliciviridae family;                 |
+    |         | - Norwalk virus (GI & GII),           |
+    |         | - Sapporo virus                       |
+    | EV      | Picornaviridae family                 |
+    |         | - Aichivirus A-C                      |
+    |         | - Cosavirus A,B,D,E                   |
+    |         | - Enterovirus A-H, J                  |
+    |         |   - Incl. Enterovirus, Aichivirus,    |
+    |         |     Human Poliovirus, Echovirus       |
+    |         | - Human Parechovirus A,B              |
+    |         | - Rhinovirus A,B,C                    |
+    | RVA     | Rotavirus genus;                      |
+    |         | - Rotavirus A                         |
+    | HAV     | Hepatovirus genus                     |
+    |         | - Hepatovirus A                       |
+    | HEV     | Orthohepevirus genus                  |
+    |         | - Orthohepevirus A (Hepatitis E)      |
+    | PV      | Papillomaviridae family;              |
+    |         | - Alphapapillomaviruses,              |
+    |         | - Betapapillomaviruses,               |
+    |         | - Gammapapillomaviruses               |
+    | Flavi   | Flaviviridae family                   |
+    |         | - Dengue virus 1-4                    |
+    |         | - Hepacivirus C (Hepatitis C)         |
+    |         | - Pegivirus C (GB-C)                  |
+    |         | - Tick-borne encephalitis virus       |
+    |         | - Zika virus                          |
+    ---------------------------------------------------
 HELP_USAGE
 }
 
@@ -47,7 +77,7 @@ wrong_tt_keyword_err_msg() {
 }
 
 validate_input_tt_keyword() {
-   if [[ "${1}" =~ ^(NoV|EV|HAV|HEV|RVA)$ ]]; then
+   if [[ "${1}" =~ ^(NoV|EV|HAV|HEV|RVA|PV|Flavi)$ ]]; then
         if [ ! -d "${INPUT_FOLDER}" ]; then
             echo -e "No '"${INPUT_FOLDER}"' folder found. Virus typing can only be performed after a completed Jovian analysis."
             exit 1
@@ -58,8 +88,12 @@ validate_input_tt_keyword() {
     fi
 }
 
+#! If on any positional argument `--help` is given, print help message
+if [[ "$*" == *--help* ]]; then
+    usage_msg
+    exit 0
 #! If $1 is not empty, and $2 is not empty, and number of arguments is equal to 2
-if [ ! -z "${1}" -a ! -z "${2}" -a $# -eq 2 ]; then
+elif [ ! -z "${1}" -a ! -z "${2}" -a $# -eq 2 ]; then
     validate_input_tt_keyword "${1}"
     WHICH_TT="${1}"
     #! If $2 equal the literal --force
@@ -140,8 +174,23 @@ typingtool() {
         local extract_name="Rotavirus" # Genus
         local extract_field="7" # Genus
         local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with genus == Rotavirus found."
+    elif [ "${which_tt}" == "PV" ]; then
+        local tt_url="https://www.rivm.nl/mpf/typingservice/papillomavirus/"
+        local parser_py="bin/typingtool_PV_XML_to_csv_parser.py"
+        local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_PV.fa}
+        local extract_name="Papillomaviridae" # Family
+        local extract_field="8" # Family
+        local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with family == Papillomaviridae found."
+    elif [ "${which_tt}" == "Flavi" ]; then
+        local tt_url="https://www.rivm.nl/mpf/typingservice/flavivirus/"
+        local parser_py="bin/typingtool_Flavi_XML_to_csv_parser.py"
+        local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_Flavi.fa}
+        local extract_name="Flaviviridae" # Family
+        local extract_field="8" # Family
+        local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with family == Flaviviridae found."
     else
-        echo -e "Unknown typingtool specified, please specify either 'NoV', 'EV', 'HAV', 'HEV' or 'RVA'."
+        echo -e "Unknown typingtool specified."
+        wrong_tt_keyword_err_msg "${1}"
         exit 1
     fi
 
