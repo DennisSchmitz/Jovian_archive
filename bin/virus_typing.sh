@@ -34,12 +34,13 @@ bash jovian -vt-help                    Print this help message.
 The first argument should always be one of the keyword listed below:
     N.B. Keywords are case-sensitive
     ---------------------------------------------------
-    | Keyword | Typeable virusses                     |
+    | KEYWORD | TYPEABLE VIRUSSES                     |
     |-------------------------------------------------|
     | NoV     | Caliciviridae family;                 |
     |         | - Norwalk virus (GI & GII),           |
     |         | - Sapporo virus                       |
-    | EV      | Picornaviridae family                 |
+    |-------------------------------------------------|
+    | EV      | Picornaviridae family;                |
     |         | - Aichivirus A-C                      |
     |         | - Cosavirus A,B,D,E                   |
     |         | - Enterovirus A-H, J                  |
@@ -47,17 +48,22 @@ The first argument should always be one of the keyword listed below:
     |         |     Human Poliovirus, Echovirus       |
     |         | - Human Parechovirus A,B              |
     |         | - Rhinovirus A,B,C                    |
+    |-------------------------------------------------|
     | RVA     | Rotavirus genus;                      |
     |         | - Rotavirus A                         |
-    | HAV     | Hepatovirus genus                     |
+    |-------------------------------------------------|
+    | HAV     | Hepatovirus genus;                    |
     |         | - Hepatovirus A                       |
-    | HEV     | Orthohepevirus genus                  |
+    |-------------------------------------------------|
+    | HEV     | Orthohepevirus genus;                 |
     |         | - Orthohepevirus A (Hepatitis E)      |
+    |-------------------------------------------------|
     | PV      | Papillomaviridae family;              |
     |         | - Alphapapillomaviruses,              |
     |         | - Betapapillomaviruses,               |
     |         | - Gammapapillomaviruses               |
-    | Flavi   | Flaviviridae family                   |
+    |-------------------------------------------------|
+    | Flavi   | Flaviviridae family;                  |
     |         | - Dengue virus 1-4                    |
     |         | - Hepacivirus C (Hepatitis C)         |
     |         | - Pegivirus C (GB-C)                  |

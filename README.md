@@ -92,6 +92,7 @@ It is however necessary to have read and write access to the `/tmp` folder on yo
 |`NCBI New_taxdump`| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/ | [link](#ncbi-new_taxdump-database)|
 |`Latest Human Genome`*| https://support.illumina.com/sequencing/sequencing_software/igenome.html | [link](#human-genome)|
 |`Virus-Host interaction database`| http://www.genome.jp/virushostdb/note.html | [link](#virus-host-interaction-database)|
+
 _* We suggest the latest human genome because Jovian is intended for clinical samples. You can however use any reference you'd like, as [explained here](#faq)._
 
 ___
