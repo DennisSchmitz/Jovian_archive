@@ -72,7 +72,17 @@ All data are visualized via an interactive web-report, [as shown here](#example-
 - All SNP metrics are presented via interactive spreadsheet-like tables, allowing detailed analysis.  
 
 ### Virus typing
-After a Jovian analysis is finished you can perform virus-typing (i.e. sub-species level taxonomic labelling). These analyses can be started by the command `bash jovian -vt [virus keyword]`, where `[virus keyword]` can be: `NoV` (Caliciviridae), `EV` (Picornaviridae), `RVA` (_Rotavirus A_), `HAV` (_Hepatovirus A | Hepatitis A_), `HEV` (_Orthohepevirus A | Hepatitis E_), `PV` (Papillomaviridae) or `Flavi` (Flaviviridae). More detailed information is given upon the command `bash jovian -vt-help`.  
+After a Jovian analysis is finished you can perform virus-typing (i.e. sub-species level taxonomic labelling). These analyses can be started by the command `bash jovian -vt [virus keyword]`, where `[virus keyword]` can be:  
+
+Keyword | Taxon used for scaffold selection | Notable virus species
+--------|-----------------------------------|----------------------
+`NoV` | Caliciviridae   | #TODO  
+`EV`  | Picornaviridae  | #TODO  
+`RVA` | _Rotavirus A_   | #TODO  
+`HAV` | _Hepatovirus A_ (Hepatitis A) | #TODO  
+`HEV` | _Orthohepevirus A_ (Hepatitis E)| #TODO  
+`PV`  | Papillomaviridae | #TODO  
+`Flavi` | Flaviviridae    | #TODO  
   
 ### Audit trail  
 An audit trail, used for clinical reproducability and logging, is generated and contains:  
