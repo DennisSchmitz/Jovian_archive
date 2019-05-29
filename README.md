@@ -38,7 +38,7 @@ Wetlab personnel can start, configure and interpret results via an interactive w
 ### Pipeline features    
 - Data quality control (QC) and cleaning.  
   - Including library fragment length analysis, usefull for sample preparation QC.  
-- Removal of human* data (patient privacy). _*<sup><sub>You can use whichever reference you [would like](#faq). However, Jovian is intended for human clinical samples.</sup></sub>_  
+- Removal of human* data (patient privacy). _*<sup><sub>You can use [whichever reference you would like](#faq). However, Jovian is intended for human clinical samples.</sup></sub>_  
 - Assembly of short reads into bigger scaffolds (often full viral genomes).  
 - Taxonomic classification:  
   - Every nucleic acid containing biological entity (i.e. not only viruses) is determined up to species level.  
@@ -51,7 +51,7 @@ Wetlab personnel can start, configure and interpret results via an interactive w
   - GC content.  
   - Open reading frames (ORFs) are predicted.  
   - Minority variants (quasispecies) are identified.  
-- Importantly, results of all processes listed above are presented via an [interactive web-report](#pipeline-visualizations) which includes an [audit trail](#audit-trail).  
+- Importantly, results of all processes listed above are presented via an [interactive web-report](#pipeline-visualizations) including an [audit trail](#audit-trail).  
 
 ### Pipeline visualizations  
 All data are visualized via an interactive web-report, [as shown here](#example-jovian-report), which includes:  
