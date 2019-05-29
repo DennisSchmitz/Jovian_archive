@@ -66,7 +66,7 @@ do
         JOVIAN_HELP="TRUE"
         shift # Next
         ;;
-        -cm | --computing-mode)
+        -cm|--computing-mode)
         COMPUTING_MODE="$2"
         shift # Next
         shift # Next
@@ -660,14 +660,10 @@ elif [[ ! "${JOVIAN_MODE}" =~ ^(relaxed|strict)$ ]]; then
     fi
 fi
 
-if [[ "${COMPUTING_MODE}" =~ ^(standalone)$ ]]; then
-    sed -i '/drmaa/{s|^|#|};' profile/config.yaml
-    sed -ie "s/cores: 120/cores: ${AVAILABLE_CORES}/g" profile/config.yaml
-    exit 0
-elif [[ "${COMPUTING_MODE}" =~ ^(grid)$ ]]; then
-    # TODO: do something here
-    echo -e "This doesn't function yet"
-    echo -e "A proper computing switcher will be included in another version (hopefully)"
+if [[ "${COMPUTING_MODE}" =~ ^(*)$ ]]; then
+    echo -e "This is a placeholder for the actual computing-mode switcher"
+    minispacer
+    echo -e ":)"
     exit 0
 fi
 
