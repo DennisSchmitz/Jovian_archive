@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1091
 source bin/functions.sh
 
 #? some statements here that will probably be used
@@ -174,6 +175,45 @@ if [ "${PATHING_SINGLE}" == "TRUE" ]; then
             printf "\nDone with downloading and installing the databases required for Jovian \n"
             printf "The databases have been placed in the %s folder\n" "${db_path_single_response}"
 
+            cat << EOF > ~/database-updater.sh
+#!/bin/bash
+source activate Jovian_helper
+
+### Updating BLAST taxdb
+cd "${DB_PATH_TAX}" || exit 1
+perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress taxdb
+
+### UPDATING KRONA
+cd "${DB_PATH_KRONA}" || exit 1
+bash "${CONDA_PREFIX}"/opt/krona/updateTaxonomy.sh ./
+bash "${CONDA_PREFIX}"/opt/krona/updateAccessions.sh ./
+
+### UPDATING VHOST INTERACTION DB
+cd "${DB_PATH_VHOST}" || exit 1
+curl -o virushostdb.tsv -L ftp://ftp.genome.jp/pub/db/virushostdb/virushostdb.tsv
+
+### UPDATING NEWTAXDUMP DB
+cd "${DB_PATH_NTAX}" || exit 1
+curl -o new_taxdump.tar.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
+curl -o new_taxdump.tar.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
+tar -xzf new_taxdump.tar.gz
+    for file in *.dmp;
+        do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim;
+        done
+
+### UPDATING BLAST NT
+cd "${DB_PATH_NT}" || exit 1
+perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress nt
+
+### UPDATING BLAST NR
+cd "${DB_PATH_NR}" || exit 1
+perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress nr
+
+echo -e "Done with updating databases"
+exit
+
+EOF
+        
         break
         fi
 
@@ -297,6 +337,45 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
             printf "\e[1m%s/new_taxdump\e[0m\n" "${db_path_indiv_ntax_response}"
             printf "\e[1m%s/krona_taxonomy\e[0m\n" "${db_path_indiv_krona_response}"
             printf "\e[1m%s/Virus-Host_interaction_db\e[0m\n" "${db_path_indiv_vhost_response}"
+
+            cat << EOF > ~/database-updater.sh
+#!/bin/bash
+source activate Jovian_helper
+
+### Updating BLAST taxdb
+cd "${DB_PATH_TAX}" || exit 1
+perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress taxdb
+
+### UPDATING KRONA
+cd "${DB_PATH_KRONA}" || exit 1
+bash "${CONDA_PREFIX}"/opt/krona/updateTaxonomy.sh ./
+bash "${CONDA_PREFIX}"/opt/krona/updateAccessions.sh ./
+
+### UPDATING VHOST INTERACTION DB
+cd "${DB_PATH_VHOST}" || exit 1
+curl -o virushostdb.tsv -L ftp://ftp.genome.jp/pub/db/virushostdb/virushostdb.tsv
+
+### UPDATING NEWTAXDUMP DB
+cd "${DB_PATH_NTAX}" || exit 1
+curl -o new_taxdump.tar.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
+curl -o new_taxdump.tar.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
+tar -xzf new_taxdump.tar.gz
+    for file in *.dmp;
+        do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim;
+        done
+
+### UPDATING BLAST NT
+cd "${DB_PATH_NT}" || exit 1
+perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress nt
+
+### UPDATING BLAST NR
+cd "${DB_PATH_NR}" || exit 1
+perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress nr
+
+echo -e "Done with updating databases"
+exit
+
+EOF
 
         break
         fi
