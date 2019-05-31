@@ -17,7 +17,7 @@ ___
   - [Databases](#databases)  
 - [Configuration](#configuration)  
   - [Installing the pipeline](#installing-the-pipeline)  
-  - [Database configuration](#database-installation)  
+  - [Database installation](#database-installation)  
   - [Setup Jupyter Notebook user profile](#setup-jupyter-notebook-user-profile)  
   - [Starting the Jupyter Notebook server process](#starting-the-jupyter-notebook-server-process)  
   - [Configuration for remote and grid computers](#configuration-for-remote-and-grid-computers)  
