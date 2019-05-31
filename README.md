@@ -17,7 +17,7 @@ ___
   - [Databases](#databases)  
 - [Configuration](#configuration)  
   - [Installing the pipeline](#installing-the-pipeline)  
-  - [Database configuration](#database-configuration)  
+  - [Database configuration](#database-installation)  
   - [Setup Jupyter Notebook user profile](#setup-jupyter-notebook-user-profile)  
   - [Starting the Jupyter Notebook server process](#starting-the-jupyter-notebook-server-process)  
   - [Configuration for remote and grid computers](#configuration-for-remote-and-grid-computers)  
@@ -190,7 +190,7 @@ Keep in mind that each database still gets its own folder on top of the specifie
 
 Before running a Jovian analysis, update the pathing information for the installed databases in [profile/pipeline_parameters.yaml](profile/pipeline_parameters.yaml).  
   
-  
+
 #### Updating the databases
 **It is important that all the databases are updated at the same time, otherwise there might be a mismatch in taxonomy IDs making classifications invalid.**  
 Once the database installation is finished you will be provided with a script called `database-updater.sh`, you can find this script in your **home** directory. This script will update all databases that were installed during the earlier database installation process. We strongly advise you to set up a cronjob which runs this script on a weekly basis in order to keep all databases up-to-date.
