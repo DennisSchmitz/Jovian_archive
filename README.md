@@ -46,7 +46,7 @@ Wetlab personnel can start, configure and interpret results via an interactive w
 - Viral typing:
   - Several viral families and genera can be taxonomically labelled at the sub-species level as described [here](#virus-typing).  
 - Viral scaffolds are cross-referenced against the Virus-Host interaction database and NCBI host database.  
-- Scaffolds are detailedly annotated:  
+- Scaffolds are annotated with great detail:  
   - Depth of coverage.  
   - GC content.  
   - Open reading frames (ORFs) are predicted.  
@@ -123,11 +123,11 @@ It is however necessary to have read and write access to the `/tmp` folder on yo
 ### Databases  
 |Database name|Link|Installation instructions|
 |:---|:---|:---|
-|`NCBI NT & NR`| ftp://ftp.ncbi.nlm.nih.gov/blast/db/ | [link](#blast-nt-nr-and-taxdb-databases)|
-|`NCBI Taxdump`| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/ | [link](#blast-nt-nr-and-taxdb-databases)|
-|`NCBI New_taxdump`| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/ | [link](#ncbi-new_taxdump-database)|
+|`NCBI NT & NR`| ftp://ftp.ncbi.nlm.nih.gov/blast/db/ | [link](#database-installation)|
+|`NCBI Taxdump`| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/ | [link](#database-installation)|
+|`NCBI New_taxdump`| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/ | [link](#database-installation)|
+|`Virus-Host interaction database`| http://www.genome.jp/virushostdb/note.html | [link](#database-installation)|
 |`Latest Human Genome`*| https://support.illumina.com/sequencing/sequencing_software/igenome.html | [link](#human-genome)|
-|`Virus-Host interaction database`| http://www.genome.jp/virushostdb/note.html | [link](#virus-host-interaction-database)|
 
 _* We suggest the latest human genome because Jovian is intended for clinical samples. You can however use any reference you'd like, as [explained here](#faq)._
 
@@ -159,32 +159,68 @@ In case the installation of IGVjs is declined during installation and you wish t
 `bash jovian -ii`  
 The installation of IGVjs will now start, this can take up to 30 minutes.
 
-### Database configuration  
-**N.B. These databases should be updated simulatenously, otherwise the taxonomy IDs might not be valid.**  
+### Database installation  
+Installing the databases necessary for Jovian can be done with the command `bash jovian -id` and/or `bash jovian --install-databases`.  
+This command will start the interactive installation process for the various required databases.  
+**If you're inexperienced with the command line, please do not touch this. *Please leave this to your local system administrators.***  
 
-#### BLAST NT, NR and taxdb databases  
-- Use the `Jovian_helper` environment, i.e. `conda activate Jovian_helper`.  
-- Use the script to download...  
-  - NT: `cd [desired_database_location]; perl ${CONDA_PREFIX}/bin/update_blastdb.pl --decompress nt`  
-  - NR: `cd [desired_database_location]; perl ${CONDA_PREFIX}/bin/update_blastdb.pl --decompress nr`  
-  - Taxdb: `cd [desired_database_location]; perl ${CONDA_PREFIX}/bin/update_blastdb.pl --decompress taxdb`  
-- Put a file named [.ncbirc](files/.ncbirc) in your home (`cd ~`) directory. See this example [.ncbirc](files/.ncbirc), remember to update it for your local setup!   
-  - We advise you to setup automatic `crontab` scripts to update these databases every week, please contact your own IT support for help with this.  
+The following databases will be downloaded/installed on your system:
+- BLAST NT
+- BLAST NR
+- BLAST TaxDB
+- NCBI New_Taxdump
+- KRONA Taxonomy & Accessions
+- Virus-Host interaction database
 
-#### NCBI new_taxdump database  
-This section is work in progress, will be automated in the bash wrapper, see issue #7.  
-- Download `new_taxdump` from https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/   
-- Extract it, it should contain the `rankedlineage` and `host` files.
-- Then change the delimiters via this one liner:
- **N.B. execute this command from the directory where these `*.dmp` files are located**  
- `for file in *.dmp; do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim; done`  
-- When you run a Jovian analysis, update the pathing information in [profile/pipeline_parameters.yaml](profile/pipeline_parameters.yaml) to your local pathing.  
+#### Pathing structure
+During the installation you will be asked about the pathing structure of the databases. The options are **single** or **individual**. Each path ***MUST*** start with a `/` and ***CANNOT*** end with a `/`, doing so will cause problems for your system.  
+- **Single path:** This means that you enter one base path for the installation of the various databases. Each database will get its own folder on top of the base-path which you specified. As an example, if you specify `/databases` as a base path then the folder structure will look like this:  
+    - NT database:  `/database/NT_database`
+    - NR database:  `/database/NR_database`
+    - Tax database; `/database/taxdb`  
+    etc..
 
-#### Krona resources  
-- Use the `Jovian_helper` environment, i.e. `conda activate Jovian_helper`.  
-- Use the code below to generate the Krona taxonomy files:  
-  ```cd [desired_database_location]; bash ${CONDA_PREFIX}/opt/krona/updateTaxonomy.sh ./ ; bash ${CONDA_PREFIX}/opt/krona/updateAccessions.sh ./```  
-- When you run a Jovian analysis, update the pathing information to the Krona resources in [profile/pipeline_parameters.yaml](profile/pipeline_parameters.yaml) to your local pathing.  
+- **Individual paths:** This means that for every database you will be prompted to enter the path individually. This means you can specify a different pathing structure for every database. This is especially useful if you already have one or more databases installed on your system, matching the path in the installer with the path of the already present database makes sure the database will only be updated instead of a complete reinstallation.  
+Keep in mind that each database still gets its own folder on top of the specified paths. As an example, the paths can look something like this:
+    - NT database:  `/mnt/db/NT_database`
+    - NR database:  `/data/db/NR_database`
+    - Tax database: `/mnt/taxonomies/taxdb`  
+    etc...
+
+
+Before running a Jovian analysis, update the pathing information for the installed databases in [profile/pipeline_parameters.yaml](profile/pipeline_parameters.yaml).  
+  
+  
+#### Updating the databases
+**It is important that all the databases are updated at the same time, otherwise there might be a mismatch in taxonomy IDs making classifications invalid.**  
+Once the database installation is finished you will be provided with a script called `database-updater.sh`, you can find this script in your **home** directory. This script will update all databases that were installed during the earlier database installation process. We strongly advise you to set up a cronjob which runs this script on a weekly basis in order to keep all databases up-to-date.
+
+#### Manually updating the databases
+While we recommend to use the provided script for updating the databases as listed [here](#updating-the-databases), it is possible to update the various databases manually.  
+It is important to use the `Jovian_helper` environment while updating the databases, you can activate this environment with `source activate Jovian_helper` or `conda activate Jovian_helper`.  
+
+- Updating the BLAST databases (NT, NR and Taxdb)
+    - NT:       `cd [NT_database_location]; perl ${CONDA_PREFIX}/bin/update_blastdb.pl --decompress nt`
+    - NR:       `cd [NR_database_location]; perl ${CONDA_PREFIX}/bin/update_blastdb.pl --decompress nr`
+    - Taxdb:    `cd [Taxdb_database_location]; perl ${CONDA_PREFIX}/bin/update_blastdb.pl --decompress taxdb`
+- Updating the NCBI new_taxdump database
+    - run the commands in the following snippet:  
+    ```
+    cd [New_taxdump_database_location]
+    
+    curl -o new_taxdump.tar.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
+    
+    curl -o new_taxdump.tar.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
+    
+    tar -xzf new_taxdump.tar.gz
+    
+    for file in *.dmp; do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim; done
+    ```
+- Updating the KRONA taxonomy and accessions databases
+    - Taxonomy:     `cd [Krona_database_location]; bash "${CONDA_PREFIX}"/opt/krona/updateTaxonomy.sh ./`
+    - Accessions:   `cd [Krona_database_location]; bash "${CONDA_PREFIX}"/opt/krona/updateAccessions.sh ./`
+- Updating the Virus-Host_interaction database
+    - `cd [Virus-Host_database_location]; curl -o virushostdb.tsv -L ftp://ftp.genome.jp/pub/db/virushostdb/virushostdb.tsv`
 
 #### Human Genome  
 _We suggest the latest human genome because Jovian is intended for clinical samples. You can however use any reference you'd like, as [explained here](#faq)._
@@ -195,20 +231,14 @@ _We suggest the latest human genome because Jovian is intended for clinical samp
   - Remove the EBV contig via `awk '{print >out}; />chrEBV/{out="EBV.fa"}' out=nonEBV.fa genome.fa` ([source](https://unix.stackexchange.com/questions/202514/split-file-into-two-parts-at-a-pattern)).  
   - Remove `EBV.fa` and replace `genome.fa` with `nonEBV.fa` via `rm EBV.fa; mv nonEBV.fa genome.fa`  
   - Activate the `Jovian_helper` environment via `source activate Jovian_helper` and index the updated `genome.fa` file via `bowtie2-build --threads 10 genome.fa genome.fa`.  
-- When you run a Jovian analysis, update the pathing information to your cleaned and bowtie2 indexed `genome.fa` file in [profile/pipeline_parameters.yaml](profile/pipeline_parameters.yaml).  
-
-#### Virus-Host interaction database  
-- Download the Virus-Host database (Mihara et al. 2016) via...  
-  - ```cd [desired_database_location]; wget ftp://ftp.genome.jp/pub/db/virushostdb/virushostdb.tsv```  
-- When you run a Jovian analysis, update the pathing information to the Virus-Host interaction table in [profile/pipeline_parameters.yaml](profile/pipeline_parameters.yaml) to your local pathing.  
+- When you run a Jovian analysis, update the pathing information to your cleaned and bowtie2 indexed `genome.fa` file in [profile/pipeline_parameters.yaml](profile/pipeline_parameters.yaml).   
 
 ### Setup Jupyter Notebook user profile  
 Run `jovian --configure-jupyter` and when it asks about overwriting default config reply `y` and press `enter`.  
 
 ### Starting the Jupyter Notebook server process  
-- Open a Linux terminal and navigate to the root via `cd /`  
-- Start the Jupyter Notebook server via `jupyter notebook`. NB Keep this proces runnning for as long as you want to access these Jupyter Notebooks Reports.  
-- The above command should give your a link that you can access via your browser, please open this link from your work station. If you cannot find this link, you can run `jupyter notebook list` from a seperate terminal to generate it.  
+A Jupyter Notebook server process can be started with the command `bash jovian --start-jupyter`.  
+You will be provided with a link that you can access via your web browser. Please open this link from your work station. If you cannot find this link, run `jupyter notebook list` from a separate terminal to generate it.
 
 ### Configuration for remote and grid computers
 - If you run the pipeline on a remote computer (e.g. server/HPC or grid) you need the system admins of those systems to make Jupyter Notebook accessible to your local computer. 
@@ -230,7 +260,7 @@ Currently, the method to launch analyses via the Jupyter Notebook requires some 
 - If the dry-run has completed without errors, you are ready to start a real analysis with the following command:  
 `bash jovian -i <input_directory>` 
 - After the pipeline has finished, open `Notebook_report.ipynb` via your browser. Click on `Cell` in the toolbar, then press `Run all` and wait for data to be imported.  
-  - N.B. You need to have a Jupyter notebook process running in the background, as described [here](#starting-the-jupyter-notebook-server-process); i.e. `jupyter notebook`.  
+  - N.B. You need to have a Jupyter notebook process running in the background, as described [here](#starting-the-jupyter-notebook-server-process).
 
 _____
 
