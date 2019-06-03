@@ -137,6 +137,7 @@ ___
 Pipeline software, databases and Jupyter Notebook need to be downloaded, installed and configured as described below.  
 
 ### Installing the pipeline  
+_We have Jovian operational on a RHEL grid and we test new versions in CentOS and Ubuntu Dockers. We do expect Jovian to work on other Linux distro's, but we cannot guarantee stability._  
 - Installing the Jovian pipeline requires a specific file (.ncbirc) in your home directory, you can create this file with the command `touch ~/.ncbirc`
     - This file (.ncbirc) **needs** to be updated later on with information regarding your local setup in order to make the pipeline actually work.
 - Navigate to a directory where you want to analyse your datasets and download the pipeline via `git clone https://github.com/DennisSchmitz/Jovian.git`  
