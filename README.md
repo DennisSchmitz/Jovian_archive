@@ -204,7 +204,7 @@ Currently, the method to launch analyses via the Jupyter Notebook requires some 
 <b>Command-line interface method:</b>  
 - Make sure the installation of Jovian is completed, see: [installing the pipeline](#installing-the-pipeline)
 - Go to the `Jovian` folder [created above](#installing-the-pipeline)
-- Configure pipeline parameters by changing the [profile/pipeline_parameters.yaml](profile/pipeline_parameters.yaml) file. Either via Jupyter Notebook or with a commandline text-editor of choice.  
+- Configure pipeline parameters by changing the [profile/pipeline_parameters.yaml](profile/pipeline_parameters.yaml) file. Either via Jupyter Notebook or with a commandline text-editor of choice. 
 - We recommended you do a `dry-run` before each analysis to check if there are any typo's, missing files or other errors. This can be done via `bash jovian -i <input_directory> -n`
 - If the dry-run has completed without errors, you are ready to start a real analysis with the following command:  
 `bash jovian -i <input_directory>` 
@@ -262,6 +262,7 @@ ___
 |Jupyterthemes|NA|https://github.com/dunovank/jupyter-themes|
 |Krona|Ondov, B.D., N.H. Bergman, and A.M. Phillippy, Interactive metagenomic visualization in a Web browser. BMC Bioinformatics, 2011. 12: p. 385.|https://github.com/marbl/Krona/wiki|
 |Lofreq|Wilm, A., et al., LoFreq: a sequence-quality aware, ultra-sensitive variant caller for uncovering cell-population heterogeneity from high-throughput sequencing datasets. 2012. 40(22): p. 11189-11201.|http://csb5.github.io/lofreq/|
+|MGkit|Rubino, F. and Creevey, C.J. 2014. MGkit: Metagenomic Framework For The Study Of Microbial Communities. . Available at: figshare [doi:10.6084/m9.figshare.1269288].|https://bitbucket.org/setsuna80/mgkit/src/develop/|
 |Minimap2|Li, H., Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics, 2018.|https://github.com/lh3/minimap2|
 |MultiQC|Ewels, P., et al., MultiQC: summarize analysis results for multiple tools and samples in a single report. 2016. 32(19): p. 3047-3048.|https://multiqc.info/|
 |Nb_conda|NA|https://github.com/Anaconda-Platform/nb_conda|

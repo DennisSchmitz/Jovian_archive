@@ -3,27 +3,34 @@
 ######################################
 
 Trimmomatic:
-    adapter_removal_config: ILLUMINACLIP:files/trimmomatic_0.36_adapters_lists/NexteraPE-PE.fa:2:30:10:8:true # For the Nextera PE lib prep adapters
-    quality_trimming_config: SLIDINGWINDOW:5:30 # Default: 5 nucleotides window size, minimum average Phred score of 30
+    adapter_removal_config: ILLUMINACLIP:files/trimmomatic_0.36_adapters_lists/NexteraPE-PE.fa:2:20:10:8:true # For the Nextera PE lib prep adapters
+    quality_trimming_config: SLIDINGWINDOW:5:20 # Default: 5 nucleotides window size, minimum average Phred score of 30
     minimum_length_config: MINLEN:50 # Default: Remove anything smaller than 50 nucleotides
     
 HuGo_removal:
     alignment_type: --local # Choose if you want to do "local" or "global" alignment. Keep this as "--local" unless you know what you're doing.
 
 SPAdes:
-    kmersizes: 21,33,55,77 # uncomment this line if you want to use the pipeline for short Illumina reads (<250 nt in length). Then also comment the line below.
-#    kmersizes: 21,33,55,77,99,127 # uncomment this line if you want to use the pipeline for longer Illumina reads (>250 nt in length). Then also comment the line above.
+ #   kmersizes: 21,33,55,77 # uncomment this line if you want to use the pipeline for short Illumina reads (<250 nt in length). Then also comment the line below.
+    kmersizes: 21,33,55,77,99,127 # uncomment this line if you want to use the pipeline for longer Illumina reads (>250 nt in length). Then also comment the line above.
 
 scaffold_minLen_filter:
-    minlen: 500 # Minimum allowed scaffold size to be allowed for downstream processessing. Advice, use a minimum length that is atleast 1nt greater than your Illumina read length
+    minlen: 250 # Minimum allowed scaffold size to be allowed for downstream processessing. Advice, use a minimum length that is atleast 1nt greater than your Illumina read length
 
 taxonomic_classification: # NT database is hardcoded for now
     evalue: 0.05 # E-value threshold for saving hits
-    max_target_seqs: 10 # Maximum number of target sequences to report
+    max_target_seqs: 250 # Maximum number of target sequences to report
+    max_hsps: 1 # Maximum number of hits per targets sequence.
 
 taxonomic_classification_LCA:
-    bitscoreDeltaLCA: 5 # Every taxonomic hit within this bitscore distance will be used in the LCA analysis.
-
+    Krona: True
+    Krona_LCA: 
+        bitscoreDeltaLCA: 5 # Every taxonomic hit within this bitscore distance will be used in the LCA analysis.
+    mgkit: False
+    mgkit_LCA:
+        quantile_threshold: .97
+        bitscore_threshold: 100
+        
 SNP_calling:
     max_cov: 20000 # Maximum coverage that will be used for SNP calling. Don't change this value unless you know what you're doing.
     minimum_AF: 0.05 # This is the minimum allelle frequency (=AF) for which you want a SNP to be reported. Default is 5%.
