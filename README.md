@@ -7,12 +7,13 @@ ___
 <img align="right" src="../assets/images/Jovian_logo.png">
 
 ## Table of content  
-- [Pipeline description](#pipeline-description)  
-  - [Pipeline features](#pipeline-features)  
-  - [Pipeline visualizations](#pipeline-visualizations)  
+- [Jovian description](#jovian-description)  
+  - [Features](#features)  
+  - [Visualizations](#visualizations)  
   - [Virus typing](#virus-typing)  
   - [Audit trail](#audit-trail)  
-- [Pipeline requirements](#pipeline-requirements)  
+- [Requirements](#requirements)  
+  - [System requirements](#system-requirements)
   - [Software](#software)  
   - [Databases](#databases)  
 - [Configuration](#configuration)  
@@ -30,12 +31,12 @@ ___
 
 ___
 
-## Pipeline description  
+## Jovian description  
 
 The pipeline automatically processes raw Illumina NGS data from human clinical matrices (faeces, serum, etc.) into clinically relevant information such as taxonomic classification, viral typing and minority variant identification (quasispecies).
 Wetlab personnel can start, configure and interpret results via an interactive web-report. This makes doing metagenomics analyses much more accessible and user-friendly since minimal command-line skills are required.  
 
-### Pipeline features    
+### Features    
 - Data quality control (QC) and cleaning.  
   - Including library fragment length analysis, usefull for sample preparation QC.  
 - Removal of human* data (patient privacy). _*<sup><sub>You can use [whichever reference you would like](#faq). However, Jovian is intended for human clinical samples.</sup></sub>_  
@@ -53,7 +54,7 @@ Wetlab personnel can start, configure and interpret results via an interactive w
   - Minority variants (quasispecies) are identified.  
 - Importantly, results of all processes listed above are presented via an [interactive web-report](#pipeline-visualizations) including an [audit trail](#audit-trail).  
 
-### Pipeline visualizations  
+### Visualizations  
 All data are visualized via an interactive web-report, [as shown here](#example-jovian-report), which includes:  
 - A collation of interactive QC graphs via `MultiQC`.  
 - Taxonomic results are presented on three levels:  
@@ -105,12 +106,13 @@ ___
 ![Jovian_rulegraph.png](../assets/images/rulegraph_Jovian.png?raw=true)
 ___
 
-## Pipeline requirements
-Jovian has two major software dependencies, miniConda and IGVjs. On first usage, you will be asked if you want to automatically install these. It also depends on the [following software](#software), but most systems will have these installed already. An analysis also depends on several databases that you have to download yourself, as [described below](#databases). And it requires some configuration, as explained [here](#configuration).  
+## Requirements
+Jovian has minimal [system requirements](#system-requirements), it is intended for powerful servers and/or grid-computers but also works on powerful PCs and laptops. It has two major software dependencies, miniConda and IGVjs. During the installation procedure you will be asked if you want to automatically install these. Additionally, it depends on the [following software](#software), but most Linux systems have these pre-installed already. Any metagenomics analysis, Jovian included, depends on several [public databases that you have to download](#databases). Lastly, some [configuration is required](#configuration).  
 
-### System rights
-In order to run Jovian there are very little additional system rights necessary, Root and/or sudo-rights are not required.  
-It is however necessary to have read and write access to the `/tmp` folder on your system. This won't be a problem most of the time since the `/tmp` folder is usually free to read from and write to. However, it is best to check this with your system administrator(s).
+### System requirements
+We have developed and tested the software for Linux distributions (_distro's_) `RHEL`, `CentOS` and `Ubuntu`. We do expect Jovian to work on other Linux distro's, but cannot guarantee stability.  
+
+The software does **not** require root and/or sudo-rights. It is however necessary to have read and write access to the `/tmp` folder on your system. This won't be a problem most of the time since the `/tmp` folder is usually free to read from and write to. However, it is best to check this with your system administrator(s).  
 
 ### Software  
 |Software name|Website|  
