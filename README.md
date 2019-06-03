@@ -24,7 +24,7 @@ ___
 - [FAQ](#faq)
 - [Example Jovian report](#example-jovian-report)
 - [Acknowledgements](#acknowledgements)
-    - [Authors:](#authors)
+    - [Authors](#authors)
 
 ___
 
@@ -36,7 +36,7 @@ Wetlab personnel can start, configure and interpret results via an interactive w
 ### Features    
 - Data quality control (QC) and cleaning.  
   - Including library fragment length analysis, usefull for sample preparation QC.  
-- Removal of human* data (patient privacy). _*<sup><sub>You can use [whichever reference you would like](#faq). However, Jovian is intended for human clinical samples.</sup></sub>_  
+- Removal of human* data (patient privacy). _*<sup><sub>You can use [whichever reference you would like](../../wiki/Frequently-Asked-Questions#i-dont-care-about-removing-the-human-data-i-have-samples-that-are-from-other-species-can-i-also-automatically-remove-that). However, Jovian is intended for human clinical samples.</sup></sub>_  
 - Assembly of short reads into bigger scaffolds (often full viral genomes).  
 - Taxonomic classification:  
   - Every nucleic acid containing biological entity (i.e. not only viruses) is determined up to species level.  
@@ -49,7 +49,7 @@ Wetlab personnel can start, configure and interpret results via an interactive w
   - GC content.  
   - Open reading frames (ORFs) are predicted.  
   - Minority variants (quasispecies) are identified.  
-- Importantly, results of all processes listed above are presented via an [interactive web-report](#pipeline-visualizations) including an [audit trail](#audit-trail).  
+- Importantly, results of all processes listed above are presented via an [interactive web-report](#visualizations) including an [audit trail](#audit-trail).  
 
 ### Visualizations  
 All data are visualized via an interactive web-report, [as shown here](#example-jovian-report), which includes:  
@@ -104,12 +104,12 @@ ___
 ___
 
 ## Requirements
-Jovian has minimal [system requirements](#system-requirements), it is intended for powerful servers and/or grid-computers but also works on powerful PCs and laptops. It has two major software dependencies, miniConda and IGVjs. During the installation procedure you will be asked if you want to automatically install these. Additionally, it depends on the [following software](#software), but most Linux systems have these pre-installed already. Any metagenomics analysis, Jovian included, depends on several [public databases that you have to download](#databases). Lastly, some [configuration is required](#configuration).  
+Jovian has minimal [system requirements](#system-requirements), it is intended for powerful servers and/or grid-computers but also works on powerful PCs and laptops. It has two major software dependencies, miniConda and IGVjs. During the installation procedure you will be asked if you want to automatically install these (if Conda is not already available). Additionally, it depends on the [following software](#software), but most Linux systems have these pre-installed already. Any metagenomics analysis, Jovian included, depends on several [public databases that you have to download](#databases).    
 
 ### System requirements
-We have developed and tested the software for Linux distributions (_distro's_) `RHEL`, `CentOS` and `Ubuntu`. We do expect Jovian to work on other Linux distro's, but cannot guarantee stability.  
+We have developed and tested the software for the following Linux distributions ("distro's"): `RHEL`, `CentOS` and `Ubuntu`. We do expect Jovian to work on other Linux distro's, but cannot guarantee stability. We are currently assessing if it feasible to also test our software on Windows computers using [Ubuntu on Windows](https://www.microsoft.com/en-us/p/ubuntu/9nblggh4msv6?activetab=pivot:overviewtab). This is a work-in-progress, but preliminary tests look promising.  
 
-The software does **not** require root and/or sudo-rights. It is however necessary to have read and write access to the `/tmp` folder on your system. This won't be a problem most of the time since the `/tmp` folder is usually free to read from and write to. However, it is best to check this with your system administrator(s).  
+The software does <u><b>not</b></u> require root and/or sudo-rights. It is however necessary to have read and write access to the `/tmp` folder on your system. This won't be a problem most of the time since the `/tmp` folder is usually free to read from and write to. However, it is best to check this with your system administrator(s).  
 
 The databases require up to 400GB of disk-space. The pipeline itself, including all Conda software environments and IGVjs, requires up to 15GB of disk-space.
 
@@ -124,13 +124,13 @@ The databases require up to 400GB of disk-space. The pipeline itself, including 
 ### Databases  
 |Database name|Link|Installation instructions|
 |:---|:---|:---|
-|`NCBI NT & NR`| ftp://ftp.ncbi.nlm.nih.gov/blast/db/ | [link](#database-installation)|
-|`NCBI Taxdump`| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/ | [link](#database-installation)|
-|`NCBI New_taxdump`| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/ | [link](#database-installation)|
-|`Virus-Host interaction database`| http://www.genome.jp/virushostdb/note.html | [link](#database-installation)|
-|`Latest Human Genome`*| https://support.illumina.com/sequencing/sequencing_software/igenome.html | [link](#human-genome)|
+|`NCBI NT & NR`| ftp://ftp.ncbi.nlm.nih.gov/blast/db/ | [link](../../wiki/Installation-Instructions#database-installation)|
+|`NCBI Taxdump`| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/ | [link](../../wiki/Installation-Instructions#database-installation)|
+|`NCBI New_taxdump`| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/ | [link](../../wiki/Installation-Instructions#database-installation)|
+|`Virus-Host interaction database`| http://www.genome.jp/virushostdb/note.html | [link](../../wiki/Installation-Instructions#database-installation)|
+|`Latest Human Genome`*| https://support.illumina.com/sequencing/sequencing_software/igenome.html | [link](../../wiki/Installation-Instructions#database-installation)|
 
-_* We suggest the latest human genome because Jovian is intended for clinical samples. You can however use any reference you'd like, as [explained here](#faq)._
+_* We suggest the latest human genome because Jovian is intended for clinical samples. You can however use any reference you'd like, as [explained here](../../wiki/Frequently-Asked-Questions#i-dont-care-about-removing-the-human-data-i-have-samples-that-are-from-other-species-can-i-also-automatically-remove-that)._
 
 ___
 
@@ -144,18 +144,18 @@ Can be found on [this wiki page](../../wiki/Installation-Instructions).
 Currently, the method to launch analyses via the Jupyter Notebook requires some minor tweaks. So I cannot share it yet, we recommend you to use the command-line method below.  
 
 <b>Jupyter Notebook method:</b>  
-- Via your Jupyter Notebook browser connection, go to the `Jovian` folder [created above](#installing-the-pipeline). Then, open `Notebook_portal.ipynb`.  
+- Via your Jupyter Notebook browser connection, go to the `Jovian` folder [created during installation](../../wiki/Installation-Instructions). Then, open `Notebook_portal.ipynb`.  
 - Follow the instructions in this notebook to start an analysis.  
 
 <b>Command-line interface method:</b>  
-- Make sure the installation of Jovian is completed, see: [installing the pipeline](#installing-the-pipeline)
-- Go to the `Jovian` folder [created above](#installing-the-pipeline)
+- Make sure that Jovian is completely [installed](../../wiki/Installation-Instructions).  
+- Go to the folder where `Jovian` was installed.  
 - Configure pipeline parameters by changing the [profile/pipeline_parameters.yaml](profile/pipeline_parameters.yaml) file. Either via Jupyter Notebook or with a commandline text-editor of choice.  
-- We recommended you do a `dry-run` before each analysis to check if there are any typo's, missing files or other errors. This can be done via `bash jovian -i <input_directory> -n`
+- Optional: We recommended you do a `dry-run` before each analysis to check if there are any typo's, missing files or other errors. This can be done via `bash jovian -i <input_directory> -n`
 - If the dry-run has completed without errors, you are ready to start a real analysis with the following command:  
 `bash jovian -i <input_directory>` 
 - After the pipeline has finished, open `Notebook_report.ipynb` via your browser. Click on `Cell` in the toolbar, then press `Run all` and wait for data to be imported.  
-  - N.B. You need to have a Jupyter notebook process running in the background, as described [here](#starting-the-jupyter-notebook-server-process).
+  - N.B. You need to have a Jupyter notebook process running in the background, as described [here](../../wiki/Installation-Instructions#starting-the-jupyter-notebook-server-process).
 
 ### Explanation of output folders  
 |Folder|Contents|
@@ -274,7 +274,7 @@ ___
 |`Virus-Host Database`|Mihara, T., Nishimura, Y., Shimizu, Y., Nishiyama, H., Yoshikawa, G., Uehara, H., ... & Ogata, H. (2016). Linking virus genomes with host taxonomy. Viruses, 8(3), 66.|http://www.genome.jp/virushostdb/note.html|
 |`Virus typing-tools`|Kroneman, A., Vennema, H., Deforche, K., Avoort, H. V. D., Penaranda, S., Oberste, M. S., ... & Koopmans, M. (2011). An automated genotyping tool for enteroviruses and noroviruses. Journal of Clinical Virology, 51(2), 121-125.|https://www.ncbi.nlm.nih.gov/pubmed/21514213|
 
-#### Authors:
+#### Authors
 - Dennis Schmitz ([RIVM](https://www.rivm.nl/en) and [EMC](https://www6.erasmusmc.nl/viroscience/))  
 - Sam Nooij ([RIVM](https://www.rivm.nl/en) and [EMC](https://www6.erasmusmc.nl/viroscience/))  
 - Robert Verhagen ([RIVM](https://www.rivm.nl/en))  
