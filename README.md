@@ -7,27 +7,34 @@ ___
 <img align="right" src="../assets/images/Jovian_logo.png">
 
 ## Table of content  
-- [Jovian description](#jovian-description)  
-  - [Features](#features)  
-  - [Visualizations](#visualizations)  
-  - [Virus typing](#virus-typing)  
-  - [Audit trail](#audit-trail)  
-- [Requirements](#requirements)  
-  - [System requirements](#system-requirements)
-  - [Software](#software)  
-  - [Databases](#databases)  
-- [Configuration](#configuration)  
-  - [Installing the pipeline](#installing-the-pipeline)  
-  - [Database installation](#database-installation)  
-  - [Setup Jupyter Notebook user profile](#setup-jupyter-notebook-user-profile)  
-  - [Starting the Jupyter Notebook server process](#starting-the-jupyter-notebook-server-process)  
-  - [Configuration for remote and grid computers](#configuration-for-remote-and-grid-computers)  
-- [How to start a Jovian analysis](#how-to-start-a-jovian-analysis)  
-- [Explanation of output folders](#explanation-of-output-folders)  
-- [FAQ](#faq)  
-- [Example Jovian report](#example-jovian-report)  
-- [Acknowledgements](#acknowledgements)  
-- [Authors](#authors)  
+- [Jovian, user-friendly metagenomics](#jovian-user-friendly-metagenomics)
+  - [Table of content](#table-of-content)
+  - [Jovian description](#jovian-description)
+    - [Features](#features)
+    - [Visualizations](#visualizations)
+    - [Virus typing](#virus-typing)
+    - [Audit trail](#audit-trail)
+  - [Requirements](#requirements)
+    - [System requirements](#system-requirements)
+    - [Software](#software)
+    - [Databases](#databases)
+  - [Configuration](#configuration)
+    - [Installing the pipeline](#installing-the-pipeline)
+      - [Installing IGVjs](#installing-igvjs)
+    - [Database installation](#database-installation)
+      - [Pathing structure](#pathing-structure)
+      - [Updating the databases](#updating-the-databases)
+      - [Manually updating the databases](#manually-updating-the-databases)
+      - [Human Genome](#human-genome)
+    - [Setup Jupyter Notebook user profile](#setup-jupyter-notebook-user-profile)
+    - [Starting the Jupyter Notebook server process](#starting-the-jupyter-notebook-server-process)
+    - [Configuration for remote and grid computers](#configuration-for-remote-and-grid-computers)
+  - [How to start a Jovian analysis](#how-to-start-a-jovian-analysis)
+  - [Explanation of output folders](#explanation-of-output-folders)
+  - [FAQ](#faq)
+  - [Example Jovian report](#example-jovian-report)
+  - [Acknowledgements](#acknowledgements)
+      - [Authors:](#authors)
 
 ___
 
@@ -284,19 +291,7 @@ Also, a hidden folder named `.snakemake` is generated. Do not remove or edit thi
 ___
 
 ## FAQ
-- _I get an error saying the directory is locked, what should I do?_
-  - Probably an earlier analysis crashed and/or was cancelled by the user while the pipeline was still running. You can unlock the directory by typing `bash jovian --unlock`.  
-- _Why are there multiple lines per taxid in the host table?_  
-  - In the Virus-Host interaction database there are sometimes multiple entries for a single taxid, meaning, there are multiple known hosts. Therefore, we follow this formatting and print the different hosts on multiple lines.  
-- _Why doesn't the virus typing-tool accept my query?_
-  - Please see [this](https://github.com/DennisSchmitz/Jovian/issues/29) and [this](https://github.com/DennisSchmitz/Jovian/issues/51) issue. The short answer; they were made for Sanger sequences and are not yet able to to handle NGS datasets. This is a work-in-progress.  
-- _I am missing a certain taxa of which I'm sure is in the dataset. How is that possible?_
-  - Could be due to multiple reasons. The first one being the stringency of the analysis. The current default values are quite strict, you might have filtered it away. Please try more relaxed settings. The second being the result of the LCA analysis (Lowest Common Ancestor) putting a certain scaffold at a unexpected taxonomic level. Imagine a sequence that is homologous between (pro)phages and bacteria, the lowest common ancestor between phages and bacteria is the theoretical root of all life (i.e. `root` taxonomic level), so you will find it at the taxonomic level (you can try changing the `bitscoreDeltaLCA: 5` to `0` in the [config-file](profile/pipeline_parameters.yaml). It could also be a result of an erroneous entry in the used public databases, to which a scaffold then gets assigned. If it is anything other than these reasons, please let us know by making an [issue](https://github.com/DennisSchmitz/Jovian/issues).  
-- _I don't care about removing the human data, I have cell-lines which are from other species, can I also automatically remove that?_
-  - Yes. Although we focus on patient-privacy since it was developed for clinical samples, you can enter any reference sequence you like. You can do that by changing `background_ref: /path/to/file/genome.fa` into the location of your desired background removal organisms in the [config-file](profile/pipeline_parameters.yaml). The only limitations are that it is a `fasta` file and that is indexed via `bowtie2`, although this latter process will be automated in a future version.  
-- _How can some scaffolds still be assigned to `Homo sapiens`? I thought Jovian removed human data?_
-  - The human genome is a consensus genome built from many individuals from around the globe. It does not capture all diversity in the human gene pool and therefore cannot completely remove all human data. You can improve this by selecting a reference genome that is closer to your target population, e.g. if you sequence mainly Dutch samples, the [GoNL genome](http://www.nlgenome.nl/) might be better suited.  
-
+Can be found on [this wiki page](wiki/Frequently-Asked-Questions).
 ___
 
 ## Example Jovian report  
