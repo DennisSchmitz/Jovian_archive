@@ -7,34 +7,24 @@ ___
 <img align="right" src="../assets/images/Jovian_logo.png">
 
 ## Table of content  
-- [Jovian, user-friendly metagenomics](#jovian-user-friendly-metagenomics)
-  - [Table of content](#table-of-content)
-  - [Jovian description](#jovian-description)
-    - [Features](#features)
-    - [Visualizations](#visualizations)
-    - [Virus typing](#virus-typing)
-    - [Audit trail](#audit-trail)
-  - [Requirements](#requirements)
-    - [System requirements](#system-requirements)
-    - [Software](#software)
-    - [Databases](#databases)
-  - [Configuration](#configuration)
-    - [Installing the pipeline](#installing-the-pipeline)
-      - [Installing IGVjs](#installing-igvjs)
-    - [Database installation](#database-installation)
-      - [Pathing structure](#pathing-structure)
-      - [Updating the databases](#updating-the-databases)
-      - [Manually updating the databases](#manually-updating-the-databases)
-      - [Human Genome](#human-genome)
-    - [Setup Jupyter Notebook user profile](#setup-jupyter-notebook-user-profile)
-    - [Starting the Jupyter Notebook server process](#starting-the-jupyter-notebook-server-process)
-    - [Configuration for remote and grid computers](#configuration-for-remote-and-grid-computers)
-  - [How to start a Jovian analysis](#how-to-start-a-jovian-analysis)
+- [Table of content](#table-of-content)
+- [Jovian description](#jovian-description)
+  - [Features](#features)
+  - [Visualizations](#visualizations)
+  - [Virus typing](#virus-typing)
+  - [Audit trail](#audit-trail)
+- [Requirements](#requirements)
+  - [System requirements](#system-requirements)
+  - [Software](#software)
+  - [Databases](#databases)
+- [Instructions](#instructions)
+  - [Installation](#installation)
+  - [How to start/configure a Jovian analysis](#how-to-startconfigure-a-jovian-analysis)
   - [Explanation of output folders](#explanation-of-output-folders)
-  - [FAQ](#faq)
-  - [Example Jovian report](#example-jovian-report)
-  - [Acknowledgements](#acknowledgements)
-      - [Authors:](#authors)
+- [FAQ](#faq)
+- [Example Jovian report](#example-jovian-report)
+- [Acknowledgements](#acknowledgements)
+    - [Authors:](#authors)
 
 ___
 
@@ -144,12 +134,13 @@ _* We suggest the latest human genome because Jovian is intended for clinical sa
 
 ___
 
-## Installation instructions  
+## Instructions 
+Below you'll find instructions on how to install and start/configure a Jovian analysis.   
+
+### Installation
 Can be found on [this wiki page](../../wiki/Installation-Instructions).
 
-___
- 
-## How to start a Jovian analysis  
+### How to start/configure a Jovian analysis  
 Currently, the method to launch analyses via the Jupyter Notebook requires some minor tweaks. So I cannot share it yet, we recommend you to use the command-line method below.  
 
 <b>Jupyter Notebook method:</b>  
@@ -166,9 +157,7 @@ Currently, the method to launch analyses via the Jupyter Notebook requires some 
 - After the pipeline has finished, open `Notebook_report.ipynb` via your browser. Click on `Cell` in the toolbar, then press `Run all` and wait for data to be imported.  
   - N.B. You need to have a Jupyter notebook process running in the background, as described [here](#starting-the-jupyter-notebook-server-process).
 
-_____
-
-## Explanation of output folders  
+### Explanation of output folders  
 |Folder|Contents|
 |:---|:---|
 |`bin/` |Contains the scripts required for Jovian to work |
