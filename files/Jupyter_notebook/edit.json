@@ -1,0 +1,16 @@
+{
+    "load_extensions": {
+      "codefolding/edit": true
+    },
+    "Editor": {
+      "codemirror_options": {
+        "vimMode": false,
+        "keyMap": "default",
+        "lineNumbers": true
+      },
+      "file_extension_modes": {
+        ".txt": "YAML",
+        ".sm": "Perl"
+      }
+    }
+  }

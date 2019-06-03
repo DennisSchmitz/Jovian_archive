@@ -6,4 +6,4 @@ channels:
 dependencies:
   - bowtie2==2.3.4.3
   - blast==2.7.1
-  - krona==2.7
+  - krona==2.7.1

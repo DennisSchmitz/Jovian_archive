@@ -32,7 +32,7 @@ with open(config["sample_sheet"]) as sample_sheet_file:
 onstart:
     try:
         print("Checking if all specified files are accessible...")
-        for filename in [ config["databases"]["HuGo_ref"],
+        for filename in [ config["databases"]["background_ref"],
                          config["databases"]["Krona_taxonomy"],
                          config["databases"]["virusHostDB"],
                          config["databases"]["NCBI_new_taxdump_rankedlineage"],
@@ -56,7 +56,7 @@ onstart:
         conda list > results/log_conda.txt
 
         echo -e "\tGenerating used databases log..."
-        echo -e "==> Homo Sapiens NCBI GRch38 NO DECOY genome: <==\n$(ls -lah $(grep "    HuGo_ref:" profile/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" > results/log_db.txt
+        echo -e "==> User-specified background reference (default: Homo Sapiens NCBI GRch38 NO DECOY genome): <==\n$(ls -lah $(grep "    background_ref:" profile/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" > results/log_db.txt
         echo -e "\n==> Virus-Host Interaction Database: <==\n$(ls -lah $(grep "    virusHostDB:" profile/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> results/log_db.txt
         echo -e "\n==> Krona Taxonomy Database: <==\n$(ls -lah $(grep "    Krona_taxonomy:" profile/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> results/log_db.txt
         echo -e "\n==> NCBI new_taxdump Database: <==\n$(ls -lah $(grep "    NCBI_new_taxdump_rankedlineage:" profile/pipeline_parameters.yaml | cut -f 2 -d ":") $(grep "    NCBI_new_taxdump_host:" profile/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> results/log_db.txt
@@ -195,7 +195,7 @@ fi
     
 rule HuGo_removal_pt1_alignment:
     input:
-        HuGo_ref=config["databases"]["HuGo_ref"],
+        background_ref=config["databases"]["background_ref"],
         r1="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_pR1.fastq",
         r2="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_pR2.fastq",
         r1_unpaired="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_uR1.fastq",
@@ -215,7 +215,7 @@ rule HuGo_removal_pt1_alignment:
     shell:
         """
 bowtie2 --time --threads {threads} {params.alignment_type} \
--x {input.HuGo_ref} \
+-x {input.background_ref} \
 -1 {input.r1} \
 -2 {input.r2} \
 -U {input.r1_unpaired} \
@@ -436,7 +436,10 @@ pileup.sh in={input.bam} \
 ref={input.fasta} \
 fastaorf={input.ORF_NT_fasta} \
 outorf={output.perORFcoverage} \
-out={output.perScaffold} 2> {output.summary} 1> {log}
+out={output.perScaffold} \
+secondary=f \
+samstreamer=t \
+2> {output.summary} 1> {log}
         """
 
 rule Determine_GC_content:
@@ -656,8 +659,20 @@ rule quantify_output:
     threads: config["threads"]["quantify_output"]
     log:
         "logs/quantify_output.log"
-    script:
-        "bin/quantify_profiles.py"
+    shell:
+        """
+python bin/quantify_profiles.py \
+-f {input.fastqc} \
+-t {input.trimmomatic} \
+-hg {input.hugo} \
+-c {input.classified} \
+-u {input.unclassified} \
+-co {output.counts} \
+-p {output.percentages} \
+-g {output.graph} \
+-cpu {threads} \
+-l {log}
+        """
 
     #############################################################################
     ##### Make heatmaps for superkingdoms and viruses                       #####
@@ -820,7 +835,6 @@ onsuccess:
         echo -e "\tRemoving temporary files..."
         if [ "{config[remove_temp]}" != "0" ]
         then
-        #    echo -e "\t\tValue is NOT 0 --> {config[remove_temp]}"   # DEBUG only
             rm -rf data/FastQC_pretrim/
             rm -rf data/FastQC_posttrim/
             rm -rf data/cleaned_fastq/fastq_without_HuGo_removal/
@@ -833,12 +847,14 @@ onsuccess:
             rm -f data/taxonomic_classification/*.taxtab
             rm -f data/taxonomic_classification/*.taxMagtab
         else
-        #    echo -e "\t\tValue is 0 --> {config[remove_temp]}"   # DEBUG only
             echo -e "\t\tYou chose to not remove temp files: the human genome alignment files are not removed."
         fi
 
         echo -e "\tCreating symlinks for the interactive genome viewer..."
         bin/set_symlink.sh
+
+        echo -e "\tGenerating HTML index of log files..."
+        tree -hD --dirsfirst -H "../logs" -L 2 -T "Logs overview" --noreport --charset utf-8 -P "*" -o results/logfiles_index.html logs/
 
         echo -e "\tGenerating Snakemake report..."
         snakemake --unlock --config sample_sheet=sample_sheet.yaml
