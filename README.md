@@ -144,117 +144,9 @@ _* We suggest the latest human genome because Jovian is intended for clinical sa
 
 ___
 
-## Configuration  
-Pipeline software, databases and Jupyter Notebook need to be downloaded, installed and configured as described below.  
+## Installation instructions  
+Can be found on [this wiki page](../../wiki/Installation-Instructions).
 
-### Installing the pipeline  
-_We have Jovian operational on a RHEL grid and we test new versions in CentOS and Ubuntu Dockers. We do expect Jovian to work on other Linux distro's, but we cannot guarantee stability._  
-- Installing the Jovian pipeline requires a specific file (.ncbirc) in your home directory, you can create this file with the command `touch ~/.ncbirc`
-    - This file (.ncbirc) **needs** to be updated later on with information regarding your local setup in order to make the pipeline actually work.
-- Navigate to a directory where you want to analyse your datasets and download the pipeline via `git clone https://github.com/DennisSchmitz/Jovian.git`  
-- Navigate to the newly created `Jovian` folder.
-- Depending on your local setup, you need to modify the config files in order to make the pipeline work as intended.
-    - **[For grid-computing setups]** Open the file `profile/config.yaml` with your text-editor of choice and modify the amount of cores to match your setup. It is also important to update the DRMAA queue information to match your setup. If this is unknown, contact your local system administrator(s) for more information.
-    - **[For standalone-computing setups]** Open the file `profile/config.yaml` with your text-editor of choice and modify the amount of cores to something acceptable for your setup. (depending on your dataset and server, 8 to 12 cores should be fine). Then comment out the lines starting with "drmaa", this can be done by placing a "#" in front of the line as in the example below: 
-    ```
-    #drmaa: " -q bio -n {threads} -R \"span[hosts=1]\""
-    #drmaa-log-dir: logs/drmaa
-    ```
-- Now run `bash jovian -ic` to begin the interactive installer for jovian (make sure you run this command while in the `Jovian` folder)
-    - This command will install all files, folders and programs necessary for Jovian, it will however only do so if you give consent to do so. Once done with the installation it will go on with building different "environments" which are necessary for analysing the data.
-- Follow the instructions on screen and answer the questions given in order to completely install Jovian. Installation can take roughly up to an hour or two (depending on your system). It is only necessary to stay with your computer during the interactive installer which won't take longer than 30 minutes.
-    - If you're inexperienced with the commandline, it is best to simply answer all questions in the interactive installer with "yes"  or "y". 
-
-#### Installing IGVjs
-The installation of IGVjs is usually handled by the interactive Jovian installer (described above).  
-In case the installation of IGVjs is declined during installation and you wish to install/use IGVjs at a moment of your convenience, run the following command:  
-`bash jovian -ii`  
-The installation of IGVjs will now start, this can take up to 30 minutes.
-
-### Database installation  
-Installing the databases necessary for Jovian can be done with the command `bash jovian -id` and/or `bash jovian --install-databases`.  
-This command will start the interactive installation process for the various required databases.  
-**If you're inexperienced with the command line, please do not touch this. *Please leave this to your local system administrators.***  
-
-The following databases will be downloaded/installed on your system:
-- BLAST NT
-- BLAST NR
-- BLAST TaxDB
-- NCBI New_Taxdump
-- KRONA Taxonomy & Accessions
-- Virus-Host interaction database
-
-#### Pathing structure
-During the installation you will be asked about the pathing structure of the databases. The options are **single** or **individual**. Each path ***MUST*** start with a `/` and ***CANNOT*** end with a `/`, doing so will cause problems for your system.  
-- **Single path:** This means that you enter one base path for the installation of the various databases. Each database will get its own folder on top of the base-path which you specified. As an example, if you specify `/databases` as a base path then the folder structure will look like this:  
-    - NT database:  `/database/NT_database`
-    - NR database:  `/database/NR_database`
-    - Tax database; `/database/taxdb`  
-    etc..
-
-- **Individual paths:** This means that for every database you will be prompted to enter the path individually. This means you can specify a different pathing structure for every database. This is especially useful if you already have one or more databases installed on your system, matching the path in the installer with the path of the already present database makes sure the database will only be updated instead of a complete reinstallation.  
-Keep in mind that each database still gets its own folder on top of the specified paths. As an example, the paths can look something like this:
-    - NT database:  `/mnt/db/NT_database`
-    - NR database:  `/data/db/NR_database`
-    - Tax database: `/mnt/taxonomies/taxdb`  
-    etc...
-
-
-Before running a Jovian analysis, update the pathing information for the installed databases in [profile/pipeline_parameters.yaml](profile/pipeline_parameters.yaml).  
-  
-
-#### Updating the databases
-**It is important that all the databases are updated at the same time, otherwise there might be a mismatch in taxonomy IDs making classifications invalid.**  
-Once the database installation is finished you will be provided with a script called `database-updater.sh`, you can find this script in your **home** directory. This script will update all databases that were installed during the earlier database installation process. We strongly advise you to set up a cronjob which runs this script on a weekly basis in order to keep all databases up-to-date.
-
-#### Manually updating the databases
-While we recommend to use the provided script for updating the databases as listed [here](#updating-the-databases), it is possible to update the various databases manually.  
-It is important to use the `Jovian_helper` environment while updating the databases, you can activate this environment with `source activate Jovian_helper` or `conda activate Jovian_helper`.  
-
-- Updating the BLAST databases (NT, NR and Taxdb)
-    - NT:       `cd [NT_database_location]; perl ${CONDA_PREFIX}/bin/update_blastdb.pl --decompress nt`
-    - NR:       `cd [NR_database_location]; perl ${CONDA_PREFIX}/bin/update_blastdb.pl --decompress nr`
-    - Taxdb:    `cd [Taxdb_database_location]; perl ${CONDA_PREFIX}/bin/update_blastdb.pl --decompress taxdb`
-- Updating the NCBI new_taxdump database
-    - run the commands in the following snippet:  
-    ```
-    cd [New_taxdump_database_location]
-    
-    curl -o new_taxdump.tar.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
-    
-    curl -o new_taxdump.tar.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
-    
-    tar -xzf new_taxdump.tar.gz
-    
-    for file in *.dmp; do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim; done
-    ```
-- Updating the KRONA taxonomy and accessions databases
-    - Taxonomy:     `cd [Krona_database_location]; bash "${CONDA_PREFIX}"/opt/krona/updateTaxonomy.sh ./`
-    - Accessions:   `cd [Krona_database_location]; bash "${CONDA_PREFIX}"/opt/krona/updateAccessions.sh ./`
-- Updating the Virus-Host_interaction database
-    - `cd [Virus-Host_database_location]; curl -o virushostdb.tsv -L ftp://ftp.genome.jp/pub/db/virushostdb/virushostdb.tsv`
-
-#### Human Genome  
-_We suggest the latest human genome because Jovian is intended for clinical samples. You can however use any reference you'd like, as [explained here](#faq)._
-- Download the latest Human Genome version from https://support.illumina.com/sequencing/sequencing_software/igenome.html  
-  - Select the NCBI version of `GRCh38`. NB do NOT download the `GRCh38Decoy` version! This version will filter out certain human viruses.  
-- The `GRCh38` version of the human genome still contains an Epstein Barr virus (EBV) contig, this needs to be removed as shown below:  
-  - Navigate to `NCBI/GRCh38/Sequence/Bowtie2Index/` in the newly downloaded Human Genome.  
-  - Remove the EBV contig via `awk '{print >out}; />chrEBV/{out="EBV.fa"}' out=nonEBV.fa genome.fa` ([source](https://unix.stackexchange.com/questions/202514/split-file-into-two-parts-at-a-pattern)).  
-  - Remove `EBV.fa` and replace `genome.fa` with `nonEBV.fa` via `rm EBV.fa; mv nonEBV.fa genome.fa`  
-  - Activate the `Jovian_helper` environment via `source activate Jovian_helper` and index the updated `genome.fa` file via `bowtie2-build --threads 10 genome.fa genome.fa`.  
-- When you run a Jovian analysis, update the pathing information to your cleaned and bowtie2 indexed `genome.fa` file in [profile/pipeline_parameters.yaml](profile/pipeline_parameters.yaml).   
-
-### Setup Jupyter Notebook user profile  
-Run `jovian --configure-jupyter` and when it asks about overwriting default config reply `y` and press `enter`.  
-
-### Starting the Jupyter Notebook server process  
-A Jupyter Notebook server process can be started with the command `bash jovian --start-jupyter`.  
-You will be provided with a link that you can access via your web browser. Please open this link from your work station. If you cannot find this link, run `jupyter notebook list` from a separate terminal to generate it.
-
-### Configuration for remote and grid computers
-- If you run the pipeline on a remote computer (e.g. server/HPC or grid) you need the system admins of those systems to make Jupyter Notebook accessible to your local computer. 
-  
 ___
  
 ## How to start a Jovian analysis  
@@ -291,7 +183,7 @@ Also, a hidden folder named `.snakemake` is generated. Do not remove or edit thi
 ___
 
 ## FAQ
-Can be found on [this wiki page](wiki/Frequently-Asked-Questions).
+Can be found on [this wiki page](../../wiki/Frequently-Asked-Questions).
 ___
 
 ## Example Jovian report  
