@@ -114,6 +114,8 @@ We have developed and tested the software for Linux distributions (_distro's_) `
 
 The software does **not** require root and/or sudo-rights. It is however necessary to have read and write access to the `/tmp` folder on your system. This won't be a problem most of the time since the `/tmp` folder is usually free to read from and write to. However, it is best to check this with your system administrator(s).  
 
+The databases require up to 400GB of disk-space. The pipeline itself, including all Conda software environments and IGVjs, requires up to 15GB of disk-space.
+
 ### Software  
 |Software name|Website|  
 |:---|:---|  
