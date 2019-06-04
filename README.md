@@ -111,7 +111,10 @@ We have developed and tested the software for the following Linux distributions 
 
 The software does <u><b>not</b></u> require root and/or sudo-rights. It is however necessary to have read and write access to the `/tmp` folder on your system. This won't be a problem most of the time since the `/tmp` folder is usually free to read from and write to. However, it is best to check this with your system administrator(s).  
 
-The databases require up to 400GB of disk-space. The pipeline itself, including all Conda software environments and IGVjs, requires up to 15GB of disk-space.
+The databases require up to 400GB of disk-space. Installation of the Jovian pipeline totals ~6GB disk-space and is spread over two locations:
+1. In the users' home directory*: A "Jovian_master" environment of ~2GB is installed, this serves as the "head" of the pipeline. Also, a "Jovian_helper" environment is installed to facilitate ancillary operations (e.g. database updating) which also requires ~1GB. * <sub>Technically it is installed in Conda's default directory, but for most users this will be `home`.</sub>  
+_If Conda is not installed on the system, Jovian will do that automatically in the `home` directory, requiring ~1GB of disk-space._
+2. At the location where the repo was downloaded: Here the "body" of the pipeline is installed, including all Conda software environments and IGVjs. It requires 4GB of disk-space.
 
 ### Software  
 |Software name|Website|  
