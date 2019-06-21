@@ -326,6 +326,7 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
                 line
                 installer_intro
                 echo -e "Conda succesfully added to PATH"
+                break
             elif [[ "${answer}" =~ ^(no|n)$ ]]; then
                 export PATH=${HOME}/tmp/Miniconda3/bin:$PATH | tee -a ${INSTALL_LOG}
                 tput reset
@@ -334,6 +335,7 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
                 line
                 spacer
                 echo -e "Conda has not been permanently added to PATH, this means you cannot use the conda command once this session closes."
+                break
             else
                 echo -e "Please answer with 'yes' or 'no'"
                 minispacer
@@ -374,6 +376,7 @@ if [[ $PATH != *${MASTER_NAME}* ]]; then # If the master environment is not in y
                 conda env create -f ${PATH_JOVIAN_MASTER_YAML} | tee -a ${INSTALL_LOG} # Create the env from the specified yaml file
                 source activate "${MASTER_NAME}"
                 echo -e "DONE"
+                break
             elif [[ "${envanswer}" =~ ^(no|n)$ ]]; then
                 echo -e "The Jovian_master environment is a requirement. Exiting because Jovian cannot continue without this environment"
                 exit 1
@@ -473,18 +476,25 @@ if [ "$igvjs_installeranswers_igvjs" == "U" ]; then
         echo -e "IGVjs hasn't been installed in this working directory yet... \n\nIGVjs is the piece of software which is used for the interactive scaffold viewer in the Jupyter notebook reports"
         echo -e "\nIGVjs is necessary when you wish to view these reports. However, if you wish to only use Jovian on the command line this software isn't necessary."
         echo -e "It's advised to install IGVjs now unless you only wish to use Jovian on the command line. It's alway possible to install IGVjs at a later moment with 'bash jovian -ii'\n"
-        read -r -p "Do you wish to install IGVjs to this working directory now? [y/N] " igvanswer
-        igvanswer=${igvanswer,,}
-        if [[ "${igvanswer}" =~ ^(yes|y)$ ]]; then
-            echo -e "Starting with installing IGVjs, this can take up to 15 minutes..."
-            bin/install_IGVjs.sh
-            echo -e "DONE with installing IGVjs"
-            echo -e "installeranswers:\n    igvjs: Y" > "${HOME}"/.jovian_installchoice_igvjs
-        else
-            echo -e "Skipping the installation of IGVjs..."
-            echo -e "installeranswers:\n    igvjs: N" > "${HOME}"/.jovian_installchoice_igvjs
-            sleep 1
-        fi
+        while read -r -p "Do you wish to install IGVjs to this working directory now? [y/N] " igvanswer
+        do
+            igvanswer=${igvanswer,,}
+            if [[ "${igvanswer}" =~ ^(yes|y)$ ]]; then
+                echo -e "Starting with installing IGVjs, this can take up to 15 minutes..."
+                bin/install_IGVjs.sh
+                echo -e "DONE with installing IGVjs"
+                echo -e "installeranswers:\n    igvjs: Y" > "${HOME}"/.jovian_installchoice_igvjs
+                break
+            elif [[ "${igvanswer}" =~ ^(no|n)$ ]]; then
+                echo -e "Skipping the installation of IGVjs..."
+                echo -e "installeranswers:\n    igvjs: N" > "${HOME}"/.jovian_installchoice_igvjs
+                sleep 1
+                break
+            else
+                echo -e "Please answer with 'yes' or 'no'"
+                minispacer
+            fi
+        done
     fi
 elif [ "$igvjs_installeranswers_igvjs" == "Y" ]; then
     if [ ! -e ${IGVJS_LOCATION} ]; then
