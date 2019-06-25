@@ -46,6 +46,7 @@ COMPUTING_MODE="NONE"
 START_JUPYTER="FALSE"
 MAKE_SAMPLE_SHEET="FALSE"
 SHEET_SUCCESS="FALSE" # Default value for sample_sheet.yaml
+SKIP_CONFIRMATION="FALSE"
 
 ### Parse the jovian commandline arguments, if they are not part of jovian, they get send to Snakemake
 POSITIONAL=()
@@ -142,6 +143,10 @@ do
         MAKE_SAMPLE_SHEET="TRUE"
         shift # Next
         ;;
+        -y)
+        SKIP_CONFIRMATION="TRUE"
+        shift # Next
+        ;;
         *) # Any other option
         POSITIONAL+=("$1") # save in array
         shift # Next
@@ -163,25 +168,34 @@ if [ "${CLEAN:-}" == "TRUE" ]; then
     line
     spacer
     echo -e "The following files and folders will be deleted:\ndata/\nlogs/\nresults/\nprofile/variables.yaml\nsample_sheet.yaml\n\n"
-    while read -r -p "Are you sure you wish to permanently delete these files and folders? [y/N] " response
-    do
-        response=${response,,}
-        if [[ "${response}" =~ ^(yes|y)$ ]]; then
-            echo -e "Removing Jovian output: data/ logs/ results/ profile/variables.yaml sample_sheet.yaml"
+    if [ "${SKIP_CONFIRMATION}" == "TRUE" ]; then
+        echo -e "Removing Jovian output: data/ logs/ results/ profile/variables.yaml sample_sheet.yaml"
             rm -rf data/
             rm -rf logs/
             rm -rf results/
             rm sample_sheet.yaml
             rm profile/variables.yaml
-            break
-        elif [[ "${response}" =~ ^(no|n)$ ]]; then
-            echo -e "Aborting cleaning process on user request"
-            exit 0
-        else
-            echo -e "Please answer with 'yes' or 'no'"
-            minispacer
-        fi
-    done
+    else
+        while read -r -p "Are you sure you wish to permanently delete these files and folders? [y/N] " response
+        do
+            response=${response,,}
+            if [[ "${response}" =~ ^(yes|y)$ ]] || [ "${SKIP_CONFIRMATION}" == "TRUE" ]; then
+                echo -e "Removing Jovian output: data/ logs/ results/ profile/variables.yaml sample_sheet.yaml"
+                rm -rf data/
+                rm -rf logs/
+                rm -rf results/
+                rm sample_sheet.yaml
+                rm profile/variables.yaml
+                break
+            elif [[ "${response}" =~ ^(no|n)$ ]]; then
+                echo -e "Aborting cleaning process on user request"
+                exit 0
+            else
+                echo -e "Please answer with 'yes' or 'no'"
+                minispacer
+            fi
+        done
+    fi
     exit 0
 fi
 
@@ -289,58 +303,78 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
         ### confirmation of conda installation
         installer_intro
         echo -e "Miniconda missing. Installing Miniconda can take up to 15 minutes..."
-        while read -r -p "Do you wish to install (mini)conda now? [y/N] " response
-        do
-            response=${response,,}
-            if [[ "${response}" =~ ^(no|n) ]]; then
-                minispacer
-                echo -e "Conda is a requirement for Jovian to run."
-                echo -e "Exiting because conda isn't installed and automatic installation of conda was declined by user"
-                exit 1
-            elif [[ "${response}" =~ ^(yes|y)$ ]]; then
-                echo "Jovian ${VERSION}" > ${INSTALL_LOG}
-                line | tee -a ${INSTALL_LOG}
-                curl -o latest.sh -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
-                chmod +x latest.sh
-                sh latest.sh -b -p "${HOME}/tmp/Miniconda3" | tee -a ${INSTALL_LOG}
-                rm latest.sh
-                tput reset
-                installer_intro
-                break
-            else
-                echo -e "Please answer with 'yes' or 'no'"
-                minispacer
-            fi
-        done
-        
+        if [ "${SKIP_CONFIRMATION}" == "TRUE" ]; then
+            echo "Jovian ${VERSION}" > ${INSTALL_LOG}
+            line | tee -a ${INSTALL_LOG}
+            curl -o latest.sh -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+            chmod +x latest.sh
+            sh latest.sh -b -p "${HOME}/tmp/Miniconda3" | tee -a ${INSTALL_LOG}
+            rm latest.sh
+            tput reset
+            installer_intro
+        else
+            while read -r -p "Do you wish to install (mini)conda now? [y/N] " response
+            do
+                response=${response,,}
+                if [[ "${response}" =~ ^(no|n) ]]; then
+                    minispacer
+                    echo -e "Conda is a requirement for Jovian to run."
+                    echo -e "Exiting because conda isn't installed and automatic installation of conda was declined by user"
+                    exit 1
+                elif [[ "${response}" =~ ^(yes|y)$ ]]; then
+                    echo "Jovian ${VERSION}" > ${INSTALL_LOG}
+                    line | tee -a ${INSTALL_LOG}
+                    curl -o latest.sh -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+                    chmod +x latest.sh
+                    sh latest.sh -b -p "${HOME}/tmp/Miniconda3" | tee -a ${INSTALL_LOG}
+                    rm latest.sh
+                    tput reset
+                    installer_intro
+                    break
+                else
+                    echo -e "Please answer with 'yes' or 'no'"
+                    minispacer
+                fi
+            done
+        fi
         ### conda has been installed by previous step, confirm addition to PATH
         echo -e "Conda is installed but not yet added to PATH, do you wish to add conda to your PATH?"
-        while read -r -p "The conda PATH will be added to your ~/.bashrc and will only affect you. [y/N] " answer
-        do
-            answer=${answer,,}
-            if [[ "${answer}" =~ ^(yes|y)$ ]]; then
-                echo "PATH=$PATH:${HOME}/tmp/Miniconda3/bin" >> "${HOME}/.bashrc" | tee -a ${INSTALL_LOG}
-                source "${HOME}"/.bashrc | tee -a ${INSTALL_LOG}
-                export PATH=${HOME}/tmp/Miniconda3/bin:$PATH
-                tput reset
-                line
-                installer_intro
-                echo -e "Conda succesfully added to PATH"
-                break
-            elif [[ "${answer}" =~ ^(no|n)$ ]]; then
-                export PATH=${HOME}/tmp/Miniconda3/bin:$PATH | tee -a ${INSTALL_LOG}
-                tput reset
-                line
-                installer_intro
-                line
-                spacer
-                echo -e "Conda has not been permanently added to PATH, this means you cannot use the conda command once this session closes."
-                break
-            else
-                echo -e "Please answer with 'yes' or 'no'"
-                minispacer
-            fi
-        done
+        if [ "${SKIP_CONFIRMATION}" == "TRUE" ]; then
+            echo "PATH=$PATH:${HOME}/tmp/Miniconda3/bin" >> "${HOME}/.bashrc" | tee -a ${INSTALL_LOG}
+            source "${HOME}"/.bashrc | tee -a ${INSTALL_LOG}
+            export PATH=${HOME}/tmp/Miniconda3/bin:$PATH
+            tput reset
+             line
+             installer_intro
+             echo -e "Conda succesfully added to PATH"
+        else
+            while read -r -p "The conda PATH will be added to your ~/.bashrc and will only affect you. [y/N] " answer
+            do
+                answer=${answer,,}
+                if [[ "${answer}" =~ ^(yes|y)$ ]]; then
+                    echo "PATH=$PATH:${HOME}/tmp/Miniconda3/bin" >> "${HOME}/.bashrc" | tee -a ${INSTALL_LOG}
+                    source "${HOME}"/.bashrc | tee -a ${INSTALL_LOG}
+                    export PATH=${HOME}/tmp/Miniconda3/bin:$PATH
+                    tput reset
+                    line
+                    installer_intro
+                    echo -e "Conda succesfully added to PATH"
+                    break
+                elif [[ "${answer}" =~ ^(no|n)$ ]]; then
+                    export PATH=${HOME}/tmp/Miniconda3/bin:$PATH | tee -a ${INSTALL_LOG}
+                    tput reset
+                    line
+                    installer_intro
+                    line
+                    spacer
+                    echo -e "Conda has not been permanently added to PATH, this means you cannot use the conda command once this session closes."
+                    break
+                else
+                    echo -e "Please answer with 'yes' or 'no'"
+                    minispacer
+                fi
+            done
+        fi
     
         echo -e "\n"
         echo -e "Installation of Conda is done"
@@ -367,24 +401,30 @@ if [[ $PATH != *${MASTER_NAME}* ]]; then # If the master environment is not in y
     source activate "${MASTER_NAME}" # Try to activate this env
     if [ ! $? -eq 0 ]; then # If exit statement is not 0, i.e. master conda env hasn't been installed yet, do...
         installer_intro
-
-        while read -r -p "The Jovian_master environment hasn't been installed yet, do you want to install this environment now? [y/N] " envanswer
-        do
-            envanswer=${envanswer,,}
-            if [[ "${envanswer}" =~ ^(yes|y)$ ]]; then
-                echo -e "\tInstalling Jovian master environment..." | tee -a ${INSTALL_LOG}   
-                conda env create -f ${PATH_JOVIAN_MASTER_YAML} | tee -a ${INSTALL_LOG} # Create the env from the specified yaml file
-                source activate "${MASTER_NAME}"
-                echo -e "DONE"
-                break
-            elif [[ "${envanswer}" =~ ^(no|n)$ ]]; then
-                echo -e "The Jovian_master environment is a requirement. Exiting because Jovian cannot continue without this environment"
-                exit 1
-            else
-                echo -e "Please answer with 'yes' or 'no'"
-                minispacer
-            fi
-        done
+        if [ "${SKIP_CONFIRMATION}" = "TRUE" ]; then
+            echo -e "\tInstalling Jovian master environment..." | tee -a ${INSTALL_LOG}   
+            conda env create -f ${PATH_JOVIAN_MASTER_YAML} | tee -a ${INSTALL_LOG} # Create the env from the specified yaml file
+            source activate "${MASTER_NAME}"
+            echo -e "DONE"
+        else
+            while read -r -p "The Jovian_master environment hasn't been installed yet, do you want to install this environment now? [y/N] " envanswer
+            do
+                envanswer=${envanswer,,}
+                if [[ "${envanswer}" =~ ^(yes|y)$ ]]; then
+                    echo -e "\tInstalling Jovian master environment..." | tee -a ${INSTALL_LOG}   
+                    conda env create -f ${PATH_JOVIAN_MASTER_YAML} | tee -a ${INSTALL_LOG} # Create the env from the specified yaml file
+                    source activate "${MASTER_NAME}"
+                    echo -e "DONE"
+                    break
+                elif [[ "${envanswer}" =~ ^(no|n)$ ]]; then
+                    echo -e "The Jovian_master environment is a requirement. Exiting because Jovian cannot continue without this environment"
+                    exit 1
+                else
+                    echo -e "Please answer with 'yes' or 'no'"
+                    minispacer
+                fi
+            done
+        fi
     fi
     set -ue # Turn bash strict mode on again
     echo -e "Succesfully activated Jovian_master environment"
@@ -401,100 +441,160 @@ if [ "${ARCHIVE:-}" == "TRUE" ]; then
     echo -e "\n\nArchiving the Jovian data and results can take several hours depending on the size of your dataset(s)."
     echo -e "This archiving process will NOT include the raw dataset in the final archive"
     echo -e "\nIt is advised to run the archiving process overnight, it is strongly advised to not stop the process once you started it"
-    while read -r -p "Do you want to start the Jovian archiving process now? [y/N] " archive_answer
-    do
-    archive_answer=${archive_answer,,}
-        if [[ "${archive_answer}" =~ ^(yes|y)$ ]]; then
-            echo -e "\n\nStarting the archiving process\n\n"
-            eval "$(parse_yaml profile/variables.yaml "config_")"
-            
-            if [ -e data/ ]; then
-                echo -e "Found the 'data/' folder, appending to archive..."
-                (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar data/) &
-                spinner
-            else
-                echo -e "Couldn't find the 'data/' folder in this working directory, skipping this folder in archiving"
-            fi
-
-            if [ -e logs/ ]; then
-                echo -e "Found the 'logs/' folder, appending to archive..."
-                (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar logs/) &
-                spinner
-            else
-                echo -e "Couldn't find the 'logs/' folder in this working directory, skipping this folder in archiving"
-            fi
-            
-            if [ -e results/ ]; then
-                echo -e "Found the 'results/' folder, appending to archive..."
-                (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar results/) &
-                spinner
-            else
-                echo -e "Couldn't find the 'results/' folder in this working directory, skipping this folder in archiving"
-            fi
-            
-            if [ -e sample_sheet.yaml ]; then
-                echo -e "Found 'sample_sheet.yaml', appending to archive..."
-                (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar sample_sheet.yaml) &
-                spinner
-            else
-                echo -e "Couldn't find the file 'sample_sheet.yaml' in this working directory, skipping this file in archiving"
-            fi
-            
-            if [ -e profile/ ]; then
-                echo -e "Found 'profile' folder, appending to archive..."
-                (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar profile/) &
-                spinner
-            else
-                echo -e "Couldn't find the 'profile' folder in this working directory, skipping this file in archiving"
-            fi
-
-            if [ -e archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar ]; then
-                echo -e "\n\nFiles and folders have been appended to the archive."
-                echo -e "Compressing archive..."
-                (pigz -p "${AVAILABLE_CORES}" archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar) &
-                spinner
-            else
-                echo "No files and folders could be found for archiving."
-                exit 1
-            fi
-            break
-        elif [[ "${archive_answer}" =~ ^(no|n)$ ]]; then
-            echo -e "Aborting the archiving process on user request"
-            exit 0
+    if [ "${SKIP_CONFIRMATION}" == "TRUE" ]; then
+        eval "$(parse_yaml profile/variables.yaml "config_")"
+        if [ -e data/ ]; then
+            echo -e "Found the 'data/' folder, appending to archive..."
+            (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar data/) &
+            spinner
         else
-            echo -e "Please answer with 'yes'' or 'no'"
-            minispacer
+            echo -e "Couldn't find the 'data/' folder in this working directory, skipping this folder in archiving"
         fi
-    done
-exit 0
+        
+        if [ -e logs/ ]; then
+            echo -e "Found the 'logs/' folder, appending to archive..."
+            (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar logs/) &
+            spinner
+        else
+            echo -e "Couldn't find the 'logs/' folder in this working directory, skipping this folder in archiving"
+        fi
+            
+        if [ -e results/ ]; then
+            echo -e "Found the 'results/' folder, appending to archive..."
+            (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar results/) &
+            spinner
+        else
+            echo -e "Couldn't find the 'results/' folder in this working directory, skipping this folder in archiving"
+        fi
+            
+        if [ -e sample_sheet.yaml ]; then
+            echo -e "Found 'sample_sheet.yaml', appending to archive..."
+            (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar sample_sheet.yaml) &
+            spinner
+        else
+            echo -e "Couldn't find the file 'sample_sheet.yaml' in this working directory, skipping this file in archiving"
+        fi
+            
+        if [ -e profile/ ]; then
+            echo -e "Found 'profile' folder, appending to archive..."
+            (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar profile/) &
+            spinner
+        else
+            echo -e "Couldn't find the 'profile' folder in this working directory, skipping this file in archiving"
+        fi
+
+        if [ -e archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar ]; then
+            echo -e "\n\nFiles and folders have been appended to the archive."
+            echo -e "Compressing archive..."
+            (pigz -p "${AVAILABLE_CORES}" archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar) &
+            spinner
+        else
+            echo "No files and folders could be found for archiving."
+            exit 1
+        fi
+    else
+        while read -r -p "Do you want to start the Jovian archiving process now? [y/N] " archive_answer
+        do
+        archive_answer=${archive_answer,,}
+            if [[ "${archive_answer}" =~ ^(yes|y)$ ]]; then
+                echo -e "\n\nStarting the archiving process\n\n"
+                eval "$(parse_yaml profile/variables.yaml "config_")"
+                
+                if [ -e data/ ]; then
+                    echo -e "Found the 'data/' folder, appending to archive..."
+                    (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar data/) &
+                    spinner
+                else
+                    echo -e "Couldn't find the 'data/' folder in this working directory, skipping this folder in archiving"
+                fi
+
+                if [ -e logs/ ]; then
+                    echo -e "Found the 'logs/' folder, appending to archive..."
+                    (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar logs/) &
+                    spinner
+                else
+                    echo -e "Couldn't find the 'logs/' folder in this working directory, skipping this folder in archiving"
+                fi
+                
+                if [ -e results/ ]; then
+                    echo -e "Found the 'results/' folder, appending to archive..."
+                    (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar results/) &
+                    spinner
+                else
+                    echo -e "Couldn't find the 'results/' folder in this working directory, skipping this folder in archiving"
+                fi
+                
+                if [ -e sample_sheet.yaml ]; then
+                    echo -e "Found 'sample_sheet.yaml', appending to archive..."
+                    (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar sample_sheet.yaml) &
+                    spinner
+                else
+                    echo -e "Couldn't find the file 'sample_sheet.yaml' in this working directory, skipping this file in archiving"
+                fi
+                
+                if [ -e profile/ ]; then
+                    echo -e "Found 'profile' folder, appending to archive..."
+                    (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar profile/) &
+                    spinner
+                else
+                    echo -e "Couldn't find the 'profile' folder in this working directory, skipping this file in archiving"
+                fi
+
+                if [ -e archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar ]; then
+                    echo -e "\n\nFiles and folders have been appended to the archive."
+                    echo -e "Compressing archive..."
+                    (pigz -p "${AVAILABLE_CORES}" archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar) &
+                    spinner
+                else
+                    echo "No files and folders could be found for archiving."
+                    exit 1
+                fi
+                break
+            elif [[ "${archive_answer}" =~ ^(no|n)$ ]]; then
+                echo -e "Aborting the archiving process on user request"
+                exit 0
+            else
+                echo -e "Please answer with 'yes'' or 'no'"
+                minispacer
+            fi
+        done
+    fi
+    exit 0
 fi
 
 ### Checker for if IGVjs is installed, otherwise, ask user if it should be installed
 if [ "$igvjs_installeranswers_igvjs" == "U" ]; then
     if [ ! -e ${IGVJS_LOCATION} ]; then
         installer_intro
-        echo -e "IGVjs hasn't been installed in this working directory yet... \n\nIGVjs is the piece of software which is used for the interactive scaffold viewer in the Jupyter notebook reports"
-        echo -e "\nIGVjs is necessary when you wish to view these reports. However, if you wish to only use Jovian on the command line this software isn't necessary."
-        echo -e "It's advised to install IGVjs now unless you only wish to use Jovian on the command line. It's alway possible to install IGVjs at a later moment with 'bash jovian -ii'\n"
-        while read -r -p "Do you wish to install IGVjs to this working directory now? [y/N] " igvanswer
-        do
-            igvanswer=${igvanswer,,}
-            if [[ "${igvanswer}" =~ ^(yes|y)$ ]]; then
-                echo -e "Starting with installing IGVjs, this can take up to 15 minutes..."
-                bin/install_IGVjs.sh
-                echo -e "DONE with installing IGVjs"
-                echo -e "installeranswers:\n    igvjs: Y" > "${HOME}"/.jovian_installchoice_igvjs
-                break
-            elif [[ "${igvanswer}" =~ ^(no|n)$ ]]; then
-                echo -e "Skipping the installation of IGVjs..."
-                echo -e "installeranswers:\n    igvjs: N" > "${HOME}"/.jovian_installchoice_igvjs
-                sleep 1
-                break
-            else
-                echo -e "Please answer with 'yes' or 'no'"
-                minispacer
-            fi
-        done
+        if [ "${SKIP_CONFIRMATION}" == "TRUE" ]; then
+            echo -e "Starting with installing IGVjs, this can take up to 15 minutes..."
+            bin/install_IGVjs.sh
+            echo -e "DONE with installing IGVjs"
+            echo -e "installeranswers:\n    igvjs: Y" > "${HOME}"/.jovian_installchoice_igvjs
+        else
+            echo -e "IGVjs hasn't been installed in this working directory yet... \n\nIGVjs is the piece of software which is used for the interactive scaffold viewer in the Jupyter notebook reports"
+            echo -e "\nIGVjs is necessary when you wish to view these reports. However, if you wish to only use Jovian on the command line this software isn't necessary."
+            echo -e "It's advised to install IGVjs now unless you only wish to use Jovian on the command line. It's alway possible to install IGVjs at a later moment with 'bash jovian -ii'\n"
+            while read -r -p "Do you wish to install IGVjs to this working directory now? [y/N] " igvanswer
+            do
+                igvanswer=${igvanswer,,}
+                if [[ "${igvanswer}" =~ ^(yes|y)$ ]]; then
+                    echo -e "Starting with installing IGVjs, this can take up to 15 minutes..."
+                    bin/install_IGVjs.sh
+                    echo -e "DONE with installing IGVjs"
+                    echo -e "installeranswers:\n    igvjs: Y" > "${HOME}"/.jovian_installchoice_igvjs
+                    break
+                elif [[ "${igvanswer}" =~ ^(no|n)$ ]]; then
+                    echo -e "Skipping the installation of IGVjs..."
+                    echo -e "installeranswers:\n    igvjs: N" > "${HOME}"/.jovian_installchoice_igvjs
+                    sleep 1
+                    break
+                else
+                    echo -e "Please answer with 'yes' or 'no'"
+                    minispacer
+                fi
+            done
+        fi
     fi
 elif [ "$igvjs_installeranswers_igvjs" == "Y" ]; then
     if [ ! -e ${IGVJS_LOCATION} ]; then
