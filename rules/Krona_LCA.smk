@@ -1,6 +1,7 @@
 rule Krona_chart_and_LCA:
     input:
         classification="data/taxonomic_classification/{sample}.blastn",
+        blast="data/taxonomic_classification/{sample}.blastn",
         stats="data/scaffolds_filtered/{sample}_perMinLenFiltScaffold.stats"
     output:
         no_lca=temp("data/taxonomic_classification/{sample}_nolca_filt.gff"),
