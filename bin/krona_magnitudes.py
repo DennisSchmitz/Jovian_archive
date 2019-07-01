@@ -18,25 +18,22 @@ Example:
 
 import pandas as pd
 import numpy as np
+import sys
 from sys import argv
 
-def diff(list1, list2):
-    c = set(list1).union(set(list2))  # or c = set(list1) | set(list2)
-    d = set(list1).intersection(set(list2))  # or d = set(list1) & set(list2)
-    return list(c - d)
+
 
 SCRIPT, INPUTTAX, INPUTBLAST, INPUTSTATS, OUTPUTFILE = argv
 
 df_tax = pd.read_csv(INPUTTAX, sep = '\t')
 df_blast = pd.read_csv(INPUTBLAST, sep = '\t')
 df_blast = df_blast[df_blast.columns[0]]
-df_blast = df_blast.unique()
+df_blast = pd.DataFrame(df_blast.unique())
 
-df_nohits = pd.DataFrame(diff(df_blast, df_tax[df_tax.columns[0]]), columns = ['#queryID'])
-
+df_nohits = df_blast[~df_blast[df_blast.columns[0]].isin(df_tax[df_tax.columns[0]])]
 df_nohits.insert(loc = 1, column = 'taxID', value = 0)
 df_nohits.insert(2, 'Avg. log e-value', '1')
-df_tax = df_tax.append(df_nohits, ignore_index = True, sort = False)
+df_tax = pd.concat([df_tax,df_nohits],join_axes=[df_tax.columns])
 fields = ['#ID', 'Plus_reads', 'Minus_reads']
 
 df_stats = pd.read_csv(INPUTSTATS, sep = '\t', usecols=fields)

@@ -766,17 +766,17 @@ echo -e "\tRemoving temporary files..."
 if [ "{config[remove_temp]}" != "0" ];
 then
 #    echo -e "\t\tValue is NOT 0 --> {config[remove_temp]}"   # DEBUG only
-    rm -rf data/FastQC_pretrim/
-    rm -rf data/FastQC_posttrim/
-    rm -rf data/cleaned_fastq/fastq_without_HuGo_removal/
-    rm -f data/scaffolds_filtered/*_insert_size_histogram.pdf
-    rm -f data/scaffolds_filtered/*_insert_size_metrics.txt
-    rm -f data/scaffolds_filtered/*_MinLenFiltSummary.stats
-    rm -f data/scaffolds_filtered/*_perMinLenFiltScaffold.stats
-    rm -f data/scaffolds_filtered/*nt.fasta.sizes
+#   rm -rf data/FastQC_pretrim/
+#  rm -rf data/FastQC_posttrim/
+#    rm -rf data/cleaned_fastq/fastq_without_HuGo_removal/
+#    rm -f data/scaffolds_filtered/*_insert_size_histogram.pdf
+#    rm -f data/scaffolds_filtered/*_insert_size_metrics.txt
+#    rm -f data/scaffolds_filtered/*_MinLenFiltSummary.stats
+#    rm -f data/scaffolds_filtered/*_perMinLenFiltScaffold.stats
+#    rm -f data/scaffolds_filtered/*nt.fasta.sizes
     rm -f data/scaffolds_filtered/*.windows
-    rm -f data/taxonomic_classification/*.taxtab
-    rm -f data/taxonomic_classification/*.taxMagtab
+#    #rm -f data/taxonomic_classification/*.taxtab
+#    #rm -f data/taxonomic_classification/*.taxMagtab
 else
 #    echo -e "\t\tValue is 0 --> {config[remove_temp]}"   # DEBUG only
     echo -e "\t\tYou chose to not remove temp files: the human genome alignment files are not removed."

@@ -23,10 +23,10 @@ taxonomic_classification: # NT database is hardcoded for now
     max_hsps: 1 # Maximum number of hits per targets sequence.
 
 taxonomic_classification_LCA:
-    Krona: true
+    Krona: false
     Krona_LCA: 
         bitscoreDeltaLCA: 5 # Every taxonomic hit within this bitscore distance will be used in the LCA analysis.
-    mgkit: false
+    mgkit: true
     mgkit_LCA:
         quantile_threshold: .97
         bitscore_threshold: 100
