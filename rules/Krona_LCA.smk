@@ -4,7 +4,6 @@ rule Krona_chart_and_LCA:
         blast="data/taxonomic_classification/{sample}.blastn",
         stats="data/scaffolds_filtered/{sample}_perMinLenFiltScaffold.stats"
     output:
-        no_lca=temp("data/taxonomic_classification/{sample}_nolca_filt.gff"),
         taxtab="data/taxonomic_classification/{sample}.taxtab",
         taxMagtab="data/taxonomic_classification/{sample}.taxMagtab",
     conda:
