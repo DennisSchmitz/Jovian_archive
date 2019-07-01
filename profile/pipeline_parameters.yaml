@@ -3,8 +3,8 @@
 ######################################
 
 Trimmomatic:
-    adapter_removal_config: ILLUMINACLIP:files/trimmomatic_0.36_adapters_lists/NexteraPE-PE.fa:2:20:10:8:true # For the Nextera PE lib prep adapters
-    quality_trimming_config: SLIDINGWINDOW:5:20 # Default: 5 nucleotides window size, minimum average Phred score of 30
+    adapter_removal_config: ILLUMINACLIP:files/trimmomatic_0.36_adapters_lists/NexteraPE-PE_SISPA-K_primer.fa:2:30:10:8:true # For the Nextera PE lib prep adapters
+    quality_trimming_config: SLIDINGWINDOW:5:30 # Default: 5 nucleotides window size, minimum average Phred score of 30
     minimum_length_config: MINLEN:50 # Default: Remove anything smaller than 50 nucleotides
     
 HuGo_removal:
@@ -23,10 +23,10 @@ taxonomic_classification: # NT database is hardcoded for now
     max_hsps: 1 # Maximum number of hits per targets sequence.
 
 taxonomic_classification_LCA:
-    Krona: True
+    Krona: false
     Krona_LCA: 
         bitscoreDeltaLCA: 5 # Every taxonomic hit within this bitscore distance will be used in the LCA analysis.
-    mgkit: False
+    mgkit: true
     mgkit_LCA:
         quantile_threshold: .97
         bitscore_threshold: 100
@@ -49,7 +49,7 @@ HTML_index_titles:
 
 databases: # Location of NT, NR and TaxDB are stored via an alias in your home directory (~/.ncbirc). They should work with keywords "nt" "nr" "taxdb"
     HuGo_ref: /mnt/db/Reference_genomes/Homo_sapiens/NCBI/GRCh38/Sequence/Bowtie2Index_without_EBV_virus_chr/genome.fa # Location of HuGo assembly GRCH38 from which I manually removed the EBV chromosome, see the README.md for explanation  
-    Krona_taxonomy: /mnt/db/taxonomy_krona/ # Location of the Krona taxonomy files; installable with the helper script attached along with Jovian
+    Krona_taxonomy: /mnt/scratch_dir/db/krona_taxonomy/ #/mnt/db/taxonomy_krona/ # Location of the Krona taxonomy files; installable with the helper script attached along with Jovian
     virusHostDB: /mnt/db/Virus-Host_interaction_DB/virushostdb.tsv # Location of the Virus-Host interaction database, see http://www.genome.jp/virushostdb/note.html
     NCBI_new_taxdump_rankedlineage: /mnt/db/new_taxdump/rankedlineage.dmp.delim # Location of the NCBI's "new_taxdump" file "rankedlineage.dmp", see ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/
     NCBI_new_taxdump_host: /mnt/db/new_taxdump/host.dmp.delim # Location of the NCBI's "new_taxdump" file "host.dmp", see ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/

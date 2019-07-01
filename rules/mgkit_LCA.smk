@@ -72,8 +72,10 @@ rule qfilter_gff:
 rule lca_mgkit:
     input:
         filtgff="data/taxonomic_classification/{sample}_lca_filt.gff",
+        blast="data/taxonomic_classification/{sample}.blastn",
         stats="data/scaffolds_filtered/{sample}_perMinLenFiltScaffold.stats"
     output:
+        no_lca=temp("data/taxonomic_classification/{sample}_nolca_filt.gff"),
         taxtab="data/taxonomic_classification/{sample}.taxtab",
         taxMagtab="data/taxonomic_classification/{sample}.taxMagtab"
     conda:
@@ -87,8 +89,11 @@ rule lca_mgkit:
         bitscore_threshold=config["taxonomic_classification_LCA"]["mgkit_LCA"]["bitscore_threshold"]        
     shell:
         """
-        taxon-utils lca -b {params.bitscore_threshold} -s -p -t /mnt/db/taxdb/taxonomy.pickle {input.filtgff} {output.taxtab} > {log} 2>&1;
+        taxon-utils lca -b {params.bitscore_threshold} -s -p -n {output.no_lca} -t /mnt/db/taxdb/taxonomy.pickle {input.filtgff} {output.taxtab} > {log} 2>&1;
         sed -i '1i #queryID\ttaxID' {output.taxtab} >> {log} 2>&1;
-        python bin/average_logevalue.py {output.taxtab} {input.filtgff} {output.taxtab} >> {log} 2>&1;
-        python bin/krona_magnitudes.py {output.taxtab} {input.stats} {output.taxMagtab} >> {log} 2>&1
+        if [[ ! -e {output.no_lca} ]]; then
+        touch {output.no_lca}
+        fi
+        python bin/average_logevalue_no_lca.py {output.taxtab} {output.no_lca} {input.filtgff} {output.taxtab} >> {log} 2>&1;
+        python bin/krona_magnitudes.py {output.taxtab} {input.blast} {input.stats} {output.taxMagtab} >> {log} 2>&1
         """

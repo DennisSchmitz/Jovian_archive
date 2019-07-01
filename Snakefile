@@ -763,7 +763,7 @@ echo -e "\tRemoving empty folders..."
 find data -depth -type d -not \( -path data/scaffolds_raw -prune \) -empty -delete
 
 echo -e "\tRemoving temporary files..."
-if [ "{config[remove_temp]}" != "0" ]
+if [ "{config[remove_temp]}" != "0" ];
 then
 #    echo -e "\t\tValue is NOT 0 --> {config[remove_temp]}"   # DEBUG only
     rm -rf data/FastQC_pretrim/
