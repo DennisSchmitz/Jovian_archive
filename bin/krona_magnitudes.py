@@ -23,20 +23,20 @@ from sys import argv
 
 
 
-SCRIPT, INPUTTAX, INPUTBLAST, INPUTSTATS, OUTPUTFILE = argv
+SCRIPT, INPUTTAX, INPUTSTATS, OUTPUTFILE = argv
 
 df_tax = pd.read_csv(INPUTTAX, sep = '\t')
-df_blast = pd.read_csv(INPUTBLAST, sep = '\t')
-df_blast = df_blast[df_blast.columns[0]]
-df_blast = pd.DataFrame(df_blast.unique())
-
-df_nohits = df_blast[~df_blast[df_blast.columns[0]].isin(df_tax[df_tax.columns[0]])]
-df_nohits.insert(loc = 1, column = 'taxID', value = 0)
-df_nohits.insert(2, 'Avg. log e-value', '1')
-df_tax = pd.concat([df_tax,df_nohits],join_axes=[df_tax.columns])
 fields = ['#ID', 'Plus_reads', 'Minus_reads']
 
 df_stats = pd.read_csv(INPUTSTATS, sep = '\t', usecols=fields)
+df_statsID = df_stats['#ID']
+df_statsID.rename('#queryID', inplace = True)
+df_nohits = pd.DataFrame(df_statsID[~df_statsID.isin(df_tax[df_tax.columns[0]])])
+
+df_nohits.insert(loc = 1, column = 'taxID', value = 0)
+df_nohits.insert(2, 'Avg. log e-value', '1')
+df_tax = pd.concat([df_tax,df_nohits],join_axes=[df_tax.columns])
+
 
 df_stats["Nr_of_reads"] = df_stats["Plus_reads"].add(df_stats["Minus_reads"])
 df_stats.drop(['Plus_reads', 'Minus_reads'], axis=1, inplace=True)

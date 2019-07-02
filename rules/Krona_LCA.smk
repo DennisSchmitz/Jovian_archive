@@ -1,7 +1,6 @@
 rule Krona_chart_and_LCA:
     input:
         classification="data/taxonomic_classification/{sample}.blastn",
-        blast="data/taxonomic_classification/{sample}.blastn",
         stats="data/scaffolds_filtered/{sample}_perMinLenFiltScaffold.stats"
     output:
         taxtab="data/taxonomic_classification/{sample}.taxtab",
@@ -24,5 +23,5 @@ then # Clean and make symlink to Krona db from the current Conda env (which has 
     ln -s {params.krona_tax_db} $(which ktClassifyBLAST | sed 's|/bin/ktClassifyBLAST|/opt/krona/taxonomy|g')
 fi
 ktClassifyBLAST -o {output.taxtab} -t {params.bitscoreDeltaLCA} {input.classification} > {log} 2>&1
-python bin/krona_magnitudes.py {output.taxtab} {input.blast} {input.stats} {output.taxMagtab} >> {log} 2>&1
+python bin/krona_magnitudes.py {output.taxtab} {input.stats} {output.taxMagtab} >> {log} 2>&1
         """

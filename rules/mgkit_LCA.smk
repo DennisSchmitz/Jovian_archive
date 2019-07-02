@@ -72,7 +72,6 @@ rule qfilter_gff:
 rule lca_mgkit:
     input:
         filtgff="data/taxonomic_classification/{sample}_lca_filt.gff",
-        blast="data/taxonomic_classification/{sample}.blastn",
         stats="data/scaffolds_filtered/{sample}_perMinLenFiltScaffold.stats"
     output:
         no_lca=temp("data/taxonomic_classification/{sample}_nolca_filt.gff"),
@@ -95,5 +94,5 @@ rule lca_mgkit:
         touch {output.no_lca}
         fi
         python bin/average_logevalue_no_lca.py {output.taxtab} {output.no_lca} {input.filtgff} {output.taxtab} >> {log} 2>&1;
-        python bin/krona_magnitudes.py {output.taxtab} {input.blast} {input.stats} {output.taxMagtab} >> {log} 2>&1
+        python bin/krona_magnitudes.py {output.taxtab} {input.stats} {output.taxMagtab} >> {log} 2>&1
         """
