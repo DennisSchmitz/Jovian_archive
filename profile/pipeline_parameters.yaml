@@ -29,11 +29,18 @@ scaffold_minLen_filter:
 
 taxonomic_classification: # NT database is hardcoded for now
     evalue: 0.05 # E-value threshold for saving hits
-    max_target_seqs: 10 # Maximum number of target sequences to report
+    max_target_seqs: 250 # Maximum number of target sequences to report
+    max_hsps: 1 # Maximum number of hits per targets sequence.
 
 taxonomic_classification_LCA:
-    bitscoreDeltaLCA: 5 # Every taxonomic hit within this bitscore distance will be used in the LCA analysis.
-
+    Krona: true
+    Krona_LCA: 
+        bitscoreDeltaLCA: 5 # Every taxonomic hit within this bitscore distance will be used in the LCA analysis.
+    mgkit: False
+    mgkit_LCA:
+        quantile_threshold: .97
+        bitscore_threshold: 100
+        
 SNP_calling:
     max_cov: 20000 # Maximum coverage that will be used for SNP calling. Dont change this value unless you know what youre doing.
     minimum_AF: 0.05 # This is the minimum allelle frequency (=AF) for which you want a SNP to be reported. Default is 5%.

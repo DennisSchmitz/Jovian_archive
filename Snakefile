@@ -2,7 +2,7 @@
 Authors: Dennis Schmitz, Sam Nooij, Robert Verhagen, Thierry Janssens, Jeroen Cremer, Florian Zwagemaker, Mark Kroon, Erwin van Wieringen, Annelies Kroneman, Harry Vennema, Marion Koopmans
 Organisation: Rijksinstituut voor Volksgezondheid en Milieu (RIVM)
 Department: Virology - Emerging and Endemic Viruses (EEV)
-Date: 23-08-2018
+eate: 23-08-2018
 Changelog, examples, installation guide and explanation on:
    https://github.com/DennisSchmitz/Jovian
 """
@@ -558,7 +558,8 @@ rule Scaffold_classification:
     params:
         outfmt="6 std qseqid sseqid staxids sscinames stitle",
         evalue=config["taxonomic_classification"]["evalue"],
-        max_target_seqs=config["taxonomic_classification"]["max_target_seqs"]
+        max_target_seqs=config["taxonomic_classification"]["max_target_seqs"],
+        max_hsps=config["taxonomic_classification"]["max_hsps"]
     shell:
         """
 blastn -task megablast \
@@ -566,10 +567,17 @@ blastn -task megablast \
 -query {input} \
 -evalue {params.evalue} \
 -max_target_seqs {params.max_target_seqs} \
+-max_hsps {params.max_hsps} \
 -db nt \
 -num_threads {threads} \
 -out {output} > {log} 2>&1
         """
+
+if config["taxonomic_classification_LCA"]["Krona"] == True:
+    include: "rules/Krona_LCA.smk"
+
+if config["taxonomic_classification_LCA"]["mgkit"] == True:
+    include: "rules/mgkit_LCA.smk"
 
     #############################################################################
     ##### Send scaffolds to their respective typingtools                    #####
@@ -582,34 +590,6 @@ blastn -task megablast \
     #############################################################################
     ##### Generate interactive taxonomy plot. LCA, magnitudes and plot      #####
     #############################################################################
-
-rule Krona_chart_and_LCA:
-    input:
-        classification="data/taxonomic_classification/{sample}.blastn",
-        stats="data/scaffolds_filtered/{sample}_perMinLenFiltScaffold.stats"
-    output:
-        taxtab="data/taxonomic_classification/{sample}.taxtab",
-        taxMagtab="data/taxonomic_classification/{sample}.taxMagtab",
-    conda:
-        "envs/Krona_plot.yaml"
-    benchmark:
-        "logs/benchmark/Krona_chart_and_LCA_{sample}.txt"
-    threads: 1
-    log:
-        "logs/Krona_chart_and_LCA_{sample}.log"
-    params:
-        bitscoreDeltaLCA=config["taxonomic_classification_LCA"]["bitscoreDeltaLCA"],
-        krona_tax_db=config["databases"]["Krona_taxonomy"]
-    shell:  # We rm the [conda_path]/opt/krona/taxonomy folder and replace that to our specified krona_taxonomy path, updated weekly via crontab, see scripts Robert
-        """
-if [ ! -L $(which ktClassifyBLAST | sed 's|/bin/ktClassifyBLAST|/opt/krona/taxonomy|g') ] # If symlink to Krona db does not exist...
-then # Clean and make symlink to Krona db from the current Conda env (which has a unique and unpredictable hash, therefore, the which command)
-    rm -rf $(which ktClassifyBLAST | sed 's|/bin/ktClassifyBLAST|/opt/krona/taxonomy|g')
-    ln -s {params.krona_tax_db} $(which ktClassifyBLAST | sed 's|/bin/ktClassifyBLAST|/opt/krona/taxonomy|g')
-fi
-ktClassifyBLAST -o {output.taxtab} -t {params.bitscoreDeltaLCA} {input.classification} > {log} 2>&1
-python bin/krona_magnitudes.py {output.taxtab} {input.stats} {output.taxMagtab} >> {log} 2>&1
-        """
 
 rule Krona_chart_combine:
     input:
@@ -825,6 +805,7 @@ onerror:
         rm -f data/scaffolds_filtered/*.html
         rm -f results/IGVjs_index.html
     """)
+
 
 onsuccess:
     shell("""

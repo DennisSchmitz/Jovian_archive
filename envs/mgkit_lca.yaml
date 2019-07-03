@@ -1,0 +1,7 @@
+name: mgkit_lca
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+    - mgkit==0.3.4
