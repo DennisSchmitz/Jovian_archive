@@ -6,23 +6,11 @@
 # changes
 # 22-11-2018, rv, from 8080 to port 8083 because jupyter notebook is using this port
 
-parse_yaml() {
-   local prefix=$2
-   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
-   sed -ne "s|^\($s\)\($w\)$s:$s\"\(.*\)\"$s\$|\1$fs\2$fs\3|p" \
-        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
-   awk -F$fs '{
-      indent = length($1)/7;
-      vname[indent] = $2;
-      for (i in vname) {if (i > indent) {delete vname[i]}}
-      if (length($3) > 0) {
-         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
-         printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
-      }
-   }'
-}
+source bin/functions.sh
 
 eval $(parse_yaml profile/pipeline_parameters.yaml "config_")
+currentuser=$(whoami)
+
 
 echo "Selected port for NGINX is: $config_server_info_port "
 port=$config_server_info_port
@@ -45,31 +33,32 @@ then
    exit 1
 fi
 
-if [ ! -f "$CONDA_PREFIX/etc/nginx/sites.d/default-site.conf" ] || [ ! -f "$CONDA_PREFIX/bin/nginx" ]
+mkdir -p /tmp/etc/nginx/sites.d/
+cp $CONDA_PREFIX/etc/nginx/sites.d/default-site.conf /tmp/etc/nginx/sites.d/default-site.conf
+
+if [ ! -f "/tmp/etc/nginx/sites.d/default-site.conf" ] || [ ! -f "$CONDA_PREFIX/bin/nginx" ]
 then
    echo "nginx/cfg not found"
    echo "conda install nginx?"
    exit 1
 fi
 
-
 # make config and start nginx
 if [ "${1}" == "start" ]
 then
    # check if nginx already runs
-   if [ ! -z "$(ps -ef| grep nginx| grep -v grep| grep -v start_nginx)" ]
+   if [ ! -z "$(ps -ef| grep nginx| grep worker)" ]
    then
        echo "nginx is already running"
        exit 1
    fi
 
-   cat << EOF > $CONDA_PREFIX/etc/nginx/sites.d/default-site.conf
+   cat << EOF > /tmp/etc/nginx/sites.d/default-site.conf
 server {
     listen       ${port};
     server_name  localhost;
-
+    root   /tmp/etc/nginx/default-site/;
     location / {
-        root   etc/nginx/default-site/;
         index  index.html index.htm;
 
         if (\$request_method = 'OPTIONS') {
@@ -108,17 +97,21 @@ server {
     # redirect server error pages to the static page /50x.html
     error_page   500 502 503 504  /50x.html;
     location = /50x.html {
-        root   etc/nginx/default-site/;
+        root   /tmp/etc/nginx/default-site/;
     }
 
 }
 EOF
 
+cp /tmp/etc/nginx/sites.d/default-site.conf $CONDA_PREFIX/etc/nginx/sites.d/default-site.conf
+
+find /tmp/etc/nginx/ -user ${currentuser} -exec chmod 777 {} \;
+
    nginx&
    sleep 3
 
    # check if nginx runs
-   if [ -z "$(ps -ef| grep nginx| grep -v grep| grep -v start_nginx)" ]
+   if [ -z "$(ps -ef| grep nginx| grep worker)" ]
    then
        echo "nginx is not running"
        exit 1
@@ -129,7 +122,7 @@ fi
 if [ "${1}" == "stop" ]
 then
    # check if nginx  runs
-   if [ -z "$(ps -ef| grep nginx| grep -v grep| grep -v start_nginx)" ]
+   if [ -z "$(ps -ef| grep nginx| grep worker)" ]
    then
        echo "nginx is not running"
        exit 1

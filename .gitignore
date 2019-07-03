@@ -18,3 +18,5 @@ private_*
 profile/variables.yaml
 PZN_*/
 core.*
+archive_*.tar.gz
+.nfs*
