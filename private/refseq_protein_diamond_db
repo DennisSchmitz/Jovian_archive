@@ -1,0 +1,12 @@
+# fetch the latest refseq protein blast database
+# update_blastdb.pl is part of the BLAST+ package and requires
+# conda install perl-bioperl
+source activate Thierry
+perl /home/janssetk/.conda/envs/Thierry/bin/update_blastdb.pl 
+blastdbcmd -entry all -db /mnt/db/refseq_protein/refseq_protein -dbtype prot \ 
+	-out /mnt/db/refseq_protein/refseq_protein.fasta
+
+conda deactivate
+source activate diamond_home
+    diamond makedb --in /mnt/db/refseq_protein_filt/refseq_protein_filt.fasta \ 
+	-d /mnt/db/refseq_protein_filt/diamond/refseq_protein_filt

@@ -3,39 +3,36 @@
 ######################################
 
 Trimmomatic:
-    # For the Nextera PE lib prep adapters
-    adapter_removal_config: ILLUMINACLIP:files/trimmomatic_0.36_adapters_lists/NexteraPE-PE.fa:2:30:10:8:true
-    # ! test settings for best "relaxed" mode
-    # Default: 5 nucleotides window size, minimum average Phred score of 30
-    quality_trimming_config: SLIDINGWINDOW:5:30
-    # Default: Remove anything smaller than 50 nucleotides
-    minimum_length_config: MINLEN:50
+    adapter_removal_config: ILLUMINACLIP:files/trimmomatic_0.36_adapters_lists/NexteraPE-PE_SISPA-K_primer.fa:2:30:10:8:true # For the Nextera PE lib prep adapters
+    quality_trimming_config: SLIDINGWINDOW:5:30 # Default: 5 nucleotides window size, minimum average Phred score of 30
+    minimum_length_config: MINLEN:50 # Default: Remove anything smaller than 50 nucleotides
     
 HuGo_removal:
-    # Choose if you want to do "local" or "global" alignment. Keep this as "--local" unless you know what you're doing.
-    alignment_type: --local
+    alignment_type: --local # Choose if you want to do "local" or "global" alignment. Keep this as "--local" unless you know what you're doing.
 
 SPAdes:
-    # TODO: kmersizes kunnen waarschijnlijk worden verwijderd, moet getest worden.
-    # uncomment this line if you want to use the pipeline for short Illumina reads (<250 nt in length). Then also comment the line below.
-    kmersizes: 21,33,55,77
-    # uncomment this line if you want to use the pipeline for longer Illumina reads (>250 nt in length). Then also comment the line above.
-#    kmersizes: 21,33,55,77,99,127
+ #   kmersizes: 21,33,55,77 # uncomment this line if you want to use the pipeline for short Illumina reads (<250 nt in length). Then also comment the line below.
+    kmersizes: 21,33,55,77,99,127 # uncomment this line if you want to use the pipeline for longer Illumina reads (>250 nt in length). Then also comment the line above.
 
 scaffold_minLen_filter:
-    # ! test settings for best "relaxed" mode
-    # Minimum allowed scaffold size to be allowed for downstream processessing. Advice, use a minimum length that is atleast 1nt greater than your Illumina read length
-    minlen: 500
+    minlen: 250 # Minimum allowed scaffold size to be allowed for downstream processessing. Advice, use a minimum length that is atleast 1nt greater than your Illumina read length
 
 taxonomic_classification: # NT database is hardcoded for now
     evalue: 0.05 # E-value threshold for saving hits
-    max_target_seqs: 10 # Maximum number of target sequences to report
+    max_target_seqs: 250 # Maximum number of target sequences to report
+    max_hsps: 1 # Maximum number of hits per targets sequence.
 
 taxonomic_classification_LCA:
-    bitscoreDeltaLCA: 5 # Every taxonomic hit within this bitscore distance will be used in the LCA analysis.
-
+    Krona: false
+    Krona_LCA: 
+        bitscoreDeltaLCA: 5 # Every taxonomic hit within this bitscore distance will be used in the LCA analysis.
+    mgkit: true
+    mgkit_LCA:
+        quantile_threshold: .97
+        bitscore_threshold: 100
+        
 SNP_calling:
-    max_cov: 20000 # Maximum coverage that will be used for SNP calling. Dont change this value unless you know what youre doing.
+    max_cov: 20000 # Maximum coverage that will be used for SNP calling. Don't change this value unless you know what you're doing.
     minimum_AF: 0.05 # This is the minimum allelle frequency (=AF) for which you want a SNP to be reported. Default is 5%.
 
 ORF_prediction:
@@ -50,21 +47,14 @@ HTML_index_titles:
 ### Database locations and IGVjs network settings  ###
 ######################################################
 
-databases: # Location of NT, NR and TaxDB are stored via an alias in your home directory (~/.ncbirc). They should work with keywords "nt" "nr" "taxdb"  
-    # Location of background reference fasta. By default this is the HuGo assembly GRCH38 from which I manually removed the EBV chromosome, see the README.md for explanation
-    background_ref: /mnt/db/Reference_genomes/Homo_sapiens/NCBI/GRCh38/Sequence/Bowtie2Index_without_EBV_virus_chr/genome.fa
-    # Location of the Krona taxonomy files; installable with the helper script attached along with Jovian
-    Krona_taxonomy: /mnt/db/taxonomy_krona/
-    # Location of the Virus-Host interaction database, see http://www.genome.jp/virushostdb/note.html
-    virusHostDB: /mnt/db/Virus-Host_interaction_DB/virushostdb.tsv
-    # Location of the NCBIs "new_taxdump" file "rankedlineage.dmp", see ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/
-    NCBI_new_taxdump_rankedlineage: /mnt/db/new_taxdump/rankedlineage.dmp.delim
-    # Location of the NCBIs "new_taxdump" file "host.dmp", see ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/
-    NCBI_new_taxdump_host: /mnt/db/new_taxdump/host.dmp.delim
+databases: # Location of NT, NR and TaxDB are stored via an alias in your home directory (~/.ncbirc). They should work with keywords "nt" "nr" "taxdb"
+    HuGo_ref: /mnt/db/Reference_genomes/Homo_sapiens/NCBI/GRCh38/Sequence/Bowtie2Index_without_EBV_virus_chr/genome.fa # Location of HuGo assembly GRCH38 from which I manually removed the EBV chromosome, see the README.md for explanation  
+    Krona_taxonomy: /mnt/scratch_dir/db/krona_taxonomy/ #/mnt/db/taxonomy_krona/ # Location of the Krona taxonomy files; installable with the helper script attached along with Jovian
+    virusHostDB: /mnt/db/Virus-Host_interaction_DB/virushostdb.tsv # Location of the Virus-Host interaction database, see http://www.genome.jp/virushostdb/note.html
+    NCBI_new_taxdump_rankedlineage: /mnt/db/new_taxdump/rankedlineage.dmp.delim # Location of the NCBI's "new_taxdump" file "rankedlineage.dmp", see ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/
+    NCBI_new_taxdump_host: /mnt/db/new_taxdump/host.dmp.delim # Location of the NCBI's "new_taxdump" file "host.dmp", see ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/
 
 server_info: # This is used for IGVjs, discuss this with your IT department, depends on your local setup
-    # ? kan deze ook semi-flexibel? I.e. automatisch invullen naar de juiste poort als nginx al draait op een systeem?
-    # ? Kan gecheckt worden met netstat -tulpn | grep nginx
     port: 8083
 
 ######################################
@@ -80,4 +70,4 @@ threads:
     Fragment_length_analysis: 4
     quantify_output: 4
 
-remove_temp: 1 # For development and debug only. If you set this to 0 you will keep the HuGo alignment data which can lead to patient privacy concerns.
+remove_temp: 1 # For development and debug only. If you set this to no you will keep the HuGo alignment data --> Patient privacy concern.

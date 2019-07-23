@@ -195,7 +195,7 @@ fi
     
 rule HuGo_removal_pt1_alignment:
     input:
-        background_ref=config["databases"]["background_ref"],
+        background_ref=config["databases"]["HuGo_ref"],
         r1="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_pR1.fastq",
         r2="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_pR2.fastq",
         r1_unpaired="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_uR1.fastq",
@@ -380,8 +380,15 @@ tabix -p vcf {output.zipped_vcf} >> {log} 2>&1
 
 rule ORF_analysis:
     input:
-        "data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"]
+        classified="data/table/{sample}_taxClassified.tsv",
+        unclassified="data/table/{sample}_taxUnclassified.tsv"
     output:
+        bactfasta=temp("data/scaffolds_filtered/{sample}_Bacteria.fasta"),
+        virfasta=temp("data/scaffolds_filtered/{sample}_Viruses.fasta"),
+        archfasta=temp("data/scaffolds_filtered/{sample}_Archaea.fasta"),
+        bactgff=temp("data/scaffolds_filtered/{sample}_Bacteria.gff"),
+        virgff=temp("data/scaffolds_filtered/{sample}_Viruses.gff"),
+        archgff=temp("data/scaffolds_filtered/{sample}_Archaea.gff"),
         ORF_AA_fasta="data/scaffolds_filtered/{sample}_ORF_AA.fa",
         ORF_NT_fasta="data/scaffolds_filtered/{sample}_ORF_NT.fa",
         ORF_annotation_gff="data/scaffolds_filtered/{sample}_annotation.gff",
@@ -400,12 +407,56 @@ rule ORF_analysis:
         output_format=config["ORF_prediction"]["output_format"]
     shell:
         """
-prodigal -q -i {input} \
--a {output.ORF_AA_fasta} \
--d {output.ORF_NT_fasta} \
--o {output.ORF_annotation_gff} \
--p {params.procedure} \
--f {params.output_format} > {log} 2>&1
+python bin/split_superkingdom.py {input.classified} {input.unclassified} {output.bactfasta} {output.virfasta} ;
+{output.archfasta}
+
+if [ -s {output.bactfasta} ]
+then
+    prefix=$(echo {output.bactfasta}| cut -d'.' -f 1)
+    prokka \
+    --outdir <(echo data/scaffolds_filtered/$prefix) \
+    --prefix <(echo $(echo {output.bactfasta}| cut -d'.' -f 1)) \
+    --kingdom Bacteria \
+    --metagenome {output.bactfasta}
+    cat echo data/scaffolds_filtered/$prefix/*_Bacteria.faa >> {output.ORF_AA_fasta}
+    cat echo data/scaffolds_filtered/$prefix/*_Bacteria.fna >> {output.ORF_NT_fasta} 
+    gt sort echo data/scaffolds_filtered/$prefix/$prefix.gff" > {output.bact.gff}
+    rm -rf echo data/scaffolds_filtered/$prefix/
+    unset prefix
+fi
+
+if [ -s {output.virfasta} ]
+then
+    prefix=$(echo {output.virfasta}| cut -d'.' -f 1)
+    prokka \
+    --outdir <(echo data/scaffolds_filtered/$prefix) \
+    --prefix <(echo $(echo {output.virfasta}| cut -d'.' -f 1)) \
+    --kingdom Viruses \
+    --protein /mnt/db/RVDB-prot/U-RVDBv16.0-prot.fasta \
+    --metagenome {output.virfasta}
+    cat echo data/scaffolds_filtered/$prefix/*_Viruses.faa >> {output.ORF_AA_fasta}
+    cat echo data/scaffolds_filtered/$prefix/*_Viruses.fna >> {output.ORF_NT_fasta} 
+    gt sort echo data/scaffolds_filtered/$prefix/$prefix.gff" > {output.vir.gff}
+    rm -rf echo data/scaffolds_filtered/$prefix/
+    unset prefix
+fi
+
+if [ -s {output.archfasta} ]
+then
+    prefix=$(echo {output.archfasta}| cut -d'.' -f 1)
+    prokka \
+    --outdir <(echo data/scaffolds_filtered/$prefix) \
+    --prefix <(echo $(echo {output.archfasta}| cut -d'.' -f 1)) \
+    --kingdom Archaea \
+    --metagenome {output.archfasta}
+    cat echo data/scaffolds_filtered/$prefix/*_Archaea.faa >> {output.ORF_AA_fasta}
+    cat echo data/scaffolds_filtered/$prefix/*_Archaea.fna >> {output.ORF_NT_fasta} 
+    gt sort echo data/scaffolds_filtered/$prefix/$prefix.gff" > {output.arch.gff}
+    rm -rf echo data/scaffolds_filtered/$prefix/
+fi
+
+gt merge {sample}_*.gff > {output.ORF_annotation_gff}
+
 bgzip -c {output.ORF_annotation_gff} 2>> {log} 1> {output.zipped_gff3}
 tabix -p gff {output.zipped_gff3} >> {log} 2>&1
 

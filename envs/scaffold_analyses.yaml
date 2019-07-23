@@ -5,6 +5,8 @@ channels:
   - defaults
 dependencies:
     - prodigal==2.6.3
+    - prokka==1.13.7
+    - genometools-genometools==1.5.10
     - tabix==0.2.6
     - samtools==1.9
     - bbmap==38.22
