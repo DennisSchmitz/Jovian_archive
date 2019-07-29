@@ -369,8 +369,6 @@ def draw_heatmaps(df, outfile, title, taxonomic_rank, colour):
                 
                 new_df = new_df.fillna(0)
                 
-                print(new_df.head())
-                
                 samples = new_df["Sample_name"].astype(str)
                 nr_contigs = new_df["Number_of_contigs"].astype(int)
                 assigned = new_df["tax_name"].astype(str)
