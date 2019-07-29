@@ -334,31 +334,124 @@ def draw_heatmaps(df, outfile, title, taxonomic_rank, colour):
 
         else:
             #If it is not empty, continue normally
+            if max(pd.DataFrame(df.groupby(["Sample_name", taxonomic_rank]).size())[0]) > 3:
+                #if there are taxa with more than 3 contigs *in one sample*
+                #the hover info boxes will be too many, so
+                #aggregate statistics per taxon
+                
+                aggregated = True
+                
+                new_df = pd.DataFrame(df.groupby(["Sample_name", taxonomic_rank]).size()).reset_index()
+                new_df = new_df.rename(columns={0: "Number_of_contigs"})
+                
+                min_df = pd.DataFrame(df.groupby(["Sample_name", taxonomic_rank]).min()).reset_index()
+                max_df = pd.DataFrame(df.groupby(["Sample_name", taxonomic_rank]).max()).reset_index()
+                sum_df = pd.DataFrame(df.groupby(["Sample_name", taxonomic_rank]).sum()).reset_index()
+                avg_df = pd.DataFrame(df.groupby(["Sample_name", taxonomic_rank]).mean()).reset_index()
+                
+                for column in [ "Plus_reads", "Minus_reads", "Avg_fold", "Length", "Percentage", "Nr_ORFs"]:
+                    min_df = min_df.rename(columns={column : "MIN_%s" % column})
+                    max_df = max_df.rename(columns={column : "MAX_%s" % column})
+                    sum_df = sum_df.rename(columns={column : "SUM_%s" % column})
+                    avg_df = avg_df.rename(columns={column : "AVG_%s" % column})
+                    
+                    new_df["MIN_%s" % column] = min_df["MIN_%s" % column]
+                    new_df["MAX_%s" % column] = max_df["MAX_%s" % column]
+                    new_df["SUM_%s" % column] = sum_df["SUM_%s" % column]
+                    new_df["AVG_%s" % column] = avg_df["AVG_%s" % column]
+                    
+                for stat in [ "MIN", "MAX", "SUM", "AVG" ]:
+                    new_df["%s_reads" % stat] = new_df["%s_Minus_reads" % stat] + new_df["%s_Plus_reads" % stat]
+                    
+                new_df["tax_name"] = min_df["tax_name"]
+                new_df["taxon"] = min_df[taxonomic_rank]
+                new_df["total_reads"] = df["read_pairs"]
+                
+                new_df = new_df.fillna(0)
+                
+                print(new_df.head())
+                
+                samples = new_df["Sample_name"].astype(str)
+                nr_contigs = new_df["Number_of_contigs"].astype(int)
+                assigned = new_df["tax_name"].astype(str)
+                taxonomy = new_df["taxon"].astype(str)
+                min_reads = new_df["MIN_reads"].astype(int)
+                max_reads = new_df["MAX_reads"].astype(int)
+                sum_reads = new_df["SUM_reads"].astype(int)
+                avg_reads = new_df["AVG_reads"].astype(int)
+                total_reads = new_df["total_reads"].astype(int)
+                min_percentage = new_df["MIN_Percentage"].astype(float)
+                max_percentage = new_df["MAX_Percentage"].astype(float)
+                sum_percentage = new_df["SUM_Percentage"].astype(float)
+                avg_percentage = new_df["AVG_Percentage"].astype(float)
+                min_coverage = new_df["MIN_Avg_fold"].astype(int)
+                max_coverage = new_df["MAX_Avg_fold"].astype(int)
+                sum_coverage = new_df["SUM_Avg_fold"].astype(int)
+                avg_coverage = new_df["AVG_Avg_fold"].astype(int)
+                min_length = new_df["MIN_Length"].astype(int)
+                max_length = new_df["MAX_Length"].astype(int)
+                sum_length = new_df["SUM_Length"].astype(int)
+                avg_length = new_df["AVG_Length"].astype(int)
+                min_nr_orfs = new_df["MIN_Nr_ORFs"].astype(int)
+                max_nr_orfs = new_df["MAX_Nr_ORFs"].astype(int)
+                sum_nr_orfs = new_df["SUM_Nr_ORFs"].astype(int)
+                avg_nr_orfs = new_df["AVG_Nr_ORFs"].astype(int)
+                
+                colors = len(samples) * colour
+                
+                max_load = max(avg_percentage)
+                alphas = [ min( x / float(max_load), 0.9) + 0.1 for x in avg_percentage ]
+                #scale darkness to the average percentage of reads
+                
+                source = ColumnDataSource(
+                data = dict(samples=samples, nr_contigs=nr_contigs,
+                           assigned=assigned, taxonomy=taxonomy,
+                           min_reads=min_reads, max_reads=max_reads,
+                           sum_reads=sum_reads, avg_reads=avg_reads,
+                           total_reads=total_reads, min_percentage=min_percentage,
+                           max_percentage=max_percentage, sum_percentage=sum_percentage,
+                           avg_percentage=avg_percentage, min_coverage=min_coverage,
+                           max_coverage=max_coverage, sum_coverage=sum_coverage,
+                           avg_coverage=avg_coverage, min_length=min_length,
+                           max_length=max_length,
+                           sum_length=sum_length,
+                           avg_length=avg_length,
+                           min_nr_orfs=min_nr_orfs, max_nr_orfs=max_nr_orfs,
+                           sum_nr_orfs=sum_nr_orfs, avg_nr_orfs=avg_nr_orfs,
+                           colors=colors, alphas=alphas))
 
-            samples = df["Sample_name"].astype(str)
-            scaffolds = df["scaffold_name"].astype(str)
-            assigned = df["tax_name"].astype(str)
-            taxonomy = df[taxonomic_rank].astype(str)
-            reads = df["reads"].astype(int)
-            total_reads = df["read_pairs"].astype(int)
-            percent_of_total = df["Percentage"].astype(float)
-            coverage = df["Avg_fold"].astype(int)
-            contig_length = df["Length"].astype(int)
+            else:
+                #no taxon has too many contigs assigned per sample,
+                #so create a plot for everything
+                
+                aggregated = False
+                
+                samples = df["Sample_name"].astype(str)
+                scaffolds = df["scaffold_name"].astype(str)
+                assigned = df["tax_name"].astype(str)
+                taxonomy = df[taxonomic_rank].astype(str)
+                reads = df["reads"].astype(int)
+                total_reads = df["read_pairs"].astype(int)
+                percent_of_total = df["Percentage"].astype(float)
+                coverage = df["Avg_fold"].astype(int)
+                contig_length = df["Length"].astype(int)
+                nr_orfs = df["Nr_ORFs"].astype(int)
 
-            colors = len(reads) * colour #multiply to make an equally long list
-            
-            max_load = max(percent_of_total)
-            alphas = [ min( x / float(max_load), 0.9) + 0.1 for x in percent_of_total ]
-            
-            source = ColumnDataSource(
-                data = dict(samples=samples, scaffolds=scaffolds,
-                            assigned=assigned, taxonomy=taxonomy,
-                            reads=reads, total_reads=total_reads,
-                            percent_of_total=percent_of_total, 
-                            coverage=coverage,
-                            contig_length=contig_length,
-                            colors=colors, alphas=alphas)
-            )
+                colors = len(reads) * colour #multiply to make an equally long list
+
+                max_load = max(percent_of_total)
+                alphas = [ min( x / float(max_load), 0.9) + 0.1 for x in percent_of_total ]
+
+                source = ColumnDataSource(
+                    data = dict(samples=samples, scaffolds=scaffolds,
+                                assigned=assigned, taxonomy=taxonomy,
+                                reads=reads, total_reads=total_reads,
+                                percent_of_total=percent_of_total, 
+                                coverage=coverage,
+                                contig_length=contig_length,
+                                nr_orfs=nr_orfs,
+                                colors=colors, alphas=alphas)
+                )
 
             y_value = (taxonomy, "taxonomy")
 
@@ -393,14 +486,30 @@ def draw_heatmaps(df, outfile, title, taxonomic_rank, colour):
         else:
             pass
 
-        # And set tooltip depending on superkingdoms    
-        p.select_one(HoverTool).tooltips = [
-        ('Sample', "@samples"),
-        ('Scaffold', "@scaffolds"),
-        ('Taxon' , "@assigned"),
-        ('Number of reads', "@reads (@percent_of_total % of sample total)"),
-        ('Scaffold length', "@contig_length"),
-        ('Average Depth of Coverage', "@coverage")
+        # And set tooltip depending on superkingdoms
+        
+        if aggregated:
+            # An aggregated format requires a different hover tooltip
+            p.select_one(HoverTool).tooltips = [
+                ('Sample', "@samples"),
+                ('Taxon', "@assigned"),
+                ('Number of scaffolds', "@nr_contigs"),
+                #('-----', ""), # If you like a separator in the tooltip
+                ('Number of reads total (min, avg, max)', "@sum_reads (@min_reads, @avg_reads, @max_reads)"),
+                ('Scaffold length total (min, avg, max)', "@sum_length (@min_length, @avg_length, @max_length)"),
+                ('Number of ORFs total (min, avg, max)', "@sum_nr_orfs (@min_nr_orfs, @avg_nr_orfs, @max_nr_orfs)"),
+                ('Depth of coverage total (min, avg, max)', "@sum_coverage (@min_coverage, @avg_coverage*, @max_coverage)"),
+                ('*', "darkness scaled to this number")
+            ]
+        else:
+            p.select_one(HoverTool).tooltips = [
+            ('Sample', "@samples"),
+            ('Scaffold', "@scaffolds"),
+            ('Taxon' , "@assigned"),
+            ('Number of reads', "@reads (@percent_of_total % of sample total)"),
+            ('Scaffold length', "@contig_length"),
+            ('Number of ORFs', "@nr_orfs")
+            ('Average Depth of Coverage', "@coverage")
     ]
     else:
         p.select_one(HoverTool).tooltips = [
