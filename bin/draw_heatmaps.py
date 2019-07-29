@@ -212,7 +212,8 @@ def read_classifications(infile):
                                              "kingdom", "phylum", "class", 
                                              "order", "family", "genus",
                                              "species", "Plus_reads", 
-                                             "Minus_reads", "Avg_fold", "Length" 
+                                             "Minus_reads", "Avg_fold", "Length",
+                                             "Nr_ORFs"
                                             ]]
 
     # Calculate the number of read pairs matched to each scaffold
