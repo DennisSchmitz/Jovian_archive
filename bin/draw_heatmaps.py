@@ -508,7 +508,7 @@ def draw_heatmaps(df, outfile, title, taxonomic_rank, colour):
             ('Taxon' , "@assigned"),
             ('Number of reads', "@reads (@percent_of_total % of sample total)"),
             ('Scaffold length', "@contig_length"),
-            ('Number of ORFs', "@nr_orfs")
+            ('Number of ORFs', "@nr_orfs"),
             ('Average Depth of Coverage', "@coverage")
     ]
     else:
