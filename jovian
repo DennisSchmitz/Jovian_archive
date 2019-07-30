@@ -47,6 +47,7 @@ START_JUPYTER="FALSE"
 MAKE_SAMPLE_SHEET="FALSE"
 SHEET_SUCCESS="FALSE" # Default value for sample_sheet.yaml
 SKIP_CONFIRMATION="FALSE"
+SNAKEMAKE_UNLOCK="FALSE"
 
 ### Parse the jovian commandline arguments, if they are not part of jovian, they get send to Snakemake
 POSITIONAL=()
@@ -145,6 +146,10 @@ do
         ;;
         -y)
         SKIP_CONFIRMATION="TRUE"
+        shift # Next
+        ;;
+        -u|--unlock)
+        SNAKEMAKE_UNLOCK="TRUE"
         shift # Next
         ;;
         *) # Any other option
@@ -849,6 +854,13 @@ if [ "${MAKE_SAMPLE_SHEET}" == "TRUE" ]; then
     echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > profile/variables.yaml
     echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> profile/variables.yaml
     echo -e "The sample sheet and variables file has now been created, you can now run the Jovian snakefile manually"
+    exit 0
+fi
+
+if [ "${SNAKEMAKE_UNLOCK}" == "TRUE" ]; then
+    printf "\nUnlocking working directory...\n"
+    snakemake -s Snakefile --profile "${PROFILE}" --unlock
+    printf "\nDone.\n"
     exit 0
 fi
 

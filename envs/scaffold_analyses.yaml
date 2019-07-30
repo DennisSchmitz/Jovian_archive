@@ -4,10 +4,12 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+    - python==3.6.7
+    - biopython==1.74 py36h516909a_0
     - prodigal==2.6.3
     - prokka==1.13.7
     - genometools-genometools==1.5.10
-    - tabix==0.2.6
+    - htslib==1.9
     - samtools==1.9
     - bbmap==38.22
     - bwa==0.7.17
@@ -17,3 +19,5 @@ dependencies:
     - gawk==4.2.1
     - igvtools==2.3.93
     - r-base==3.5.1 # r-base is sometimes required for picard to run. this isn't listed in the picard dependency list.
+    - pandas==0.24.2
+

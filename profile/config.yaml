@@ -7,7 +7,7 @@
 #keep-going: false
 #notemp: true
 local-cores: 4
-cores: 120
+cores: 240
 config:
    sample_sheet=sample_sheet.yaml
 latency-wait: 60

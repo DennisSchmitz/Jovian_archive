@@ -2,7 +2,7 @@
 Authors: Dennis Schmitz, Sam Nooij, Robert Verhagen, Thierry Janssens, Jeroen Cremer, Florian Zwagemaker, Mark Kroon, Erwin van Wieringen, Annelies Kroneman, Harry Vennema, Marion Koopmans
 Organisation: Rijksinstituut voor Volksgezondheid en Milieu (RIVM)
 Department: Virology - Emerging and Endemic Viruses (EEV)
-Date: 23-08-2018
+eate: 23-08-2018
 Changelog, examples, installation guide and explanation on:
    https://github.com/DennisSchmitz/Jovian
 """
@@ -91,8 +91,11 @@ rule all:
         expand("data/cleaned_fastq/{sample}_{read}.fq", sample = SAMPLES, read = [ 'pR1', 'pR2', 'unpaired' ]), # Extract unmapped & paired reads AND unpaired from HuGo alignment; i.e. cleaned fastqs
         expand("data/scaffolds_raw/{sample}/scaffolds.fasta", sample = SAMPLES), # SPAdes assembly output
         expand("data/scaffolds_filtered/{sample}_scaffolds_ge{len}nt.{extension}", sample = SAMPLES, len = config["scaffold_minLen_filter"]["minlen"], extension = [ 'fasta', 'fasta.fai' ]), # Filtered SPAdes Scaffolds
+        expand("data/scaffolds_filtered/{sample}_Bacteria.fasta", sample = SAMPLES),
+        expand("data/scaffolds_filtered/{sample}_Viruses.fasta", sample = SAMPLES),
+        expand("data/scaffolds_filtered/{sample}_Archaea.fasta", sample = SAMPLES),
         expand("data/scaffolds_filtered/{sample}_sorted.bam", sample = SAMPLES), # BWA mem alignment for fragment length analysis
-        expand("data/scaffolds_filtered/{sample}_{extension}", sample = SAMPLES, extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi', 'contig_ORF_count_list.txt' ]), # Prodigal ORF prediction output
+        expand("data/scaffolds_filtered/{sample}_{extension}", sample = SAMPLES, extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff.gz', 'annotation.gff.gz.tbi' ]), # Prodigal ORF prediction output
         expand("data/scaffolds_filtered/{sample}_{extension}", sample = SAMPLES, extension = [ 'unfiltered.vcf', 'filtered.vcf', 'filtered.vcf.gz', 'filtered.vcf.gz.tbi' ]), # SNP calling output
         expand("data/scaffolds_filtered/{sample}_GC.bedgraph", sample = SAMPLES), # Percentage GC content per specified window
         expand("data/scaffolds_filtered/{sample}_IGVjs.html", sample = SAMPLES), # IGVjs html's
@@ -195,7 +198,7 @@ fi
     
 rule HuGo_removal_pt1_alignment:
     input:
-        background_ref=config["databases"]["HuGo_ref"],
+        background_ref=config["databases"]["background_ref"],
         r1="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_pR1.fastq",
         r2="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_pR2.fastq",
         r1_unpaired="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_uR1.fastq",
@@ -378,89 +381,158 @@ bgzip -c {output.filt_vcf} 2>> {log} 1> {output.zipped_vcf}
 tabix -p vcf {output.zipped_vcf} >> {log} 2>&1
         """
 
-rule ORF_analysis:
+rule split_superkingdom:
     input:
-        classified="data/table/{sample}_taxClassified.tsv",
-        unclassified="data/table/{sample}_taxUnclassified.tsv"
+        lcaFile="data/taxonomic_classification/{sample}.taxtab",
+        scaffolds="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"],
+        NCBI_new_taxdump_rankedlineage=config["databases"]["NCBI_new_taxdump_rankedlineage"],
     output:
-        bactfasta=temp("data/scaffolds_filtered/{sample}_Bacteria.fasta"),
-        virfasta=temp("data/scaffolds_filtered/{sample}_Viruses.fasta"),
-        archfasta=temp("data/scaffolds_filtered/{sample}_Archaea.fasta"),
-        bactgff=temp("data/scaffolds_filtered/{sample}_Bacteria.gff"),
-        virgff=temp("data/scaffolds_filtered/{sample}_Viruses.gff"),
-        archgff=temp("data/scaffolds_filtered/{sample}_Archaea.gff"),
-        ORF_AA_fasta="data/scaffolds_filtered/{sample}_ORF_AA.fa",
-        ORF_NT_fasta="data/scaffolds_filtered/{sample}_ORF_NT.fa",
-        ORF_annotation_gff="data/scaffolds_filtered/{sample}_annotation.gff",
-        zipped_gff3="data/scaffolds_filtered/{sample}_annotation.gff.gz",
-        index_zipped_gff3="data/scaffolds_filtered/{sample}_annotation.gff.gz.tbi",
-        contig_ORF_count_list="data/scaffolds_filtered/{sample}_contig_ORF_count_list.txt"
+        bactfasta="data/scaffolds_filtered/{sample}_Bacteria.fasta",
+        virfasta="data/scaffolds_filtered/{sample}_Viruses.fasta",
+        archfasta="data/scaffolds_filtered/{sample}_Archaea.fasta",
     conda:
         "envs/scaffold_analyses.yaml"
     log:
-        "logs/ORF_prediction_{sample}.log"
+        "logs/split_superkingdom_{sample}.log"
     benchmark:
-        "logs/benchmark/ORF_prediction_{sample}.txt"
-    threads: 1
+        "logs/benchmark/split_superkingdom_{sample}.txt"
+    threads: 4
+    shell:
+        """
+python bin/split_superkingdom.py {input.lcaFile} {input.scaffolds} {input.NCBI_new_taxdump_rankedlineage} {output.bactfasta} {output.virfasta} {output.archfasta} 
+        """
+
+rule prodigal:
+    input:
+        "data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"]
+    output:
+        ORF_NT_fasta="data/scaffolds_filtered/{sample}_ORF_NT.fa",
+        contig_ORF_count_list="data/scaffolds_filtered/{sample}_contig_ORF_count_list.txt",
+    conda:
+        "envs/scaffold_analyses.yaml"
+    log:
+        "logs/prodigal_{sample}.log"
+    benchmark:
+        "logs/benchmark/prodigal_{sample}.txt"
+    threads: 4
     params:
         procedure=config["ORF_prediction"]["procedure"],
         output_format=config["ORF_prediction"]["output_format"]
     shell:
         """
-python bin/split_superkingdom.py {input.classified} {input.unclassified} {output.bactfasta} {output.virfasta} ;
-{output.archfasta}
+    prodigal -q -i {input} \
+        -d {output.ORF_NT_fasta} \
+        -p {params.procedure} \
+        -f {params.output_format} > {log} 2>&1
+    egrep "^>" {output.ORF_NT_fasta} | sed 's/_/ /6' | tr -d ">" | cut -f 1 -d " " | uniq -c > {output.contig_ORF_count_list}
+        """
 
-if [ -s {output.bactfasta} ]
+rule ORF_analysis:
+    input:
+        bactfasta="data/scaffolds_filtered/{sample}_Bacteria.fasta",
+        virfasta="data/scaffolds_filtered/{sample}_Viruses.fasta",
+        archfasta="data/scaffolds_filtered/{sample}_Archaea.fasta",
+    output:
+        ORF_AA_fasta="data/scaffolds_filtered/{sample}_ORF_AA.fa",
+        zipped_gff3="data/scaffolds_filtered/{sample}_annotation.gff.gz",
+        index_zipped_gff3="data/scaffolds_filtered/{sample}_annotation.gff.gz.tbi",
+    conda:
+        "envs/scaffold_analyses.yaml"
+    log:
+        out = "logs/ORF_analysis_{sample}.log",
+        err = "logs/ORF_analysis_{sample}.err"
+    benchmark:
+        "logs/benchmark/ORF_prediction_{sample}.txt"
+    threads: 4
+    shell:
+        """
+sed -i 's|"prodigal -i \\Q$outdir/$prefix.fna\\E -c -m -g $gcode -p $prodigal_mode -f sco -q"|"prodigal -i \\Q$outdir/$prefix.fna\\E -m -g $gcode -p $prodigal_mode -f sco -q"|g' "${{CONDA_PREFIX}}"/bin/prokka 
+# modify the prokka perl script in order to remove the -c option from the prodigal command, for better predection of partial ORFs    
+specimen=$(echo {input.bactfasta} | cut -d'/' -f 3 |cut -d'_' -f1) 
+touch data/scaffolds_filtered/${{specimen}}.gff
+if [ -s {input.bactfasta} ]
 then
-    prefix=$(echo {output.bactfasta}| cut -d'.' -f 1)
+    prefix1=data/scaffolds_filtered/${{specimen}}_Bacteria/ 
     prokka \
-    --outdir <(echo data/scaffolds_filtered/$prefix) \
-    --prefix <(echo $(echo {output.bactfasta}| cut -d'.' -f 1)) \
+    --outdir ${{prefix1}} \
+    --prefix ${{specimen}}\
     --kingdom Bacteria \
-    --metagenome {output.bactfasta}
-    cat echo data/scaffolds_filtered/$prefix/*_Bacteria.faa >> {output.ORF_AA_fasta}
-    cat echo data/scaffolds_filtered/$prefix/*_Bacteria.fna >> {output.ORF_NT_fasta} 
-    gt sort echo data/scaffolds_filtered/$prefix/$prefix.gff" > {output.bact.gff}
-    rm -rf echo data/scaffolds_filtered/$prefix/
-    unset prefix
+    --metagenome \
+    --force \
+    {input.bactfasta} 
+    cat ${{prefix1}}/${{specimen}}.faa >> {output.ORF_AA_fasta} 
+    gt gff3 -sort yes -v yes ${{prefix1}}/${{specimen}}.gff > data/scaffolds_filtered/${{specimen}}.bact.gff 
+    if [ -s data/scaffolds_filtered/${{specimen}}.gff ]
+    then
+        gt gff3 -sort yes -v yes data/scaffolds_filtered/${{specimen}}.gff > ${{prefix1}}/${{specimen}}.tmp 
+        gt merge data/scaffolds_filtered/${{specimen}}.bact.gff ${{prefix1}}/${{specimen}}.tmp  > data/scaffolds_filtered/${{specimen}}.gff 
+        rm ${{prefix1}}/${{specimen}}.tmp
+    else
+        cat data/scaffolds_filtered/${{specimen}}.bact.gff  >> data/scaffolds_filtered/${{specimen}}.gff 
+    fi
+   rm -f ${{prefix1}}/*; rmdir ${{prefix1}}/ 
+   rm data/scaffolds_filtered/${{specimen}}.bact.gff
+    unset prefix1 
 fi
 
-if [ -s {output.virfasta} ]
+if [ -s {input.virfasta} ]
 then
-    prefix=$(echo {output.virfasta}| cut -d'.' -f 1)
+    prefix1=./data/scaffolds_filtered/${{specimen}}_Viruses 
     prokka \
-    --outdir <(echo data/scaffolds_filtered/$prefix) \
-    --prefix <(echo $(echo {output.virfasta}| cut -d'.' -f 1)) \
+    --outdir ${{prefix1}} \
+    --prefix $specimen \
     --kingdom Viruses \
+    --metagenome \
+    --force \
     --protein /mnt/db/RVDB-prot/U-RVDBv16.0-prot.fasta \
-    --metagenome {output.virfasta}
-    cat echo data/scaffolds_filtered/$prefix/*_Viruses.faa >> {output.ORF_AA_fasta}
-    cat echo data/scaffolds_filtered/$prefix/*_Viruses.fna >> {output.ORF_NT_fasta} 
-    gt sort echo data/scaffolds_filtered/$prefix/$prefix.gff" > {output.vir.gff}
-    rm -rf echo data/scaffolds_filtered/$prefix/
-    unset prefix
+    {input.virfasta}
+    cat ${{prefix1}}/${{specimen}}.faa >> {output.ORF_AA_fasta} 
+    gt gff3 -sort yes -v yes ${{prefix1}}/${{specimen}}.gff > data/scaffolds_filtered/${{specimen}}.vir.gff 
+    if [ -s data/scaffolds_filtered/${{specimen}}.gff ]
+    then
+        gt gff3 -sort yes -v yes data/scaffolds_filtered/${{specimen}}.gff > ${{prefix1}}/${{specimen}}.tmp 
+        gt merge data/scaffolds_filtered/${{specimen}}.vir.gff ${{prefix1}}/${{specimen}}.tmp  > data/scaffolds_filtered/${{specimen}}.gff 
+        rm ${{prefix1}}/${{specimen}}.tmp
+    else
+        cat  data/scaffolds_filtered/${{specimen}}.vir.gff >> data/scaffolds_filtered/${{specimen}}.gff 
+    fi
+    rm -f ${{prefix1}}/*; rmdir ${{prefix1}}/ 
+    rm data/scaffolds_filtered/${{specimen}}.vir.gff 
+    unset prefix1 
 fi
 
-if [ -s {output.archfasta} ]
+if [ -s {input.archfasta} ]
 then
-    prefix=$(echo {output.archfasta}| cut -d'.' -f 1)
+    prefix1=./data/scaffolds_filtered/${{specimen}}_Archaea 
     prokka \
-    --outdir <(echo data/scaffolds_filtered/$prefix) \
-    --prefix <(echo $(echo {output.archfasta}| cut -d'.' -f 1)) \
-    --kingdom Archaea \
-    --metagenome {output.archfasta}
-    cat echo data/scaffolds_filtered/$prefix/*_Archaea.faa >> {output.ORF_AA_fasta}
-    cat echo data/scaffolds_filtered/$prefix/*_Archaea.fna >> {output.ORF_NT_fasta} 
-    gt sort echo data/scaffolds_filtered/$prefix/$prefix.gff" > {output.arch.gff}
-    rm -rf echo data/scaffolds_filtered/$prefix/
+    --outdir ${{prefix1}} \
+    --prefix $specimen \
+    --kingdom  Archaea \
+    --metagenome \
+    --force \
+    {input.archfasta}  
+    cat ${{prefix1}}/${{specimen}}.faa >> {output.ORF_AA_fasta} 
+    gt gff3 -sort yes -v yes ${{prefix1}}/${{specimen}}.gff > data/scaffolds_filtered/${{specimen}}.arch.gff
+    if [ -s data/scaffolds_filtered/${{specimen}}.gff ]
+    then
+        gt gff3 -sort yes -v yes data/scaffolds_filtered/${{specimen}}.gff > ${{prefix1}}/${{specimen}}.tmp 
+        gt merge data/scaffolds_filtered/${{specimen}}.arch.gff ${{prefix1}}/${{specimen}}.tmp  > data/scaffolds_filtered/${{specimen}}.gff 
+        rm ${{prefix1}}/${{specimen}}.tmp
+    else
+        cat data/scaffolds_filtered/${{specimen}}.arch.gff >> data/scaffolds_filtered/${{specimen}}.gff 
+    fi
+    rm -f ${{prefix1}}/*; rmdir ${{prefix1}}/ 
+    rm data/scaffolds_filtered/${{specimen}}.arch.gff 
+    unset prefix1 
 fi
 
-gt merge {sample}_*.gff > {output.ORF_annotation_gff}
-
-bgzip -c {output.ORF_annotation_gff} 2>> {log} 1> {output.zipped_gff3}
-tabix -p gff {output.zipped_gff3} >> {log} 2>&1
-
-egrep "^>" {output.ORF_NT_fasta} | sed 's/_/ /6' | tr -d ">" | cut -f 1 -d " " | uniq -c > {output.contig_ORF_count_list}
+sed -i '/^##FASTA$/,$d' data/scaffolds_filtered/${{specimen}}.gff
+gt gff3 -sort yes -v yes data/scaffolds_filtered/${{specimen}}.gff  > data/scaffolds_filtered/final_${{specimen}}.gff 
+bgzip -c data/scaffolds_filtered/final_${{specimen}}.gff 2>> {log.err} 1> {output.zipped_gff3} 
+tabix -p gff -f {output.zipped_gff3} 2>> {log.err}  
+rm data/scaffolds_filtered/${{specimen}}.gff 
+rm data/scaffolds_filtered/final_${{specimen}}.gff 
+unset specimen
         """
 
 rule Generate_contigs_metrics:
@@ -609,7 +681,8 @@ rule Scaffold_classification:
     params:
         outfmt="6 std qseqid sseqid staxids sscinames stitle",
         evalue=config["taxonomic_classification"]["evalue"],
-        max_target_seqs=config["taxonomic_classification"]["max_target_seqs"]
+        max_target_seqs=config["taxonomic_classification"]["max_target_seqs"],
+        max_hsps=config["taxonomic_classification"]["max_hsps"]
     shell:
         """
 blastn -task megablast \
@@ -617,10 +690,17 @@ blastn -task megablast \
 -query {input} \
 -evalue {params.evalue} \
 -max_target_seqs {params.max_target_seqs} \
+-max_hsps {params.max_hsps} \
 -db nt \
 -num_threads {threads} \
 -out {output} > {log} 2>&1
         """
+
+if config["taxonomic_classification_LCA"]["Krona"] == True:
+    include: "rules/Krona_LCA.smk"
+
+if config["taxonomic_classification_LCA"]["mgkit"] == True:
+    include: "rules/mgkit_LCA.smk"
 
     #############################################################################
     ##### Send scaffolds to their respective typingtools                    #####
@@ -633,34 +713,6 @@ blastn -task megablast \
     #############################################################################
     ##### Generate interactive taxonomy plot. LCA, magnitudes and plot      #####
     #############################################################################
-
-rule Krona_chart_and_LCA:
-    input:
-        classification="data/taxonomic_classification/{sample}.blastn",
-        stats="data/scaffolds_filtered/{sample}_perMinLenFiltScaffold.stats"
-    output:
-        taxtab="data/taxonomic_classification/{sample}.taxtab",
-        taxMagtab="data/taxonomic_classification/{sample}.taxMagtab",
-    conda:
-        "envs/Krona_plot.yaml"
-    benchmark:
-        "logs/benchmark/Krona_chart_and_LCA_{sample}.txt"
-    threads: 1
-    log:
-        "logs/Krona_chart_and_LCA_{sample}.log"
-    params:
-        bitscoreDeltaLCA=config["taxonomic_classification_LCA"]["bitscoreDeltaLCA"],
-        krona_tax_db=config["databases"]["Krona_taxonomy"]
-    shell:  # We rm the [conda_path]/opt/krona/taxonomy folder and replace that to our specified krona_taxonomy path, updated weekly via crontab, see scripts Robert
-        """
-if [ ! -L $(which ktClassifyBLAST | sed 's|/bin/ktClassifyBLAST|/opt/krona/taxonomy|g') ] # If symlink to Krona db does not exist...
-then # Clean and make symlink to Krona db from the current Conda env (which has a unique and unpredictable hash, therefore, the which command)
-    rm -rf $(which ktClassifyBLAST | sed 's|/bin/ktClassifyBLAST|/opt/krona/taxonomy|g')
-    ln -s {params.krona_tax_db} $(which ktClassifyBLAST | sed 's|/bin/ktClassifyBLAST|/opt/krona/taxonomy|g')
-fi
-ktClassifyBLAST -o {output.taxtab} -t {params.bitscoreDeltaLCA} {input.classification} > {log} 2>&1
-python bin/krona_magnitudes.py {output.taxtab} {input.stats} {output.taxMagtab} >> {log} 2>&1
-        """
 
 rule Krona_chart_combine:
     input:
@@ -768,10 +820,10 @@ rule Merge_all_metrics_into_single_tsv:
         bbtoolsFile="data/scaffolds_filtered/{sample}_perMinLenFiltScaffold.stats",
         kronaFile="data/taxonomic_classification/{sample}.taxtab",
         minLenFiltScaffolds="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"],
-        scaffoldORFcounts="data/scaffolds_filtered/{sample}_contig_ORF_count_list.txt",
         virusHostDB=config["databases"]["virusHostDB"],
         NCBI_new_taxdump_rankedlineage=config["databases"]["NCBI_new_taxdump_rankedlineage"],
         NCBI_new_taxdump_host=config["databases"]["NCBI_new_taxdump_host"],
+        contig_ORF_count_list="data/scaffolds_filtered/{sample}_contig_ORF_count_list.txt",
     output:
         taxClassifiedTable="data/tables/{sample}_taxClassified.tsv",
         taxUnclassifiedTable="data/tables/{sample}_taxUnclassified.tsv",
@@ -789,7 +841,7 @@ python bin/merge_data.py {wildcards.sample} \
 {input.bbtoolsFile} \
 {input.kronaFile} \
 {input.minLenFiltScaffolds} \
-{input.scaffoldORFcounts} \
+{input.contig_ORF_count_list} \
 {input.virusHostDB} \
 {input.NCBI_new_taxdump_rankedlineage} \
 {input.NCBI_new_taxdump_host} \
@@ -876,6 +928,7 @@ onerror:
         rm -f data/scaffolds_filtered/*.html
         rm -f results/IGVjs_index.html
     """)
+
 
 onsuccess:
     shell("""
