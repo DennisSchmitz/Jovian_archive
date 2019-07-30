@@ -484,7 +484,7 @@ then
     --kingdom Viruses \
     --metagenome \
     --force \
-    --protein /mnt/db/RVDB-prot/U-RVDBv16.0-prot.fasta \
+    --protein /mnt/db/RVDB-prot_filtered/U-RVDB-prot_filtered.fasta  \
     {input.virfasta}
     cat ${{prefix1}}/${{specimen}}.faa >> {output.ORF_AA_fasta} 
     gt gff3 -sort yes -v yes ${{prefix1}}/${{specimen}}.gff > data/scaffolds_filtered/${{specimen}}.vir.gff 
