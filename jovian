@@ -223,9 +223,11 @@ Output (automatically generated):
 Parameters:
   -m, --mode [strict|relaxed]       Work-in-progress. Automatically configures Jovian to be
                                     stringent or relaxed in taxonomic classification of
-                                    scaffolds.
-                                    #TODO add clarification once tested
-  -vt-help, --virus-typing-help          Print additional information about the virus-typing, i.e.
+                                    scaffolds. Please see the publication for details. In short,
+                                    use 'strict' for high precision at the cost of sensitivity
+                                    and use 'relaxed' for high sensitivity at the cost of more
+                                    spurious results (contamination).
+  -vt-help, --virus-typing-help     Print additional information about the virus-typing, i.e.
                                     which family/genus is selected and which species are typed.
   -vt, --virus-typing [NoV|EV|RVA|HAV|HEV|PV|Flavi]
                                     After a Jovian analyses has completed, do viral typing for
@@ -242,17 +244,11 @@ Parameters:
                                     a job fails.
   -n, --dry-run                     Useful snakemake command: Do not execute anything, and
                                     display what would be done.
-  --unlock                          Useful snakemake command: Remove a lock on the working
-                                    directory.
+  -u, --unlock                      Removes the lock on the working directory. This happens when
+                                    a run ends abruptly and prevents you from doing subsequent
+                                    analyses.
   -q, --quiet                       Useful snakemake command: Do not output any progress or
                                     rule information.
-Jupyter Notebook (for data visualization):
-  --configure-jupyter               Sets the proper Jupyter settings. You only need to do this
-                                    once per user.
-  --start-jupyter                   Starts a Jupyter Notebook process. You must always have this
-                                    running in a separate terminal (or in the background) if you
-                                    want to open the final report with the interactive graphs
-                                    and tables.
 Archiving Jovian results:
   --archive                         Archives the output of a Jovian analysis into single
                                     compressed file.
@@ -260,6 +256,13 @@ Archiving Jovian results:
                                     archive. It is important to use the same version of Jovian
                                     as was initially used to build the archive. N.B. databases
                                     are not restored.
+Jupyter Notebook (for data visualization):
+  --configure-jupyter               Sets the proper Jupyter settings. You only need to do this
+                                    once per user.
+  --start-jupyter                   Starts a Jupyter Notebook process. You must always have this
+                                    running in a separate terminal (or in the background) if you
+                                    want to open the final report with the interactive graphs
+                                    and tables.
 Installation:
   -ic, --install-dependencies       Install the required software dependencies.
   -ii, --install-igvjs              Install IGVjs dependency.
