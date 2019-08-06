@@ -643,7 +643,8 @@ if [ "$cm_installeranswers_compmode" == "U" ]; then
             do
                 queueanswer=${queueanswer,,}
                 echo -e "installeranswers:\n    compmode: G\n   queue: ${queueanswer}" > "${HOME}"/.jovian_installchoice_compmode
-                echo -e "drmaa: \" -q ${queueanswer} -n {threads} -R \\\"span[hosts=1]\\\"\"" >> profile/config.yaml
+                sed -i '\|drmaa|d' profile/config.yaml
+                echo -e "\ndrmaa: \" -q ${queueanswer} -n {threads} -R \\\"span[hosts=1]\\\"\"" >> profile/config.yaml
                 echo -e "drmaa-log-dir: logs/drmaa" >> profile/config.yaml
                 break
             done
@@ -662,7 +663,7 @@ elif [ "${cm_installeranswers_compmode}" == "G" ]; then
     installer_intro
     echo -e "Jovian is set to run in Grid-mode.\nSetting some of the variables."
     sed -i '\|drmaa|d' profile/config.yaml
-    echo -e "drmaa: \" -q ${cm_installeranswers_queue} -n {threads} -R \\\"span[hosts=1]\\\"\"" >> profile/config.yaml
+    echo -e "\ndrmaa: \" -q ${cm_installeranswers_queue} -n {threads} -R \\\"span[hosts=1]\\\"\"" >> profile/config.yaml
     echo -e "drmaa-log-dir: logs/drmaa" >> profile/config.yaml
 fi
 
