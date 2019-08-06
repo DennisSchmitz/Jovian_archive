@@ -1,30 +1,31 @@
 # Jovian, user-friendly metagenomics     
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/DennisSchmitz/Jovian_binder/master?filepath=Notebook_report.ipynb)
 
-**IMPORTANT: Do not share the code without my express permission as it is unpublished (manuscript in preparation)**  
+**IMPORTANT: Do not share the code without my express permission as it is unpublished (manuscript in preparation)**
 
 ___
 
 <img align="right" src="../assets/images/Jovian_logo.png">
 
 ## Table of content  
-- [Table of content](#table-of-content)
-- [Jovian description](#jovian-description)
-  - [Features](#features)
-  - [Visualizations](#visualizations)
-  - [Virus typing](#virus-typing)
-  - [Audit trail](#audit-trail)
-- [Requirements](#requirements)
-  - [System requirements](#system-requirements)
-  - [Software](#software)
-  - [Databases](#databases)
-- [Instructions](#instructions)
-  - [Installation](#installation)
-  - [How to start/configure a Jovian analysis](#how-to-startconfigure-a-jovian-analysis)
-  - [Explanation of output folders](#explanation-of-output-folders)
-- [FAQ](#faq)
-- [Example Jovian report](#example-jovian-report)
-- [Acknowledgements](#acknowledgements)
-    - [Authors](#authors)
+- [Table of content](#Table-of-content)
+- [Jovian description](#Jovian-description)
+  - [Features](#Features)
+  - [Visualizations](#Visualizations)
+  - [Virus typing](#Virus-typing)
+  - [Audit trail](#Audit-trail)
+- [Requirements](#Requirements)
+  - [System requirements](#System-requirements)
+  - [Software](#Software)
+  - [Databases](#Databases)
+- [Instructions](#Instructions)
+  - [Installation](#Installation)
+  - [How to start/configure a Jovian analysis](#How-to-startconfigure-a-Jovian-analysis)
+  - [Explanation of output folders](#Explanation-of-output-folders)
+- [FAQ](#FAQ)
+- [Example Jovian report](#Example-Jovian-report)
+- [Acknowledgements](#Acknowledgements)
+    - [Authors](#Authors)
 
 ___
 
@@ -180,6 +181,9 @@ ___
 
 ## Example Jovian report  
 _Data shown below is based on public data, available on ENA via accession ID `PRJNA491626`. It contains Illumina paired-end data of faeces from people with gastroenteritis._  
+
+An example Jovian report can be found by clicking on the Binder button below. Please note, some parts are omitted or static due to technical constraints. But you get full functionality when it is locally installed.  
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/DennisSchmitz/Jovian_binder/master?filepath=Notebook_report.ipynb)
 
 **MultiQC is used to summarize many pipeline metrics, including read quality, insert-size distribution, biases, etc.:**  
 <br>
