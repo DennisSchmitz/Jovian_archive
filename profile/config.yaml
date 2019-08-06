@@ -4,6 +4,4 @@ config:
    sample_sheet=sample_sheet.yaml
 latency-wait: 60
 use-conda: true
-drmaa: " -q bio -n {threads} -R \"span[hosts=1]\""
-drmaa-log-dir: logs/drmaa
 jobname: Jovian_{name}.jobid{jobid}

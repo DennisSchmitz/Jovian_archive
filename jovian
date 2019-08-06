@@ -639,14 +639,15 @@ if [ "$cm_installeranswers_compmode" == "U" ]; then
             break
         elif [[ "${cmanswer}" =~ ^(grid|g)$ ]]; then
             echo -e "Grid mode has been chosen. Please specify your grid settings so the pipeline will function properly."
-            while read -r -p "Please specify the name of the Queue that your local grid/HPC cluster uses. Please enter exclusively the name of the queue." queueanswer
+            while read -r -p "Please specify the name of the Queue that your local grid/HPC cluster uses. Please enter exclusively the name of the queue. " queueanswer
             do
                 queueanswer=${queueanswer,,}
                 echo -e "installeranswers:\n    compmode: G\n   queue: ${queueanswer}" > "${HOME}"/.jovian_installchoice_compmode
-                echo -e "drmaa: \" -q ${queueanswer} -n {threads} -R \"span[hosts=1]\"\"" >> profile/config.yaml
+                echo -e "drmaa: \" -q ${queueanswer} -n {threads} -R \\\"span[hosts=1]\\\"\"" >> profile/config.yaml
                 echo -e "drmaa-log-dir: logs/drmaa" >> profile/config.yaml
                 break
             done
+            break
         elif [[ "${cmanswer}" =~ ^(exit)$ ]]; then
             break
             exit
@@ -660,7 +661,8 @@ elif [ "${cm_installeranswers_compmode}" == "S" ]; then
 elif [ "${cm_installeranswers_compmode}" == "G" ]; then
     installer_intro
     echo -e "Jovian is set to run in Grid-mode.\nSetting some of the variables."
-    echo -e "drmaa: \" -q ${cm_installeranswers_queue} -n {threads} -R \"span[hosts=1]\"\"" >> profile/config.yaml
+    sed -i '\|drmaa|d' profile/config.yaml
+    echo -e "drmaa: \" -q ${cm_installeranswers_queue} -n {threads} -R \\\"span[hosts=1]\\\"\"" >> profile/config.yaml
     echo -e "drmaa-log-dir: logs/drmaa" >> profile/config.yaml
 fi
 
