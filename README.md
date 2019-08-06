@@ -91,14 +91,14 @@ An audit trail, used for clinical reproducability and logging, is generated and 
   - Database timestamps  
   - (user-specified) Pipeline parameters  
 
-However, several things are out-of-scope for Jovian logging:
+However, it has limitations since several things are out-of-scope for Jovian to control:
 - The `IGVjs` version  
 - The `virus typing-tools` version  
   - Currently we depend on a public web-tool hosted by the [RIVM](https://www.rivm.nl/en). These are developed in close collaboration with - *but independently of* - Jovian. A versioning system for the `virus typing-tools` is being worked on, however, this is not trivial and will take some time.  
-- The database versions  
-  - We only save the timestamps of the database files, this is because the databases used by Jovian have no official versioning. Any versioning scheme is therefore out-of-scope for Jovian and a responsibility of the end-user.  
 - Input files
   - We only save the names and location of input files at the time the analysis was performed. Long-term storage of the data, and documenting their location over time, is the responsibility of the end-user.  
+- Input metadata
+  - The end-user is responsible for storing datasets with their correct metadata (e.g. clinical information, database versions, etc.). We recommend using [iRODS](https://irods.org) for this as described by [Nieroda et al. 2019](https://www.ncbi.nlm.nih.gov/pubmed/30646845). While we acknowledge that database versions are vital to replicate results, the databases Jovian uses have no official versioning, hence why we include timestamps only.  
 
 ___
 
@@ -146,19 +146,21 @@ Below you'll find instructions on how to install and start/configure a Jovian an
 Can be found on [this wiki page](../../wiki/Installation-Instructions).
 
 ### How to start/configure a Jovian analysis  
-Currently, the method to launch analyses via the Jupyter Notebook requires some minor tweaks. So I cannot share it yet, we recommend you to use the command-line method below.  
+There are two methods, the first is by using the "Jovian Portal" and the second is via the command-line interface. The former is an interactive website that is intended for non-bioinformaticians while the latter is intended for people familiar with the command-line interface.  
 
-<b>Jupyter Notebook method:</b>  
-- Via your Jupyter Notebook browser connection, go to the `Jovian` folder [created during installation](../../wiki/Installation-Instructions). Then, open `Notebook_portal.ipynb`.  
+<b>Jovian Portal:</b>  
+- First, start a Jupyter notebook background process as described [here](../../wiki/Installation-Instructions#starting-the-jupyter-notebook-server-process). Or ask your system-admin to do this for you.  
+- Via the Jupyter Notebook connection established in the previous step, go to the `Jovian` folder [created during installation](../../wiki/Installation-Instructions). Then, open `Notebook_portal.ipynb`.  
 - Follow the instructions in this notebook to start an analysis.  
 
-<b>Command-line interface method:</b>  
+<b>Command-line interface:</b>  
 - Make sure that Jovian is completely [installed](../../wiki/Installation-Instructions).  
 - Go to the folder where `Jovian` was installed.  
 - Configure pipeline parameters by changing the [profile/pipeline_parameters.yaml](profile/pipeline_parameters.yaml) file. Either via Jupyter Notebook or with a commandline text-editor of choice.  
 - Optional: We recommended you do a `dry-run` before each analysis to check if there are any typo's, missing files or other errors. This can be done via `bash jovian -i <input_directory> -n`
 - If the dry-run has completed without errors, you are ready to start a real analysis with the following command:  
-`bash jovian -i <input_directory>` 
+`bash jovian -i <input_directory>`  
+- After analysis is finished, you can optionally genotype the viruses [as described here](#Virus-typing) (i.e. sub-species level taxonomic classification). This can be done via `bash jovian -vt [NoV|EV|RVA|HAV|HEV|PV|Flavi]`.  
 - After the pipeline has finished, open `Notebook_report.ipynb` via your browser. Click on `Cell` in the toolbar, then press `Run all` and wait for data to be imported.  
   - N.B. You need to have a Jupyter notebook process running in the background, as described [here](../../wiki/Installation-Instructions#starting-the-jupyter-notebook-server-process).
 
