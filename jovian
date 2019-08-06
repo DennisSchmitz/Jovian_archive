@@ -636,6 +636,7 @@ if [ "$cm_installeranswers_compmode" == "U" ]; then
         if [[ "${cmanswer}" =~ ^(standalone|s)$ ]]; then
             echo -e "Standalone mode has been chosen. We will remember your choice so you don't have to do this step every time"
             echo -e "installeranswers:\n    compmode: S\n   queue: N" > "${HOME}"/.jovian_installchoice_compmode
+            sed -i '\|drmaa|d' profile/config.yaml
             break
         elif [[ "${cmanswer}" =~ ^(grid|g)$ ]]; then
             echo -e "Grid mode has been chosen. Please specify your grid settings so the pipeline will function properly."
@@ -659,6 +660,7 @@ if [ "$cm_installeranswers_compmode" == "U" ]; then
 elif [ "${cm_installeranswers_compmode}" == "S" ]; then
     installer_intro
     echo -e "Jovian is running in the standalone computing mode"
+    sed -i '\|drmaa|d' profile/config.yaml
 elif [ "${cm_installeranswers_compmode}" == "G" ]; then
     installer_intro
     echo -e "Jovian is set to run in Grid-mode.\nSetting some of the variables."
