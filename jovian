@@ -42,7 +42,6 @@ STOP_NGINX="FALSE"
 REBUILD_ARCHIVE="FALSE"
 CONFIG_JUP="FALSE"
 JOVIAN_MODE="NONE"
-COMPUTING_MODE="NONE"
 START_JUPYTER="FALSE"
 MAKE_SAMPLE_SHEET="FALSE"
 SHEET_SUCCESS="FALSE" # Default value for sample_sheet.yaml
@@ -67,11 +66,6 @@ do
         ;;
         -h|--help)
         JOVIAN_HELP="TRUE"
-        shift # Next
-        ;;
-        -cm|--computing-mode)
-        COMPUTING_MODE="$2"
-        shift # Next
         shift # Next
         ;;
         -sh|--snakemake-help)
@@ -303,8 +297,12 @@ fi
 if [ ! -e "${HOME}/.jovian_installchoice_igvjs" ]; then
     echo -e "installeranswers:\n    igvjs: U" > "${HOME}"/.jovian_installchoice_igvjs 
 fi
+if [ ! -e "${HOME}/.jovian_installchoice_compmode" ]; then
+    echo -e "installeranswers:\n    compmode: U\n   queue: U" > "${HOME}"/.jovian_installchoice_compmode
+fi
 
 eval "$(parse_yaml "${HOME}"/.jovian_installchoice_igvjs "igvjs_")"
+eval "$(parse_yaml "${HOME}"/.jovian_installchoice_compmode "cm_")"
 
 if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. the `conda` command is not available), if true, install it in ~/tmp. Otherwise, proceed.
     if [ ! -e "${HOME}/tmp/Miniconda3" ]; then
@@ -627,6 +625,46 @@ if [ "${INSTALL_IGVJS:-}" == "TRUE" ]; then
     exit 0
 fi
 
+if [ "$cm_installeranswers_compmode" == "U" ]; then
+    installer_intro
+    echo -e "Jovian can run in two computing-modes. 'standalone' and 'HPC/Grid'"
+    echo -e "Please specify the computing-mode that you wish to use for Jovian.\n\n"
+    echo -e "\n\e[1;91;40m\tIf you don't know what this means then please contact your local system administrators before continuing.\e[0m\n\n"
+    while read -r -p "Do you wish to run Jovian in 'standalone' or 'grid' mode? [standalone/grid] " cmanswer
+    do
+        cmanswer=${cmanswer,,}
+        if [[ "${cmanswer}" =~ ^(standalone|s)$ ]]; then
+            echo -e "Standalone mode has been chosen. We will remember your choice so you don't have to do this step every time"
+            echo -e "installeranswers:\n    compmode: S\n   queue: N" > "${HOME}"/.jovian_installchoice_compmode
+            break
+        elif [[ "${cmanswer}" =~ ^(grid|g)$ ]]; then
+            echo -e "Grid mode has been chosen. Please specify your grid settings so the pipeline will function properly."
+            while read -r -p "Please specify the name of the Queue that your local grid/HPC cluster uses. Please enter exclusively the name of the queue." queueanswer
+            do
+                queueanswer=${queueanswer,,}
+                echo -e "installeranswers:\n    compmode: G\n   queue: ${queueanswer}" > "${HOME}"/.jovian_installchoice_compmode
+                echo -e "drmaa: \" -q ${queueanswer} -n {threads} -R \"span[hosts=1]\"\"" >> profile/config.yaml
+                echo -e "drmaa-log-dir: logs/drmaa" >> profile/config.yaml
+                break
+            done
+        elif [[ "${cmanswer}" =~ ^(exit)$ ]]; then
+            break
+            exit
+        else
+            echo -e "Please answer with 'standalone' or 'grid'."
+        fi
+    done
+elif [ "${cm_installeranswers_compmode}" == "S" ]; then
+    installer_intro
+    echo -e "Jovian is running in the standalone computing mode"
+elif [ "${cm_installeranswers_compmode}" == "G" ]; then
+    installer_intro
+    echo -e "Jovian is set to run in Grid-mode.\nSetting some of the variables."
+    echo -e "drmaa: \" -q ${cm_installeranswers_queue} -n {threads} -R \"span[hosts=1]\"\"" >> profile/config.yaml
+    echo -e "drmaa-log-dir: logs/drmaa" >> profile/config.yaml
+fi
+
+
 ###############################################################################################################
 ##### End of installation block, from this point onwards you can safely assume Jovian_master is activated #####
 ###############################################################################################################
@@ -809,13 +847,6 @@ elif [[ ! "${JOVIAN_MODE}" =~ ^(relaxed|strict)$ ]]; then
         echo -e "Jovian is set to run with a custom config/mode"
         exit 0
     fi
-fi
-
-if [[ "${COMPUTING_MODE}" =~ ^(*)$ ]]; then
-    echo -e "This is a placeholder for the actual computing-mode switcher"
-    minispacer
-    echo -e ":)"
-    exit 0
 fi
 
 ### Pass other CLI arguments along to Snakemake
