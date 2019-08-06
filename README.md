@@ -1,4 +1,5 @@
 # Jovian, user-friendly metagenomics     
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/DennisSchmitz/Jovian_binder/master?filepath=Notebook_report.ipynb)
 
 **IMPORTANT: Do not share the code without my express permission as it is unpublished (manuscript in preparation)**
