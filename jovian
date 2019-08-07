@@ -658,11 +658,9 @@ if [ "$cm_installeranswers_compmode" == "U" ]; then
         fi
     done
 elif [ "${cm_installeranswers_compmode}" == "S" ]; then
-    installer_intro
     echo -e "Jovian is running in the standalone computing mode"
     sed -i '\|drmaa|d' profile/config.yaml
 elif [ "${cm_installeranswers_compmode}" == "G" ]; then
-    installer_intro
     echo -e "Jovian is set to run in Grid-mode.\nSetting some of the variables."
     sed -i '\|drmaa|d' profile/config.yaml
     echo -e "\ndrmaa: \" -q ${cm_installeranswers_queue} -n {threads} -R \\\"span[hosts=1]\\\"\"" >> profile/config.yaml
