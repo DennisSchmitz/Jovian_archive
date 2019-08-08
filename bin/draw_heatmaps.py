@@ -186,7 +186,7 @@ def read_numbers(infile):
     numbers_df = numbers_df[[ "Sample", "input_read_pairs" ]]
     numbers_df = numbers_df.rename(columns={"input_read_pairs" : "read_pairs"})
 
-    numbers_df["Sample"] = numbers_df.Sample.apply(lambda x: x[:x.rfind("_R1")]) # On every value in column named "Sample" perform function that chops off "_R1" and any character after it
+    numbers_df["Sample"] = numbers_df.Sample.apply(lambda x: x[:x.rfind("_")]) # On every value in column named "Sample" perform function that chops off "_R1" and any character after it
     
     return(numbers_df)
 
