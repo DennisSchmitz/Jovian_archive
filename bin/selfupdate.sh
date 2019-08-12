@@ -20,8 +20,8 @@ if [ "${1}" == "master" ]; then
 		fi
 	done
 		
-	git fetch origin master
-	git reset --hard FETCH_HEAD
+	git reset --hard
+	git checkout master
 	git clean -df
 
 else
@@ -39,6 +39,8 @@ else
 			echo -e "Please answer with 'yes' or 'no'"
 		fi
 	done
+	git reset --hard
+	git checkout master	
 	git fetch origin --tags "${1}"
 	git reset --hard FETCH_HEAD
 	git clean -df
