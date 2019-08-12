@@ -24,6 +24,7 @@ if [ "${1}" == "master" ]; then
 	git checkout master
 	git clean -df
 
+	echo -e "DONE"
 else
 
 	echo -e "Changing the Jovian version will delete \e[1m all local changes\e[0m that you've made. If you have any important changes then please make a backup of the files you changed before you continue"
@@ -44,4 +45,6 @@ else
 	git fetch origin --tags "${1}"
 	git reset --hard FETCH_HEAD
 	git clean -df
+
+	echo -e "DONE"
 fi
