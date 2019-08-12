@@ -47,6 +47,8 @@ MAKE_SAMPLE_SHEET="FALSE"
 SHEET_SUCCESS="FALSE" # Default value for sample_sheet.yaml
 SKIP_CONFIRMATION="FALSE"
 SNAKEMAKE_UNLOCK="FALSE"
+JOVIAN_UPDATE="FALSE"
+CHANGE_VERSION="FALSE"
 
 ### Parse the jovian commandline arguments, if they are not part of jovian, they get send to Snakemake
 POSITIONAL=()
@@ -146,6 +148,12 @@ do
         SNAKEMAKE_UNLOCK="TRUE"
         shift # Next
         ;;
+        --update)
+        JOVIAN_UPDATE="TRUE"
+        CHANGE_VERSION="$2"
+        shift # Next
+        shift # Next
+        ;;
         *) # Any other option
         POSITIONAL+=("$1") # save in array
         shift # Next
@@ -161,6 +169,17 @@ if [ "${SHOW_VERSION}" == "TRUE" ]; then
     echo -e "Jovian ${VERSION}"
     exit 0
 fi
+
+if [ "${JOVIAN_UPDATE}" == "TRUE" ]; then
+    if [ -z "${CHANGE_VERSION}" ]; then
+        bin/selfupdate.sh master
+        exit 0
+    else
+        bin/selfupdate.sh "${CHANGE_VERSION}"
+        exit
+    fi
+fi
+
 
 ### Remove all Jovian output
 if [ "${CLEAN:-}" == "TRUE" ]; then
