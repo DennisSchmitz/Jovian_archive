@@ -22,7 +22,6 @@ if [ "${1}" == "master" ]; then
 		
 	git reset --hard
 	git checkout master
-	git clean -df
 
 	echo -e "DONE"
 else
@@ -44,7 +43,6 @@ else
 	git checkout master	
 	git fetch origin --tags "${1}"
 	git reset --hard FETCH_HEAD
-	git clean -df
 
 	echo -e "DONE"
 fi
