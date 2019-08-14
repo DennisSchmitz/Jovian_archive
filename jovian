@@ -692,9 +692,9 @@ fi
 
 if [ "$db_installeranswers_databases" == "U" ]; then
     installer_intro
-    echo -e "Jovian requires several databases to run."
-    echo -e "Please specify the location of each required database, you will only have to do this once (the answers given will be stored)"
-    echo -e "The location of each database must start with a '/'"
+    echo "Jovian requires several databases to run."
+    echo "Please specify the location of each required database, you will only have to do this once (the answers given will be stored)"
+    echo "The location of each database must start with a '/'"
     thinline
     minispacer
 
@@ -1019,8 +1019,7 @@ if [ -e sample_sheet.yaml ]; then
     echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > profile/variables.yaml
     echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> profile/variables.yaml
     eval $(parse_yaml profile/variables.yaml "config_")
-    echo "Unique identifier for this Jovian run is: $config_Jovian_run_identifier "
-    snakemake -s Snakefile --profile "${PROFILE}" ${@}
+    snakemake -s Snakefile --profile "${PROFILE}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
     set -ue #turn bash strict mode back on
 else
     echo -e "Sample_sheet.yaml could not be found"
