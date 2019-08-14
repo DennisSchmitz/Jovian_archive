@@ -45,6 +45,7 @@ import argparse
 import datetime
 import os
 import sys
+import re
 import pandas as pd
 from bokeh.core.properties import value
 from bokeh.io import save, output_file
@@ -573,10 +574,11 @@ def main():
                            delimiter = '\t')[[ "Sample", "Total Sequences" ]]
     #Note1: FastQC reports numbers of reads of pre- and post-QC fastq files,
     # I only want to have the pre-QC numbers now:
-    pre_qc = [ col for col in read_nrs.Sample if '_R1' in col or '_1' in col ]
+    pattern = re.compile(r".*_R?1([_.].*$|$)") # A regex meaning: get anything up to "_R?1" and then either "_R?1[_.].*$" or "_R?1$".
+    pre_qc = [ col for col in read_nrs.Sample if bool(re.search(pattern, col)) ]
     read_nrs = read_nrs[read_nrs.Sample.isin(pre_qc)]
-    read_nrs.Sample = read_nrs.Sample.str.replace(r'_R?1.*', '') #remove the "_R1" or "_1" suffix and anything that may be after it
-    
+    read_nrs.Sample = read_nrs.Sample.str.replace(r'_R?1([_.].*$|$)', '') #remove the "_R1" or "_1" suffix and anything that may be after it. N.B. a simple `.*`` doesn't work because otherwise it will greedily remove everything after the first occurrence of "_R1" e.g. "Sample_bla_bla_R138_ACGGT_R1" becomes "Sample_bla_bla"
+
     #Note2: I now only have the number of forward reads. To add reverse,
     # multiply this number by 2:
     read_nrs["Total Sequences"] = (read_nrs["Total Sequences"] * 2).astype(int)
@@ -588,7 +590,7 @@ def main():
     #3. low-quality reads/sample (by Trimmomatic):
     lowq_nrs = pd.read_csv(arguments.trimmomatic, 
                            delimiter = '\t')[[ "Sample", "forward_only_surviving", "reverse_only_surviving", "dropped" ]]
-    lowq_nrs.Sample = lowq_nrs.Sample.str.replace(r'_R?1.*', '') #remove the "_R1" or "_1" suffix and anything that may be after it
+    lowq_nrs.Sample = lowq_nrs.Sample.str.replace(r'_R?1([_.].*$|$)', '') #remove the "_R1" or "_1" suffix and anything that may be after it. N.B. a simple `.*`` doesn't work because otherwise it will greedily remove everything after the first occurrence of "_R1" e.g. "Sample_bla_bla_R138_ACGGT_R1" becomes "Sample_bla_bla"
     #Note: trimmomatic drops read pairs ("dropped") and for some pairs 
     # only one mate is of sufficiently high quality ("forward/reverse
     # only surviving"). The number of low-quality reads is calculated

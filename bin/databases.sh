@@ -198,7 +198,7 @@ curl -o new_taxdump.tar.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxd
 curl -o new_taxdump.tar.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
 tar -xzf new_taxdump.tar.gz
     for file in *.dmp;
-        do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim;
+        do awk '{gsub("\t",""); if(substr(\$0,length(\$0),length(\$0))=="|") print substr(\$0,0,length(\$0)-1); else print \$0}' \${file} > \${file}.delim;
         done
 
 ### UPDATING BLAST NT
@@ -361,7 +361,7 @@ curl -o new_taxdump.tar.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxd
 curl -o new_taxdump.tar.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
 tar -xzf new_taxdump.tar.gz
     for file in *.dmp;
-        do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim;
+        do awk '{gsub("\t",""); if(substr(\$0,length(\$0),length(\$0))=="|") print substr(\$0,0,length(\$0)-1); else print \$0}' < \${file} > \${file}.delim;
         done
 
 ### UPDATING BLAST NT

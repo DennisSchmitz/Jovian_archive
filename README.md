@@ -1,30 +1,32 @@
 # Jovian, user-friendly metagenomics     
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/DennisSchmitz/Jovian_binder/master?filepath=Notebook_report.ipynb)
 
-**IMPORTANT: Do not share the code without my express permission as it is unpublished (manuscript in preparation)**  
+**IMPORTANT: Do not share the code without my express permission as it is unpublished (manuscript in preparation)**
 
 ___
 
 <img align="right" src="../assets/images/Jovian_logo.png">
 
 ## Table of content  
-- [Table of content](#table-of-content)
-- [Jovian description](#jovian-description)
-  - [Features](#features)
-  - [Visualizations](#visualizations)
-  - [Virus typing](#virus-typing)
-  - [Audit trail](#audit-trail)
-- [Requirements](#requirements)
-  - [System requirements](#system-requirements)
-  - [Software](#software)
-  - [Databases](#databases)
-- [Instructions](#instructions)
-  - [Installation](#installation)
-  - [How to start/configure a Jovian analysis](#how-to-startconfigure-a-jovian-analysis)
-  - [Explanation of output folders](#explanation-of-output-folders)
-- [FAQ](#faq)
-- [Example Jovian report](#example-jovian-report)
-- [Acknowledgements](#acknowledgements)
-    - [Authors](#authors)
+- [Table of content](#Table-of-content)
+- [Jovian description](#Jovian-description)
+  - [Features](#Features)
+  - [Visualizations](#Visualizations)
+  - [Virus typing](#Virus-typing)
+  - [Audit trail](#Audit-trail)
+- [Requirements](#Requirements)
+  - [System requirements](#System-requirements)
+  - [Software](#Software)
+  - [Databases](#Databases)
+- [Instructions](#Instructions)
+  - [Installation](#Installation)
+  - [How to start/configure a Jovian analysis](#How-to-startconfigure-a-Jovian-analysis)
+  - [Explanation of output folders](#Explanation-of-output-folders)
+- [FAQ](#FAQ)
+- [Example Jovian report](#Example-Jovian-report)
+- [Acknowledgements](#Acknowledgements)
+    - [Authors](#Authors)
 
 ___
 
@@ -35,7 +37,7 @@ Wetlab personnel can start, configure and interpret results via an interactive w
 
 ### Features    
 - Data quality control (QC) and cleaning.  
-  - Including library fragment length analysis, usefull for sample preparation QC.  
+  - Including library fragment length analysis, useful for sample preparation QC.  
 - Removal of human* data (patient privacy). _*<sup><sub>You can use [whichever reference you would like](../../wiki/Frequently-Asked-Questions#i-dont-care-about-removing-the-human-data-i-have-samples-that-are-from-other-species-can-i-also-automatically-remove-that). However, Jovian is intended for human clinical samples.</sup></sub>_  
 - Assembly of short reads into bigger scaffolds (often full viral genomes).  
 - Taxonomic classification:  
@@ -74,13 +76,13 @@ After a Jovian analysis is finished you can perform virus-typing (i.e. sub-speci
 
 Keyword | Taxon used for scaffold selection | Notable virus species
 --------|-----------------------------------|----------------------
-`NoV` | Caliciviridae   | #TODO  
-`EV`  | Picornaviridae  | #TODO  
-`RVA` | _Rotavirus A_   | #TODO  
-`HAV` | _Hepatovirus A_ (Hepatitis A) | #TODO  
-`HEV` | _Orthohepevirus A_ (Hepatitis E)| #TODO  
-`PV`  | Papillomaviridae | #TODO  
-`Flavi` | Flaviviridae    | #TODO  
+`NoV` | Caliciviridae   | Norovirus GI and GII, Sapovirus  
+`EV`  | Picornaviridae  | Enteroviruses (Coxsackie, Polio, Rhino, etc.), Parecho, Aichi, Hepatitis A #TODO  
+`RVA` | _Rotavirus A_   | Rotavirus A  
+`HAV` | _Hepatovirus A_ | Hepatitis A  
+`HEV` | _Orthohepevirus A_ | Hepatitis E  
+`PV`  | Papillomaviridae | Human Papillomavirus  
+`Flavi` | Flaviviridae    | Dengue, JEV, TBE, WNV, YFV #TODO  
   
 ### Audit trail  
 An audit trail, used for clinical reproducability and logging, is generated and contains:  
@@ -89,14 +91,14 @@ An audit trail, used for clinical reproducability and logging, is generated and 
   - Database timestamps  
   - (user-specified) Pipeline parameters  
 
-However, several things are out-of-scope for Jovian logging:
+However, it has limitations since several things are out-of-scope for Jovian to control:
 - The `IGVjs` version  
 - The `virus typing-tools` version  
   - Currently we depend on a public web-tool hosted by the [RIVM](https://www.rivm.nl/en). These are developed in close collaboration with - *but independently of* - Jovian. A versioning system for the `virus typing-tools` is being worked on, however, this is not trivial and will take some time.  
-- The database versions  
-  - We only save the timestamps of the database files, this is because the databases used by Jovian have no official versioning. Any versioning scheme is therefore out-of-scope for Jovian and a responsibility of the end-user.  
 - Input files
   - We only save the names and location of input files at the time the analysis was performed. Long-term storage of the data, and documenting their location over time, is the responsibility of the end-user.  
+- Input metadata
+  - The end-user is responsible for storing datasets with their correct metadata (e.g. clinical information, database versions, etc.). We recommend using [iRODS](https://irods.org) for this as described by [Nieroda et al. 2019](https://www.ncbi.nlm.nih.gov/pubmed/30646845). While we acknowledge that database versions are vital to replicate results, the databases Jovian uses have no official versioning, hence why we include timestamps only.  
 
 ___
 
@@ -111,7 +113,10 @@ We have developed and tested the software for the following Linux distributions 
 
 The software does <u><b>not</b></u> require root and/or sudo-rights. It is however necessary to have read and write access to the `/tmp` folder on your system. This won't be a problem most of the time since the `/tmp` folder is usually free to read from and write to. However, it is best to check this with your system administrator(s).  
 
-The databases require up to 400GB of disk-space. The pipeline itself, including all Conda software environments and IGVjs, requires up to 15GB of disk-space.
+The databases require up to 400GB of disk-space. Installation of the Jovian pipeline totals ~6GB disk-space and is spread over two locations:
+1. In the users' home directory*: A "Jovian_master" environment of ~2GB is installed, this serves as the "head" of the pipeline. Also, a "Jovian_helper" environment is installed to facilitate ancillary operations (e.g. database updating) which also requires ~1GB. * <sub>Technically it is installed in Conda's default directory, but for most users this will be `home`.</sub>  
+_If Conda is not installed on the system, Jovian will do that automatically in the `home` directory, requiring ~1GB of disk-space._
+2. At the location where the repo was downloaded: Here the "body" of the pipeline is installed, including all Conda software environments and IGVjs. It requires 4GB of disk-space.
 
 ### Software  
 |Software name|Website|  
@@ -141,20 +146,23 @@ Below you'll find instructions on how to install and start/configure a Jovian an
 Can be found on [this wiki page](../../wiki/Installation-Instructions).
 
 ### How to start/configure a Jovian analysis  
-Currently, the method to launch analyses via the Jupyter Notebook requires some minor tweaks. So I cannot share it yet, we recommend you to use the command-line method below.  
+There are two methods, the first is by using the "Jovian Portal" and the second is via the command-line interface. The former is an interactive website that is intended for non-bioinformaticians while the latter is intended for people familiar with the command-line interface.  
 
-<b>Jupyter Notebook method:</b>  
-- Via your Jupyter Notebook browser connection, go to the `Jovian` folder [created during installation](../../wiki/Installation-Instructions). Then, open `Notebook_portal.ipynb`.  
+<b>Jovian Portal:</b>  
+- First, start a Jupyter notebook background process as described [here](../../wiki/Installation-Instructions#starting-the-jupyter-notebook-server-process). Or ask your system-admin to do this for you.  
+- Via the Jupyter Notebook connection established in the previous step, go to the `Jovian` folder [created during installation](../../wiki/Installation-Instructions). Then, open `Notebook_portal.ipynb`.  
 - Follow the instructions in this notebook to start an analysis.  
+  -  N.B. These reports work with Mozilla Firefox and Google Chrome, we do not recommend using Internet Explorer.  
 
-<b>Command-line interface method:</b>  
+<b>Command-line interface:</b>  
 - Make sure that Jovian is completely [installed](../../wiki/Installation-Instructions).  
 - Go to the folder where `Jovian` was installed.  
 - Configure pipeline parameters by changing the [profile/pipeline_parameters.yaml](profile/pipeline_parameters.yaml) file. Either via Jupyter Notebook or with a commandline text-editor of choice.  
 - Optional: We recommended you do a `dry-run` before each analysis to check if there are any typo's, missing files or other errors. This can be done via `bash jovian -i <input_directory> -n`
 - If the dry-run has completed without errors, you are ready to start a real analysis with the following command:  
-`bash jovian -i <input_directory>` 
-- After the pipeline has finished, open `Notebook_report.ipynb` via your browser. Click on `Cell` in the toolbar, then press `Run all` and wait for data to be imported.  
+`bash jovian -i <input_directory>`  
+- After analysis is finished, you can optionally genotype the viruses [as described here](#Virus-typing) (i.e. sub-species level taxonomic classification). This can be done via `bash jovian -vt [NoV|EV|RVA|HAV|HEV|PV|Flavi]`.  
+- After the pipeline has finished, open `Notebook_report.ipynb` via your browser (Mozilla Firefox or Google Chrome). Click on `Cell` in the toolbar, then press `Run all` and wait for data to be imported.  
   - N.B. You need to have a Jupyter notebook process running in the background, as described [here](../../wiki/Installation-Instructions#starting-the-jupyter-notebook-server-process).
 
 ### Explanation of output folders  
@@ -172,107 +180,58 @@ Also, a hidden folder named `.snakemake` is generated. Do not remove or edit thi
 ___
 
 ## FAQ
-Can be found on [this wiki page](../../wiki/Frequently-Asked-Questions).
+Can be found on [this wiki page](../../wiki/Frequently-Asked-Questions).  
 ___
 
 ## Example Jovian report  
-_Data shown below is based on public data, available on ENA via accession ID `PRJNA491626`. It contains Illumina paired-end data of faeces from people with gastroenteritis._  
-
-**MultiQC is used to summarize many pipeline metrics, including read quality, insert-size distribution, biases, etc.:**  
-<br>
-![Jovian_QC-report_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_QC-report_PRJNA491626-public-dataset.PNG?raw=true)
-
-**A summary barchart overview of the entire dataset is also presented:**
-<br>
-![Jovian_barcharts_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_barcharts_PRJNA491626-public-dataset.PNG?raw=true)
-
-**Metagenomics data is presented through three different visualizations, Krona pie-charts give sample level overview:**  
-<br>
-![Jovian_Krona-chart_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_Krona-chart_PRJNA491626-public-dataset.PNG?raw=true)
-
-**Viral and bacterial heatmaps that are stratified to different taxonomic levels give an overview of the complete dataset:**  
-<br>
-![Jovian_heatmap_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_heatmap_PRJNA491626-public-dataset.png?raw=true)
-
-**All classified scaffolds and their metrics are presented through interactive tables that are functionally similar to popular spreadsheet programs. Allowing filtering for certain metrics, e.g. taxonomic level (species up to superkingdom), length, number of ORFs, percentage GC, depth of coverage, etc. to facilitate in-depth analyses:**
-<br>
-![Jovian_classified-scaffolds_PRJNA491626-public-dataset.png](../assets/images/screenshots/Jovian_classified-scaffolds_PRJNA491626-public-dataset.png?raw=true)
-
-**Any scaffold that could not be classified ("dark matter") is reported in a similar interactive table for further investigation:**
-<br>
-![Jovian_dark-matter_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_dark-matter_PRJNA491626-public-dataset.PNG?raw=true)
-
-**All classified scaffolds are also cross-referenced against the NCBI host information and the Virus-Host database:**
-<br>
-![Jovian_host-disease_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_host-disease_PRJNA491626-public-dataset.PNG?raw=true)
-
-**The typing-tool output for Caliciviridae, Picornaviridae, Hepatoviruses, Orthohepeviruses and Rotaviruses containing the genotype information are also presented:**
-<br>
-![Jovian_NoV-TT_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_NoV-TT_PRJNA491626-public-dataset.PNG?raw=true)
-![Jovian_EV-TT_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_EV-TT_PRJNA491626-public-dataset.PNG?raw=true)
-![Jovian_HAV-TT_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_HAV-TT_PRJNA491626-public-dataset.PNG?raw=true)
-![Jovian_RVA-TT_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_RVA-TT_PRJNA491626-public-dataset.PNG?raw=true)
-
-**IGVjs is used to visualize genomes, you can zoom in to individual sites to inspect e.g. minority variants in greater detail. It incorporates and shows the depth of coverage, GC contents, predicted ORFs, minority variants (quasispecies) alongside each individual aligning read:**  
-<br>
-![Jovian_IGVjs_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_IGVjs_PRJNA491626-public-dataset.PNG?raw=true)
-![Jovian_IGVjs-zoom_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_IGVjs-zoom_PRJNA491626-public-dataset.PNG?raw=true)
-
-**The SNP information is also presented through a spreadsheet table for filtering and in-depth analysis:**  
-<br>
-![Jovian_minority-SNP-table_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_minority-SNP-table_PRJNA491626-public-dataset.PNG?raw=true)
-
-**Lastly, the logging of software, databases and pipeline settings are presented to the user. A verbose list containing all software in the current running environment, `Jovian_master`, is reported (not shown). Also, a list containing the timestamps of all used databases are reported (not shown). Via Snakemake a report is created describing exactly what software and which versions were used (shown below), alongside information about how long each step in the pipeline took to complete (not shown). The Git hash is reported, the unique Jovian methodological "fingerprint", which allows exact reproduction of results at a later time (shown below). And pipeline settings for the current analysis are reported (shown below):**  
-<br>
-![Jovian_Snakemake-report_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_Snakemake-report_PRJNA491626-public-dataset.PNG?raw=true)
-![Jovian_logging-git-hash-config_PRJNA491626-public-dataset.PNG](../assets/images/screenshots/Jovian_logging-git-hash-config_PRJNA491626-public-dataset.PNG?raw=true)
-
+Can be found on [this wiki page](../../wiki/Example-Jovian-report).  
 ___
 
 ## Acknowledgements
 
 |Name |Publication|Website|
 |:---|:---|:---|
-|`BBtools`|NA|https://jgi.doe.gov/data-and-tools/bbtools/|
-|`BEDtools`|Quinlan, A.R. and I.M.J.B. Hall, BEDTools: a flexible suite of utilities for comparing genomic features. 2010. 26(6): p. 841-842.|https://bedtools.readthedocs.io/en/latest/|
-|`BLAST`|Altschul, S.F., et al., Gapped BLAST and PSI-BLAST: a new generation of protein database search programs. 1997. 25(17): p. 3389-3402.|https://www.ncbi.nlm.nih.gov/books/NBK279690/|
-|`BWA`|Li, H. (2013). Aligning sequence reads, clone sequences and assembly contigs with BWA-MEM. arXiv preprint arXiv:1303.3997.|https://github.com/lh3/bwa|
-|`BioConda`|Grüning, B., et al., Bioconda: sustainable and comprehensive software distribution for the life sciences. 2018. 15(7): p. 475.|https://bioconda.github.io/|
-|`Biopython`|Cock, P. J., Antao, T., Chang, J. T., Chapman, B. A., Cox, C. J., Dalke, A., ... & De Hoon, M. J. (2009). Biopython: freely available Python tools for computational molecular biology and bioinformatics. Bioinformatics, 25(11), 1422-1423.|https://biopython.org/|
-|`Bokeh`|Bokeh Development Team (2018). Bokeh: Python library for interactive visualization.|https://bokeh.pydata.org/en/latest/|
-|`Bowtie2`|Langmead, B. and S.L.J.N.m. Salzberg, Fast gapped-read alignment with Bowtie 2. 2012. 9(4): p. 357.|http://bowtie-bio.sourceforge.net/bowtie2/index.shtml|
-|`Conda`|NA|https://conda.io/|
-|`DRMAA`|NA|http://drmaa-python.github.io/|
-|`FastQC`|Andrews, S., FastQC: a quality control tool for high throughput sequence data. 2010.|https://www.bioinformatics.babraham.ac.uk/projects/fastqc/|
-|`gawk`|NA|https://www.gnu.org/software/gawk/|
-|`GNU Parallel`|O. Tange (2018): GNU Parallel 2018, March 2018, https://doi.org/10.5281/zenodo.1146014.|https://www.gnu.org/software/parallel/|
-|`Git`|NA|https://git-scm.com/|
-|`igvtools`|NA|https://software.broadinstitute.org/software/igv/igvtools|
-|`Jupyter Notebook`|Kluyver, Thomas, et al. "Jupyter Notebooks-a publishing format for reproducible computational workflows." ELPUB. 2016.|https://jupyter.org/|
-|`Jupyter_contrib_nbextension`|NA|https://github.com/ipython-contrib/jupyter_contrib_nbextensions|
-|`Jupyterthemes`|NA|https://github.com/dunovank/jupyter-themes|
-|`Krona`|Ondov, B.D., N.H. Bergman, and A.M. Phillippy, Interactive metagenomic visualization in a Web browser. BMC Bioinformatics, 2011. 12: p. 385.|https://github.com/marbl/Krona/wiki|
-|`Lofreq`|Wilm, A., et al., LoFreq: a sequence-quality aware, ultra-sensitive variant caller for uncovering cell-population heterogeneity from high-throughput sequencing datasets. 2012. 40(22): p. 11189-11201.|http://csb5.github.io/lofreq/|
-|`Minimap2`|Li, H., Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics, 2018.|https://github.com/lh3/minimap2|
-|`MultiQC`|Ewels, P., et al., MultiQC: summarize analysis results for multiple tools and samples in a single report. 2016. 32(19): p. 3047-3048.|https://multiqc.info/|
-|`Nb_conda`|NA|https://github.com/Anaconda-Platform/nb_conda|
-|`Nb_conda_kernels`|NA|https://github.com/Anaconda-Platform/nb_conda_kernels|
-|`Nginx`|NA|https://www.nginx.com/|
-|`Numpy`|Walt, S. V. D., Colbert, S. C., & Varoquaux, G. (2011). The NumPy array: a structure for efficient numerical computation. Computing in Science & Engineering, 13(2), 22-30.|http://www.numpy.org/|
-|`Pandas`|McKinney, W. Data structures for statistical computing in python. in Proceedings of the 9th Python in Science Conference. 2010. Austin, TX.|https://pandas.pydata.org/|
-|`Picard`|NA|https://broadinstitute.github.io/picard/|
-|`Prodigal`|Hyatt, D., et al., Prodigal: prokaryotic gene recognition and translation initiation site identification. 2010. 11(1): p. 119.|https://github.com/hyattpd/Prodigal/wiki/Introduction|
-|`Python`|G. van Rossum, Python tutorial, Technical Report CS-R9526, Centrum voor Wiskunde en Informatica (CWI), Amsterdam, May 1995.|https://www.python.org/|
-|`Qgrid`|NA|https://github.com/quantopian/qgrid|
-|`SAMtools`|Li, H., et al., The sequence alignment/map format and SAMtools. 2009. 25(16): p. 2078-2079.|http://www.htslib.org/|
-|`SPAdes`|Nurk, S., et al., metaSPAdes: a new versatile metagenomic assembler. Genome Res, 2017. 27(5): p. 824-834.|http://cab.spbu.ru/software/spades/|
-|`Seqtk`|NA|https://github.com/lh3/seqtk|
-|`Snakemake`|Köster, J. and S.J.B. Rahmann, Snakemake—a scalable bioinformatics workflow engine. 2012. 28(19): p. 2520-2522.|https://snakemake.readthedocs.io/en/stable/|
-|`Tabix`|NA|www.htslib.org/doc/tabix.html|
-|`tree`|NA|http://mama.indstate.edu/users/ice/tree/|
-|`Trimmomatic`|Bolger, A.M., M. Lohse, and B. Usadel, Trimmomatic: a flexible trimmer for Illumina sequence data. Bioinformatics, 2014. 30(15): p. 2114-20.|www.usadellab.org/cms/?page=trimmomatic|
-|`Virus-Host Database`|Mihara, T., Nishimura, Y., Shimizu, Y., Nishiyama, H., Yoshikawa, G., Uehara, H., ... & Ogata, H. (2016). Linking virus genomes with host taxonomy. Viruses, 8(3), 66.|http://www.genome.jp/virushostdb/note.html|
-|`Virus typing-tools`|Kroneman, A., Vennema, H., Deforche, K., Avoort, H. V. D., Penaranda, S., Oberste, M. S., ... & Koopmans, M. (2011). An automated genotyping tool for enteroviruses and noroviruses. Journal of Clinical Virology, 51(2), 121-125.|https://www.ncbi.nlm.nih.gov/pubmed/21514213|
+|BBtools|NA|https://jgi.doe.gov/data-and-tools/bbtools/|
+|BEDtools|Quinlan, A.R. and I.M.J.B. Hall, BEDTools: a flexible suite of utilities for comparing genomic features. 2010. 26(6): p. 841-842.|https://bedtools.readthedocs.io/en/latest/|
+|BLAST|Altschul, S.F., et al., Gapped BLAST and PSI-BLAST: a new generation of protein database search programs. 1997. 25(17): p. 3389-3402.|https://www.ncbi.nlm.nih.gov/books/NBK279690/|
+|BWA|Li, H. (2013). Aligning sequence reads, clone sequences and assembly contigs with BWA-MEM. arXiv preprint arXiv:1303.3997.|https://github.com/lh3/bwa|
+|BioConda|Grüning, B., et al., Bioconda: sustainable and comprehensive software distribution for the life sciences. 2018. 15(7): p. 475.|https://bioconda.github.io/|
+|Biopython|Cock, P. J., Antao, T., Chang, J. T., Chapman, B. A., Cox, C. J., Dalke, A., ... & De Hoon, M. J. (2009). Biopython: freely available Python tools for computational molecular biology and bioinformatics. Bioinformatics, 25(11), 1422-1423.|https://biopython.org/|
+|Bokeh|Bokeh Development Team (2018). Bokeh: Python library for interactive visualization.|https://bokeh.pydata.org/en/latest/|
+|Bowtie2|Langmead, B. and S.L.J.N.m. Salzberg, Fast gapped-read alignment with Bowtie 2. 2012. 9(4): p. 357.|http://bowtie-bio.sourceforge.net/bowtie2/index.shtml|
+|Conda|NA|https://conda.io/|
+|DRMAA|NA|http://drmaa-python.github.io/|
+|FastQC|Andrews, S., FastQC: a quality control tool for high throughput sequence data. 2010.|https://www.bioinformatics.babraham.ac.uk/projects/fastqc/|
+|gawk|NA|https://www.gnu.org/software/gawk/|
+|GNU Parallel|O. Tange (2018): GNU Parallel 2018, March 2018, https://doi.org/10.5281/zenodo.1146014.|https://www.gnu.org/software/parallel/|
+|Git|NA|https://git-scm.com/|
+|igvtools|NA|https://software.broadinstitute.org/software/igv/igvtools|
+|Jupyter Notebook|Kluyver, Thomas, et al. "Jupyter Notebooks-a publishing format for reproducible computational workflows." ELPUB. 2016.|https://jupyter.org/|
+|Jupyter_contrib_nbextension|NA|https://github.com/ipython-contrib/jupyter_contrib_nbextensions|
+|Jupyterthemes|NA|https://github.com/dunovank/jupyter-themes|
+|Krona|Ondov, B.D., N.H. Bergman, and A.M. Phillippy, Interactive metagenomic visualization in a Web browser. BMC Bioinformatics, 2011. 12: p. 385.|https://github.com/marbl/Krona/wiki|
+|Lofreq|Wilm, A., et al., LoFreq: a sequence-quality aware, ultra-sensitive variant caller for uncovering cell-population heterogeneity from high-throughput sequencing datasets. 2012. 40(22): p. 11189-11201.|http://csb5.github.io/lofreq/|
+|MGkit|Rubino, F. and Creevey, C.J. 2014. MGkit: Metagenomic Framework For The Study Of Microbial Communities. . Available at: figshare [doi:10.6084/m9.figshare.1269288].|https://bitbucket.org/setsuna80/mgkit/src/develop/|
+|Minimap2|Li, H., Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics, 2018.|https://github.com/lh3/minimap2|
+|MultiQC|Ewels, P., et al., MultiQC: summarize analysis results for multiple tools and samples in a single report. 2016. 32(19): p. 3047-3048.|https://multiqc.info/|
+|Nb_conda|NA|https://github.com/Anaconda-Platform/nb_conda|
+|Nb_conda_kernels|NA|https://github.com/Anaconda-Platform/nb_conda_kernels|
+|Nginx|NA|https://www.nginx.com/|
+|Numpy|Walt, S. V. D., Colbert, S. C., & Varoquaux, G. (2011). The NumPy array: a structure for efficient numerical computation. Computing in Science & Engineering, 13(2), 22-30.|http://www.numpy.org/|
+|Pandas|McKinney, W. Data structures for statistical computing in python. in Proceedings of the 9th Python in Science Conference. 2010. Austin, TX.|https://pandas.pydata.org/|
+|Picard|NA|https://broadinstitute.github.io/picard/|
+|Prodigal|Hyatt, D., et al., Prodigal: prokaryotic gene recognition and translation initiation site identification. 2010. 11(1): p. 119.|https://github.com/hyattpd/Prodigal/wiki/Introduction|
+|Python|G. van Rossum, Python tutorial, Technical Report CS-R9526, Centrum voor Wiskunde en Informatica (CWI), Amsterdam, May 1995.|https://www.python.org/|
+|Qgrid|NA|https://github.com/quantopian/qgrid|
+|SAMtools|Li, H., et al., The sequence alignment/map format and SAMtools. 2009. 25(16): p. 2078-2079.|http://www.htslib.org/|
+|SPAdes|Nurk, S., et al., metaSPAdes: a new versatile metagenomic assembler. Genome Res, 2017. 27(5): p. 824-834.|http://cab.spbu.ru/software/spades/|
+|Seqtk|NA|https://github.com/lh3/seqtk|
+|Snakemake|Köster, J. and S.J.B. Rahmann, Snakemake—a scalable bioinformatics workflow engine. 2012. 28(19): p. 2520-2522.|https://snakemake.readthedocs.io/en/stable/|
+|Tabix|NA|www.htslib.org/doc/tabix.html|
+|tree|NA|http://mama.indstate.edu/users/ice/tree/|
+|Trimmomatic|Bolger, A.M., M. Lohse, and B. Usadel, Trimmomatic: a flexible trimmer for Illumina sequence data. Bioinformatics, 2014. 30(15): p. 2114-20.|www.usadellab.org/cms/?page=trimmomatic|
+|Virus-Host Database|Mihara, T., Nishimura, Y., Shimizu, Y., Nishiyama, H., Yoshikawa, G., Uehara, H., ... & Ogata, H. (2016). Linking virus genomes with host taxonomy. Viruses, 8(3), 66.|http://www.genome.jp/virushostdb/note.html|
+|Virus typing tools|Kroneman, A., Vennema, H., Deforche, K., Avoort, H. V. D., Penaranda, S., Oberste, M. S., ... & Koopmans, M. (2011). An automated genotyping tool for enteroviruses and noroviruses. Journal of Clinical Virology, 51(2), 121-125.|https://www.ncbi.nlm.nih.gov/pubmed/21514213|
 
 #### Authors
 - Dennis Schmitz ([RIVM](https://www.rivm.nl/en) and [EMC](https://www6.erasmusmc.nl/viroscience/))  

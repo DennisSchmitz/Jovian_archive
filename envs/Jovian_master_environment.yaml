@@ -22,3 +22,4 @@ dependencies:
   - tree==1.7.0
   - nodejs==11.11.0
   - gawk==5.0.0
+  - pigz==2.3.4
