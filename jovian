@@ -304,6 +304,12 @@ Debug only:
   --make-sample-sheet               Only make the sample sheet.
 Other:
   -v, --version                     Prints the version of Jovian.
+  --update                          Updates Jovian to the latest release.
+                                    Some files might be reset to their default contents as shown 
+                                    on Github
+  --update [Version tag]            Changes Jovian to the specified release. 
+                                    Only accepts major releases.
+                                    Files might get lost due to a significant change in version.
 HELP_USAGE
     exit 0
 fi
