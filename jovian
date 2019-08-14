@@ -193,6 +193,16 @@ if [ "${CLEAN:-}" == "TRUE" ]; then
             rm -rf results/
             rm sample_sheet.yaml
             rm profile/variables.yaml
+
+            ## clean the yaml files
+            sed -i '\|databases|d' profile/pipeline_parameters.yaml
+            sed -i '\|background_ref|d' profile/pipeline_parameters.yaml
+            sed -i '\|Krona_taxonomy|d' profile/pipeline_parameters.yaml
+            sed -i '\|virusHostDB|d' profile/pipeline_parameters.yaml
+            sed -i '\|NCBI_new_taxdump_rankedlineage|d' profile/pipeline_parameters.yaml
+            sed -i '\|NCBI_new_taxdump_host|d' profile/pipeline_parameters.yaml
+            sed -i '\|drmaa|d' profile/config.yaml
+
     else
         while read -r -p "Are you sure you wish to permanently delete these files and folders? [y/N] " response
         do
@@ -204,6 +214,14 @@ if [ "${CLEAN:-}" == "TRUE" ]; then
                 rm -rf results/
                 rm sample_sheet.yaml
                 rm profile/variables.yaml
+
+                sed -i '\|databases|d' profile/pipeline_parameters.yaml
+                sed -i '\|background_ref|d' profile/pipeline_parameters.yaml
+                sed -i '\|Krona_taxonomy|d' profile/pipeline_parameters.yaml
+                sed -i '\|virusHostDB|d' profile/pipeline_parameters.yaml
+                sed -i '\|NCBI_new_taxdump_rankedlineage|d' profile/pipeline_parameters.yaml
+                sed -i '\|NCBI_new_taxdump_host|d' profile/pipeline_parameters.yaml
+                sed -i '\|drmaa|d' profile/config.yaml
                 break
             elif [[ "${response}" =~ ^(no|n)$ ]]; then
                 echo -e "Aborting cleaning process on user request"
@@ -319,9 +337,13 @@ fi
 if [ ! -e "${HOME}/.jovian_installchoice_compmode" ]; then
     echo -e "installeranswers:\n    compmode: U\n   queue: U" > "${HOME}"/.jovian_installchoice_compmode
 fi
+if [ ! -e "${HOME}/.jovian_installchoice_db" ]; then
+    echo -e "installeranswers:\n    databases: U\n    backgroundref: U\n    kronataxonomy: U\n    virushostdb: U\n    newtaxdumpranked: U\n    newtaxdumphost: U" > "${HOME}"/.jovian_installchoice_db
+fi
 
 eval "$(parse_yaml "${HOME}"/.jovian_installchoice_igvjs "igvjs_")"
 eval "$(parse_yaml "${HOME}"/.jovian_installchoice_compmode "cm_")"
+eval "$(parse_yaml "${HOME}"/.jovian_installchoice_db "db_")"
 
 if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. the `conda` command is not available), if true, install it in ~/tmp. Otherwise, proceed.
     if [ ! -e "${HOME}/tmp/Miniconda3" ]; then
@@ -644,6 +666,98 @@ if [ "${INSTALL_IGVJS:-}" == "TRUE" ]; then
     exit 0
 fi
 
+### Install databases, as specified via CLI argument '-id'
+if [ "${INSTALL_DB:-}" == "TRUE" ]; then
+    spacer
+    line
+    echo -e "Installing databases, this can take hours for a fresh installation..."
+    if [[ $PATH != *${HELPER_NAME}* ]]; then # If helper env is not in your path (i.e. it is not currently active), do...
+        set +ue # Turn bash strict mode off because that breaks conda
+        source activate "${HELPER_NAME}" # Try to activate this env
+        if [ ! $? -eq 0 ]; then # If exit statement is not 0, i.e. helper conda env hasn't been installed yet, do...
+            echo -e "\tInstalling Jovian helper environment..."
+            conda env create -f ${PATH_JOVIAN_HELPER_YAML} # Create the env from the specified yaml file
+            source activate "${HELPER_NAME}"
+        fi
+        set -ue # Turn bash strict mode on again
+    fi
+    bin/databases.sh
+    # The rest of the code is performed in the helper env, not in the master env.
+    conda deactivate 
+    # source deactivate # if you need to go back to the master_env. N.B. Wrap this command with set +u and set -u when working in strict bash mode.
+    echo -e "DONE"
+    exit 0
+fi
+
+if [ "$db_installeranswers_databases" == "U" ]; then
+    installer_intro
+    echo -e "Jovian requires several databases to run."
+    echo -e "Please specify the location of each required database, you will only have to do this once (the answers given will be stored)"
+    echo -e "The location of each database must start with a '/'"
+    thinline
+    minispacer
+
+    while
+    read -r -e -p "Please specify the location where your Background Reference is installed: " bg_ref_path
+    read -r -e -p "Please specify the location where the Krona Taxonomy database is installed: " krona_db_path
+    read -r -e -p "Please specify the location of the 'virushostdb.tsv' file: "  virushost_path
+    read -r -e -p "Please specify the location of the new_taxdump 'rankedlineage.dmp.delim' file: " newtaxdump_ranked_path
+    read -r -e -p "Please specify the location of the new_taxdump 'host.dmp.delim' file: " newtaxdump_host_path
+    do
+        
+        bg_ref_path=${bg_ref_path}
+        krona_db_path=${krona_db_path}
+        virushost_path=${virushost_path}
+        newtaxdump_ranked_path=${newtaxdump_ranked_path}
+        newtaxdump_host_path=${newtaxdump_host_path}
+
+        minispacer
+        echo -e "Your provided answers are as follows:"
+        echo -e "\e[1mBackground reference location: ${bg_ref_path}\e[0m"
+        echo -e "\e[1mKrona taxonomy database location: ${krona_db_path}\e[0m"
+        echo -e "\e[1mVirusHost.tsv file location: ${virushost_path}\e[0m"
+        echo -e "\e[1mNewtaxdump rankedlineage.dmp.delim file location: ${newtaxdump_ranked_path}\e[0m"
+        echo -e "\e[1mNewtaxdump host.dmp.delim file location: ${newtaxdump_host_path}\e[0m"
+        minispacer
+        
+        while read -r -p "Does this look correct? [yes/no] " db_paths_confirm
+        do
+            db_paths_confirm=${db_paths_confirm,,}
+            if [[ "${db_paths_confirm}" =~ ^(yes)$ ]]; then
+                echo "The locations of databases and files have been confirmed"
+                break
+            elif [[ "${db_paths_confirm}" =~ ^(no)$ ]]; then
+                minispacer
+                break
+            else
+                echo "Please answer with 'yes' or 'no'"
+            fi
+        done
+
+        if [[  "${db_paths_confirm}" =~ ^(yes)$ ]]; then
+            echo -e "installeranswers:\n    databases: SET\n    backgroundref: ${bg_ref_path}\n    kronataxonomy: ${krona_db_path}\n    virushostdb: ${virushost_path}\n    newtaxdumpranked: ${newtaxdump_ranked_path}\n    newtaxdumphost: ${newtaxdump_host_path}" > "${HOME}"/.jovian_installchoice_db
+            sed -i '\|databases|d' profile/pipeline_parameters.yaml
+            sed -i '\|background_ref|d' profile/pipeline_parameters.yaml
+            sed -i '\|Krona_taxonomy|d' profile/pipeline_parameters.yaml
+            sed -i '\|virusHostDB|d' profile/pipeline_parameters.yaml
+            sed -i '\|NCBI_new_taxdump_rankedlineage|d' profile/pipeline_parameters.yaml
+            sed -i '\|NCBI_new_taxdump_host|d' profile/pipeline_parameters.yaml
+
+            echo -e "databases:\n    background_ref: ${bg_ref_path}\n    Krona_taxonomy: ${krona_db_path}\n    virusHostDB: ${virushost_path}\n    NCBI_new_taxdump_rankedlineage: ${newtaxdump_ranked_path}\n    NCBI_new_taxdump_host: ${newtaxdump_host_path}" >> profile/pipeline_parameters.yaml
+            break
+        fi
+    done
+elif [ "${db_installeranswers_databases}" == "SET" ]; then
+    sed -i '\|databases|d' profile/pipeline_parameters.yaml
+    sed -i '\|background_ref|d' profile/pipeline_parameters.yaml
+    sed -i '\|Krona_taxonomy|d' profile/pipeline_parameters.yaml
+    sed -i '\|virusHostDB|d' profile/pipeline_parameters.yaml
+    sed -i '\|NCBI_new_taxdump_rankedlineage|d' profile/pipeline_parameters.yaml
+    sed -i '\|NCBI_new_taxdump_host|d' profile/pipeline_parameters.yaml
+
+    echo -e "databases:\n    background_ref: ${db_installeranswers_backgroundref}\n    Krona_taxonomy: ${db_installeranswers_kronataxonomy}\n    virusHostDB: ${db_installeranswers_virushostdb}\n    NCBI_new_taxdump_rankedlineage: ${db_installeranswers_newtaxdumpranked}\n    NCBI_new_taxdump_host: ${db_installeranswers_newtaxdumphost}" >> profile/pipeline_parameters.yaml
+fi
+
 if [ "$cm_installeranswers_compmode" == "U" ]; then
     installer_intro
     echo -e "Jovian can run in two computing-modes. 'standalone' and 'HPC/Grid'"
@@ -664,7 +778,7 @@ if [ "$cm_installeranswers_compmode" == "U" ]; then
                 queueanswer=${queueanswer,,}
                 echo -e "installeranswers:\n    compmode: G\n   queue: ${queueanswer}" > "${HOME}"/.jovian_installchoice_compmode
                 sed -i '\|drmaa|d' profile/config.yaml
-                echo -e "\ndrmaa: \" -q ${queueanswer} -n {threads} -R \\\"span[hosts=1]\\\"\"" >> profile/config.yaml
+                echo -e "drmaa: \" -q ${queueanswer} -n {threads} -R \\\"span[hosts=1]\\\"\"" >> profile/config.yaml
                 echo -e "drmaa-log-dir: logs/drmaa" >> profile/config.yaml
                 break
             done
@@ -682,7 +796,7 @@ elif [ "${cm_installeranswers_compmode}" == "S" ]; then
 elif [ "${cm_installeranswers_compmode}" == "G" ]; then
     echo -e "Jovian is set to run in Grid-mode.\nSetting some of the variables."
     sed -i '\|drmaa|d' profile/config.yaml
-    echo -e "\ndrmaa: \" -q ${cm_installeranswers_queue} -n {threads} -R \\\"span[hosts=1]\\\"\"" >> profile/config.yaml
+    echo -e "drmaa: \" -q ${cm_installeranswers_queue} -n {threads} -R \\\"span[hosts=1]\\\"\"" >> profile/config.yaml
     echo -e "drmaa-log-dir: logs/drmaa" >> profile/config.yaml
 fi
 
@@ -714,29 +828,6 @@ if [ "${REBUILD_ARCHIVE}" == "TRUE" ]; then
         echo -e "There's no Jovian-archive present."
         exit 0
     fi
-fi
-
-### Install databases, as specified via CLI argument '-id'
-if [ "${INSTALL_DB:-}" == "TRUE" ]; then
-    spacer
-    line
-    echo -e "Installing databases, this can take hours for a fresh installation..."
-    if [[ $PATH != *${HELPER_NAME}* ]]; then # If helper env is not in your path (i.e. it is not currently active), do...
-        set +ue # Turn bash strict mode off because that breaks conda
-        source activate "${HELPER_NAME}" # Try to activate this env
-        if [ ! $? -eq 0 ]; then # If exit statement is not 0, i.e. helper conda env hasn't been installed yet, do...
-            echo -e "\tInstalling Jovian helper environment..."
-            conda env create -f ${PATH_JOVIAN_HELPER_YAML} # Create the env from the specified yaml file
-            source activate "${HELPER_NAME}"
-        fi
-        set -ue # Turn bash strict mode on again
-    fi
-    bin/databases.sh
-    # The rest of the code is performed in the helper env, not in the master env.
-    conda deactivate 
-    # source deactivate # if you need to go back to the master_env. N.B. Wrap this command with set +u and set -u when working in strict bash mode.
-    echo -e "DONE"
-    exit 0
 fi
 
 ### Print Snakemake help
