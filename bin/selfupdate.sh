@@ -3,7 +3,7 @@
 
 #* load external functions
 source bin/functions.sh
-
+source activate Jovian_master
 
 if [ "${1}" == "master" ]; then
 	echo -e "Updating Jovian will delete \e[1m all local changes\e[0m that you've made.\nIf you have any important changes then please make a backup of the files you changed before you continue"
@@ -22,7 +22,8 @@ if [ "${1}" == "master" ]; then
 		
 	git reset --hard
 	git checkout master
-
+	conda env update --file envs/Jovian_master_environment.yaml
+	
 	echo -e "DONE"
 else
 

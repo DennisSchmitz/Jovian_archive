@@ -170,17 +170,6 @@ if [ "${SHOW_VERSION}" == "TRUE" ]; then
     exit 0
 fi
 
-if [ "${JOVIAN_UPDATE}" == "TRUE" ]; then
-    if [ -z "${CHANGE_VERSION}" ]; then
-        bin/selfupdate.sh master
-        exit 0
-    else
-        bin/selfupdate.sh "${CHANGE_VERSION}"
-        exit
-    fi
-fi
-
-
 ### Remove all Jovian output
 if [ "${CLEAN:-}" == "TRUE" ]; then
     line
@@ -487,6 +476,17 @@ fi
         ###############################################################################################################
         ##### From this point onwards you can safely assume Conda is installed and Jovian_master is activated     #####
         ###############################################################################################################
+
+
+if [ "${JOVIAN_UPDATE}" == "TRUE" ]; then
+    if [ -z "${CHANGE_VERSION}" ]; then
+        bin/selfupdate.sh master
+        exit 0
+    else
+        bin/selfupdate.sh "${CHANGE_VERSION}"
+        exit
+    fi
+fi
 
 ### Archiving of relevant data in a single tar.gz file
 if [ "${ARCHIVE:-}" == "TRUE" ]; then
