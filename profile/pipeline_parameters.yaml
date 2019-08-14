@@ -53,22 +53,6 @@ HTML_index_titles:
     IGVjs_title: "Interactive genome viewers for all samples in this run:"
     heatmap_title: "Interactive heatmaps of different taxonomic levels for all samples in this run:"
 
-######################################################
-### Database locations and IGVjs network settings  ###
-######################################################
-
-databases: # Location of NT, NR and TaxDB are stored via an alias in your home directory (~/.ncbirc). They should work with keywords "nt" "nr" "taxdb"  
-    # Location of background reference fasta. By default this is the HuGo assembly GRCH38 from which I manually removed the EBV chromosome, see the README.md for explanation
-    background_ref: /mnt/db/Reference_genomes/Homo_sapiens/NCBI/GRCh38/Sequence/Bowtie2Index_without_EBV_virus_chr/genome.fa
-    # Location of the Krona taxonomy files; installable with the helper script attached along with Jovian
-    Krona_taxonomy: /mnt/db/taxonomy_krona/
-    # Location of the Virus-Host interaction database, see http://www.genome.jp/virushostdb/note.html
-    virusHostDB: /mnt/db/Virus-Host_interaction_DB/virushostdb.tsv
-    # Location of the NCBIs "new_taxdump" file "rankedlineage.dmp", see ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/
-    NCBI_new_taxdump_rankedlineage: /mnt/db/new_taxdump/rankedlineage.dmp.delim
-    # Location of the NCBIs "new_taxdump" file "host.dmp", see ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/
-    NCBI_new_taxdump_host: /mnt/db/new_taxdump/host.dmp.delim
-
 server_info: # This is used for IGVjs, discuss this with your IT department, depends on your local setup
     # ? kan deze ook semi-flexibel? I.e. automatisch invullen naar de juiste poort als nginx al draait op een systeem?
     # ? Kan gecheckt worden met netstat -tulpn | grep nginx
@@ -87,4 +71,5 @@ threads:
     Fragment_length_analysis: 4
     quantify_output: 4
 
-remove_temp: 1 # For development and debug only. If you set this to 0 you will keep the HuGo alignment data which can lead to patient privacy concerns.
+remove_temp: 1 # For development and debug only. If you set this to 0 you will keep the HuGo alignment data which can lead to patient privacy concerns.ssss
+
