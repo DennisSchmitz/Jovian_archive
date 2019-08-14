@@ -37,7 +37,7 @@ Wetlab personnel can start, configure and interpret results via an interactive w
 
 ### Features    
 - Data quality control (QC) and cleaning.  
-  - Including library fragment length analysis, usefull for sample preparation QC.  
+  - Including library fragment length analysis, useful for sample preparation QC.  
 - Removal of human* data (patient privacy). _*<sup><sub>You can use [whichever reference you would like](../../wiki/Frequently-Asked-Questions#i-dont-care-about-removing-the-human-data-i-have-samples-that-are-from-other-species-can-i-also-automatically-remove-that). However, Jovian is intended for human clinical samples.</sup></sub>_  
 - Assembly of short reads into bigger scaffolds (often full viral genomes).  
 - Taxonomic classification:  
@@ -76,13 +76,13 @@ After a Jovian analysis is finished you can perform virus-typing (i.e. sub-speci
 
 Keyword | Taxon used for scaffold selection | Notable virus species
 --------|-----------------------------------|----------------------
-`NoV` | Caliciviridae   | #TODO  
-`EV`  | Picornaviridae  | #TODO  
-`RVA` | _Rotavirus A_   | #TODO  
-`HAV` | _Hepatovirus A_ (Hepatitis A) | #TODO  
-`HEV` | _Orthohepevirus A_ (Hepatitis E)| #TODO  
-`PV`  | Papillomaviridae | #TODO  
-`Flavi` | Flaviviridae    | #TODO  
+`NoV` | Caliciviridae   | Norovirus GI and GII, Sapovirus  
+`EV`  | Picornaviridae  | Enteroviruses (Coxsackie, Polio, Rhino, etc.), Parecho, Aichi, Hepatitis A #TODO  
+`RVA` | _Rotavirus A_   | Rotavirus A  
+`HAV` | _Hepatovirus A_ | Hepatitis A  
+`HEV` | _Orthohepevirus A_ | Hepatitis E  
+`PV`  | Papillomaviridae | Human Papillomavirus  
+`Flavi` | Flaviviridae    | Dengue, JEV, TBE, WNV, YFV #TODO  
   
 ### Audit trail  
 An audit trail, used for clinical reproducability and logging, is generated and contains:  
