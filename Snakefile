@@ -2,7 +2,7 @@
 Authors: Dennis Schmitz, Sam Nooij, Robert Verhagen, Thierry Janssens, Jeroen Cremer, Florian Zwagemaker, Mark Kroon, Erwin van Wieringen, Annelies Kroneman, Harry Vennema, Marion Koopmans
 Organisation: Rijksinstituut voor Volksgezondheid en Milieu (RIVM)
 Department: Virology - Emerging and Endemic Viruses (EEV)
-eate: 23-08-2018
+Date: 23-08-2018
 Changelog, examples, installation guide and explanation on:
    https://github.com/DennisSchmitz/Jovian
 """
