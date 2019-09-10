@@ -13,7 +13,8 @@
 # 
 # -- 14 Nov 2018 update: changed notebook into regular Python script that is run by the Snakefile
 # -- 30 Apr 2019 update: start complete rework to make the script snakemake-independent and fix bugs
-# -- 10 Sep 2019 update: restore superkingdom heatmap to former version that leaves out empty values
+# -- 10 Sep 2019 update: restore superkingdom heatmap to former version that leaves out empty values,
+#                        and draw heatmaps in single files using tabs for taxonomic ranks
 # 
 # Required Python packages:
 #  - Pandas
@@ -25,6 +26,7 @@ import numpy as np
 import pandas as pd
 from bokeh.plotting import figure, output_file, save
 from bokeh.models import HoverTool, ColumnDataSource
+from bokeh.models.widgets import Tabs, Panel
 
 
 # Set global VARIABLES-------------------------------------
@@ -45,9 +47,9 @@ def parse_arguments():
      -c/--classified = table with taxonomic classifications
      -n/--numbers = file with (MultiQC, Trimmomatic's) read numbers
      -s/--super = output file for superkingdoms heatmap
-     -v/--virus = output files for virus heatmaps (as list)
-     -p/--phage = output files for phage heatmaps (as list)
-     -b/--bact = output files for bacteria heatmaps (as list)
+     -v/--virus = output file for virus heatmap
+     -p/--phage = output file for phage heatmap
+     -b/--bact = output file for bacteria heatmap
      -sq/--super-quantities = output file for superkingdom quantities
      -st/--stats = output file with taxonomic rank statistics
      -vs/--vir-stats = ouput file for viral statistis
@@ -134,8 +136,7 @@ def parse_arguments():
                           metavar='',
                           required=True,
                           type=str,
-                          nargs='+',
-                          help="Virus heatmap file name list")
+                          help="Virus heatmap file name")
 
     required.add_argument('-p',
                           '--phage',
@@ -143,8 +144,7 @@ def parse_arguments():
                           metavar='',
                           required=True,
                           type=str,
-                          nargs='+',
-                          help="Phage heatmap file name list")
+                          help="Phage heatmap file name")
 
     required.add_argument('-b',
                           '--bact',
@@ -152,8 +152,7 @@ def parse_arguments():
                           metavar='',
                           required=True,
                           type=str,
-                          nargs='+',
-                          help="Bacterium heatmap file names")
+                          help="Bacterium heatmap file")
 
     optional = parser.add_argument_group("Optional arguments")
 
@@ -326,12 +325,7 @@ def draw_heatmaps(df, outfile, title, taxonomic_rank, colour):
         # Check if the dataframe is empty
         if df.empty:
         # If so, warn the user and exit
-            with open(outfile, 'w') as out:
-                out.write("No contigs found for rank %s!\n" % taxonomic_rank)
-
-            print("\n---\nThere are no contigs for the given %s. Heatmap %s could not be made.\n---\n" % (taxonomic_rank, outfile))
-
-            return(None)
+            return(None, False)
 
         else:
             #If it is not empty, continue normally
@@ -534,11 +528,12 @@ def draw_heatmaps(df, outfile, title, taxonomic_rank, colour):
     p.rect("samples", y_value[1], 1, 1, source=source,
             color="colors", alpha="alphas", line_color=None)
 
-    output_file(outfile, title=title)
-    save(p)
-    print("The heatmap %s has been created and written to: %s" % (title, outfile))
+    panel = Panel(child = p, title = title.split()[1].title())
+    #the .title() methods capitalises a string
+    
+    #print("The heatmap %s has been created and written to: %s" % (title, outfile))
 
-    return(None)
+    return(panel, True)
 
 
 def main():
@@ -627,40 +622,108 @@ def main():
                   colour = arguments.colour)
 
     #5.2. Viruses
+    virus_tabs = []
     for rank in RANKS[3:]:
         # Create heatmaps for each rank below 'class'
-        outfile_base = arguments.virus[0].split('.')[0]
-        outfile_extension = arguments.virus[0].split('.')[1]
-        outfile_new = outfile_base + "-%s." % rank + outfile_extension
-        draw_heatmaps(df=virus_df,
-                      outfile=outfile_new,
+        (content, panel) = draw_heatmaps(df=virus_df,
+                      outfile=None,
                       title="Virus %s heatmap" % rank,
                       taxonomic_rank=rank,
                       colour=arguments.colour)
+        #Check if there was data to make a panel
+        if panel:
+            virus_tabs.append(content)
+        
+        #if there was no data, print a warning and do not add nonsense panel
+        else:
+            print("No data for the current virus rank! (%s)" % rank)
+            print("\n---\nThere are no contigs for the given %s. No virus %s heatmap can be made.\n---\n" % (rank, rank))
+
+    if len(virus_tabs) > 1:
+        #multiple tabs: create figure with tabs
+        output_file(arguments.virus, title = "Virus heatmap")
+        tabs = Tabs(tabs=virus_tabs)
+        save(tabs)
+        print("The Virus heatmap has been created and written to: %s" % arguments.virus)
+    elif len(virus_tabs) == 1:
+        #single tab: create regular figure
+        output_file(arguments.virus, title = "Virus heatmap")
+        save(virus_tabs[0])
+    else:
+        #no tabs: warn user that no heatmap can be made
+        print("\n---\nThere are no contigs for Viruses in this sample! No virus heatmap is made.\n---\n")
+        with open(arguments.virus, 'w') as outfile:
+            outfile.write("No virus contigs found in the current dataset.")
 
     #5.3. Phages
+    phage_tabs = []
     for rank in RANKS[3:]:
         # Create heatmaps for each rank below 'class'
-        outfile_base = arguments.phage[0].split('.')[0]
-        outfile_extension = arguments.phage[0].split('.')[1]
-        outfile_new = outfile_base + "-%s." % rank + outfile_extension
-        draw_heatmaps(df=phage_df,
-                      outfile=outfile_new,
+        (content, panel) = draw_heatmaps(df=phage_df,
+                      outfile=None,
                       title="Phage %s heatmap" % rank,
                       taxonomic_rank=rank,
                       colour=arguments.colour)
 
+    #Check if there was data to make a panel
+        if panel:
+            phage_tabs.append(content)
+        
+        #if there was no data, print a warning and do not add nonsense panel
+        else:
+            print("No data for the current phage rank! (%s)" % rank)
+            print("\n---\nThere are no contigs for the given %s. No phage %s heatmap can be made.\n---\n" % (rank, rank))
+
+    if len(phage_tabs) > 1:
+        #multiple tabs: create figure with tabs
+        output_file(arguments.phage, title = "Phage heatmap")
+        tabs = Tabs(tabs=phage_tabs)
+        save(tabs)
+        print("The Phage heatmap has been created and written to: %s" % arguments.phage)
+    elif len(phage_tabs) == 1:
+        #single tab: create regular figure
+        output_file(arguments.phage, title = "Phage heatmap")
+        save(phage_tabs[0])
+    else:
+        #no tabs: warn user that no heatmap can be made
+        print("\n---\nThere are no contigs for phages in this sample! No phage heatmap is made.\n---\n")
+        with open(arguments.phage, 'w') as outfile:
+            outfile.write("No phage contigs found in the current dataset.")
+
     #5.4. Bacteria
+    bacterium_tabs = []
     for rank in RANKS[1:]:
         # Create heatmaps for each rank below 'superkingdom'
-        outfile_base = arguments.bact[0].split('.')[0]
-        outfile_extension = arguments.bact[0].split('.')[1]
-        outfile_new = outfile_base + "-%s." % rank + outfile_extension
-        draw_heatmaps(df=bacterium_df,
-                      outfile=outfile_new,
+        (content, panel) = draw_heatmaps(df=bacterium_df,
+                      outfile=None,
                       title="Bacterium %s heatmap" % rank,
                       taxonomic_rank=rank,
                       colour=arguments.colour)
+
+        #Check if there was data to make a panel
+        if panel:
+            bacterium_tabs.append(content)
+        
+        #if there was no data, print a warning and do not add nonsense panel
+        else:
+            print("No data for the current bacteria rank! (%s)" % rank)
+            print("\n---\nThere are no contigs for the given %s. No bacteria %s heatmap can be made.\n---\n" % (rank, rank))
+
+    if len(bacterium_tabs) > 1:
+        #multiple tabs: create figure with tabs
+        output_file(arguments.bact, title = "Bacteria heatmap")
+        tabs = Tabs(tabs=bacterium_tabs)
+        save(tabs)
+        print("The Bacteria heatmap has been created and written to: %s" % arguments.bact)
+    elif len(bacterium_tabs) == 1:
+        #single tab: create regular figure
+        output_file(arguments.bact, title = "Bacteria heatmap")
+        save(bacterium_tabs[0])
+    else:
+        #no tabs: warn user that no heatmap can be made
+        print("\n---\nThere are no contigs for bacteria in this sample! No bacteria heatmap is made.\n---\n")
+        with open(arguments.bact, 'w') as outfile:
+            outfile.write("No bacterial contigs found in the current dataset.")
 
 #EXECUTE script--------------------------------------------
 if __name__ == "__main__":
