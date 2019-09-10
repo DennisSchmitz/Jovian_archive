@@ -531,9 +531,14 @@ def draw_heatmaps(df, outfile, title, taxonomic_rank, colour):
     panel = Panel(child = p, title = title.split()[1].title())
     #the .title() methods capitalises a string
     
-    #print("The heatmap %s has been created and written to: %s" % (title, outfile))
-
-    return(panel, True)
+    if taxonomic_rank == "superkingdom":
+        #The superkingdom heatmap still requires a single output file
+        output_file(outfile, title = title)
+        save(p)
+        print("The heatmap %s has been created and written to: %s" % (title, outfile))
+        return(None)
+    else:
+        return(panel, True)
 
 
 def main():
