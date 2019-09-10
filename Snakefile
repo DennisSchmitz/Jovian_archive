@@ -681,7 +681,7 @@ rule draw_heatmaps:
         "logs/draw_heatmaps.log"
     shell:
         """
-python bin/draw_heatmaps.py -c {input.classified} -n {input.numbers} -sq {output.super_quantities} -st {output.stats} -vs {output.vir_stats} -ps {output.phage_stats} -bs {output.bact_stats} -s {output.super} -v {output.virus} -p {input.phage} -b {input.bact} > {log} 2>&1
+python bin/draw_heatmaps.py -c {input.classified} -n {input.numbers} -sq {output.super_quantities} -st {output.stats} -vs {output.vir_stats} -ps {output.phage_stats} -bs {output.bact_stats} -s {output.super} -v {output.virus} -p {output.phage} -b {output.bact} > {log} 2>&1
         """
 
     #############################################################################
