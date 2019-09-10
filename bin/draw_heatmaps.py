@@ -13,6 +13,7 @@
 # 
 # -- 14 Nov 2018 update: changed notebook into regular Python script that is run by the Snakefile
 # -- 30 Apr 2019 update: start complete rework to make the script snakemake-independent and fix bugs
+# -- 10 Sep 2019 update: restore superkingdom heatmap to former version that leaves out empty values
 # 
 # Required Python packages:
 #  - Pandas
@@ -20,7 +21,6 @@
 
 # IMPORT required libraries--------------------------------
 import argparse
-import re
 import numpy as np
 import pandas as pd
 from bokeh.plotting import figure, output_file, save
@@ -187,9 +187,8 @@ def read_numbers(infile):
     numbers_df = numbers_df[[ "Sample", "input_read_pairs" ]]
     numbers_df = numbers_df.rename(columns={"input_read_pairs" : "read_pairs"})
 
-    regex = re.compile(r"(.*)_R?[12][_.]?")
-    numbers_df["Sample"] = numbers_df.Sample.apply(lambda x: re.search(regex, x).group(1)) # On every value in column named "Sample" perform regex capture as to only get the sample name (text before the "_R?[12][_.]?").
-
+    numbers_df["Sample"] = numbers_df.Sample.apply(lambda x: x[:x.rfind("_R1")]) # On every value in column named "Sample" perform function that chops off "_R1" and any character after it
+    
     return(numbers_df)
 
 
@@ -302,7 +301,7 @@ def draw_heatmaps(df, outfile, title, taxonomic_rank, colour):
         #and set hovertool tooltip parameters
         samples = df["Sample_name"].astype(str)
         assigned = df["superkingdom"].astype(str)
-        reads = df["reads"].astype(int)
+        reads = df["reads"].astype(float)
         percent_of_total = df["Percentage"].astype(float)
 
         colors = len(reads) * colour #multiply to make an equally long list
@@ -595,27 +594,7 @@ def main():
                         [[ "reads", "Percentage" ]])
     superkingdom_sums.reset_index(inplace=True) #to use MultiIndex "Sample_name" and "superkingdom" as columns
     
-    missing_superkingdoms = { "Sample_name": [],
-                            "superkingdom": [],
-                            "reads": [],
-                            "Percentage": []}
-    
-    # Check for missing taxa:
-    for sample in set(superkingdom_sums["Sample_name"]):
-        subset = superkingdom_sums.loc[superkingdom_sums.Sample_name == sample, ["superkingdom"]]
-        for taxon in [ "Archaea", "Bacteria", "Eukaryota", "Viruses" ]:
-            if taxon not in subset.values:
-                missing_superkingdoms["Sample_name"].append(sample)
-                missing_superkingdoms["superkingdom"].append(taxon)
-                missing_superkingdoms["reads"].append(0)
-                missing_superkingdoms["Percentage"].append(0)
-
-    complete_superkingdoms = pd.concat([superkingdom_sums, pd.DataFrame(missing_superkingdoms)])
-    complete_superkingdoms.sort_values(by=["Sample_name", "superkingdom"], inplace=True)
-    complete_superkingdoms.reset_index(inplace=True)
-    complete_superkingdoms["reads"] = complete_superkingdoms["reads"].astype(int)
-
-    complete_superkingdoms.to_csv(arguments.super_quantities, index=False)
+    superkingdom_sums.to_csv(arguments.super_quantities, index=False)
     print("File %s has been created!" % arguments.super_quantities)
 
     #3.2. Filter viruses from the table
@@ -641,7 +620,7 @@ def main():
 
     #5. Draw heatmaps for each chunk
     #5.1. All taxa: superkingdoms
-    draw_heatmaps(df = complete_superkingdoms,
+    draw_heatmaps(df = superkingdom_sums,
                   outfile=arguments.super, 
                   title="Superkingdoms heatmap", 
                   taxonomic_rank="superkingdom", 
