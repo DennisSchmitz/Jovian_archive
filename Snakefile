@@ -749,13 +749,8 @@ find {params.search_folder} -type f -name "{params.virusHost_glob}" -exec awk 'N
 
 rule Generate_index_html:
     input:
-        "results/heatmaps/Superkingdoms_heatmap.html",
-        expand("results/heatmaps/Virus_heatmap-{rank}.html", rank = [ "order", "family", "genus", "species" ]),
-        expand("results/heatmaps/Phage_heatmap-{rank}.html", rank = [ "order", "family", "genus", "species" ]),
-        expand("results/heatmaps/Bacteria_heatmap-{rank}.html", rank = [ "phylum", "class", "order", "family", "genus", "species" ]),
         expand("data/scaffolds_filtered/{sample}_IGVjs.html", sample = SAMPLES),
     output:
-        heatmap_index="results/Heatmap_index.html",
         IGVjs_index="results/IGVjs_index.html",
     benchmark:
         "logs/benchmark/Generate_index_html.txt"
@@ -763,13 +758,11 @@ rule Generate_index_html:
     log:
         "logs/Generate_index_html.log"
     params:
-        heatmap_title=config["HTML_index_titles"]["heatmap_title"],
         igvjs_title=config["HTML_index_titles"]["IGVjs_title"],
         http_adress=config["Server_host"]["hostname"],
         port=config["server_info"]["port"],
     shell:
         """
-tree -H "heatmaps" -L 1 -T "{params.heatmap_title}" --noreport --charset utf-8 -P "*.html" -o {output.heatmap_index} results/heatmaps/ > {log} 2>&1 
 bin/create_igv_index.sh
         """
 
