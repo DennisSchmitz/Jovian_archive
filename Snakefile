@@ -103,7 +103,7 @@ rule all:
         "results/heatmaps/Virus_heatmap.html", # Virus (excl. phages) order|family|genus|species level heatmap for the entire run
         "results/heatmaps/Phage_heatmap.html", # Phage order|family|genus|species heatmaps for the entire run (based on a selection of phage families)
         "results/heatmaps/Bacteria_heatmap.html", # Bacteria phylum|class|order|family|genus|species level heatmap for the entire run
-        expand("results/{file}.html", file = [ 'multiqc', 'krona', 'Heatmap_index', 'IGVjs_index' ]), # Reports and heatmap and IGVjs index.html
+        expand("results/{file}.html", file = [ 'multiqc', 'krona', 'IGVjs_index' ]), # Reports and IGVjs index.html
 
 #################################################################################
 ##### Jovian sub-processes                                                  #####
