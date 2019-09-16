@@ -100,10 +100,10 @@ rule all:
         expand("data/tables/{sample}_{extension}", sample = SAMPLES, extension = [ 'taxClassified.tsv', 'taxUnclassified.tsv', 'virusHost.tsv' ]), # Tab seperated tables with merged data
         expand("results/{file}", file = [ 'all_taxClassified.tsv', 'all_taxUnclassified.tsv', 'all_virusHost.tsv', 'all_filtered_SNPs.tsv' ]), # Concatenated classification, virus host and typing tool tables
         expand("results/{file}", file = [ 'heatmaps/Superkingdoms_heatmap.html', 'Sample_composition_graph.html', 'Taxonomic_rank_statistics.tsv', 'Virus_rank_statistics.tsv', 'Phage_rank_statistics.tsv', 'Bacteria_rank_statistics.tsv' ]), # Taxonomic profile and heatmap output
-        expand("results/heatmaps/Virus_heatmap-{rank}.html", rank=[ "order", "family", "genus", "species" ]), # Virus (excl. phages) order|family|genus|species level heatmap for the entire run
-        expand("results/heatmaps/Phage_heatmap-{rank}.html", rank=[ "order", "family", "genus", "species" ]), # Phage order|family|genus|species heatmaps for the entire run (based on a selection of phage families)
-        expand("results/heatmaps/Bacteria_heatmap-{rank}.html", rank=[ "phylum", "class", "order", "family", "genus", "species" ]), # Bacteria phylum|class|order|family|genus|species level heatmap for the entire run
-        expand("results/{file}.html", file = [ 'multiqc', 'krona', 'Heatmap_index', 'IGVjs_index' ]), # Reports and heatmap and IGVjs index.html
+        "results/heatmaps/Virus_heatmap.html", # Virus (excl. phages) order|family|genus|species level heatmap for the entire run
+        "results/heatmaps/Phage_heatmap.html", # Phage order|family|genus|species heatmaps for the entire run (based on a selection of phage families)
+        "results/heatmaps/Bacteria_heatmap.html", # Bacteria phylum|class|order|family|genus|species level heatmap for the entire run
+        expand("results/{file}.html", file = [ 'multiqc', 'krona', 'IGVjs_index' ]), # Reports and IGVjs index.html
 
 #################################################################################
 ##### Jovian sub-processes                                                  #####
@@ -665,9 +665,9 @@ rule draw_heatmaps:
     output:
         super_quantities="results/Superkingdoms_quantities_per_sample.csv",
         super="results/heatmaps/Superkingdoms_heatmap.html",
-        virus=expand("results/heatmaps/Virus_heatmap-{rank}.html", rank = [ "order", "family", "genus", "species" ]),
-        phage=expand("results/heatmaps/Phage_heatmap-{rank}.html", rank = [ "order", "family", "genus", "species" ]),
-        bact=expand("results/heatmaps/Bacteria_heatmap-{rank}.html", rank = [ "phylum", "class", "order", "family", "genus", "species" ]),
+        virus="results/heatmaps/Virus_heatmap.html",
+        phage="results/heatmaps/Phage_heatmap.html",
+        bact="results/heatmaps/Bacteria_heatmap.html",
         stats="results/Taxonomic_rank_statistics.tsv",
         vir_stats="results/Virus_rank_statistics.tsv",
         phage_stats="results/Phage_rank_statistics.tsv",
@@ -677,15 +677,11 @@ rule draw_heatmaps:
     benchmark:
         "logs/benchmark/draw_heatmaps.txt"
     threads: 1
-    params:
-        virus_basename="results/heatmaps/Virus_heatmap.html",
-        phage_basename="results/heatmaps/Phage_heatmap.html",
-        bact_basename="results/heatmaps/Bacteria_heatmap.html"
     log:
         "logs/draw_heatmaps.log"
     shell:
         """
-python bin/draw_heatmaps.py -c {input.classified} -n {input.numbers} -sq {output.super_quantities} -st {output.stats} -vs {output.vir_stats} -ps {output.phage_stats} -bs {output.bact_stats} -s {output.super} -v {params.virus_basename} -p {params.phage_basename} -b {params.bact_basename} > {log} 2>&1
+python bin/draw_heatmaps.py -c {input.classified} -n {input.numbers} -sq {output.super_quantities} -st {output.stats} -vs {output.vir_stats} -ps {output.phage_stats} -bs {output.bact_stats} -s {output.super} -v {output.virus} -p {output.phage} -b {output.bact} > {log} 2>&1
         """
 
     #############################################################################
@@ -753,13 +749,8 @@ find {params.search_folder} -type f -name "{params.virusHost_glob}" -exec awk 'N
 
 rule Generate_index_html:
     input:
-        "results/heatmaps/Superkingdoms_heatmap.html",
-        expand("results/heatmaps/Virus_heatmap-{rank}.html", rank = [ "order", "family", "genus", "species" ]),
-        expand("results/heatmaps/Phage_heatmap-{rank}.html", rank = [ "order", "family", "genus", "species" ]),
-        expand("results/heatmaps/Bacteria_heatmap-{rank}.html", rank = [ "phylum", "class", "order", "family", "genus", "species" ]),
         expand("data/scaffolds_filtered/{sample}_IGVjs.html", sample = SAMPLES),
     output:
-        heatmap_index="results/Heatmap_index.html",
         IGVjs_index="results/IGVjs_index.html",
     benchmark:
         "logs/benchmark/Generate_index_html.txt"
@@ -767,13 +758,11 @@ rule Generate_index_html:
     log:
         "logs/Generate_index_html.log"
     params:
-        heatmap_title=config["HTML_index_titles"]["heatmap_title"],
         igvjs_title=config["HTML_index_titles"]["IGVjs_title"],
         http_adress=config["Server_host"]["hostname"],
         port=config["server_info"]["port"],
     shell:
         """
-tree -H "heatmaps" -L 1 -T "{params.heatmap_title}" --noreport --charset utf-8 -P "*.html" -o {output.heatmap_index} results/heatmaps/ > {log} 2>&1 
 bin/create_igv_index.sh
         """
 
