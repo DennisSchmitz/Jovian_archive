@@ -625,7 +625,7 @@ rule count_mapped_reads:
     output:
         "results/Mapped_read_counts.tsv"
     conda:
-        "envs/scaffolds_analyses.yaml"
+        "envs/scaffold_analyses.yaml"
     benchmark:
         "logs/benchmark/count_mapped_reads.txt"
     threads: 1
