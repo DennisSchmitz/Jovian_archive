@@ -221,8 +221,11 @@ def count_sequences_in_fastq(infile):
     with open(infile, 'r') as f:
         for i, l in enumerate(f):
             pass
-    lines = i + 1
-    return(lines / 4)
+    try:
+        lines = i + 1
+        return(lines / 4)
+    except UnboundLocalError: #happens when file is empty, there is no 'i'
+        return(0)
 
 def progress(count, total, status=''):
     """
