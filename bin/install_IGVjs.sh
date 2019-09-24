@@ -3,6 +3,11 @@
 #
 # https://github.com/igvteam/igv.js?files=1
 #
+#
+# changes:
+# yyyymmdd: who, change
+# 20190923: RV, from npm run grund to npm run build
+#
 
 # set -x
 
@@ -107,16 +112,17 @@ if [ -f dist/igv.min.js ]
 then
     echo "dist/igv.min.js already exist"
 else
-   echo "build dist/igv.min.jst (npm run grunt) output in npm_run_grunt_output and npm_run_grunt_output_err"
+   echo "build dist/igv.min.jst (npm run build) output in npm_run_build_output and npm_run_build_output_err"
    test_npm_internet
-   npm run grunt > npm_run_grunt_output 2> npm_run_grunt_output_err
+   npm run build > npm_run_build_output 2> npm_run_build_output_err
    if [ $? -ne 0 ]
    then
-       echo "npm run grunt gave an error:"
-       cat npm_run_grunt_output_err
+       echo "npm run build gave an error:"
+       cat npm_run_build_output_err
        echo
    fi
 fi
+
 echo
 
 # maken link to generated htmls
