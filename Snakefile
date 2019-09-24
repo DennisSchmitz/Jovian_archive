@@ -619,6 +619,25 @@ ktImportTaxonomy {input} -i -k -m 4 -o {output} > {log} 2>&1
     ##### Count annotated reads and visualise as stacked bar charts         #####
     #############################################################################
         
+rule count_mapped_reads:
+    input:
+        expand("data/scaffolds_filtered/{sample}_sorted.bam", sample = SAMPLES)
+    output:
+        "results/Mapped_read_counts.tsv"
+    conda:
+        "envs/scaffold_analyses.yaml"
+    benchmark:
+        "logs/benchmark/count_mapped_reads.txt"
+    threads: 1
+    log:
+        "logs/count_mapped_reads.txt"
+    params:
+        input_dir="data/scaffolds_filtered/"
+    shell:
+        """
+bash bin/count_mapped_reads.sh {params.input_dir} > {output} 2> {log}
+        """
+
 rule quantify_output:
     input:
         fastqc = "results/multiqc_data/multiqc_fastqc.txt",
@@ -627,7 +646,8 @@ rule quantify_output:
                       sample = set(SAMPLES),
                       suffix = [ "pR1", "pR2", "unpaired" ]),
         classified = "results/all_taxClassified.tsv",
-        unclassified = "results/all_taxUnclassified.tsv"
+        unclassified = "results/all_taxUnclassified.tsv",
+        mapped_reads = "results/Mapped_read_counts.tsv"
     output:
         counts = "results/profile_read_counts.csv",
         percentages = "results/profile_percentages.csv",
@@ -647,6 +667,7 @@ python bin/quantify_profiles.py \
 -hg {input.hugo} \
 -c {input.classified} \
 -u {input.unclassified} \
+-m {input.mapped_reads} \
 -co {output.counts} \
 -p {output.percentages} \
 -g {output.graph} \

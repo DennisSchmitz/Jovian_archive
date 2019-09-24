@@ -8,6 +8,8 @@ Date: 4 December 2018
 -- 21 May 2019 update: start complete rework to make the script snakemake-independent and fix bugs
         N.B. For now, the number of threads is still passed by snakemake!
           It can optionally be provided as command-line argument.
+-- 19 Sep 2019 update: count mapped reads with separate script (with samtools view)
+        merge these reads to all_tax[Un]classified.tsv for correct quantifications
 
 Script that gathers numbers from the PZN analysis, i.e.:
  - number of reads per sample (raw)
@@ -76,9 +78,14 @@ def parse_arguments():
     Parse the arguments from the command line, i.e.:
      -f/--fastqc = file with (multiqc) fastqc output
      -t/--trimmomatic = file with (multiqc) trimmomatic output
-     -h/--hugo = fastq files of extracted human reads
+     -hg/--hugo = fastq files of extracted human reads
      -c/--classified = table with taxonomic classifications
      -u/--unclassified = table with unclassified contigs
+     -m/--mapped_reads = table with number of mapped reads
+     -co/--counts = output file (table) with counts
+     -pg/--percentages = output file (table) with percentages
+     -cpu/--cpu-cores = number of cores (threads) to use
+     -col/--colours = colours to use in figure/barchart (8 colours)
      -h/--help = show help
     """
     parser = argparse.ArgumentParser(prog="draw heatmaps",
@@ -129,6 +136,14 @@ def parse_arguments():
                           required=True,
                           type=str,
                           help="Table with unclassified contigs")
+
+    required.add_argument('-m',
+                          '--mapped-reads',
+                          dest="mapped_reads",
+                          metavar='',
+                          required=True,
+                          type=str,
+                          help="Table with mapped read counts")
 
     required.add_argument('-co',
                           '--counts',
@@ -206,8 +221,11 @@ def count_sequences_in_fastq(infile):
     with open(infile, 'r') as f:
         for i, l in enumerate(f):
             pass
-    lines = i + 1
-    return(lines / 4)
+    try:
+        lines = i + 1
+        return(lines / 4)
+    except UnboundLocalError: #happens when file is empty, there is no 'i'
+        return(0)
 
 def progress(count, total, status=''):
     """
@@ -273,7 +291,7 @@ def count_non_human_reads(file_list, threads):
     
     return(read_df)
 
-def sum_superkingdoms(classified_file):
+def sum_superkingdoms(classified_file, mapped_reads_file):
     """
     Input:
         taxonomic classifications and quantifications as
@@ -284,16 +302,21 @@ def sum_superkingdoms(classified_file):
         that were not assigned a superkingdom ("not classified")
     """
     clas_df = pd.read_csv(classified_file, delimiter = '\t')
-    #Sum the forward and reverse reads per classified scaffold:
-    clas_df["reads"] = clas_df.Plus_reads + clas_df.Minus_reads
+    
+    counts_df = pd.read_csv(mapped_reads_file, delimiter = '\t')
+    clas_df = pd.merge(clas_df, counts_df, how = 'left', on = 'scaffold_name')
+    #If a scaffold has no reads mapping to it, set to 0:
+    clas_df.fillna({"mapped_reads" : 0}, inplace=True)
+
     # N.B. Take into account reads that were not assigned a superkingdom
     # and are therefore actually still unclassified!
     clas_df.fillna("not classified", inplace=True)
+
     #Count the reads assigned to Archaea, Bacteria, Eukaryota and Viruses per sample:
     superkingdom_sums = pd.DataFrame(clas_df.groupby(
     [ "Sample_name", "superkingdom" ]).sum()
-                         [[ "reads" ]])
-    
+                         [[ "mapped_reads" ]])
+
     #Check all samples and superkingdoms to find out for which superkingdoms there is no data
     samples_superkingdoms_dict = {}
     for i in superkingdom_sums.index:
@@ -310,7 +333,7 @@ def sum_superkingdoms(classified_file):
     for key, value in samples_superkingdoms_dict.items():
         for superkingdom in [ "Archaea", "Bacteria", "Eukaryota", "Viruses", "not classified" ]:
             if superkingdom not in value:
-                newdata.loc[(key, superkingdom), "reads"] = 0
+                newdata.loc[(key, superkingdom), "mapped_reads"] = 0
             else:
                 pass
     
@@ -325,12 +348,12 @@ def sum_superkingdoms(classified_file):
     final_df = pd.DataFrame(
         new_df.pivot(index = "Sample_name",
                       columns="superkingdom",
-                                values="reads"))
+                                values="mapped_reads"))
     final_df.reset_index(inplace=True)
     
     return(final_df)
 
-def sum_unclassified(unclassified_file):
+def sum_unclassified(unclassified_file, mapped_reads_file):
     """
     Input:
         table of scaffolds that were not classified by PZN
@@ -340,11 +363,13 @@ def sum_unclassified(unclassified_file):
         unclassified scaffolds per sample
     """
     unclas_df = pd.read_csv(unclassified_file, delimiter = '\t')
-    #Sum the forward and reverse reads per unclassified scaffold:
-    unclas_df["reads"] = unclas_df.Plus_reads + unclas_df.Minus_reads
+
+    counts_df = pd.read_csv(mapped_reads_file, delimiter = '\t')
+    unclas_df = pd.merge(unclas_df, counts_df, how = 'left', on = 'scaffold_name')
+
     # Summarise the reads per sample:
     unclas_sums = pd.DataFrame(unclas_df.groupby("Sample_name").sum()
-                               [[ "reads" ]])
+                               [[ "mapped_reads" ]])
     unclas_sums.reset_index(inplace=True)
     
     return(unclas_sums)
@@ -506,18 +531,20 @@ def main():
                 "hugo = {2}\n"
                 "classified = {3}\n"
                 "unclassified: {4}\n"
+                "mapped_reads: {5}\n"
                 "  OUTPUT:\n"
-                "counts = {5}\n"
-                "percentages = {6}\n"
-                "graph = {7}\n"
+                "counts = {6}\n"
+                "percentages = {7}\n"
+                "graph = {8}\n"
                 "  OPTIONAL:\n"
-                "log = {8}\n"
-                "cores = {9}\n"
-                "colours = {10}".format(arguments.fastqc,
+                "log = {9}\n"
+                "cores = {10}\n"
+                "colours = {11}".format(arguments.fastqc,
                                         arguments.trimmomatic,
                                         arguments.hugo,
                                         arguments.classified,
                                         arguments.unclassified,
+                                        arguments.mapped_reads,
                                         arguments.counts,
                                         arguments.percentages,
                                         arguments.graph,
@@ -623,7 +650,7 @@ def main():
     ## (Minimap reads to scaffolds > 500 nt long from SPAdes,
     ## that have been classified with Megablast to BLAST nt database
     ## and the LCA algorithm from Krona (see PZN methods).)
-    classified_nrs = sum_superkingdoms(arguments.classified)
+    classified_nrs = sum_superkingdoms(arguments.classified, arguments.mapped_reads)
     
     #Debug:
     #print(classified_nrs.head())
@@ -631,7 +658,7 @@ def main():
     #6. Reads mapped to unclassified scaffolds/sample:
     ## (Minimap reads to scaffolds that Megablast could not
     ## assign.)
-    unclassified_nrs = sum_unclassified(arguments.unclassified)
+    unclassified_nrs = sum_unclassified(arguments.unclassified, arguments.mapped_reads)
     
     #Debug:
     #print(unclassified_nrs.head())
@@ -651,7 +678,7 @@ def main():
     # from the 'unclassified contigs table' and those from
     # the 'classified contigs table' that wern not assigned
     # a superkingdom:
-    nrs_df["Unclassified"] = nrs_df.reads + nrs_df["not classified"]
+    nrs_df["Unclassified"] = nrs_df.mapped_reads + nrs_df["not classified"]
 
     #And keep only the relevant columns,
     # in a logical order:
