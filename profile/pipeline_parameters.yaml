@@ -72,9 +72,3 @@ threads:
 
 remove_temp: 1 # For development and debug only. If you set this to 0 you will keep the HuGo alignment data which can lead to patient privacy concerns.ssss
 
-databases:
-    background_ref: /mnt/db/Reference_genomes/Homo_sapiens/NCBI/GRCh38/Sequence/Bowtie2Index_without_EBV_virus_chr/genome.fa
-    Krona_taxonomy: /mnt/db/taxonomy_krona/
-    virusHostDB: /mnt/db/Virus-Host_interaction_DB/virushostdb.tsv
-    NCBI_new_taxdump_rankedlineage: /mnt/db/new_taxdump/rankedlineage.dmp.delim
-    NCBI_new_taxdump_host: /mnt/db/new_taxdump/host.dmp.delim
