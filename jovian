@@ -180,8 +180,8 @@ if [ "${CLEAN:-}" == "TRUE" ]; then
             rm -rf data/
             rm -rf logs/
             rm -rf results/
-            rm sample_sheet.yaml
-            rm profile/variables.yaml
+            rm -f sample_sheet.yaml
+            rm -f profile/variables.yaml
 
             ## clean the yaml files
             sed -i '\|databases|d' profile/pipeline_parameters.yaml
@@ -201,8 +201,8 @@ if [ "${CLEAN:-}" == "TRUE" ]; then
                 rm -rf data/
                 rm -rf logs/
                 rm -rf results/
-                rm sample_sheet.yaml
-                rm profile/variables.yaml
+                rm -f sample_sheet.yaml
+                rm -f profile/variables.yaml
 
                 sed -i '\|databases|d' profile/pipeline_parameters.yaml
                 sed -i '\|background_ref|d' profile/pipeline_parameters.yaml
