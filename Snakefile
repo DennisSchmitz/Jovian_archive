@@ -621,23 +621,41 @@ ktImportTaxonomy {input} -i -k -m 4 -o {output} > {log} 2>&1
         
 rule count_mapped_reads:
     input:
-        expand("data/scaffolds_filtered/{sample}_sorted.bam", sample = SAMPLES)
+        "data/scaffolds_filtered/{sample}_sorted.bam"
+        #expand("data/scaffolds_filtered/{sample}_sorted.bam", sample = SAMPLES)
     output:
-        "results/Mapped_read_counts.tsv"
+        "results/counts/Mapped_read_counts-{sample}.tsv"
     conda:
         "envs/scaffold_analyses.yaml"
     benchmark:
-        "logs/benchmark/count_mapped_reads.txt"
+        "logs/benchmark/count_mapped_reads-{sample}.txt"
     threads: 1
     log:
-        "logs/count_mapped_reads.txt"
-    params:
-        input_dir="data/scaffolds_filtered/"
+        "logs/count_mapped_reads-{sample}.txt"
     shell:
         """
-bash bin/count_mapped_reads.sh {params.input_dir} > {output} 2> {log}
+bash bin/count_mapped_reads.sh {input} > {output} 2> {log}
         """
 
+rule concatenate_read_counts:
+    input:
+        expand("results/counts/Mapped_read_counts-{sample}.tsv", sample = SAMPLES)
+    output:
+        "results/counts/Mapped_read_counts.tsv"
+    benchmark:
+        "logs/benchmark/concatenate_read_counts.txt"
+    threads: 1
+    log:
+        "logs/concatenate_read_counts.txt"
+    shell:
+        """
+array=( {input} )
+{ cat ${array[@]:0:1}; grep -v "^mapped_reads" ${array[@]:1}; } > {output} 2> {log}
+        """
+# Use bash array slicing as shown by Gilles Quenot, 2013:
+# https://unix.stackexchange.com/a/60578
+        
+        
 rule quantify_output:
     input:
         fastqc = "results/multiqc_data/multiqc_fastqc.txt",
@@ -647,7 +665,7 @@ rule quantify_output:
                       suffix = [ "pR1", "pR2", "unpaired" ]),
         classified = "results/all_taxClassified.tsv",
         unclassified = "results/all_taxUnclassified.tsv",
-        mapped_reads = "results/Mapped_read_counts.tsv"
+        mapped_reads = "results/counts/Mapped_read_counts.tsv"
     output:
         counts = "results/profile_read_counts.csv",
         percentages = "results/profile_percentages.csv",
