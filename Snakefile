@@ -650,7 +650,7 @@ rule concatenate_read_counts:
     shell:
         """
 array=( {input} )
-{ cat ${array[@]:0:1}; grep -v "^mapped_reads" ${array[@]:1}; } > {output} 2> {log}
+{{ cat ${{array[@]:0:1}}; grep -v "^mapped_reads" ${{array[@]:1}}; }} > {output} 2> {log}
         """
 # Use bash array slicing as shown by Gilles Quenot, 2013:
 # https://unix.stackexchange.com/a/60578
