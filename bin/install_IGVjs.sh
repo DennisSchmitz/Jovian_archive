@@ -3,6 +3,11 @@
 #
 # https://github.com/igvteam/igv.js?files=1
 #
+#
+# changes:
+# yyyymmdd: who, change
+# 20190923: RV, from npm run grund to npm run build
+#
 
 # set -x
 
@@ -85,6 +90,10 @@ fi
 echo
 
 cd igv.js
+### Checkout from version `latest` to version 2.2.15 of IGV.js since from version 2.2.16 onwards your unable to
+### view scaffolds with >100.000 features (features=reads), see: https://github.com/igvteam/igv.js/releases/tag/v2.2.16
+###! I`ll make a issue on IGV.js GitHub project requesting a solution/workaround.
+git checkout 844759961da824a94746f389f18575ab4efcd288
 
 if [ -d node_modules ] && [ -d node_modules/grunt ] && [ -f node_modules/grunt/bin/grunt ]
 then
@@ -107,16 +116,17 @@ if [ -f dist/igv.min.js ]
 then
     echo "dist/igv.min.js already exist"
 else
-   echo "build dist/igv.min.jst (npm run grunt) output in npm_run_grunt_output and npm_run_grunt_output_err"
+   echo "build dist/igv.min.jst (npm run build) output in npm_run_build_output and npm_run_build_output_err"
    test_npm_internet
-   npm run grunt > npm_run_grunt_output 2> npm_run_grunt_output_err
+   npm run build > npm_run_build_output 2> npm_run_build_output_err
    if [ $? -ne 0 ]
    then
-       echo "npm run grunt gave an error:"
-       cat npm_run_grunt_output_err
+       echo "npm run build gave an error:"
+       cat npm_run_build_output_err
        echo
    fi
 fi
+
 echo
 
 # maken link to generated htmls

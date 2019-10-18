@@ -18,9 +18,9 @@ HuGo_removal:
 SPAdes:
     # TODO: kmersizes kunnen waarschijnlijk worden verwijderd, moet getest worden.
     # uncomment this line if you want to use the pipeline for short Illumina reads (<250 nt in length). Then also comment the line below.
-    kmersizes: 21,33,55,77
+#    kmersizes: 21,33,55,77
     # uncomment this line if you want to use the pipeline for longer Illumina reads (>250 nt in length). Then also comment the line above.
-#    kmersizes: 21,33,55,77,99,127
+    kmersizes: 21,33,55,77,99,127
 
 scaffold_minLen_filter:
     # ! test settings for best "relaxed" mode
