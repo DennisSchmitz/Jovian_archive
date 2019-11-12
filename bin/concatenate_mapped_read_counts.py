@@ -82,7 +82,7 @@ def main():
     for file in arguments.input:
         sample = os.path.splitext(file.split('-')[-1])[0]
         df = pd.read_csv(file, sep='\t')
-        df["Sample"] = sample
+        df["Sample_name"] = sample
         
         concat_df = pd.concat([concat_df, df])
         
@@ -97,7 +97,7 @@ def main():
         duplicates = concat_df[concat_df.duplicated(["scaffold_name"], keep = False)]
         print("These are the duplicates:\n\n", duplicates)
         print("\nAs contig names are unique _per sample_, "
-            "you should also filter by _Sample_ name to "
+            "you should also filter by *Sample_name* to "
             "separate scaffolds and count correctly.")
         print("(This is done automatically with "
             "'quantify_output.py')")
