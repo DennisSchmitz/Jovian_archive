@@ -653,7 +653,6 @@ rule concatenate_read_counts:
         -i {input} \
         -o {output} \
         > {log} 2&>1
-
         """
         
 rule quantify_output:
