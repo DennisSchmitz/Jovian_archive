@@ -22,6 +22,7 @@
 
 # IMPORT required libraries--------------------------------
 import argparse
+import re
 import numpy as np
 import pandas as pd
 from bokeh.plotting import figure, output_file, save
@@ -186,8 +187,9 @@ def read_numbers(infile):
     numbers_df = numbers_df[[ "Sample", "input_read_pairs" ]]
     numbers_df = numbers_df.rename(columns={"input_read_pairs" : "read_pairs"})
 
-    numbers_df["Sample"] = numbers_df.Sample.apply(lambda x: x[:x.rfind("_R1")]) # On every value in column named "Sample" perform function that chops off "_R1" and any character after it
-    
+    regex = re.compile(r"(.*)_R?[12][_.]?")
+    numbers_df["Sample"] = numbers_df.Sample.apply(lambda x: re.search(regex, x).group(1)) # On every value in column named "Sample" perform regex capture as to only get the sample name (text before the "_R?[12][_.]?").
+
     return(numbers_df)
 
 

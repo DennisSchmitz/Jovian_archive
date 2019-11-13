@@ -304,7 +304,8 @@ def sum_superkingdoms(classified_file, mapped_reads_file):
     clas_df = pd.read_csv(classified_file, delimiter = '\t')
     
     counts_df = pd.read_csv(mapped_reads_file, delimiter = '\t')
-    clas_df = pd.merge(clas_df, counts_df, how = 'left', on = 'scaffold_name')
+    clas_df = pd.merge(clas_df, counts_df, how = 'left', 
+                       on = [ 'scaffold_name', 'Sample_name' ])
     #If a scaffold has no reads mapping to it, set to 0:
     clas_df.fillna({"mapped_reads" : 0}, inplace=True)
 
@@ -365,7 +366,8 @@ def sum_unclassified(unclassified_file, mapped_reads_file):
     unclas_df = pd.read_csv(unclassified_file, delimiter = '\t')
 
     counts_df = pd.read_csv(mapped_reads_file, delimiter = '\t')
-    unclas_df = pd.merge(unclas_df, counts_df, how = 'left', on = 'scaffold_name')
+    unclas_df = pd.merge(unclas_df, counts_df, how = 'left',
+                         on = [ 'scaffold_name', 'Sample_name' ])
 
     # Summarise the reads per sample:
     unclas_sums = pd.DataFrame(unclas_df.groupby("Sample_name").sum()
