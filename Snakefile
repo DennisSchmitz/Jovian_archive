@@ -649,12 +649,11 @@ rule concatenate_read_counts:
         "logs/concatenate_read_counts.txt"
     shell:
         """
-array=( {input} )
-{{ cat ${{array[@]:0:1}}; grep -v "^mapped_reads" ${{array[@]:1}}; }} > {output} 2> {log}
+        bin/concatenate_mapped_read_counts.py \
+        -i {input} \
+        -o {output} \
+        > {log} 2&>1
         """
-# Use bash array slicing as shown by Gilles Quenot, 2013:
-# https://unix.stackexchange.com/a/60578
-        
         
 rule quantify_output:
     input:
