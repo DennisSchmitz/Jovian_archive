@@ -90,10 +90,9 @@ fi
 echo
 
 cd igv.js
-### Checkout from version `latest` to version 2.2.15 of IGV.js since from version 2.2.16 onwards your unable to
-### view scaffolds with >100.000 features (features=reads), see: https://github.com/igvteam/igv.js/releases/tag/v2.2.16
-###! I`ll make a issue on IGV.js GitHub project requesting a solution/workaround.
-git checkout 844759961da824a94746f389f18575ab4efcd288
+
+##! For stability purposes I've hardcoded IGVjs to version 2.3.5 --> https://github.com/igvteam/igv.js/releases/tag/v2.3.5
+git checkout 0a465785d1426006ff85555f7972ddee0a22ff18 --quiet
 
 if [ -d node_modules ] && [ -d node_modules/grunt ] && [ -f node_modules/grunt/bin/grunt ]
 then

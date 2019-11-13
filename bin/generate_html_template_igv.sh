@@ -81,46 +81,52 @@ a="$(cat << EOF
 
         var options =
         {
-                reference:
-                    {
-                        id: "<<<id>>>",
-                        fastaURL: "<<<fastaURL>>>"
-                    },
-
-            tracks: [
+            reference:
                 {
-                    type: "wig",
-                    name: "GC contents",
-                    format: "bedGraph",
-                    url: "<<<GCcontentBedGraph>>>",
-                    min: "0",
-                    max: "1"
+                    id: "<<<id>>>",
+                    fastaURL: "<<<fastaURL>>>",
+                    wholeGenomeView: false,
+                    tracks: [
+                        {
+                            type: "wig",
+                            name: "GC contents",
+                            format: "bedGraph",
+                            url: "<<<GCcontentBedGraph>>>",
+                            min: "0",
+                            max: "1",
+                            order: Number.MAX_VALUE
+                        },
+                        {
+                            name:"SNPs",
+                            type:"variant",
+                            format:"vcf",
+                            url: "<<<url_vcf>>>",
+                            indexURL: "<<<indexURL_vcf>>>",
+                            displayMode: "SQUISHED",
+                            order: 2
+                        },
+                        {
+                            type: "alignment",
+                            format: "bam",
+                            colorBy: "strand",
+                            url: "<<<url_bam>>>",
+                            indexURL: "<<<indexURL_bam>>>",
+                            indexed: "true",
+                            name: "Alignment",
+                            showSoftClips: true,
+                            order: 3
+                        },
+                        {
+                            type: "annotation",
+                            name: "ORF predictions",
+                            format: "gff3",
+                            url: "<<<url_gff3>>>",
+                            indexURL: "<<<indexURL_gff3>>>",
+                            displayMode: "EXPANDED",
+                            order: 1
+                        }
+                    ]
                 },
-                {
-                    name:"SNPs",
-                    type:"variant",
-                    format:"vcf",
-                    url: "<<<url_vcf>>>",
-                    indexURL: "<<<indexURL_vcf>>>",
-                },
-                {
-                    type: "alignment",
-                    format: "bam",
-                    colorBy: "strand",
-                    url: "<<<url_bam>>>",
-                    indexURL: "<<<indexURL_bam>>>",
-                    indexed: "true",
-                    name: "Alignment"
-                },
-                {
-                    type: "annotation",
-                    name: "ORF predictions",
-                    format: "gff3",
-                    url: "<<<url_gff3>>>",
-                    indexURL: "<<<indexURL_gff3>>>",
-                    displayMode: "EXPANDED"
-                }
-            ]
         };
 
         var igvDiv = document.getElementById("igv-div");
