@@ -652,7 +652,7 @@ rule concatenate_read_counts:
         bin/concatenate_mapped_read_counts.py \
         -i {input} \
         -o {output} \
-        > {log} 2&>1
+        > {log} 2>&1
         """
         
 rule quantify_output:
