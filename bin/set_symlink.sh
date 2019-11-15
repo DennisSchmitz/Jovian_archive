@@ -10,5 +10,5 @@ find /tmp/etc/nginx/default-site/* -user ${currentuser} -xtype l -exec unlink {}
 if [ ! -h /tmp/etc/nginx/default-site/$vars_Jovian_run_identifier ]
    then
       mkdir -p /tmp/etc/nginx/default-site/
-      ln -s "$(pwd)/bin/software/igv.js" "/tmp/etc/nginx/default-site/$vars_Jovian_run_identifier"
+      ln -s "$(pwd)" "/tmp/etc/nginx/default-site/$vars_Jovian_run_identifier"
 fi
