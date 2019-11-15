@@ -35,15 +35,15 @@ cat << EOF >> results/igv.html
             {
                 reference:
                 {
-                    id: "${SAMPLE}",
-                    fastaURL: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/data/scaffolds_filtered/${SAMPLE}_scaffolds_ge${params_scaffold_minLen_filter_minlen}nt.fasta",
+                    id: "${INPUT}",
+                    fastaURL: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/data/scaffolds_filtered/${INPUT}_scaffolds_ge${params_scaffold_minLen_filter_minlen}nt.fasta",
                     wholeGenomeView: false,
                     tracks: [
                         {
                             type: "wig",
                             name: "GC contents",
                             format: "bedGraph",
-                            url: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/data/scaffolds_filtered/${SAMPLE}_GC.bedgraph",
+                            url: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/data/scaffolds_filtered/${INPUT}_GC.bedgraph",
                             min: "0",
                             max: "1",
                             order: Number.MAX_VALUE
@@ -52,8 +52,8 @@ cat << EOF >> results/igv.html
                             name:"SNPs",
                             type:"variant",
                             format:"vcf",
-                            url: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/data/scaffolds_filtered/${SAMPLE}_filtered.vcf.gz",
-                            indexURL: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/data/scaffolds_filtered/${SAMPLE}_filtered.vcf.gz.tbi",
+                            url: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/data/scaffolds_filtered/${INPUT}_filtered.vcf.gz",
+                            indexURL: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/data/scaffolds_filtered/${INPUT}_filtered.vcf.gz.tbi",
                             displayMode: "SQUISHED",
                             order: 2
                         },
@@ -61,8 +61,8 @@ cat << EOF >> results/igv.html
                             type: "alignment",
                             format: "bam",
                             colorBy: "strand",
-                            url: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/data/scaffolds_filtered/${SAMPLE}_sorted.bam",
-                            indexURL: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/data/scaffolds_filtered/${SAMPLE}_sorted.bam.bai",
+                            url: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/data/scaffolds_filtered/${INPUT}_sorted.bam",
+                            indexURL: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/data/scaffolds_filtered/${INPUT}_sorted.bam.bai",
                             indexed: "true",
                             name: "Alignment",
                             showSoftClips: true,
@@ -72,8 +72,8 @@ cat << EOF >> results/igv.html
                             type: "annotation",
                             name: "ORF predictions",
                             format: "gff3",
-                            url: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/data/scaffolds_filtered/${SAMPLE}_annotation.gff.gz",
-                            indexURL: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/data/scaffolds_filtered/${SAMPLE}_annotation.gff.gz.tbi",
+                            url: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/data/scaffolds_filtered/${INPUT}_annotation.gff.gz",
+                            indexURL: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/data/scaffolds_filtered/${INPUT}_annotation.gff.gz.tbi",
                             displayMode: "EXPANDED",
                             order: 1
                         }
