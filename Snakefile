@@ -85,6 +85,14 @@ localrules:
     quantify_output,
     Concat_files,
     Concat_filtered_SNPs,
+    HTML_IGVJs_part1_static_head,
+    HTML_IGVJs_part2_tabs,
+    HTML_IGVJs_part3_close_tabs,
+    HTML_IGVJs_part4_divs,
+    HTML_IGVJs_part5_begin_js,
+    HTML_IGVJs_part6_middle_js,
+    HTML_IGVJs_part7_end_js
+
 
 rule all:
     input:
@@ -104,6 +112,7 @@ rule all:
         "results/heatmaps/Phage_heatmap.html", # Phage order|family|genus|species heatmaps for the entire run (based on a selection of phage families)
         "results/heatmaps/Bacteria_heatmap.html", # Bacteria phylum|class|order|family|genus|species level heatmap for the entire run
         expand("results/{file}.html", file = [ 'multiqc', 'krona', 'IGVjs_index' ]), # Reports and IGVjs index.html
+        expand("data/html/js-end.ok"),
 
 #################################################################################
 ##### Jovian sub-processes                                                  #####
@@ -474,6 +483,95 @@ cut -f 1-3,5 2>> {log} 1> {output.GC_bed}
     #############################################################################
     ##### Generate IGVjs index HTML                                         #####
     #############################################################################
+
+rule HTML_IGVJs_part1_static_head:
+    output:
+        "data/html/html_head.ok"
+    conda:
+        "envs/data_wrangling.yaml"
+    threads: 1
+    shell:
+        """
+bash bin/html/igvjs_write_html_head.sh {output}
+        """
+
+rule HTML_IGVJs_part2_tabs:
+    input:
+        "data/html/html_head.ok"
+    output:
+        "data/html/html_tabs.{sample}.ok"
+    conda:
+        "envs/data_wrangling.yaml"
+    threads: 1
+    shell:
+        """
+bash bin/html/igvjs_write_tabs.sh {wildcards.sample} {output} {input}
+        """
+
+rule HTML_IGVJs_part3_close_tabs:
+    input:
+        expand("data/html/html_tabs.{sample}.ok", sample = SAMPLES)
+    output:
+        "data/html/tabs_closed.ok"
+    conda:
+        "envs/data_wrangling.yaml"
+    threads: 1
+    shell:
+        """
+bash bin/html/igvjs_close_tabs.sh {output} {input}
+        """
+
+rule HTML_IGVJs_part4_divs:
+    input:
+        "data/html/tabs_closed.ok"
+    output:
+        "data/html/html_divs.{sample}.ok"
+    conda:
+        "envs/data_wrangling.yaml"
+    threads: 1
+    shell:
+        """
+bash bin/html/igvjs_write_divs.sh {wildcards.sample} {output} {input}
+        """
+
+rule HTML_IGVJs_part5_begin_js:
+    input:
+        expand("data/html/html_divs.{sample}.ok", sample = SAMPLES)
+    output:
+        "data/html/js-begin.ok"
+    conda:
+        "envs/data_wrangling.yaml"
+    threads: 1
+    shell:
+        """
+bash bin/html/igvjs_write_static_js_begin.sh {output} {input}
+        """
+
+rule HTML_IGVJs_part6_middle_js:
+    input:
+        "data/html/js-begin.ok"
+    output:
+        "data/html/js-flex.{sample}.ok"
+    conda:
+        "envs/data_wrangling.yaml"
+    threads: 1
+    shell:
+        """
+bash bin/html/igvjs_write_flex_js_middle.sh {wildcards.sample} {output} {input}
+        """
+
+rule HTML_IGVJs_part7_end_js:
+    input:
+        expand("data/html/js-flex.{sample}.ok", sample = SAMPLES)
+    output:
+        "data/html/js-end.ok"
+    conda:
+        "envs/data_wrangling.yaml"
+    threads: 1
+    shell:
+        """
+bash bin/html/igvjs_write_static_js_end.sh {output} {input}
+        """
 
 rule Generate_IGVjs_html_file:
     input:
@@ -854,6 +952,7 @@ onsuccess:
             rm -f data/scaffolds_filtered/*.windows
             rm -f data/taxonomic_classification/*.taxtab
             rm -f data/taxonomic_classification/*.taxMagtab
+            rm -rf data/html/
         else
             echo -e "\t\tYou chose to not remove temp files: the human genome alignment files are not removed."
         fi
