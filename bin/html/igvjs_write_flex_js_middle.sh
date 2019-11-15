@@ -36,7 +36,7 @@ cat << EOF >> results/igv.html
                 reference:
                 {
                     id: "${SAMPLE}",
-                    fastaURL: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/data/scaffolds_filtered/${SAMPLE}_scaffolds_ge500nt.fasta",
+                    fastaURL: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/data/scaffolds_filtered/${SAMPLE}_scaffolds_ge${params_scaffold_minLen_filter_minlen}nt.fasta",
                     wholeGenomeView: false,
                     tracks: [
                         {
