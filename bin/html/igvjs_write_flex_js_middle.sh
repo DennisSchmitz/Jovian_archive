@@ -7,7 +7,7 @@
 INPUT="$1"
 OUTPUT="$2"
 
-SAMPLE=${INPUT//_/-}
+SAMPLE="sample_${INPUT}"
 
 
 parse_yaml() {

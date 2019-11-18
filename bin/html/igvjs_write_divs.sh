@@ -7,7 +7,7 @@
 INPUT="$1"
 OUTPUT="$2"
 
-SAMPLE=${INPUT//_/-}
+SAMPLE="sample_${INPUT}"
 
 cat << EOF >> results/igv.html
 <div id="${SAMPLE}">
