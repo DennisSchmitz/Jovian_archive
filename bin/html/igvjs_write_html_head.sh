@@ -37,16 +37,15 @@ cat << EOF > results/igv.html
 
         ul#tabs li {
             display: inline-block;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
 
         ul#tabs li a {
             color: #42454a;
             background-color: #dedbde;
-            border: 1px solid #c9c3ba;
-            border-bottom: none;
             padding: 0.3em;
             text-decoration: none;
+            border: 1px solid #333333;
         }
 
         ul#tabs li a:hover {
@@ -54,10 +53,10 @@ cat << EOF > results/igv.html
         }
 
         ul#tabs li a.selected {
-            color: #000;
-            background-color: #f1f0ee;
+            color: #fff;
+            background-color: #333;
             font-weight: bold;
-            padding: 0.7em 0.3em 0.38em 0.3em;
+            padding: 0.3em 0.3em 0.3em 0.3em;
         }
 
         div.tabContent {
