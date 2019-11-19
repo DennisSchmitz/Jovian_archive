@@ -11,10 +11,9 @@ cat << EOF >> results/igv.html
 
 <div id="standardTab">
     <ul>
-        <li> When this tab (really, just a div) comes first in the document, the igv.js div has display:none, width == 0
-        <li> Clicking the IGV Tab does not generate any events that igv can listen to. So to inform IGV of the
-            visibility
-            change clients must call igv.visibilityChange(), as shown above in the showTabs function.
+        <li> Pick a sample to open the Interactive Genome Viewer </li>
+        <li> The first "Node" within a sample is automatically loaded, you can view a specific node (scaffold) with the dropdown menu. The scaffolds are ordered from large to small. </li>
+        <li> Be aware that loading might take a very long time depending on the size of the scaffold. This usually is a non-issue for scaffolds smaller than 28k nucleotides.
     </ul>
 </div>
 EOF
