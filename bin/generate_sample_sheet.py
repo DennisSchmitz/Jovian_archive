@@ -23,7 +23,7 @@ import re
 import yaml
 
 
-fq_pattern = re.compile("(.*)_R?(1|2).*\.f(ast)?q(\.gz)?")
+fq_pattern = re.compile("(.*)_R?(1|2)(?:_.*\.|\..*\.|\.)f(ast)?q(\.gz)?") # Fix for issue 88, see https://github.com/DennisSchmitz/Jovian/issues/88
 
 
 def main(args):

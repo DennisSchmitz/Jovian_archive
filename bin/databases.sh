@@ -95,6 +95,7 @@ if [ "${PATHING_SINGLE}" == "TRUE" ]; then
         echo -e "\e[1m${db_path_single_response}/taxdb\e[0m"
         echo -e "\e[1m${db_path_single_response}/new_taxdump\e[0m"
         echo -e "\e[1m${db_path_single_response}/krona_taxonomy\e[0m"
+        echo -e "\e[1m${db_path_single_response}/mgkit_taxonomy\e[0m"
         echo -e "\e[1m${db_path_single_response}/Virus-Host_interaction_db\e[0m"
         minispacer
         
@@ -124,6 +125,7 @@ if [ "${PATHING_SINGLE}" == "TRUE" ]; then
         DB_PATH_TAX="${db_path_single_response}/taxdb"
         DB_PATH_NTAX="${db_path_single_response}/new_taxdump"
         DB_PATH_KRONA="${db_path_single_response}/krona_taxonomy"
+        DB_PATH_MGKIT="${db_path_single_response}/mgkit_taxonomy"
         DB_PATH_VHOST="${db_path_single_response}/Virus-Host_interaction_db"
         
         # ! Make folders
@@ -132,6 +134,7 @@ if [ "${PATHING_SINGLE}" == "TRUE" ]; then
         mkdir -p ${DB_PATH_TAX}
         mkdir -p ${DB_PATH_NTAX}
         mkdir -p ${DB_PATH_KRONA}
+        mkdir -p ${DB_PATH_MGKIT}
         mkdir -p ${DB_PATH_VHOST}
         
         # ! Start downloading databases
@@ -140,6 +143,11 @@ if [ "${PATHING_SINGLE}" == "TRUE" ]; then
             printf "\nDownloading taxonomy database... \n"
             perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress taxdb
             
+            # ! download mgkit db
+            cd "${DB_PATH_MGKIT}" || exit
+            printf "\nDownloading MGKit database... \n"
+            bash "${CONDA_PREFIX}"/bin/download-taxonomy.sh ./
+
             # ! download krona LCA db
             cd "${DB_PATH_KRONA}" || exit
             printf "\nDownloading Krona LCA database... \n"
@@ -182,6 +190,10 @@ source activate Jovian_helper
 ### Updating BLAST taxdb
 cd "${DB_PATH_TAX}" || exit 1
 perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress taxdb
+
+### UPDATING MGKIT
+cd "${DB_PATH_MGKIT}" ||| exit 1
+bash "${CONDA_PREFIX}"/bin/download-taxonomy.sh ./
 
 ### UPDATING KRONA
 cd "${DB_PATH_KRONA}" || exit 1
@@ -235,13 +247,14 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
     printf "\e[40;91m this/path/is/also/incorrect \e[0m\n"
     minispacer
 
-    while read -r -e -p "Please type out the path under which you want to install the BLAST NT database: " db_path_indiv_NT_response; read -r -e -p "Please type out the path under which you want to install the BLAST NR database: " db_path_indiv_NR_response; read -r -e -p "Please type out the path under which you want to install the TaxDB: " db_path_indiv_taxdb_response; read -r -e -p "Please type out the path under which you want to install the NewTaxdump database: " db_path_indiv_ntax_response; read -r -e -p "Please type out the path under which you want to install the Krona LCA database: " db_path_indiv_krona_response; read -r -e -p "please type out the path under which you want to install the VirusHost Interaction database: " db_path_indiv_vhost_response
+    while read -r -e -p "Please type out the path under which you want to install the BLAST NT database: " db_path_indiv_NT_response; read -r -e -p "Please type out the path under which you want to install the BLAST NR database: " db_path_indiv_NR_response; read -r -e -p "Please type out the path under which you want to install the TaxDB: " db_path_indiv_taxdb_response; read -r -e -p "Please type out the path under which you want to install the NewTaxdump database: " db_path_indiv_ntax_response; read -r -e -p "Please type out the path under which you want to install the MMGKit database: " db_path_indiv_mgkit_response; read -r -e -p "Please type out the path under which you want to install the Krona LCA database: " db_path_indiv_krona_response; read -r -e -p "please type out the path under which you want to install the VirusHost Interaction database: " db_path_indiv_vhost_response
     do
         db_path_indiv_NT_response=${db_path_indiv_NT_response}
         db_path_indiv_NR_response=${db_path_indiv_NR_response}
         db_path_indiv_taxdb_response=${db_path_indiv_taxdb_response}
         db_path_indiv_ntax_response=${db_path_indiv_ntax_response}
         db_path_indiv_krona_response=${db_path_indiv_krona_response}
+        db_path_indiv_mgkit_response=${db_path_indiv_mgkit_response}
         db_path_indiv_vhost_response=${db_path_indiv_vhost_response}
 
         minispacer
@@ -251,6 +264,7 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
         printf "\e[1m%s/taxdb\e[0m\n" "${db_path_indiv_taxdb_response}"
         printf "\e[1m%s/new_taxdump\e[0m\n" "${db_path_indiv_ntax_response}"
         printf "\e[1m%s/krona_taxonomy\e[0m\n" "${db_path_indiv_krona_response}"
+        printf "\e[1m%s/mgkit_taxonomy\e[0m\n" "${db_path_indiv_mgkit_response}"
         printf "\e[1m%s/Virus-Host_interaction_db\e[0m\n" "${db_path_indiv_vhost_response}"
         minispacer
 
@@ -280,6 +294,7 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
         DB_PATH_TAX="${db_path_indiv_taxdb_response}/taxdb"
         DB_PATH_NTAX="${db_path_indiv_ntax_response}/new_taxdump"
         DB_PATH_KRONA="${db_path_indiv_krona_response}/krona_taxonomy"
+        DB_PATH_MGKIT="${db_path_indiv_mgkit_response}/mgkit_taxonomy"
         DB_PATH_VHOST="${db_path_indiv_vhost_response}/Virus-Host_interaction_db"
 
 
@@ -289,6 +304,7 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
         mkdir -p ${DB_PATH_TAX}
         mkdir -p ${DB_PATH_NTAX}
         mkdir -p ${DB_PATH_KRONA}
+        mkdir -p ${DB_PATH_MGKIT}
         mkdir -p ${DB_PATH_VHOST}
 
         # ! Start downloading databases
@@ -296,6 +312,10 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
             cd "${DB_PATH_TAX}" || exit
             printf "\nDownloading taxonomy database... \n"
             perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress taxdb
+
+            cd "${DB_PATH_MGKIT}" || exit
+            printf "\nDownloading MGKit LCA database... \n"
+            bash "${CONDA_PREFIX}"/bin/download-taxonomy.sh ./
                 
             # ! download krona LCA db
             cd "${DB_PATH_KRONA}" || exit
@@ -345,6 +365,10 @@ source activate Jovian_helper
 ### Updating BLAST taxdb
 cd "${DB_PATH_TAX}" || exit 1
 perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress taxdb
+
+### UPDATING MGKIT
+cd "${DB_PATH_MGKIT}" ||| exit 1
+bash "${CONDA_PREFIX}"/bin/download-taxonomy.sh ./
 
 ### UPDATING KRONA
 cd "${DB_PATH_KRONA}" || exit 1

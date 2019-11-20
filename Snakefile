@@ -1,6 +1,6 @@
 """
 Authors: Dennis Schmitz, Sam Nooij, Robert Verhagen, Thierry Janssens, Jeroen Cremer, Florian Zwagemaker, Mark Kroon, Erwin van Wieringen, Annelies Kroneman, Harry Vennema, Marion Koopmans
-Organisation: Rijksinstituut voor Volksgezondheid en Milieu (RIVM)
+Organization: Rijksinstituut voor Volksgezondheid en Milieu (RIVM)
 Department: Virology - Emerging and Endemic Viruses (EEV)
 Date: 23-08-2018
 Changelog, examples, installation guide and explanation on:
@@ -80,11 +80,17 @@ onstart:
 
 localrules: 
     all,
-    Generate_index_html,
-    Generate_IGVjs_html_file,
     quantify_output,
     Concat_files,
     Concat_filtered_SNPs,
+    HTML_IGVJs_part1_static_head,
+    HTML_IGVJs_part2_tabs,
+    HTML_IGVJs_part3_close_tabs,
+    HTML_IGVJs_part4_divs,
+    HTML_IGVJs_part5_begin_js,
+    HTML_IGVJs_part6_middle_js,
+    HTML_IGVJs_part7_end_js
+
 
 rule all:
     input:
@@ -95,15 +101,15 @@ rule all:
         expand("data/scaffolds_filtered/{sample}_{extension}", sample = SAMPLES, extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi', 'contig_ORF_count_list.txt' ]), # Prodigal ORF prediction output
         expand("data/scaffolds_filtered/{sample}_{extension}", sample = SAMPLES, extension = [ 'unfiltered.vcf', 'filtered.vcf', 'filtered.vcf.gz', 'filtered.vcf.gz.tbi' ]), # SNP calling output
         expand("data/scaffolds_filtered/{sample}_GC.bedgraph", sample = SAMPLES), # Percentage GC content per specified window
-        expand("data/scaffolds_filtered/{sample}_IGVjs.html", sample = SAMPLES), # IGVjs html's
         expand("data/taxonomic_classification/{sample}.blastn", sample = SAMPLES), # MegablastN output
         expand("data/tables/{sample}_{extension}", sample = SAMPLES, extension = [ 'taxClassified.tsv', 'taxUnclassified.tsv', 'virusHost.tsv' ]), # Tab seperated tables with merged data
         expand("results/{file}", file = [ 'all_taxClassified.tsv', 'all_taxUnclassified.tsv', 'all_virusHost.tsv', 'all_filtered_SNPs.tsv' ]), # Concatenated classification, virus host and typing tool tables
         expand("results/{file}", file = [ 'heatmaps/Superkingdoms_heatmap.html', 'Sample_composition_graph.html', 'Taxonomic_rank_statistics.tsv', 'Virus_rank_statistics.tsv', 'Phage_rank_statistics.tsv', 'Bacteria_rank_statistics.tsv' ]), # Taxonomic profile and heatmap output
-        expand("results/heatmaps/Virus_heatmap-{rank}.html", rank=[ "order", "family", "genus", "species" ]), # Virus (excl. phages) order|family|genus|species level heatmap for the entire run
-        expand("results/heatmaps/Phage_heatmap-{rank}.html", rank=[ "order", "family", "genus", "species" ]), # Phage order|family|genus|species heatmaps for the entire run (based on a selection of phage families)
-        expand("results/heatmaps/Bacteria_heatmap-{rank}.html", rank=[ "phylum", "class", "order", "family", "genus", "species" ]), # Bacteria phylum|class|order|family|genus|species level heatmap for the entire run
-        expand("results/{file}.html", file = [ 'multiqc', 'krona', 'Heatmap_index', 'IGVjs_index' ]), # Reports and heatmap and IGVjs index.html
+        "results/heatmaps/Virus_heatmap.html", # Virus (excl. phages) order|family|genus|species level heatmap for the entire run
+        "results/heatmaps/Phage_heatmap.html", # Phage order|family|genus|species heatmaps for the entire run (based on a selection of phage families)
+        "results/heatmaps/Bacteria_heatmap.html", # Bacteria phylum|class|order|family|genus|species level heatmap for the entire run
+        expand("results/{file}.html", file = [ 'multiqc', 'krona' ]), # HTML Reports
+        expand("data/html/js-end.ok"),
 
 #################################################################################
 ##### Jovian sub-processes                                                  #####
@@ -472,42 +478,96 @@ cut -f 1-3,5 2>> {log} 1> {output.GC_bed}
         """
 
     #############################################################################
-    ##### Generate IGVjs index HTML                                         #####
+    ##### Generate IGVjs HTML                                         #####
     #############################################################################
 
-rule Generate_IGVjs_html_file:
-    input:
-        fasta="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"],
-        fastaFai="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta.fai" % config["scaffold_minLen_filter"]["minlen"],
-        bam="data/scaffolds_filtered/{sample}_sorted.bam",
-        bam_bai="data/scaffolds_filtered/{sample}_sorted.bam.bai",
-        zipped_vcf="data/scaffolds_filtered/{sample}_filtered.vcf.gz",
-        zipped_vcf_index="data/scaffolds_filtered/{sample}_filtered.vcf.gz.tbi",
-        zipped_gff3="data/scaffolds_filtered/{sample}_annotation.gff.gz",
-        zipped_gff3_index="data/scaffolds_filtered/{sample}_annotation.gff.gz.tbi",
-        GC_bed="data/scaffolds_filtered/{sample}_GC.bedgraph",
+rule HTML_IGVJs_part1_static_head:
     output:
-        "data/scaffolds_filtered/{sample}_IGVjs.html"
+        "data/html/html_head.ok"
     conda:
         "envs/data_wrangling.yaml"
-    benchmark:
-        "logs/benchmark/Generate_IGVjs_html_file_{sample}.txt"
     threads: 1
-    log:
-        "logs/Generate_IGVjs_html_file_{sample}.log"
     shell:
         """
-bash bin/generate_html_template_igv.sh {wildcards.sample} \
-{input.fasta} \
-{input.bam} \
-{input.bam_bai} \
-{output} \
-Jovian \
-{input.zipped_vcf} \
-{input.zipped_vcf_index} \
-{input.zipped_gff3} \
-{input.zipped_gff3_index} \
-{input.GC_bed} > {log} 2>&1
+bash bin/html/igvjs_write_html_head.sh {output}
+        """
+
+rule HTML_IGVJs_part2_tabs:
+    input:
+        "data/html/html_head.ok"
+    output:
+        "data/html/html_tabs.{sample}.ok"
+    conda:
+        "envs/data_wrangling.yaml"
+    threads: 1
+    shell:
+        """
+bash bin/html/igvjs_write_tabs.sh {wildcards.sample} {output} {input}
+        """
+
+rule HTML_IGVJs_part3_close_tabs:
+    input:
+        expand("data/html/html_tabs.{sample}.ok", sample = SAMPLES)
+    output:
+        "data/html/tabs_closed.ok"
+    conda:
+        "envs/data_wrangling.yaml"
+    threads: 1
+    shell:
+        """
+bash bin/html/igvjs_close_tabs.sh {output} {input}
+        """
+
+rule HTML_IGVJs_part4_divs:
+    input:
+        "data/html/tabs_closed.ok"
+    output:
+        "data/html/html_divs.{sample}.ok"
+    conda:
+        "envs/data_wrangling.yaml"
+    threads: 1
+    shell:
+        """
+bash bin/html/igvjs_write_divs.sh {wildcards.sample} {output} {input}
+        """
+
+rule HTML_IGVJs_part5_begin_js:
+    input:
+        expand("data/html/html_divs.{sample}.ok", sample = SAMPLES)
+    output:
+        "data/html/js-begin.ok"
+    conda:
+        "envs/data_wrangling.yaml"
+    threads: 1
+    shell:
+        """
+bash bin/html/igvjs_write_static_js_begin.sh {output} {input}
+        """
+
+rule HTML_IGVJs_part6_middle_js:
+    input:
+        "data/html/js-begin.ok"
+    output:
+        "data/html/js-flex.{sample}.ok"
+    conda:
+        "envs/data_wrangling.yaml"
+    threads: 1
+    shell:
+        """
+bash bin/html/igvjs_write_flex_js_middle.sh {wildcards.sample} {output} {input}
+        """
+
+rule HTML_IGVJs_part7_end_js:
+    input:
+        expand("data/html/js-flex.{sample}.ok", sample = SAMPLES)
+    output:
+        "data/html/js-end.ok"
+    conda:
+        "envs/data_wrangling.yaml"
+    threads: 1
+    shell:
+        """
+bash bin/html/igvjs_write_static_js_end.sh {output} {input}
         """
 
     #############################################################################
@@ -619,6 +679,42 @@ ktImportTaxonomy {input} -i -k -m 4 -o {output} > {log} 2>&1
     ##### Count annotated reads and visualise as stacked bar charts         #####
     #############################################################################
         
+rule count_mapped_reads:
+    input:
+        "data/scaffolds_filtered/{sample}_sorted.bam"
+        #expand("data/scaffolds_filtered/{sample}_sorted.bam", sample = SAMPLES)
+    output:
+        "results/counts/Mapped_read_counts-{sample}.tsv"
+    conda:
+        "envs/scaffold_analyses.yaml"
+    benchmark:
+        "logs/benchmark/count_mapped_reads-{sample}.txt"
+    threads: 1
+    log:
+        "logs/count_mapped_reads-{sample}.txt"
+    shell:
+        """
+bash bin/count_mapped_reads.sh {input} > {output} 2> {log}
+        """
+
+rule concatenate_read_counts:
+    input:
+        expand("results/counts/Mapped_read_counts-{sample}.tsv", sample = SAMPLES)
+    output:
+        "results/counts/Mapped_read_counts.tsv"
+    benchmark:
+        "logs/benchmark/concatenate_read_counts.txt"
+    threads: 1
+    log:
+        "logs/concatenate_read_counts.txt"
+    shell:
+        """
+        bin/concatenate_mapped_read_counts.py \
+        -i {input} \
+        -o {output} \
+        > {log} 2>&1
+        """
+        
 rule quantify_output:
     input:
         fastqc = "results/multiqc_data/multiqc_fastqc.txt",
@@ -627,7 +723,8 @@ rule quantify_output:
                       sample = set(SAMPLES),
                       suffix = [ "pR1", "pR2", "unpaired" ]),
         classified = "results/all_taxClassified.tsv",
-        unclassified = "results/all_taxUnclassified.tsv"
+        unclassified = "results/all_taxUnclassified.tsv",
+        mapped_reads = "results/counts/Mapped_read_counts.tsv"
     output:
         counts = "results/profile_read_counts.csv",
         percentages = "results/profile_percentages.csv",
@@ -647,6 +744,7 @@ python bin/quantify_profiles.py \
 -hg {input.hugo} \
 -c {input.classified} \
 -u {input.unclassified} \
+-m {input.mapped_reads} \
 -co {output.counts} \
 -p {output.percentages} \
 -g {output.graph} \
@@ -665,9 +763,9 @@ rule draw_heatmaps:
     output:
         super_quantities="results/Superkingdoms_quantities_per_sample.csv",
         super="results/heatmaps/Superkingdoms_heatmap.html",
-        virus=expand("results/heatmaps/Virus_heatmap-{rank}.html", rank = [ "order", "family", "genus", "species" ]),
-        phage=expand("results/heatmaps/Phage_heatmap-{rank}.html", rank = [ "order", "family", "genus", "species" ]),
-        bact=expand("results/heatmaps/Bacteria_heatmap-{rank}.html", rank = [ "phylum", "class", "order", "family", "genus", "species" ]),
+        virus="results/heatmaps/Virus_heatmap.html",
+        phage="results/heatmaps/Phage_heatmap.html",
+        bact="results/heatmaps/Bacteria_heatmap.html",
         stats="results/Taxonomic_rank_statistics.tsv",
         vir_stats="results/Virus_rank_statistics.tsv",
         phage_stats="results/Phage_rank_statistics.tsv",
@@ -677,15 +775,11 @@ rule draw_heatmaps:
     benchmark:
         "logs/benchmark/draw_heatmaps.txt"
     threads: 1
-    params:
-        virus_basename="results/heatmaps/Virus_heatmap.html",
-        phage_basename="results/heatmaps/Phage_heatmap.html",
-        bact_basename="results/heatmaps/Bacteria_heatmap.html"
     log:
         "logs/draw_heatmaps.log"
     shell:
         """
-python bin/draw_heatmaps.py -c {input.classified} -n {input.numbers} -sq {output.super_quantities} -st {output.stats} -vs {output.vir_stats} -ps {output.phage_stats} -bs {output.bact_stats} -s {output.super} -v {params.virus_basename} -p {params.phage_basename} -b {params.bact_basename} > {log} 2>&1
+python bin/draw_heatmaps.py -c {input.classified} -n {input.numbers} -sq {output.super_quantities} -st {output.stats} -vs {output.vir_stats} -ps {output.phage_stats} -bs {output.bact_stats} -s {output.super} -v {output.virus} -p {output.phage} -b {output.bact} > {log} 2>&1
         """
 
     #############################################################################
@@ -751,32 +845,6 @@ find {params.search_folder} -type f -name "{params.unclassified_glob}" -exec awk
 find {params.search_folder} -type f -name "{params.virusHost_glob}" -exec awk 'NR==1 || FNR!=1' {{}} + 2>> {log} 1> {output.virusHost}
         """
 
-rule Generate_index_html:
-    input:
-        "results/heatmaps/Superkingdoms_heatmap.html",
-        expand("results/heatmaps/Virus_heatmap-{rank}.html", rank = [ "order", "family", "genus", "species" ]),
-        expand("results/heatmaps/Phage_heatmap-{rank}.html", rank = [ "order", "family", "genus", "species" ]),
-        expand("results/heatmaps/Bacteria_heatmap-{rank}.html", rank = [ "phylum", "class", "order", "family", "genus", "species" ]),
-        expand("data/scaffolds_filtered/{sample}_IGVjs.html", sample = SAMPLES),
-    output:
-        heatmap_index="results/Heatmap_index.html",
-        IGVjs_index="results/IGVjs_index.html",
-    benchmark:
-        "logs/benchmark/Generate_index_html.txt"
-    threads: 1
-    log:
-        "logs/Generate_index_html.log"
-    params:
-        heatmap_title=config["HTML_index_titles"]["heatmap_title"],
-        igvjs_title=config["HTML_index_titles"]["IGVjs_title"],
-        http_adress=config["Server_host"]["hostname"],
-        port=config["server_info"]["port"],
-    shell:
-        """
-tree -H "heatmaps" -L 1 -T "{params.heatmap_title}" --noreport --charset utf-8 -P "*.html" -o {output.heatmap_index} results/heatmaps/ > {log} 2>&1 
-bin/create_igv_index.sh
-        """
-
 rule Concat_filtered_SNPs:
     input:
         expand("data/scaffolds_filtered/{sample}_filtered.vcf", sample = SAMPLES)
@@ -803,7 +871,8 @@ python bin/concat_filtered_vcf.py {params.vcf_folder_glob} {output} > {log} 2>&1
 onerror:
     shell("""
         rm -f data/scaffolds_filtered/*.html
-        rm -f results/IGVjs_index.html
+        rm -f results/igv.html
+        rm -rf data/html/
     """)
 
 
@@ -827,6 +896,7 @@ onsuccess:
             rm -f data/scaffolds_filtered/*.windows
             rm -f data/taxonomic_classification/*.taxtab
             rm -f data/taxonomic_classification/*.taxMagtab
+            rm -rf data/html/
         else
             echo -e "\t\tYou chose to not remove temp files: the human genome alignment files are not removed."
         fi

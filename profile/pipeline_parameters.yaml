@@ -51,7 +51,6 @@ ORF_prediction:
 
 HTML_index_titles:
     IGVjs_title: "Interactive genome viewers for all samples in this run:"
-    heatmap_title: "Interactive heatmaps of different taxonomic levels for all samples in this run:"
 
 server_info: # This is used for IGVjs, discuss this with your IT department, depends on your local setup
     # ? kan deze ook semi-flexibel? I.e. automatisch invullen naar de juiste poort als nginx al draait op een systeem?

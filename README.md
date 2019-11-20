@@ -1,5 +1,5 @@
 # Jovian, user-friendly metagenomics     
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/DennisSchmitz/Jovian_binder/master?filepath=Notebook_report.ipynb)
 
 **IMPORTANT: Do not share the code without my express permission as it is unpublished (manuscript in preparation)**
@@ -16,9 +16,6 @@ ___
   - [Virus typing](#Virus-typing)
   - [Audit trail](#Audit-trail)
 - [Requirements](#Requirements)
-  - [System requirements](#System-requirements)
-  - [Software](#Software)
-  - [Databases](#Databases)
 - [Instructions](#Instructions)
   - [Installation](#Installation)
   - [How to start/configure a Jovian analysis](#How-to-startconfigure-a-Jovian-analysis)
@@ -35,7 +32,8 @@ ___
 The pipeline automatically processes raw Illumina NGS data from human clinical matrices (faeces, serum, etc.) into clinically relevant information such as taxonomic classification, viral typing and minority variant identification (quasispecies).
 Wetlab personnel can start, configure and interpret results via an interactive web-report. This makes doing metagenomics analyses much more accessible and user-friendly since minimal command-line skills are required.  
 
-### Features    
+### Features
+
 - Data quality control (QC) and cleaning.  
   - Including library fragment length analysis, useful for sample preparation QC.  
 - Removal of human* data (patient privacy). _*<sup><sub>You can use [whichever reference you would like](../../wiki/Frequently-Asked-Questions#i-dont-care-about-removing-the-human-data-i-have-samples-that-are-from-other-species-can-i-also-automatically-remove-that). However, Jovian is intended for human clinical samples.</sup></sub>_  
@@ -53,7 +51,8 @@ Wetlab personnel can start, configure and interpret results via an interactive w
   - Minority variants (quasispecies) are identified.  
 - Importantly, results of all processes listed above are presented via an [interactive web-report](#visualizations) including an [audit trail](#audit-trail).  
 
-### Visualizations  
+### Visualizations
+
 All data are visualized via an interactive web-report, [as shown here](#example-jovian-report), which includes:  
 - A collation of interactive QC graphs via `MultiQC`.  
 - Taxonomic results are presented on three levels:  
@@ -72,33 +71,32 @@ All data are visualized via an interactive web-report, [as shown here](#example-
 - All SNP metrics are presented via interactive spreadsheet-like tables, allowing detailed analysis.  
 
 ### Virus typing
+
 After a Jovian analysis is finished you can perform virus-typing (i.e. sub-species level taxonomic labelling). These analyses can be started by the command `bash jovian -vt [virus keyword]`, where `[virus keyword]` can be:  
 
 Keyword | Taxon used for scaffold selection | Notable virus species
 --------|-----------------------------------|----------------------
 `NoV` | Caliciviridae   | Norovirus GI and GII, Sapovirus  
-`EV`  | Picornaviridae  | Enteroviruses (Coxsackie, Polio, Rhino, etc.), Parecho, Aichi, Hepatitis A #TODO  
+`EV`  | Picornaviridae  | Enteroviruses (Coxsackie, Polio, Rhino, etc.), Parecho, Aichi, Hepatitis A 
 `RVA` | _Rotavirus A_   | Rotavirus A  
 `HAV` | _Hepatovirus A_ | Hepatitis A  
 `HEV` | _Orthohepevirus A_ | Hepatitis E  
 `PV`  | Papillomaviridae | Human Papillomavirus  
-`Flavi` | Flaviviridae    | Dengue, JEV, TBE, WNV, YFV #TODO  
+`Flavi` | Flaviviridae    | Dengue (work in progress)
   
-### Audit trail  
+### Audit trail
+
 An audit trail, used for clinical reproducability and logging, is generated and contains:  
-- A unique methodological fingerprint of the code is generated and accessible via GitHub: allowing to exactly reproduce the analysis, even retrospectively by reverting to old versions of the pipeline code.  
+- A unique methodological fingerprint: allowing to exactly reproduce the analysis, even retrospectively by reverting to old versions of the pipeline code.  
 - The following information is also logged:  
   - Database timestamps  
   - (user-specified) Pipeline parameters  
 
 However, it has limitations since several things are out-of-scope for Jovian to control:
-- The `IGVjs` version  
 - The `virus typing-tools` version  
   - Currently we depend on a public web-tool hosted by the [RIVM](https://www.rivm.nl/en). These are developed in close collaboration with - *but independently of* - Jovian. A versioning system for the `virus typing-tools` is being worked on, however, this is not trivial and will take some time.  
-- Input files
-  - We only save the names and location of input files at the time the analysis was performed. Long-term storage of the data, and documenting their location over time, is the responsibility of the end-user.  
-- Input metadata
-  - The end-user is responsible for storing datasets with their correct metadata (e.g. clinical information, database versions, etc.). We recommend using [iRODS](https://irods.org) for this as described by [Nieroda et al. 2019](https://www.ncbi.nlm.nih.gov/pubmed/30646845). While we acknowledge that database versions are vital to replicate results, the databases Jovian uses have no official versioning, hence why we include timestamps only.  
+- Input files and metadata
+  - We only save the names and location of input files at the time the analysis was performed. Long-term storage of the data, and documenting their location over time, is the responsibility of the end-user. Likewise, the end-user is responsible for storing datasets with their correct metadata (e.g. clinical information, database versions, etc.). We recommend using [iRODS](https://irods.org) for this as described by [Nieroda et al. 2019](https://www.ncbi.nlm.nih.gov/pubmed/30646845). While we acknowledge that database versions are vital to replicate results, the databases Jovian uses have no official versioning, hence why we include timestamps only.  
 
 ___
 
@@ -106,50 +104,24 @@ ___
 ___
 
 ## Requirements
-Jovian has minimal [system requirements](#system-requirements), it is intended for powerful servers and/or grid-computers but also works on powerful PCs and laptops. It has two major software dependencies, miniConda and IGVjs. During the installation procedure you will be asked if you want to automatically install these (if Conda is not already available). Additionally, it depends on the [following software](#software), but most Linux systems have these pre-installed already. Any metagenomics analysis, Jovian included, depends on several [public databases that you have to download](#databases).    
 
-### System requirements
-We have developed and tested the software for the following Linux distributions ("distro's"): `RHEL`, `CentOS` and `Ubuntu`. We do expect Jovian to work on other Linux distro's, but cannot guarantee stability. We are currently assessing if it feasible to also test our software on Windows computers using [Ubuntu on Windows](https://www.microsoft.com/en-us/p/ubuntu/9nblggh4msv6?activetab=pivot:overviewtab). This is a work-in-progress, but preliminary tests look promising.  
-
-The software does <u><b>not</b></u> require root and/or sudo-rights. It is however necessary to have read and write access to the `/tmp` folder on your system. This won't be a problem most of the time since the `/tmp` folder is usually free to read from and write to. However, it is best to check this with your system administrator(s).  
-
-The databases require up to 400GB of disk-space. Installation of the Jovian pipeline totals ~6GB disk-space and is spread over two locations:
-1. In the users' home directory*: A "Jovian_master" environment of ~2GB is installed, this serves as the "head" of the pipeline. Also, a "Jovian_helper" environment is installed to facilitate ancillary operations (e.g. database updating) which also requires ~1GB. * <sub>Technically it is installed in Conda's default directory, but for most users this will be `home`.</sub>  
-_If Conda is not installed on the system, Jovian will do that automatically in the `home` directory, requiring ~1GB of disk-space._
-2. At the location where the repo was downloaded: Here the "body" of the pipeline is installed, including all Conda software environments and IGVjs. It requires 4GB of disk-space.
-
-### Software  
-|Software name|Website|  
-|:---|:---|  
-|`git`| https://git-scm.com/downloads |  
-|`curl`| https://curl.haxx.se/ |  
-|`which`| http://savannah.gnu.org/projects/which |  
-|`bzip2`| http://www.bzip.org/ |  
-
-### Databases  
-|Database name|Link|Installation instructions|
-|:---|:---|:---|
-|`NCBI NT & NR`| ftp://ftp.ncbi.nlm.nih.gov/blast/db/ | [link](../../wiki/Installation-Instructions#database-installation)|
-|`NCBI Taxdump`| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/ | [link](../../wiki/Installation-Instructions#database-installation)|
-|`NCBI New_taxdump`| ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/ | [link](../../wiki/Installation-Instructions#database-installation)|
-|`Virus-Host interaction database`| http://www.genome.jp/virushostdb/note.html | [link](../../wiki/Installation-Instructions#database-installation)|
-|`Latest Human Genome`*| https://support.illumina.com/sequencing/sequencing_software/igenome.html | [link](../../wiki/Installation-Instructions#database-installation)|
-
-_* We suggest the latest human genome because Jovian is intended for clinical samples. You can however use any reference you'd like, as [explained here](../../wiki/Frequently-Asked-Questions#i-dont-care-about-removing-the-human-data-i-have-samples-that-are-from-other-species-can-i-also-automatically-remove-that)._
-
+Can be found on [this wiki page](../../wiki/Requirements).  
 ___
 
-## Instructions 
+## Instructions
+
 Below you'll find instructions on how to install and start/configure a Jovian analysis.   
 
 ### Installation
+
 Can be found on [this wiki page](../../wiki/Installation-Instructions).
 
-### How to start/configure a Jovian analysis  
+### How to start/configure a Jovian analysis
+
 There are two methods, the first is by using the "Jovian Portal" and the second is via the command-line interface. The former is an interactive website that is intended for non-bioinformaticians while the latter is intended for people familiar with the command-line interface.  
 
 <b>Jovian Portal:</b>  
-- First, start a Jupyter notebook background process as described [here](../../wiki/Installation-Instructions#starting-the-jupyter-notebook-server-process). Or ask your system-admin to do this for you.  
+- First, start a Jupyter notebook background process as described [here](../../wiki/Installation-Instructions#Start-a-jupyter-Notebook-server-process). Or ask your system-admin to do this for you.  
 - Via the Jupyter Notebook connection established in the previous step, go to the `Jovian` folder [created during installation](../../wiki/Installation-Instructions). Then, open `Notebook_portal.ipynb`.  
 - Follow the instructions in this notebook to start an analysis.  
   -  N.B. These reports work with Mozilla Firefox and Google Chrome, we do not recommend using Internet Explorer.  
@@ -165,12 +137,13 @@ There are two methods, the first is by using the "Jovian Portal" and the second 
 - After the pipeline has finished, open `Notebook_report.ipynb` via your browser (Mozilla Firefox or Google Chrome). Click on `Cell` in the toolbar, then press `Run all` and wait for data to be imported.  
   - N.B. You need to have a Jupyter notebook process running in the background, as described [here](../../wiki/Installation-Instructions#starting-the-jupyter-notebook-server-process).
 
-### Explanation of output folders  
+### Explanation of output folders
+
 |Folder|Contents|
 |:---|:---|
 |`bin/` |Contains the scripts required for Jovian to work |
 |`data/` | Contains intermediate and detailed data |
-|`envs/` | Contains all conda environments for the pipeline |
+|`envs/` | Contains all conda environment recipes for the pipeline |
 |`files/` | Contains ancillary files for the pipeline |
 |`logs/` | Contains all Jovian log files, use these files to troubleshoot errors |
 |`profile/` | Contains the files with Snakemake and pipeline parameters |
@@ -180,10 +153,12 @@ Also, a hidden folder named `.snakemake` is generated. Do not remove or edit thi
 ___
 
 ## FAQ
+
 Can be found on [this wiki page](../../wiki/Frequently-Asked-Questions).  
 ___
 
-## Example Jovian report  
+## Example Jovian report
+
 Can be found on [this wiki page](../../wiki/Example-Jovian-report).  
 ___
 
@@ -234,6 +209,7 @@ ___
 |Virus typing tools|Kroneman, A., Vennema, H., Deforche, K., Avoort, H. V. D., Penaranda, S., Oberste, M. S., ... & Koopmans, M. (2011). An automated genotyping tool for enteroviruses and noroviruses. Journal of Clinical Virology, 51(2), 121-125.|https://www.ncbi.nlm.nih.gov/pubmed/21514213|
 
 #### Authors
+
 - Dennis Schmitz ([RIVM](https://www.rivm.nl/en) and [EMC](https://www6.erasmusmc.nl/viroscience/))  
 - Sam Nooij ([RIVM](https://www.rivm.nl/en) and [EMC](https://www6.erasmusmc.nl/viroscience/))  
 - Robert Verhagen ([RIVM](https://www.rivm.nl/en))  
