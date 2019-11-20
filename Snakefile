@@ -80,11 +80,17 @@ onstart:
 
 localrules: 
     all,
-    Generate_index_html,
-    Generate_IGVjs_html_file,
     quantify_output,
     Concat_files,
     Concat_filtered_SNPs,
+    HTML_IGVJs_part1_static_head,
+    HTML_IGVJs_part2_tabs,
+    HTML_IGVJs_part3_close_tabs,
+    HTML_IGVJs_part4_divs,
+    HTML_IGVJs_part5_begin_js,
+    HTML_IGVJs_part6_middle_js,
+    HTML_IGVJs_part7_end_js
+
 
 rule all:
     input:
@@ -95,7 +101,6 @@ rule all:
         expand("data/scaffolds_filtered/{sample}_{extension}", sample = SAMPLES, extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi', 'contig_ORF_count_list.txt' ]), # Prodigal ORF prediction output
         expand("data/scaffolds_filtered/{sample}_{extension}", sample = SAMPLES, extension = [ 'unfiltered.vcf', 'filtered.vcf', 'filtered.vcf.gz', 'filtered.vcf.gz.tbi' ]), # SNP calling output
         expand("data/scaffolds_filtered/{sample}_GC.bedgraph", sample = SAMPLES), # Percentage GC content per specified window
-        expand("data/scaffolds_filtered/{sample}_IGVjs.html", sample = SAMPLES), # IGVjs html's
         expand("data/taxonomic_classification/{sample}.blastn", sample = SAMPLES), # MegablastN output
         expand("data/tables/{sample}_{extension}", sample = SAMPLES, extension = [ 'taxClassified.tsv', 'taxUnclassified.tsv', 'virusHost.tsv' ]), # Tab seperated tables with merged data
         expand("results/{file}", file = [ 'all_taxClassified.tsv', 'all_taxUnclassified.tsv', 'all_virusHost.tsv', 'all_filtered_SNPs.tsv' ]), # Concatenated classification, virus host and typing tool tables
@@ -103,7 +108,8 @@ rule all:
         "results/heatmaps/Virus_heatmap.html", # Virus (excl. phages) order|family|genus|species level heatmap for the entire run
         "results/heatmaps/Phage_heatmap.html", # Phage order|family|genus|species heatmaps for the entire run (based on a selection of phage families)
         "results/heatmaps/Bacteria_heatmap.html", # Bacteria phylum|class|order|family|genus|species level heatmap for the entire run
-        expand("results/{file}.html", file = [ 'multiqc', 'krona', 'IGVjs_index' ]), # Reports and IGVjs index.html
+        expand("results/{file}.html", file = [ 'multiqc', 'krona' ]), # HTML Reports
+        expand("data/html/js-end.ok"),
 
 #################################################################################
 ##### Jovian sub-processes                                                  #####
@@ -472,42 +478,96 @@ cut -f 1-3,5 2>> {log} 1> {output.GC_bed}
         """
 
     #############################################################################
-    ##### Generate IGVjs index HTML                                         #####
+    ##### Generate IGVjs HTML                                         #####
     #############################################################################
 
-rule Generate_IGVjs_html_file:
-    input:
-        fasta="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"],
-        fastaFai="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta.fai" % config["scaffold_minLen_filter"]["minlen"],
-        bam="data/scaffolds_filtered/{sample}_sorted.bam",
-        bam_bai="data/scaffolds_filtered/{sample}_sorted.bam.bai",
-        zipped_vcf="data/scaffolds_filtered/{sample}_filtered.vcf.gz",
-        zipped_vcf_index="data/scaffolds_filtered/{sample}_filtered.vcf.gz.tbi",
-        zipped_gff3="data/scaffolds_filtered/{sample}_annotation.gff.gz",
-        zipped_gff3_index="data/scaffolds_filtered/{sample}_annotation.gff.gz.tbi",
-        GC_bed="data/scaffolds_filtered/{sample}_GC.bedgraph",
+rule HTML_IGVJs_part1_static_head:
     output:
-        "data/scaffolds_filtered/{sample}_IGVjs.html"
+        "data/html/html_head.ok"
     conda:
         "envs/data_wrangling.yaml"
-    benchmark:
-        "logs/benchmark/Generate_IGVjs_html_file_{sample}.txt"
     threads: 1
-    log:
-        "logs/Generate_IGVjs_html_file_{sample}.log"
     shell:
         """
-bash bin/generate_html_template_igv.sh {wildcards.sample} \
-{input.fasta} \
-{input.bam} \
-{input.bam_bai} \
-{output} \
-Jovian \
-{input.zipped_vcf} \
-{input.zipped_vcf_index} \
-{input.zipped_gff3} \
-{input.zipped_gff3_index} \
-{input.GC_bed} > {log} 2>&1
+bash bin/html/igvjs_write_html_head.sh {output}
+        """
+
+rule HTML_IGVJs_part2_tabs:
+    input:
+        "data/html/html_head.ok"
+    output:
+        "data/html/html_tabs.{sample}.ok"
+    conda:
+        "envs/data_wrangling.yaml"
+    threads: 1
+    shell:
+        """
+bash bin/html/igvjs_write_tabs.sh {wildcards.sample} {output} {input}
+        """
+
+rule HTML_IGVJs_part3_close_tabs:
+    input:
+        expand("data/html/html_tabs.{sample}.ok", sample = SAMPLES)
+    output:
+        "data/html/tabs_closed.ok"
+    conda:
+        "envs/data_wrangling.yaml"
+    threads: 1
+    shell:
+        """
+bash bin/html/igvjs_close_tabs.sh {output} {input}
+        """
+
+rule HTML_IGVJs_part4_divs:
+    input:
+        "data/html/tabs_closed.ok"
+    output:
+        "data/html/html_divs.{sample}.ok"
+    conda:
+        "envs/data_wrangling.yaml"
+    threads: 1
+    shell:
+        """
+bash bin/html/igvjs_write_divs.sh {wildcards.sample} {output} {input}
+        """
+
+rule HTML_IGVJs_part5_begin_js:
+    input:
+        expand("data/html/html_divs.{sample}.ok", sample = SAMPLES)
+    output:
+        "data/html/js-begin.ok"
+    conda:
+        "envs/data_wrangling.yaml"
+    threads: 1
+    shell:
+        """
+bash bin/html/igvjs_write_static_js_begin.sh {output} {input}
+        """
+
+rule HTML_IGVJs_part6_middle_js:
+    input:
+        "data/html/js-begin.ok"
+    output:
+        "data/html/js-flex.{sample}.ok"
+    conda:
+        "envs/data_wrangling.yaml"
+    threads: 1
+    shell:
+        """
+bash bin/html/igvjs_write_flex_js_middle.sh {wildcards.sample} {output} {input}
+        """
+
+rule HTML_IGVJs_part7_end_js:
+    input:
+        expand("data/html/js-flex.{sample}.ok", sample = SAMPLES)
+    output:
+        "data/html/js-end.ok"
+    conda:
+        "envs/data_wrangling.yaml"
+    threads: 1
+    shell:
+        """
+bash bin/html/igvjs_write_static_js_end.sh {output} {input}
         """
 
     #############################################################################
@@ -785,25 +845,6 @@ find {params.search_folder} -type f -name "{params.unclassified_glob}" -exec awk
 find {params.search_folder} -type f -name "{params.virusHost_glob}" -exec awk 'NR==1 || FNR!=1' {{}} + 2>> {log} 1> {output.virusHost}
         """
 
-rule Generate_index_html:
-    input:
-        expand("data/scaffolds_filtered/{sample}_IGVjs.html", sample = SAMPLES),
-    output:
-        IGVjs_index="results/IGVjs_index.html",
-    benchmark:
-        "logs/benchmark/Generate_index_html.txt"
-    threads: 1
-    log:
-        "logs/Generate_index_html.log"
-    params:
-        igvjs_title=config["HTML_index_titles"]["IGVjs_title"],
-        http_adress=config["Server_host"]["hostname"],
-        port=config["server_info"]["port"],
-    shell:
-        """
-bin/create_igv_index.sh
-        """
-
 rule Concat_filtered_SNPs:
     input:
         expand("data/scaffolds_filtered/{sample}_filtered.vcf", sample = SAMPLES)
@@ -830,7 +871,8 @@ python bin/concat_filtered_vcf.py {params.vcf_folder_glob} {output} > {log} 2>&1
 onerror:
     shell("""
         rm -f data/scaffolds_filtered/*.html
-        rm -f results/IGVjs_index.html
+        rm -f results/igv.html
+        rm -rf data/html/
     """)
 
 
@@ -854,6 +896,7 @@ onsuccess:
             rm -f data/scaffolds_filtered/*.windows
             rm -f data/taxonomic_classification/*.taxtab
             rm -f data/taxonomic_classification/*.taxMagtab
+            rm -rf data/html/
         else
             echo -e "\t\tYou chose to not remove temp files: the human genome alignment files are not removed."
         fi
