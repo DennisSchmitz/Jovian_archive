@@ -15,7 +15,6 @@ dependencies:
   - jupyter==1.0.0
   - jupyter_contrib_nbextensions==0.5.1
   - jupyterthemes==0.20.0
-  - nginx==1.15.9
   - drmaa==0.7.9
   - git==2.21.0
   - parallel==20190322
