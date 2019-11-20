@@ -87,19 +87,16 @@ Keyword | Taxon used for scaffold selection | Notable virus species
 ### Audit trail
 
 An audit trail, used for clinical reproducability and logging, is generated and contains:  
-- A unique methodological fingerprint of the code is generated and accessible via GitHub: allowing to exactly reproduce the analysis, even retrospectively by reverting to old versions of the pipeline code.  
+- A unique methodological fingerprint: allowing to exactly reproduce the analysis, even retrospectively by reverting to old versions of the pipeline code.  
 - The following information is also logged:  
   - Database timestamps  
   - (user-specified) Pipeline parameters  
 
 However, it has limitations since several things are out-of-scope for Jovian to control:
-- The `IGVjs` version  
 - The `virus typing-tools` version  
   - Currently we depend on a public web-tool hosted by the [RIVM](https://www.rivm.nl/en). These are developed in close collaboration with - *but independently of* - Jovian. A versioning system for the `virus typing-tools` is being worked on, however, this is not trivial and will take some time.  
-- Input files
-  - We only save the names and location of input files at the time the analysis was performed. Long-term storage of the data, and documenting their location over time, is the responsibility of the end-user.  
-- Input metadata
-  - The end-user is responsible for storing datasets with their correct metadata (e.g. clinical information, database versions, etc.). We recommend using [iRODS](https://irods.org) for this as described by [Nieroda et al. 2019](https://www.ncbi.nlm.nih.gov/pubmed/30646845). While we acknowledge that database versions are vital to replicate results, the databases Jovian uses have no official versioning, hence why we include timestamps only.  
+- Input files and metadata
+  - We only save the names and location of input files at the time the analysis was performed. Long-term storage of the data, and documenting their location over time, is the responsibility of the end-user. Likewise, the end-user is responsible for storing datasets with their correct metadata (e.g. clinical information, database versions, etc.). We recommend using [iRODS](https://irods.org) for this as described by [Nieroda et al. 2019](https://www.ncbi.nlm.nih.gov/pubmed/30646845). While we acknowledge that database versions are vital to replicate results, the databases Jovian uses have no official versioning, hence why we include timestamps only.  
 
 ___
 
