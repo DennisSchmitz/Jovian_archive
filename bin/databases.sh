@@ -192,7 +192,7 @@ cd "${DB_PATH_TAX}" || exit 1
 perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress taxdb
 
 ### UPDATING MGKIT
-cd "${DB_PATH_MGKIT}" ||| exit 1
+cd "${DB_PATH_MGKIT}" || exit 1
 bash "${CONDA_PREFIX}"/bin/download-taxonomy.sh ./
 
 ### UPDATING KRONA
@@ -367,7 +367,7 @@ cd "${DB_PATH_TAX}" || exit 1
 perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress taxdb
 
 ### UPDATING MGKIT
-cd "${DB_PATH_MGKIT}" ||| exit 1
+cd "${DB_PATH_MGKIT}" || exit 1
 bash "${CONDA_PREFIX}"/bin/download-taxonomy.sh ./
 
 ### UPDATING KRONA
