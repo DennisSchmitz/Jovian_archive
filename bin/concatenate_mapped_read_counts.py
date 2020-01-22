@@ -80,7 +80,15 @@ def main():
     concat_df = pd.DataFrame()
     
     for file in arguments.input:
-        sample = os.path.splitext(file.split('-')[-1])[0]
+        if file.count('-') > 1:
+            #If there are multiple dashes in the file name, the
+            # sample name contains one or more dashes.
+            sample = os.path.splitext('-'.join(file.split('-')[1:]))[0]
+            #So sample should include all parts separated by dashes.
+        else:
+            #Otherwise, the sample name has no dashes and splitting
+            # the filename in two will work.
+            sample = os.path.splitext(file.split('-')[-1])[0]
         df = pd.read_csv(file, sep='\t')
         df["Sample_name"] = sample
         
