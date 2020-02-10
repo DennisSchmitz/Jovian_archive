@@ -4,4 +4,4 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-    - blast==2.7.1
+    - blast==2.9.0

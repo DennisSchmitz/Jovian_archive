@@ -5,7 +5,7 @@ channels:
   - defaults
 dependencies:
   - bowtie2==2.3.4.3
-  - blast==2.7.1
+  - blast==2.9.0
   - krona==2.7.1
   - mgkit==0.3.4
 
