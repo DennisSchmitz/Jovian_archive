@@ -21,3 +21,4 @@ core.*
 archive_*.tar
 archive_*.tar.gz
 .nfs*
+.ncbirc

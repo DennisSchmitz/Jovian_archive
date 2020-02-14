@@ -1,4 +1,0 @@
-; Lines starting with a semi-colon are considered comments
-[BLAST]
-; Path to the BLAST databases
-BLASTDB=/mnt/db/NT_Database::/mnt/db/NR_Database::/mnt/db/taxdb
