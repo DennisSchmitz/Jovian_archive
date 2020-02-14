@@ -1,0 +1,55 @@
+#!/bin/bash
+# shellcheck disable=SC1091
+
+### Install Jovian_master if it doesn't already exist, verify by activating master env in this nested shell.
+### On succes, activate master env in real shell with an allexport
+
+if [[ $PATH != *${MASTER_NAME}* ]]; then 
+
+#? If the master environment is not in your path (i.e. it is not currently active), do...
+    
+    line
+    spacer
+    set +ue # Turn bash strict mode off because that breaks conda
+    
+    
+    if ! source activate "${MASTER_NAME}"; then
+    
+    #? Attempt to activate master conda env, if exit statement is not 0, i.e. master conda env hasn't been installed yet, do...
+    
+        installer_intro
+    
+        if [ "${SKIP_CONFIRMATION}" = "TRUE" ]; then
+    
+            echo -e "\tInstalling Jovian master environment..." | tee -a ${INSTALL_LOG}   
+            conda env create -f ${PATH_JOVIAN_MASTER_YAML} | tee -a ${INSTALL_LOG} # Create the env from the specified yaml file
+            source activate "${MASTER_NAME}"
+            echo -e "DONE"
+    
+        else
+            
+            while read -r -p "The Jovian_master environment hasn't been installed yet, do you want to install this environment now? [y/N] " envanswer
+            do
+                envanswer=${envanswer,,}
+                
+                if [[ "${envanswer}" =~ ^(yes|y)$ ]]; then
+                    echo -e "\tInstalling Jovian master environment..." | tee -a ${INSTALL_LOG}   
+                    conda env create -f ${PATH_JOVIAN_MASTER_YAML} | tee -a ${INSTALL_LOG} # Create the env from the specified yaml file
+                    source activate "${MASTER_NAME}"
+                    echo -e "DONE"
+                    break
+                
+                elif [[ "${envanswer}" =~ ^(no|n)$ ]]; then
+                    echo -e "The Jovian_master environment is a requirement. Exiting because Jovian cannot continue without this environment"
+                    exit 1
+                
+                else
+                    echo -e "Please answer with 'yes' or 'no'"
+                    minispacer
+                
+                fi
+            done
+        fi
+    fi
+    set -ue # Turn bash strict mode on again
+fi

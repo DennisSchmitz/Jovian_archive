@@ -1,15 +1,7 @@
 #!/bin/bash
 # shellcheck disable=SC1091
-source bin/functions.sh
 
-#? some statements here that will probably be used
-PATHING_SINGLE="FALSE"
-PATHING_DIFFERENT="FALSE"
-db_path_single_confirmed="no"
-db_paths_indiv_confirmed="no"
-
-
-# ! start the actual script here
+#* welcome to while-loop extravaganza
 
 database_installer_intro
 
@@ -35,13 +27,16 @@ done
 database_installer
 
 # ! Introduction to paths for the database installer
+
 echo -e "Do you wish to use \e[1mone single path for all databases\e[0m or do you wish to have \e[1mindividual paths for each database?\e[0m"
 thinline
+
 echo -e "Example for one single path for all databases:"
 echo -e "/same/path/to/database_A/"
 echo -e "/same/path/to/database_B/"
 echo -e "/same/path/to/database_C/"
 thinline
+
 echo -e "Examples for individual paths for each database:"
 echo -e "/first/path/to/database_A/"
 echo -e "/different/path/to/other/database_B/"
@@ -55,12 +50,14 @@ do
     db_pathstructure_response=${db_pathstructure_response,,}
     if [[ "${db_pathstructure_response}" =~ ^(single|s)$ ]]; then
         PATHING_SINGLE="TRUE"
+		export PATHING_SINGLE
         echo "A single path-structure has been selected."
         echo "Continuing..."
         sleep 2
         break
     elif [[ "${db_pathstructure_response}" =~ ^(individual|i)$ ]]; then
         PATHING_DIFFERENT="TRUE"
+		export PATHING_DIFFERENT
         echo "An individual path-structure for each database has been selected."
         echo "Continuing..."
         sleep 2
@@ -73,15 +70,18 @@ done
 
 database_installer
 if [ "${PATHING_SINGLE}" == "TRUE" ]; then
-    # ! ASK THE PROMPT FOR THE BASE PATH HERE
+    
+	# ! ASK THE PROMPT FOR THE BASE PATH HERE
     echo -e "The databases have to be installed in a location from the root directory..."
     echo -e "In other words, the path you specify must start with a '/'"
     echo -e "It is also important to note that the specified path should NOT END with a trailing '/'"
     thinline
-    echo -e "Example of a path which is correct:"
+    
+	echo -e "Example of a path which is correct:"
     echo -e "\e[40;92m /this/path/is/correct \e[0m"
     thinline
-    echo -e "Example of a path which is incorrect:"
+    
+	echo -e "Example of a path which is incorrect:"
     echo -e "\e[40;91m this/path/is/incorrect/ \e[0m"
     minispacer
 
@@ -247,7 +247,7 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
     printf "\e[40;91m this/path/is/also/incorrect \e[0m\n"
     minispacer
 
-    while read -r -e -p "Please type out the path under which you want to install the BLAST NT database: " db_path_indiv_NT_response; read -r -e -p "Please type out the path under which you want to install the BLAST NR database: " db_path_indiv_NR_response; read -r -e -p "Please type out the path under which you want to install the TaxDB: " db_path_indiv_taxdb_response; read -r -e -p "Please type out the path under which you want to install the NewTaxdump database: " db_path_indiv_ntax_response; read -r -e -p "Please type out the path under which you want to install the MMGKit database: " db_path_indiv_mgkit_response; read -r -e -p "Please type out the path under which you want to install the Krona LCA database: " db_path_indiv_krona_response; read -r -e -p "please type out the path under which you want to install the VirusHost Interaction database: " db_path_indiv_vhost_response
+    while read -r -e -p "Please type out the path under which you want to install the BLAST NT database: " db_path_indiv_NT_response; read -r -e -p "Please type out the path under which you want to install the BLAST NR database: " db_path_indiv_NR_response; read -r -e -p "Please type out the path under which you want to install the TaxDB: " db_path_indiv_taxdb_response; read -r -e -p "Please type out the path under which you want to install the NewTaxdump database: " db_path_indiv_ntax_response; read -r -e -p "Please type out the path under which you want to install the MGKit database: " db_path_indiv_mgkit_response; read -r -e -p "Please type out the path under which you want to install the Krona LCA database: " db_path_indiv_krona_response; read -r -e -p "please type out the path under which you want to install the VirusHost Interaction database: " db_path_indiv_vhost_response
     do
         db_path_indiv_NT_response=${db_path_indiv_NT_response}
         db_path_indiv_NR_response=${db_path_indiv_NR_response}

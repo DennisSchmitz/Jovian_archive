@@ -1,0 +1,89 @@
+#!/bin/bash
+# shellcheck disable=SC1091
+
+eval "$(parse_yaml "${HOME}"/.jovian_installchoice_db "db_")"
+
+
+if [ "$db_installeranswers_databases" == "U" ]; then
+    installer_intro
+    echo "Jovian requires several databases to run."
+    echo "Please specify the location of each required database, you will only have to do this once (the answers given will be stored)"
+    echo "The location of each database must start with a '/'"
+    thinline
+    minispacer
+
+    while
+    read -r -e -p "Please specify the location where your BLAST NT database is installed: " blastnt_db_path
+    read -r -e -p "Please specify the location where your BLAST NR database is installed: " blastnr_db_path
+    read -r -e -p "Please specify the location where your TAXDB database is installed: " ncbi_taxdb_db_path
+    read -r -e -p "Please specify the location where your Background Reference is installed: " bg_ref_path
+    read -r -e -p "Please specify the location where the Krona Taxonomy database is installed: " krona_db_path
+    read -r -e -p "Please specify the location where the MGKit Taxonomy database is installed: " mgkit_db_path
+    read -r -e -p "Please specify the location of the 'virushostdb.tsv' file: "  virushost_path
+    read -r -e -p "Please specify the location of the new_taxdump 'rankedlineage.dmp.delim' file: " newtaxdump_ranked_path
+    read -r -e -p "Please specify the location of the new_taxdump 'host.dmp.delim' file: " newtaxdump_host_path
+    do
+        
+
+        blastnt_db_path=${blastnt_db_path}
+        blastnr_db_path=${blastnr_db_path}
+        ncbi_taxdb_db_path=${ncbi_taxdb_db_path}
+        bg_ref_path=${bg_ref_path}
+        krona_db_path=${krona_db_path}
+        mgkit_db_path=${mgkit_db_path}
+        virushost_path=${virushost_path}
+        newtaxdump_ranked_path=${newtaxdump_ranked_path}
+        newtaxdump_host_path=${newtaxdump_host_path}
+
+        minispacer
+        echo -e "Your provided answers are as follows:"
+        echo -e "\e[1mBLAST-NT database location: ${blastnt_db_path}\e[0m"
+        echo -e "\e[1mBLAST-NR database location: ${blastnr_db_path}\e[0m"
+        echo -e "\e[1mNCBI TAXDB database location: ${ncbi_taxdb_db_path}\e[0m"
+        echo -e "\e[1mBackground reference location: ${bg_ref_path}\e[0m"
+        echo -e "\e[1mKrona taxonomy database location: ${krona_db_path}\e[0m"
+        echo -e "\e[1mMGKit taxonomy database location: ${mgkit_db_path}\e[0m"
+        echo -e "\e[1mVirusHost.tsv file location: ${virushost_path}\e[0m"
+        echo -e "\e[1mNewtaxdump rankedlineage.dmp.delim file location: ${newtaxdump_ranked_path}\e[0m"
+        echo -e "\e[1mNewtaxdump host.dmp.delim file location: ${newtaxdump_host_path}\e[0m"
+        minispacer
+        
+        while read -r -p "Does this look correct? [yes/no] " db_paths_confirm
+        do
+            db_paths_confirm=${db_paths_confirm,,}
+            if [[ "${db_paths_confirm}" =~ ^(yes)$ ]]; then
+                echo "The locations of databases and files have been confirmed"
+                break
+            elif [[ "${db_paths_confirm}" =~ ^(no)$ ]]; then
+                minispacer
+                break
+            else
+                echo "Please answer with 'yes' or 'no'"
+            fi
+        done
+
+        if [[  "${db_paths_confirm}" =~ ^(yes)$ ]]; then
+            echo -e "installeranswers:\n    databases: SET\n    BLASTNT: ${blastnt_db_path}\n    BLASTNR: ${blastnr_db_path}\n    NCBITAXDB: ${ncbi_taxdb_db_path}\n    backgroundref: ${bg_ref_path}\n    kronataxonomy: ${krona_db_path}\n    virushostdb: ${virushost_path}\n    newtaxdumpranked: ${newtaxdump_ranked_path}\n    newtaxdumphost: ${newtaxdump_host_path}\n    mgkittaxonomy: ${mgkit_db_path}" > "${HOME}"/.jovian_installchoice_db
+            sed -i '\|databases|d' "${PROFILE}"/pipeline_parameters.yaml
+            sed -i '\|background_ref|d' "${PROFILE}"/pipeline_parameters.yaml
+            sed -i '\|Krona_taxonomy|d' "${PROFILE}"/pipeline_parameters.yaml
+            sed -i '\|MGKit_taxonomy|d' "${PROFILE}"/pipeline_parameters.yaml
+            sed -i '\|virusHostDB|d' "${PROFILE}"/pipeline_parameters.yaml
+            sed -i '\|NCBI_new_taxdump_rankedlineage|d' "${PROFILE}"/pipeline_parameters.yaml
+            sed -i '\|NCBI_new_taxdump_host|d' "${PROFILE}"/pipeline_parameters.yaml
+
+            echo -e "databases:\n    background_ref: ${bg_ref_path}\n    Krona_taxonomy: ${krona_db_path}\n    virusHostDB: ${virushost_path}\n    NCBI_new_taxdump_rankedlineage: ${newtaxdump_ranked_path}\n    NCBI_new_taxdump_host: ${newtaxdump_host_path}\n    MGKit_taxonomy: ${mgkit_db_path}" >> "${PROFILE}"/pipeline_parameters.yaml
+            break
+        fi
+    done
+elif [ "${db_installeranswers_databases}" == "SET" ]; then
+    sed -i '\|databases|d' "${PROFILE}"/pipeline_parameters.yaml
+    sed -i '\|background_ref|d' "${PROFILE}"/pipeline_parameters.yaml
+    sed -i '\|Krona_taxonomy|d' "${PROFILE}"/pipeline_parameters.yaml
+    sed -i '\|MGKit_taxonomy|d' "${PROFILE}"/pipeline_parameters.yaml
+    sed -i '\|virusHostDB|d' "${PROFILE}"/pipeline_parameters.yaml
+    sed -i '\|NCBI_new_taxdump_rankedlineage|d' "${PROFILE}"/pipeline_parameters.yaml
+    sed -i '\|NCBI_new_taxdump_host|d' "${PROFILE}"/pipeline_parameters.yaml
+
+    echo -e "databases:\n    background_ref: ${db_installeranswers_backgroundref}\n    Krona_taxonomy: ${db_installeranswers_kronataxonomy}\n    virusHostDB: ${db_installeranswers_virushostdb}\n    NCBI_new_taxdump_rankedlineage: ${db_installeranswers_newtaxdumpranked}\n    NCBI_new_taxdump_host: ${db_installeranswers_newtaxdumphost}\n    MGKit_taxonomy: ${db_installeranswers_mgkittaxonomy}" >> "${PROFILE}"/pipeline_parameters.yaml
+fi

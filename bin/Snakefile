@@ -13,8 +13,8 @@ Changelog, examples, installation guide and explanation on:
 
 shell.executable("/bin/bash")
 
-configfile: "profile/pipeline_parameters.yaml"
-configfile: "profile/variables.yaml"
+configfile: "config/pipeline_parameters.yaml"
+configfile: "config/variables.yaml"
 
 import pprint
 import os
@@ -56,15 +56,15 @@ onstart:
         conda list > results/log_conda.txt
 
         echo -e "\tGenerating used databases log..."
-        echo -e "==> User-specified background reference (default: Homo Sapiens NCBI GRch38 NO DECOY genome): <==\n$(ls -lah $(grep "    background_ref:" profile/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" > results/log_db.txt
-        echo -e "\n==> Virus-Host Interaction Database: <==\n$(ls -lah $(grep "    virusHostDB:" profile/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> results/log_db.txt
-        echo -e "\n==> Krona Taxonomy Database: <==\n$(ls -lah $(grep "    Krona_taxonomy:" profile/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> results/log_db.txt
-        echo -e "\n==> NCBI new_taxdump Database: <==\n$(ls -lah $(grep "    NCBI_new_taxdump_rankedlineage:" profile/pipeline_parameters.yaml | cut -f 2 -d ":") $(grep "    NCBI_new_taxdump_host:" profile/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> results/log_db.txt
-        echo -e "\n==> NCBI Databases as specified in ~/.ncbirc: <==\n$(ls -lah $(grep "BLASTDB=" ~/.ncbirc | cut -f 2 -d "=" | tr "::" " "))\n" >> results/log_db.txt
+        echo -e "==> User-specified background reference (default: Homo Sapiens NCBI GRch38 NO DECOY genome): <==\n$(ls -lah $(grep "    background_ref:" config/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" > results/log_db.txt
+        echo -e "\n==> Virus-Host Interaction Database: <==\n$(ls -lah $(grep "    virusHostDB:" config/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> results/log_db.txt
+        echo -e "\n==> Krona Taxonomy Database: <==\n$(ls -lah $(grep "    Krona_taxonomy:" config/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> results/log_db.txt
+        echo -e "\n==> NCBI new_taxdump Database: <==\n$(ls -lah $(grep "    NCBI_new_taxdump_rankedlineage:" config/pipeline_parameters.yaml | cut -f 2 -d ":") $(grep "    NCBI_new_taxdump_host:" config/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> results/log_db.txt
+        echo -e "\n==> NCBI Databases as specified in ~/.ncbirc: <==\n$(ls -lah $(grep "BLASTDB=" .ncbirc | cut -f 2 -d "=" | tr "::" " "))\n" >> results/log_db.txt
         
         echo -e "\tGenerating config file log..."
         rm -f results/log_config.txt
-        for file in profile/*.yaml
+        for file in config/*.yaml
         do
             echo -e "\n==> Contents of file \"${{file}}\": <==" >> results/log_config.txt
             cat ${{file}} >> results/log_config.txt
@@ -136,7 +136,7 @@ rule QC_raw_data:
         output_dir="data/FastQC_pretrim/"
     shell:
         """
-bash bin/fastqc_wrapper.sh {input} {params.output_dir} {output.html} {output.zip} {log}
+bash bin/scripts/fastqc_wrapper.sh {input} {params.output_dir} {output.html} {output.zip} {log}
         """
 
 rule Clean_the_data:
@@ -694,7 +694,7 @@ rule count_mapped_reads:
         "logs/count_mapped_reads-{sample}.txt"
     shell:
         """
-bash bin/count_mapped_reads.sh {input} > {output} 2> {log}
+bash bin/scripts/count_mapped_reads.sh {input} > {output} 2> {log}
         """
 
 rule concatenate_read_counts:
@@ -709,7 +709,7 @@ rule concatenate_read_counts:
         "logs/concatenate_read_counts.txt"
     shell:
         """
-        bin/concatenate_mapped_read_counts.py \
+        bin/scripts/concatenate_mapped_read_counts.py \
         -i {input} \
         -o {output} \
         > {log} 2>&1
@@ -738,7 +738,7 @@ rule quantify_output:
         "logs/quantify_output.log"
     shell:
         """
-python bin/quantify_profiles.py \
+python bin/scripts/quantify_profiles.py \
 -f {input.fastqc} \
 -t {input.trimmomatic} \
 -hg {input.hugo} \
@@ -779,7 +779,7 @@ rule draw_heatmaps:
         "logs/draw_heatmaps.log"
     shell:
         """
-python bin/draw_heatmaps.py -c {input.classified} -n {input.numbers} -sq {output.super_quantities} -st {output.stats} -vs {output.vir_stats} -ps {output.phage_stats} -bs {output.bact_stats} -s {output.super} -v {output.virus} -p {output.phage} -b {output.bact} > {log} 2>&1
+python bin/scripts/draw_heatmaps.py -c {input.classified} -n {input.numbers} -sq {output.super_quantities} -st {output.stats} -vs {output.vir_stats} -ps {output.phage_stats} -bs {output.bact_stats} -s {output.super} -v {output.virus} -p {output.phage} -b {output.bact} > {log} 2>&1
         """
 
     #############################################################################
@@ -808,7 +808,7 @@ rule Merge_all_metrics_into_single_tsv:
         "logs/Merge_all_metrics_into_single_tsv_{sample}.log"
     shell:
         """
-python bin/merge_data.py {wildcards.sample} \
+python bin/scripts/merge_data.py {wildcards.sample} \
 {input.bbtoolsFile} \
 {input.kronaFile} \
 {input.minLenFiltScaffolds} \
@@ -861,7 +861,7 @@ rule Concat_filtered_SNPs:
         "logs/Concat_filtered_SNPs.log"
     shell:
         """
-python bin/concat_filtered_vcf.py {params.vcf_folder_glob} {output} > {log} 2>&1
+python bin/scripts/concat_filtered_vcf.py {params.vcf_folder_glob} {output} > {log} 2>&1
         """
 
 #################################################################################
@@ -902,14 +902,14 @@ onsuccess:
         fi
 
         echo -e "\tCreating symlinks for the interactive genome viewer..."
-        bin/set_symlink.sh
+        bin/scripts/set_symlink.sh
 
         echo -e "\tGenerating HTML index of log files..."
         tree -hD --dirsfirst -H "../logs" -L 2 -T "Logs overview" --noreport --charset utf-8 -P "*" -o results/logfiles_index.html logs/
 
         echo -e "\tGenerating Snakemake report..."
-        snakemake --unlock --config sample_sheet=sample_sheet.yaml
-        snakemake --report results/snakemake_report.html --config sample_sheet=sample_sheet.yaml
+        snakemake -s bin/Snakefile --unlock --config sample_sheet=sample_sheet.yaml
+        snakemake -s bin/Snakefile --report results/snakemake_report.html --config sample_sheet=sample_sheet.yaml
 
         echo -e "Finished"
     """)

@@ -1,8 +1,5 @@
 #!/bin/bash
-
-source bin/functions.sh
-
-SET_HOSTNAME=$(bin/gethostname.sh)
+# shellcheck disable=SC1091
 
 
 minispacer
@@ -18,7 +15,7 @@ minispacer
 
 eval $(parse_yaml profile/variables.yaml "vars_")
 oldhostname="$vars_Server_host_hostname"
-newhostname="http://${SET_HOSTNAME}"
+newhostname="http://${HOSTNAME}"
 
 
 ###### Modifying the HTML index file for IGVjs
@@ -31,7 +28,7 @@ fi
 if [ -e profile/variables.yaml ]; then
     echo -e "Resetting some of the variables..."
     sed '3,4d' -i profile/variables.yaml
-    echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> profile/variables.yaml
+    echo -e "Server_host:\n    hostname: http://${HOSTNAME}" >> profile/variables.yaml
 fi
 
 minispacer

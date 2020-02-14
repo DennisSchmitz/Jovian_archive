@@ -1,0 +1,53 @@
+#!/bin/bash
+# shellcheck disable=SC1091
+
+
+line
+spacer
+echo -e "The following files and folders will be deleted:\ndata/\nlogs/\nresults/\nconfig/variables.yaml\nsample_sheet.yaml\n\n"
+if [ "${SKIP_CONFIRMATION}" == "TRUE" ]; then
+    echo -e "Removing Jovian output: data/ logs/ results/ config/variables.yaml sample_sheet.yaml"
+        rm -rf data/
+        rm -rf logs/
+        rm -rf results/
+        rm -f sample_sheet.yaml
+        rm -f config/variables.yaml
+
+        ## clean the yaml files
+        sed -i '\|databases|d' config/pipeline_parameters.yaml
+        sed -i '\|background_ref|d' config/pipeline_parameters.yaml
+        sed -i '\|Krona_taxonomy|d' config/pipeline_parameters.yaml
+        sed -i '\|virusHostDB|d' config/pipeline_parameters.yaml
+        sed -i '\|NCBI_new_taxdump_rankedlineage|d' config/pipeline_parameters.yaml
+        sed -i '\|NCBI_new_taxdump_host|d' config/pipeline_parameters.yaml
+        sed -i '\|drmaa|d' config/config.yaml
+
+else
+    while read -r -p "Are you sure you wish to permanently delete these files and folders? [y/N] " response
+    do
+        response=${response,,}
+        if [[ "${response}" =~ ^(yes|y)$ ]] || [ "${SKIP_CONFIRMATION}" == "TRUE" ]; then
+            echo -e "Removing Jovian output: data/ logs/ results/ config/variables.yaml sample_sheet.yaml"
+            rm -rf data/
+            rm -rf logs/
+            rm -rf results/
+            rm -f sample_sheet.yaml
+            rm -f config/variables.yaml
+
+            sed -i '\|databases|d' config/pipeline_parameters.yaml
+            sed -i '\|background_ref|d' config/pipeline_parameters.yaml
+            sed -i '\|Krona_taxonomy|d' config/pipeline_parameters.yaml
+            sed -i '\|virusHostDB|d' config/pipeline_parameters.yaml
+            sed -i '\|NCBI_new_taxdump_rankedlineage|d' config/pipeline_parameters.yaml
+            sed -i '\|NCBI_new_taxdump_host|d' config/pipeline_parameters.yaml
+            sed -i '\|drmaa|d' config/config.yaml
+            break
+        elif [[ "${response}" =~ ^(no|n)$ ]]; then
+            echo -e "Aborting cleaning process on user request"
+            exit 0
+        else
+            echo -e "Please answer with 'yes' or 'no'"
+            minispacer
+        fi
+    done
+fi

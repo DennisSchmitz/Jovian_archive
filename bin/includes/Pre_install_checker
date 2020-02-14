@@ -1,0 +1,28 @@
+#!/bin/bash
+# shellcheck disable=SC1091
+
+if [ ! -e "${PATH_JOVIAN_MASTER_YAML}" ]; then # If this yaml file does not exist, give error.
+    line
+    spacer
+    echo -e "ERROR: Missing file \"${PATH_JOVIAN_MASTER_YAML}\""
+    exit 1
+fi
+if [ ! -e "${PATH_JOVIAN_HELPER_YAML}" ]; then # If this yaml file does not exist, give error.
+    line
+    spacer
+    echo -e "ERROR: Missing file \"${PATH_JOVIAN_HELPER_YAML}\""
+    exit 1
+fi
+if [ ! -e "${PROFILE}/config.yaml" ]; then # If this profile folder containing config.yaml does not exist, give error.
+    line
+    spacer
+    echo -e "ERROR: Missing file \"${PROFILE}/config.yaml\""
+    exit 1
+fi
+
+if [ ! -e "${HOME}/.jovian_installchoice_compmode" ]; then
+    echo -e "installeranswers:\n    compmode: U\n   queue: U" > "${HOME}"/.jovian_installchoice_compmode
+fi
+if [ ! -e "${HOME}/.jovian_installchoice_db" ]; then
+    echo -e "installeranswers:\n    databases: U\n    backgroundref: U\n    kronataxonomy: U\n    virushostdb: U\n    newtaxdumpranked: U\n    newtaxdumphost: U" > "${HOME}"/.jovian_installchoice_db
+fi

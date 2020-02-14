@@ -1,7 +1,7 @@
 #!/bin/bash
-source bin/functions.sh
+source bin/includes/functions
 
-eval $(parse_yaml profile/variables.yaml "vars_")
+eval $(parse_yaml config/variables.yaml "vars_")
 
 currentuser=$(whoami)
 
