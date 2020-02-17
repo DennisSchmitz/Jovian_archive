@@ -223,5 +223,5 @@ ___
 - Marion Koopmans ([EMC](https://www6.erasmusmc.nl/viroscience/))  
 
 ____
-_This project/research has received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement No. 643476._
+_This project/research has received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement No. 643476. and the Dutch working group on molecular diagnostics (WMDI)._
 ____
