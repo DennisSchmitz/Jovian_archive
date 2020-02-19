@@ -270,7 +270,7 @@ bash bin/includes/Install_conda_envs
 
 ### Start and stop commands for nginx
 if [ "${START_NGINX}" == "TRUE" ]; then
-    (bin/start_nginx.sh start)
+    (bin/includes/Start_nginx start)
     exit 0
 fi
 if [ "${STOP_NGINX}" == "TRUE" ]; then
@@ -281,123 +281,38 @@ fi
 
 ### * Auto configure the jupyter user profile and prepare it for direct use
 if [ "${CONFIG_JUP}" == "TRUE" ]; then
-    jt -t grade3 -fs 95 -altp -tfs 11 -nfs 115 -cellw 88% -T
-    sed -i '1704,1706d' ~/.jupyter/custom/custom.css
-    sed -i '35,55d' ~/.jupyter/custom/custom.css
-    cat files/Jupyter_notebook/overrides.css >> ~/.jupyter/custom/custom.css
-    jupyter notebook --generate-config
-    sed -i "s/#c.NotebookApp.allow_remote_access = False/c.NotebookApp.allow_remote_access = True/g" ~/.jupyter/jupyter_notebook_config.py
-    sed -i "s/#c.NotebookApp.ip = 'localhost'/c.NotebookApp.ip = '${SET_HOSTNAME}'/g" ~/.jupyter/jupyter_notebook_config.py
-    sed -i "s/#c.NotebookApp.port = 8888/c.NotebookApp.port = 8888/g" ~/.jupyter/jupyter_notebook_config.py
-    sed -i "s/#c.NotebookApp.open_browser = True/c.NotebookApp.open_browser = False/g" ~/.jupyter/jupyter_notebook_config.py
-    sed -i "s/#c.NotebookApp.iopub_data_rate_limit = 1000000/c.NotebookApp.iopub_data_rate_limit = 100000000/g" ~/.jupyter/jupyter_notebook_config.py
-    cp files/Jupyter_notebook/edit.json ~/.jupyter/nbconfig
-    cp files/Jupyter_notebook/notebook.json ~/.jupyter/nbconfig
-    cp files/Jupyter_notebook/tree.json ~/.jupyter/nbconfig
-    echo "Done - Jupyter notebooks is configured and ready for use"
+    bash bin/includes/Config_jupyter
     exit 0
 fi
 
 if [ "${START_JUPYTER}" == "TRUE" ]; then
-    cd /
-    line
-    minispacer
-    # ! Give notices that jupyter is scary >:(
-    printf "\e[1;91;40m\tJupyter notebooks will start in a moment                                                      \e[0m\n"
-    printf "\e[1;91;40m\tPlease take note that Jupyter will keep running until you \e[4mEXPLICITLY\e[24m tell it to stop.         \e[0m\n"
-    printf "\e[1;91;40m\tYou can stop Jupyter by pressing 'Ctrl + C' on your keyboard \e[4mtwice\e[24m                            \e[0m\n"
-    minispacer
-    sleep 3
-    jupyter notebook
+    bash bin/includes/Start_jupyter
     exit 0
 fi
 
-if [ "${JOVIAN_MODE}" == "relaxed" ]; then
-    #* Check the settings for the slidingwindow and change it when the setting does not match :5:20
-    if [ "$params_Trimmomatic_quality_trimming_config" != "SLIDINGWINDOW:5:20" ]; then
-        sed -i "s/    quality_trimming_config: $params_Trimmomatic_quality_trimming_config/    quality_trimming_config: SLIDINGWINDOW:5:20/g" config/pipeline_parameters.yaml
-    fi
-    #* Check the settings for the minlen filtering and change it when the setting does not match 250
-    if [ "$params_scaffold_minLen_filter_minlen" != "250" ]; then
-        sed -i "s/    minlen: $params_scaffold_minLen_filter_minlen/    minlen: 250/g" config/pipeline_parameters.yaml
-    fi
-    echo -e "Relaxed mode set..."
-
-elif [ "${JOVIAN_MODE}" == "strict" ]; then
-    #* Check the settings for the slidingwindow and change it when the setting does not match :5:30
-    if [ "$params_Trimmomatic_quality_trimming_config" != "SLIDINGWINDOW:5:30" ]; then
-        sed -i "s/    quality_trimming_config: $params_Trimmomatic_quality_trimming_config/    quality_trimming_config: SLIDINGWINDOW:5:30/g" config/pipeline_parameters.yaml
-    fi
-    #* Check the settings for the minlen filtering and change it when the setting does not match 500
-    if [ "$params_scaffold_minLen_filter_minlen" != "500" ]; then
-        sed -i "s/    minlen: $params_scaffold_minLen_filter_minlen/    minlen: 500/g" config/pipeline_parameters.yaml
-    fi
-    echo -e "Strict mode set..."
-
-elif [ "${JOVIAN_MODE}" == "NONE" ]; then
-    #* Check if parameters match with strict mode
-    if [ "$params_Trimmomatic_quality_trimming_config" == "SLIDINGWINDOW:5:30" ] && [ "$params_scaffold_minLen_filter_minlen" == "500" ]; then
-        echo -e "Jovian will run in strict mode..."
-    fi
-    #* Check if parameters match with relaxed mode
-    if [ "$params_Trimmomatic_quality_trimming_config" == "SLIDINGWINDOW:5:20" ] && [ "$params_scaffold_minLen_filter_minlen" == "250" ]; then
-        echo -e "Jovian will run in relaxed mode..."
-    fi
-    #* Check if parameters do not match with any of the predefined modes, exit if true
-    if [[ ! "$params_Trimmomatic_quality_trimming_config" =~ ^(SLIDINGWINDOW:5:20|SLIDINGWINDOW:5:30)$ ]]; [[ ! "$params_scaffold_minLen_filter_minlen" =~ ^(250|500)$ ]]; then
-        echo -e "Jovian will run in a custom mode"
-    fi
-
-elif [[ ! "${JOVIAN_MODE}" =~ ^(relaxed|strict)$ ]]; then
-    #* Check if parameters match with strict mode
-    if [ "$params_Trimmomatic_quality_trimming_config" == "SLIDINGWINDOW:5:30" ] && [ "$params_scaffold_minLen_filter_minlen" == "500" ]; then
-        echo -e "Jovian is set to run in strict mode"
-        exit 0
-    fi
-    #* Check if parameters match with relaxed mode
-    if [ "$params_Trimmomatic_quality_trimming_config" == "SLIDINGWINDOW:5:20" ] && [ "$params_scaffold_minLen_filter_minlen" == "250" ]; then
-        echo -e "Jovian is set to run in relaxed mode"
-        exit 0
-    fi
-    #* Check if parameters do not match with any of the predefined modes, exit if true
-    if [[ ! "$params_Trimmomatic_quality_trimming_config" =~ ^(SLIDINGWINDOW:5:20|SLIDINGWINDOW:5:30)$ ]]; [[ ! "$params_scaffold_minLen_filter_minlen" =~ ^(250|500)$ ]]; then
-        echo -e "Jovian is set to run with a custom config/mode"
-        exit 0
-    fi
-fi
-
-### Pass other CLI arguments along to Snakemake
-if [ ! -d "${INPUT_DIR}" ]; then
-    minispacer
-    echo -e "The input directory specified (${INPUT_DIR}) does not exist"
-    echo -e "Please specify an existing input directory"
+if ! bash bin/includes/Mode; then
     exit 1
 fi
 
-### Generate sample sheet
-if [ -n "$(ls -A "${INPUT_DIR}")" ]; then
-    minispacer
-    echo -e "Files in input directory (${INPUT_DIR}) are present"
-    echo -e "Generating sample sheet..."
-    bin/scripts/generate_sample_sheet.py "${INPUT_DIR}" > sample_sheet.yaml
-    SHEET_SUCCESS="TRUE"
-else
-    minispacer
-    echo -e "The input directory you specified (${INPUT_DIR}) exists but is empty...\nPlease specify a directory with input-data."
-    exit 0
+
+if ! bash bin/includes/Make_samplesheet; then
+    exit 1
 fi
+
+if [ -e sample_sheet.yaml ]; then
+    echo "sample sheet exists"
+    set -o allexport
+    SHEET_SUCCESS="TRUE"
+    set +o allexport
+fi
+
 
 ### Checker for succesfull creation of sample_sheet
 if [ "${SHEET_SUCCESS}" == "TRUE" ]; then
     echo -e "Succesfully generated the sample sheet"
     ready_for_start
 else
-    echo -e "Couldn't find files in the input directory that ended up being in a .FASTQ, .FQ or .GZ format"
-    echo -e "Please inspect the input directory (${INPUT_DIR}) and make sure the files are in one of the formats listed below"
-    echo -e ".fastq.gz (Zipped Fastq)"
-    echo -e ".fq.gz (Zipped Fq)"
-    echo -e ".fastq (Unzipped Fastq)"
-    echo -e ".fq (unzipped Fq)"
+    echo "Something went wrong with the sample sheet, aborting jovian process..."
     exit 1
 fi
 
