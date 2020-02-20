@@ -113,6 +113,6 @@ rule lca_mgkit:
         if [[ ! -e {output.no_lca} ]]; then
         touch {output.no_lca}
         fi
-        python bin/average_logevalue_no_lca.py {output.taxtab} {output.no_lca} {input.filtgff} {output.taxtab} >> {log} 2>&1;
-        python bin/krona_magnitudes.py {output.taxtab} {input.stats} {output.taxMagtab} >> {log} 2>&1
+        python bin/scripts/average_logevalue_no_lca.py {output.taxtab} {output.no_lca} {input.filtgff} {output.taxtab} >> {log} 2>&1;
+        python bin/scripts/krona_magnitudes.py {output.taxtab} {input.stats} {output.taxMagtab} >> {log} 2>&1
         """
