@@ -8,7 +8,7 @@
 
 source bin/includes/functions
 
-eval $(parse_yaml profile/pipeline_parameters.yaml "config_")
+eval $(parse_yaml config/pipeline_parameters.yaml "config_")
 currentuser=$(whoami)
 
 
