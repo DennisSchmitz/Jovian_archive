@@ -4,7 +4,9 @@
 #set -v
 #set -x
 
-#load in standard vars
+#@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#@ load in standard vars
+
 set -o allexport
 [[ -f .env ]] && source .env
 source bin/includes/functions
@@ -13,7 +15,11 @@ set +o allexport
 eval "$(parse_yaml config/pipeline_parameters.yaml "params_")"
 eval "$(parse_yaml config/config.yaml "configuration_")"
 
-### Parse the jovian commandline arguments, if they are not part of jovian, they get send to Snakemake
+#@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#@ Parse the jovian commandline arguments.
+#@ If the given arguments are not part of Jovian, then Jovian will send them to Snakemake
+#@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
 POSITIONAL=()
 while [[ $# -gt 0 ]]
 do
@@ -28,8 +34,8 @@ do
         -m|--mode)
         JOVIAN_MODE="$2"
         export JOVIAN_MODE
-        shift #Next
-        shift #Next
+        shift # Next
+        shift # Next
         ;;
         -h|--help)
         JOVIAN_HELP="TRUE"
@@ -145,37 +151,52 @@ do
         ;;
     esac
 done
-set -- "${POSITIONAL[@]:-}" # Restores the positional arguments (i.e. without the case arguments above) which then can be called via `$@` or `$[0-9]` etc. These parameters are send to Snakemake.
+set -- "${POSITIONAL[@]:-}" #> Restores the positional arguments 
+                            #> (i.e. without the case arguments above) which then can be called via `$@` or `$[0-9]` etc.
+                            #> These parameters are send to Snakemake.
 
-### Check the jovian CLI arguments and do stuff
 
-### Show Jovian version
+
+#@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#@ 
+#@ First basic arguments that do not require Jovian to be installed
+#@
+#@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+
+
+
+###> Show Jovian version
 if [ "${SHOW_VERSION}" == "TRUE" ]; then
     bash bin/includes/Version
     exit 0
 fi
 
-### Remove all Jovian output
+###> Remove all Jovian output
 if [ "${CLEAN:-}" == "TRUE" ]; then
     bash bin/includes/Clean
     exit 0
 fi
 
-### Print Jovian help message
+###> Print Jovian help message
 if [ "${JOVIAN_HELP:-}" == "TRUE" ]; then
     bash bin/includes/help
     exit 0
 fi
 
-###############################################################################################################
-##### Installation block                                                                                  #####
-###############################################################################################################
+#@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#@ 
+#@ Jovian Installation block
+#@
+#@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-### Pre-flight check: Assess availability of required files, conda and Jovian_master environment
+###> Pre-flight check: Assess availability of required files, conda and Jovian_master environment
 if ! bash bin/includes/Pre_install_checker; then
     exit 1
 fi
 
+###> Installer for miniconda.
+###> Runs if the command "conda" is not recognised by the host AND if the "~/tmp/miniconda3" path is non-existant
 if ! bash bin/includes/Install_miniconda; then
     exit 1
 else
@@ -184,6 +205,8 @@ else
     set +o allexport
 fi
 
+###> Installer for Jovian_master environment.
+###> Runs if the master environment is not active (in path) and is not installed either. Activates environment on finish
 if ! bash bin/includes/Install_jovian-master; then
     exit 1
 else
@@ -193,11 +216,28 @@ else
     echo -e "Succesfully activated Jovian_master environment"
 fi
 
-        ###############################################################################################################
-        ##### From this point onwards you can safely assume Conda is installed and Jovian_master is activated     #####
-        ###############################################################################################################
+###> Install databases, as specified via CLI argument '-id'
+if [ "${INSTALL_DB:-}" == "TRUE" ]; then
+    bash bin/includes/Databases
+    exit 0
+fi
+
+###> Fill in the global location of the databases.
+bash bin/includes/Userconfig_DB
+
+###> Fill in the global computing-mode configuration
+bash bin/includes/Userconfig_CM
 
 
+#@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#@ 
+#@ End of Jovian installation.
+#@ From this point onwards you can safely assume Conda is installed
+#@ The Jovian_master environment is activated for this shell session and all child-shells
+#@
+#@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+###> Change the installed Jovian version to the latest release or to a specified verison
 if [ "${JOVIAN_UPDATE}" == "TRUE" ]; then
     if [ -z "${CHANGE_VERSION}" ]; then
         bash bin/includes/selfupdate master
@@ -208,28 +248,14 @@ if [ "${JOVIAN_UPDATE}" == "TRUE" ]; then
     fi
 fi
 
-### Archiving of relevant data in a single tar.gz file
+
+###> Archiving of relevant data in a single tar.gz file
 if [ "${ARCHIVE:-}" == "TRUE" ]; then
     bash bin/includes/Archive
     exit 0
 fi
 
-### Install databases, as specified via CLI argument '-id'
-if [ "${INSTALL_DB:-}" == "TRUE" ]; then
-    bash bin/includes/Databases
-    exit 0
-fi
-
-bash bin/includes/Userconfig_DB
-
-bash bin/includes/Userconfig_CM
-
-
-###############################################################################################################
-##### End of installation block, from this point onwards you can safely assume Jovian_master is activated #####
-###############################################################################################################
-
-### Virus typing block, as specified via CLI argument '--virus-typing'
+###> Main controller for the virus typing block, as specified via CLI argument '--virus-typing'
 if [ "${VIRUS_TYPING:-}" == "TRUE" ]; then
     if [ "${VIRUS_TYPING_HELP:-}" == "TRUE" ]; then
         bash bin/scripts/virus_typing.sh --help
@@ -243,6 +269,7 @@ if [ "${VIRUS_TYPING:-}" == "TRUE" ]; then
     fi
 fi
 
+###> Rebuild archived Jovian results in order to view results and data.
 #TODO the syntax below doesn't work if there are multiple archives. should really fix at some point.
 if [ "${REBUILD_ARCHIVE}" == "TRUE" ]; then
     if [ -e archive_*.tar.gz ]; then
@@ -254,21 +281,21 @@ if [ "${REBUILD_ARCHIVE}" == "TRUE" ]; then
     fi
 fi
 
-### Print Snakemake help
+###> Print Snakemake help
 if [ "${SNAKEMAKE_HELP:-}" == "TRUE" ]; then
     line
     snakemake --help
     exit 0
 fi
 
-### Check if this required BLAST alias file is present in HOME
+###> Make a .ncbirc file based on the database information in ~/.jovian_installchoice_db
 bash bin/includes/Make_ncbirc
 
 
-### Installation of Jovian specific conda environments
+###> Installation of Jovian specific conda environments on user request with "bash jovian -ic"
 bash bin/includes/Install_conda_envs
 
-### Start and stop commands for nginx
+###> Start and/or stop nginx
 if [ "${START_NGINX}" == "TRUE" ]; then
     (bin/includes/Start_nginx start)
     exit 0
@@ -279,26 +306,29 @@ if [ "${STOP_NGINX}" == "TRUE" ]; then
     exit 0
 fi
 
-### * Auto configure the jupyter user profile and prepare it for direct use
+###> Auto configure the jupyter user profile and prepare it for use without manually configuring it
 if [ "${CONFIG_JUP}" == "TRUE" ]; then
     bash bin/includes/Config_jupyter
     exit 0
 fi
 
+###> Easy command to start jupyter notebooks
 if [ "${START_JUPYTER}" == "TRUE" ]; then
     bash bin/includes/Start_jupyter
     exit 0
 fi
 
+###> Detect mode and/or switch mode on request of the user
 if ! bash bin/includes/Mode; then
     exit 1
 fi
 
-
+###> Build the sample_sheet.yaml
 if ! bash bin/includes/Make_samplesheet; then
     exit 1
 fi
 
+###? Failsafe 1 for the sample sheet
 if [ -e sample_sheet.yaml ]; then
     echo "sample sheet exists"
     set -o allexport
@@ -306,8 +336,7 @@ if [ -e sample_sheet.yaml ]; then
     set +o allexport
 fi
 
-
-### Checker for succesfull creation of sample_sheet
+###? Failsafe 2 for the sample sheet
 if [ "${SHEET_SUCCESS}" == "TRUE" ]; then
     echo -e "Succesfully generated the sample sheet"
     ready_for_start
@@ -316,6 +345,7 @@ else
     exit 1
 fi
 
+###> Make the sample sheet and then quit Jovian for manual running and debugging of the pipeline
 if [ "${MAKE_SAMPLE_SHEET}" == "TRUE" ]; then
     echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > config/variables.yaml
     echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> config/variables.yaml
@@ -323,6 +353,7 @@ if [ "${MAKE_SAMPLE_SHEET}" == "TRUE" ]; then
     exit 0
 fi
 
+###> Unlock snakemake if, for some reason, snakemake was unable to unlock the working directory by itself
 if [ "${SNAKEMAKE_UNLOCK}" == "TRUE" ]; then
     printf "\nUnlocking working directory...\n"
     snakemake -s bin/Snakefile --profile "${PROFILE}" --unlock
@@ -330,7 +361,8 @@ if [ "${SNAKEMAKE_UNLOCK}" == "TRUE" ]; then
     exit 0
 fi
 
-### Actual snakemake command with checkers for required files. N.B. here the UNIQUE_ID and SET_HOSTNAME variables are set!
+###> Actual snakemake command with checkers for required files.
+###> Here the UNIQUE_ID and HOSTNAME variables are actually set
 if [ -e sample_sheet.yaml ]; then
     echo -e "Starting snakemake"
     set +ue #turn off bash strict mode because snakemake and conda can't work with it properly
