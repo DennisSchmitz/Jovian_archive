@@ -1,0 +1,18 @@
+#!/bin/bash
+# shellcheck disable=SC1091
+
+jt -t grade3 -fs 95 -altp -tfs 11 -nfs 115 -cellw 88% -T
+sed -i '1704,1706d' ~/.jupyter/custom/custom.css
+sed -i '35,55d' ~/.jupyter/custom/custom.css
+cat files/Jupyter_notebook/overrides.css >> ~/.jupyter/custom/custom.css
+jupyter notebook --generate-config
+sed -i "s/#c.NotebookApp.allow_remote_access = False/c.NotebookApp.allow_remote_access = True/g" ~/.jupyter/jupyter_notebook_config.py
+sed -i "s/#c.NotebookApp.ip = 'localhost'/c.NotebookApp.ip = '${SET_HOSTNAME}'/g" ~/.jupyter/jupyter_notebook_config.py
+sed -i "s/#c.NotebookApp.port = 8888/c.NotebookApp.port = 8888/g" ~/.jupyter/jupyter_notebook_config.py
+sed -i "s/#c.NotebookApp.open_browser = True/c.NotebookApp.open_browser = False/g" ~/.jupyter/jupyter_notebook_config.py
+sed -i "s/#c.NotebookApp.iopub_data_rate_limit = 1000000/c.NotebookApp.iopub_data_rate_limit = 100000000/g" ~/.jupyter/jupyter_notebook_config.py
+cp files/Jupyter_notebook/edit.json ~/.jupyter/nbconfig
+cp files/Jupyter_notebook/notebook.json ~/.jupyter/nbconfig
+cp files/Jupyter_notebook/tree.json ~/.jupyter/nbconfig
+echo "Done - Jupyter notebooks is configured and ready for use"
+echo "Type 'bash jovian --start-jupyter' to launch the Jupyter notebooks"

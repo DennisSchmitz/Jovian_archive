@@ -6,9 +6,9 @@
 # changes
 # 22-11-2018, rv, from 8080 to port 8083 because jupyter notebook is using this port
 
-source bin/functions.sh
+source bin/includes/functions
 
-eval $(parse_yaml profile/pipeline_parameters.yaml "config_")
+eval $(parse_yaml config/pipeline_parameters.yaml "config_")
 currentuser=$(whoami)
 
 

@@ -15,9 +15,10 @@ LSF_Snakemake.*
 private_*
 .github/
 .vscode/
-profile/variables.yaml
+config/variables.yaml
 PZN_*/
 core.*
 archive_*.tar
 archive_*.tar.gz
 .nfs*
+.ncbirc

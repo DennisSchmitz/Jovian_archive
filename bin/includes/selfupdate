@@ -1,0 +1,70 @@
+#!/bin/bash
+# shellcheck disable=SC1091
+
+if [ "${1}" == "master" ]; then
+	
+	echo -e "Updating Jovian will delete \e[1m all local changes\e[0m that you've made."
+	minispacer
+	echo -e "You will also have to re-enter your database information. This information is stored in ~/.jovian_installchoice_db"
+	echo -e "You CAN make a backup of this file but usually its best to re-enter the required information to make sure everything is compatible"
+	spacer
+	echo -e "If you have any important changes then please make a backup of the files you changed before you continue"
+	
+	while read -r -p "Are you sure you wish to update Jovian now? [y/N] " updateresponse
+	do
+		updateresponse=${updateresponse,,}
+		if [[ "${updateresponse}" =~ ^(yes|y)$ ]]; then
+			break
+		elif [[ "${updateresponse}" =~ ^(no|n)$ ]]; then
+			echo -e "Aborting update process on user request"
+			exit 0
+		else
+			echo -e "Please answer with 'yes' or 'no'"
+		fi
+	done
+	
+	rm ~/.jovian_installchoice_db
+	
+	latestrelease=$(git ls-remote --tags git://github.com/DennisSchmitz/Jovian.git | sort -t '/' -k 3 -V | awk -F/ '{ print $3 }' | tail -n 1)
+
+	git reset --hard
+	git checkout master
+	git fetch origin --tags "${latestrelease}"
+	git reset --hard FETCH_HEAD
+	conda env update --file "${PATH_JOVIAN_MASTER_YAML}"
+	
+	echo -e "DONE"
+
+else
+
+	echo -e "Changing the Jovian version will delete \e[1m all local changes\e[0m that you've made."
+	minispacer
+	echo -e "You will also have to re-enter your database information. This information is stored in ~/.jovian_installchoice_db"
+	echo -e "You CAN make a backup of this file but usually its best to re-enter the required information to make sure everything is compatible"
+	spacer
+
+	echo -e "If you have any important changes then please make a backup of the files you changed before you continue"
+	
+	while read -r -p "Are you sure you wish to change the Jovian version? [y/N] " changeresponse
+	do
+		changeresponse=${changeresponse,,}
+		if [[ "${changeresponse}" =~ ^(yes|y)$ ]]; then
+			break
+		elif [[ "${changeresponse}" =~ ^(no|n)$ ]]; then
+			echo -e "Aborting the version change process on user request"
+			exit 0
+		else
+			echo -e "Please answer with 'yes' or 'no'"
+		fi
+	done
+	
+	rm ~/.jovian_installchoice_db
+	
+	git reset --hard
+	git checkout master	
+	git fetch origin --tags "${1}"
+	git reset --hard FETCH_HEAD
+	conda env update --file "${PATH_JOVIAN_MASTER_YAML}"
+
+	echo -e "DONE"
+fi

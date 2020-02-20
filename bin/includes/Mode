@@ -1,0 +1,72 @@
+#!/bin/bash
+# shellcheck disable=SC1091
+
+eval "$(parse_yaml config/pipeline_parameters.yaml "params_")"
+eval "$(parse_yaml config/config.yaml "configuration_")"
+
+#?############################################
+#? Check if the Jovian mode should change or be checked and handle accordingly
+#? ==> strict mode first as it is the primary usage mode
+#?############################################
+
+if [ "${JOVIAN_MODE}" == "strict" ]; then
+    #* Check the settings for the slidingwindow and change it when the setting does not match :5:30
+    if [ "$params_Trimmomatic_quality_trimming_config" != "SLIDINGWINDOW:5:30" ]; then
+        sed -i "s/    quality_trimming_config: $params_Trimmomatic_quality_trimming_config/    quality_trimming_config: SLIDINGWINDOW:5:30/g" config/pipeline_parameters.yaml
+    fi
+    #* Check the settings for the minlen filtering and change it when the setting does not match 500
+    if [ "$params_scaffold_minLen_filter_minlen" != "500" ]; then
+        sed -i "s/    minlen: $params_scaffold_minLen_filter_minlen/    minlen: 500/g" config/pipeline_parameters.yaml
+    fi
+    echo -e "Strict mode set..."
+    exit 0
+fi
+
+#?############################################
+#? Second check if the Jovian mode should change or be checked and handle accordingly
+#? ==> Relaxed mode
+#?############################################
+
+
+if [ "${JOVIAN_MODE}" == "relaxed" ]; then
+    #* Check the settings for the slidingwindow and change it when the setting does not match :5:20
+    if [ "$params_Trimmomatic_quality_trimming_config" != "SLIDINGWINDOW:5:20" ]; then
+        sed -i "s/    quality_trimming_config: $params_Trimmomatic_quality_trimming_config/    quality_trimming_config: SLIDINGWINDOW:5:20/g" config/pipeline_parameters.yaml
+    fi
+    #* Check the settings for the minlen filtering and change it when the setting does not match 250
+    if [ "$params_scaffold_minLen_filter_minlen" != "250" ]; then
+        sed -i "s/    minlen: $params_scaffold_minLen_filter_minlen/    minlen: 250/g" config/pipeline_parameters.yaml
+    fi
+    echo -e "Relaxed mode set..."
+    exit 0
+fi
+
+
+#@############################################
+#@ display the mode currently active mode. 
+#@ ==> Exit if one of the fixed modes is active, continue if a custom config is active.
+#@############################################
+
+if [[ ! "${JOVIAN_MODE}" =~ ^(relaxed|strict)$ ]]; then
+    #* Check if parameters match with strict mode
+    if [ "$params_Trimmomatic_quality_trimming_config" == "SLIDINGWINDOW:5:30" ] && [ "$params_scaffold_minLen_filter_minlen" == "500" ]; then
+        echo -e "Jovian is set to run in strict mode"
+        exit 0
+    fi
+    #* Check if parameters match with relaxed mode
+    if [ "$params_Trimmomatic_quality_trimming_config" == "SLIDINGWINDOW:5:20" ] && [ "$params_scaffold_minLen_filter_minlen" == "250" ]; then
+        echo -e "Jovian is set to run in relaxed mode"
+        exit 0
+    fi
+    #* Check if parameters do not match with any of the predefined modes, exit if true
+    if [[ ! "$params_Trimmomatic_quality_trimming_config" =~ ^(SLIDINGWINDOW:5:20|SLIDINGWINDOW:5:30)$ ]]; then
+        JOVIAN_MODE="CUSTOM"
+    elif [[ ! "$params_scaffold_minLen_filter_minlen" =~ ^(250|500)$ ]]; then
+        JOVIAN_MODE="CUSTOM"
+    fi
+fi
+
+if [ "${JOVIAN_MODE}" == "CUSTOM" ]; then
+    echo -e "Jovian is set to run with a custom config"
+    exit 0
+fi

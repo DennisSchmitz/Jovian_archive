@@ -2,6 +2,11 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/DennisSchmitz/Jovian_binder/master?filepath=Notebook_report.ipynb)
 
+![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/DennisSchmitz/Jovian?include_prereleases)
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3666157.svg)](https://doi.org/10.5281/zenodo.3666157)
+
+
 **IMPORTANT: Do not share the code without my express permission as it is unpublished (manuscript in preparation)**
 
 ___
@@ -9,21 +14,21 @@ ___
 <img align="right" src="../assets/images/Jovian_logo.png">
 
 ## Table of content  
-- [Table of content](#Table-of-content)
-- [Jovian description](#Jovian-description)
-  - [Features](#Features)
-  - [Visualizations](#Visualizations)
-  - [Virus typing](#Virus-typing)
-  - [Audit trail](#Audit-trail)
-- [Requirements](#Requirements)
-- [Instructions](#Instructions)
-  - [Installation](#Installation)
-  - [How to start/configure a Jovian analysis](#How-to-startconfigure-a-Jovian-analysis)
-  - [Explanation of output folders](#Explanation-of-output-folders)
-- [FAQ](#FAQ)
-- [Example Jovian report](#Example-Jovian-report)
-- [Acknowledgements](#Acknowledgements)
-    - [Authors](#Authors)
+- [Jovian, user-friendly metagenomics](#jovian-user-friendly-metagenomics)
+  - [Table of content](#table-of-content)
+  - [Jovian description](#jovian-description)
+    - [Features](#features)
+    - [Visualizations](#visualizations)
+    - [Virus typing](#virus-typing)
+    - [Audit trail](#audit-trail)
+  - [Requirements](#requirements)
+  - [Instructions](#instructions)
+    - [Installation](#installation)
+    - [How to start/configure a Jovian analysis](#how-to-startconfigure-a-jovian-analysis)
+    - [Explanation of output folders](#explanation-of-output-folders)
+  - [FAQ](#faq)
+  - [Example Jovian report](#example-jovian-report)
+  - [Acknowledgements](#acknowledgements)
 
 ___
 

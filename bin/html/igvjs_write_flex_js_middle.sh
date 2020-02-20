@@ -26,8 +26,8 @@ parse_yaml() {
    }'
 }
 
-eval $(parse_yaml profile/variables.yaml "vars_")
-eval $(parse_yaml profile/pipeline_parameters.yaml "params_")
+eval $(parse_yaml config/variables.yaml "vars_")
+eval $(parse_yaml config/pipeline_parameters.yaml "params_")
 
 cat << EOF >> results/igv.html
         ${SAMPLE} = document.getElementById("${SAMPLE}");
