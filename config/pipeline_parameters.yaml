@@ -72,4 +72,3 @@ threads:
 
 remove_temp: 1 # For development and debug only. If you set this to 0 you will keep the HuGo alignment data which can lead to patient privacy concerns.ssss
 
-    MGKit_taxonomy: /mnt/db/taxdb/
