@@ -2,7 +2,7 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/DennisSchmitz/Jovian_binder/master?filepath=Notebook_report.ipynb)
 
-![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/DennisSchmitz/Jovian?include_prereleases)
+[![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/DennisSchmitz/Jovian?include_prereleases)](https://github.com/DennisSchmitz/Jovian/releases)
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3666157.svg)](https://doi.org/10.5281/zenodo.3666157)
 
