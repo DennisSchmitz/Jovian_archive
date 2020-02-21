@@ -22,3 +22,6 @@ archive_*.tar
 archive_*.tar.gz
 .nfs*
 .ncbirc
+
+docs/build
+docs/source/_build
