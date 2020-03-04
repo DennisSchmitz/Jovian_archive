@@ -187,7 +187,7 @@ def read_numbers(infile):
     numbers_df = numbers_df[[ "Sample", "input_read_pairs" ]]
     numbers_df = numbers_df.rename(columns={"input_read_pairs" : "read_pairs"})
 
-    regex = re.compile(r"(.*)_R?[12][_.]?")
+    regex = re.compile(r"(.*)(_|\.)R?[12][_.]?")
     numbers_df["Sample"] = numbers_df.Sample.apply(lambda x: re.search(regex, x).group(1)) # On every value in column named "Sample" perform regex capture as to only get the sample name (text before the "_R?[12][_.]?").
 
     return(numbers_df)
