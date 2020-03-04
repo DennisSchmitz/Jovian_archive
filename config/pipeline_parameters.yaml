@@ -43,7 +43,7 @@ taxonomic_classification_LCA:
         
 SNP_calling:
     max_cov: 20000 # Maximum coverage that will be used for SNP calling. Dont change this value unless you know what youre doing.
-    minimum_AF: 0.05 # This is the minimum allelle frequency (=AF) for which you want a SNP to be reported. Default is 5%.
+    minimum_AF: 0.05 # This is the minimum At the end of the comment after "remove_temp" there were four Ss, probably accidentally typed in when saving the file (Ctrl + S, where Ctrl was not hit yet?).allelle frequency (=AF) for which you want a SNP to be reported. Default is 5%.
 
 ORF_prediction:
     procedure: meta # Set the prodigal procedure. Use "meta" for metagenomics data.
@@ -70,5 +70,5 @@ threads:
     Fragment_length_analysis: 4
     quantify_output: 4
 
-remove_temp: 1 # For development and debug only. If you set this to 0 you will keep the HuGo alignment data which can lead to patient privacy concerns.ssss
+remove_temp: 1 # For development and debug only. If you set this to 0 you will keep the HuGo alignment data which can lead to patient privacy concerns.
 
