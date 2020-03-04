@@ -16,8 +16,17 @@ DESIRED_OUTPUT_ZIP="$4"
 LOG="$5"
 
 # Generate sample basename (i.e. remove everything before the last '/' and then remove everything after the '.')
+EXTENSION1=".gz"
+EXTENSION2=".fastq"
+EXTENSION3=".fq"
+
+
 SAMPLE_TEMP="${INPUT_FILE##*/}"
-SAMPLE_NAME="${SAMPLE_TEMP%%.*}"
+TEMP1=${SAMPLE_TEMP//$EXTENSION1/}
+TEMP2=${TEMP1//$EXTENSION2/}
+TEMP3=${TEMP2//$EXTENSION3/}
+
+SAMPLE_NAME="${TEMP3}"
 
 # These are the output files that fastqc implicitly generates (based on the input file basename)
 REAL_OUTPUT_HTML="${OUTPUT_DIR}${SAMPLE_NAME}_fastqc.html"
