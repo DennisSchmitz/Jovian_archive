@@ -11,6 +11,7 @@ RVA_URL="https://www.rivm.nl/mpf/typingservice/rotavirusa/"
 PV_URL="https://www.rivm.nl/mpf/typingservice/papillomavirus/"
 FLAVI_URL="https://www.rivm.nl/mpf/typingservice/flavivirus/"
 
+RESPONSE="default"
 
 usage_msg() {
     cat <<HELP_USAGE
@@ -93,7 +94,9 @@ elif [ "${INPUT}" == "Flavi" ]; then
 
 fi
 
-if [ "${RESPONSE}" != "200" ]; then
+if [ "${RESPONSE}" == "default" ]; then
+	exit 1
+elif [ "${RESPONSE}" != "200" ]; then
 	echo "there seems to be an issue with the virus-typing tool server."
 	echo "Please try again later"
 	exit 1
