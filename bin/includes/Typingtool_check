@@ -1,0 +1,103 @@
+#!/bin/bash
+# shellcheck disable=SC1091
+
+INPUT="${1}"
+
+NOV_URL="https://www.rivm.nl/mpf/typingservice/norovirus/"
+EV_URL="https://www.rivm.nl/mpf/typingservice/enterovirus/"
+HAV_URL="https://www.rivm.nl/mpf/typingservice/hav/"
+HEV_URL="https://www.rivm.nl/mpf/typingservice/hev/"
+RVA_URL="https://www.rivm.nl/mpf/typingservice/rotavirusa/"
+PV_URL="https://www.rivm.nl/mpf/typingservice/papillomavirus/"
+FLAVI_URL="https://www.rivm.nl/mpf/typingservice/flavivirus/"
+
+
+usage_msg() {
+    cat <<HELP_USAGE
+Usage: bash jovian -vt [virus-keyword]
+
+Mandatory arguments:
+[virus-keyword]                         A virus keyword as specified below.
+
+Optional arguments:
+bash jovian -vt-force [virus-keyword]   Force overwrite existing output.
+bash jovian -vt-help                    Print this help message.
+
+The first argument should always be one of the keyword listed below:
+    N.B. Keywords are case-sensitive
+    ---------------------------------------------------
+    | KEYWORD | TYPEABLE VIRUSSES                     |
+    |-------------------------------------------------|
+    | NoV     | Caliciviridae family;                 |
+    |         | - Norwalk virus (GI & GII),           |
+    |         | - Sapporo virus                       |
+    |-------------------------------------------------|
+    | EV      | Picornaviridae family;                |
+    |         | - Aichivirus A-C                      |
+    |         | - Cosavirus A,B,D,E                   |
+    |         | - Enterovirus A-H, J                  |
+    |         |   - Incl. Enterovirus, Aichivirus,    |
+    |         |     Human Poliovirus, Echovirus       |
+    |         | - Human Parechovirus A,B              |
+    |         | - Rhinovirus A,B,C                    |
+    |-------------------------------------------------|
+    | RVA     | Rotavirus genus;                      |
+    |         | - Rotavirus A                         |
+    |-------------------------------------------------|
+    | HAV     | Hepatovirus genus;                    |
+    |         | - Hepatovirus A                       |
+    |-------------------------------------------------|
+    | HEV     | Orthohepevirus genus;                 |
+    |         | - Orthohepevirus A (Hepatitis E)      |
+    |-------------------------------------------------|
+    | PV      | Papillomaviridae family;              |
+    |         | - Alphapapillomaviruses,              |
+    |         | - Betapapillomaviruses,               |
+    |         | - Gammapapillomaviruses               |
+    |-------------------------------------------------|
+    | Flavi   | Flaviviridae family;                  |
+    |         | - Dengue virus 1-4                    |
+    |         | - Hepacivirus C (Hepatitis C)         |
+    |         | - Pegivirus C (GB-C)                  |
+    |         | - Tick-borne encephalitis virus       |
+    |         | - Zika virus                          |
+    ---------------------------------------------------
+HELP_USAGE
+}
+
+if [[ ! "${INPUT}" =~ ^(NoV|EV|HAV|HEV|RVA|PV|Flavi)$ ]]; then
+	echo -e "\nUnknown parameter '${1}' given.\n"
+	usage_msg
+fi
+
+if [ "${INPUT}" == "NoV" ]; then
+	RESPONSE=$(curl -sSl -D - ${NOV_URL} -o /dev/null | awk '/HTTP/ {print $2}')
+
+elif [ "${INPUT}" == "EV" ]; then
+	RESPONSE=$(curl -sSl -D - ${EV_URL} -o /dev/null | awk '/HTTP/ {print $2}')
+
+elif [ "${INPUT}" == "HAV" ]; then
+	RESPONSE=$(curl -sSl -D - ${HAV_URL} -o /dev/null | awk '/HTTP/ {print $2}')
+
+elif [ "${INPUT}" == "HEV" ]; then
+	RESPONSE=$(curl -sSl -D - ${HEV_URL} -o /dev/null | awk '/HTTP/ {print $2}')
+
+elif [ "${INPUT}" == "RVA" ]; then
+	RESPONSE=$(curl -sSl -D - ${RVA_URL} -o /dev/null | awk '/HTTP/ {print $2}')
+
+elif [ "${INPUT}" == "PV" ]; then
+	RESPONSE=$(curl -sSl -D - ${PV_URL} -o /dev/null | awk '/HTTP/ {print $2}')
+
+elif [ "${INPUT}" == "Flavi" ]; then
+	RESPONSE=$(curl -sSl -D - ${FLAVI_URL} -o /dev/null | awk '/HTTP/ {print $2}')
+
+fi
+
+if [ "${RESPONSE}" != "200" ]; then
+	echo "there seems to be an issue with the virus-typing tool server."
+	echo "Please try again later"
+	exit 1
+elif [ "${RESPONSE}" == "200" ]; then
+	echo "Virus typing service for ${INPUT} is online. Continuing..."
+	exit 0
+fi

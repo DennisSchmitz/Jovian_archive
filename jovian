@@ -261,9 +261,19 @@ if [ "${VIRUS_TYPING:-}" == "TRUE" ]; then
         bash bin/scripts/virus_typing.sh --help
         exit 0
     elif [ "${FORCE_OVERWRITE_TT:-}" == "TRUE" ]; then
-        bash bin/scripts/virus_typing.sh ${WHICH_TT} --force
+        
+        if ! bash bin/includes/Typingtool_check "${WHICH_TT}"; then
+        exit 1
+        fi
+
+        bash bin/scripts/virus_typing.sh "${WHICH_TT}" --force
         exit 0
     else
+
+        if ! bash bin/includes/Typingtool_check "${WHICH_TT}"; then
+        exit 1
+        fi
+        
         bash bin/scripts/virus_typing.sh "${WHICH_TT}"
         exit 0
     fi
