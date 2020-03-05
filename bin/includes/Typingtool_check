@@ -1,6 +1,9 @@
 #!/bin/bash
 # shellcheck disable=SC1091
 
+
+#> default vars + input
+#>################################
 INPUT="${1}"
 
 NOV_URL="https://www.rivm.nl/mpf/typingservice/norovirus/"
@@ -66,10 +69,16 @@ The first argument should always be one of the keyword listed below:
 HELP_USAGE
 }
 
+
+#> Check if input parameter is supported
+#>################################
 if [[ ! "${INPUT}" =~ ^(NoV|EV|HAV|HEV|RVA|PV|Flavi)$ ]]; then
 	echo -e "\nUnknown parameter '${1}' given.\n"
 	usage_msg
 fi
+
+#> Run an actual curl to the specific typing tool url and print the response code
+#>################################
 
 if [ "${INPUT}" == "NoV" ]; then
 	RESPONSE=$(curl -sSl -D - ${NOV_URL} -o /dev/null | awk '/HTTP/ {print $2}')
@@ -94,10 +103,13 @@ elif [ "${INPUT}" == "Flavi" ]; then
 
 fi
 
+#> Check the response code and decide whether to continue or to abort the virus typing script
+#>################################
+
 if [ "${RESPONSE}" == "default" ]; then
 	exit 1
 elif [ "${RESPONSE}" != "200" ]; then
-	echo "there seems to be an issue with the virus-typing tool server."
+	echo "There seems to be an issue with the virus-typing tool server."
 	echo "Please try again later"
 	exit 1
 elif [ "${RESPONSE}" == "200" ]; then
