@@ -303,7 +303,9 @@ bash bin/includes/Make_ncbirc
 
 
 ###> Installation of Jovian specific conda environments on user request with "bash jovian -ic"
-bash bin/includes/Install_conda_envs
+if ! bash bin/includes/Install_conda_envs; then
+    exit 0
+fi
 
 ###> Start and/or stop nginx
 if [ "${START_NGINX}" == "TRUE" ]; then

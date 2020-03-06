@@ -1,5 +1,5 @@
 .. Jovian documentation master file
-=====================================
+
 Jovian, user-friendly metagenomics
 =====================================
 
@@ -13,6 +13,22 @@ Some of the included features are taxonomic classification, viral typing and min
 
 Wetlab personnel (as well as experienced bioinformaticians) can start, configure and interpret results via an interactive web-report.
 This makes doing metagenomics analyses much more accessible and user-friendly since minimal command-line skills are required.
+
+
+.. image:: https://img.shields.io/badge/License-AGPL%20v3-blue.svg
+   :target: https://www.gnu.org/licenses/agpl-3.0
+
+.. image:: https://img.shields.io/badge/snakemake-≥5.4.3-brightgreen.svg?style=flat
+   :target: https://snakemake.readthedocs.io
+
+.. image:: https://img.shields.io/github/v/release/DennisSchmitz/Jovian?include_prereleases
+   :target: https://github.com/DennisSchmitz/Jovian/releases
+
+.. image:: https://mybinder.org/badge_logo.svg
+   :target: https://mybinder.org/v2/gh/DennisSchmitz/Jovian_binder/master?filepath=Notebook_report.ipynb
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3666157.svg
+   :target: https://doi.org/10.5281/zenodo.3666157
 
 
 Features
@@ -39,6 +55,7 @@ All data is visualized through an interactive web-report powered by Jupyter-note
    1. Interactive heatmaps are generated for virusses, phages and bacteria.
    2. Interactive taxonomic pie-charts are generated, displaying detailed taxonomic contents of each sample.
    3. Interactive (and searchable) tables are included containing detailed information regarding classified and unclassified scaffolds.
+
 * Virus-typing results are presented with interactive tables.
 * An interactive scaffold alignment viewer (IGVjs) is included.
 
@@ -47,6 +64,7 @@ All data is visualized through an interactive web-report powered by Jupyter-note
    3. GC content graph.
    4. Predicted open reading frames (ORFs).
    5. Identified minority variants.
+
 * All SNP metrics are presented via interactive tables allowing for easy and detailed analysis. 
 
 
@@ -71,6 +89,6 @@ An audit trail, used for clinical reproducability and logging, is generated for 
    :hidden:
    :caption: Installation
 
-   Requirements/requirements
+   Installation/requirements
    Installation/installation
    

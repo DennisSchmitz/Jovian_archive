@@ -17,5 +17,7 @@ if [ "${INSTALL_CONDA_ENVS:-}" == "TRUE" ]; then
     rm config/variables.yaml
     rm -rf installer_files
     echo -e "Done with creating the required conda environments, you can now start your analysis"
+    exit 1
+else
     exit 0
 fi
