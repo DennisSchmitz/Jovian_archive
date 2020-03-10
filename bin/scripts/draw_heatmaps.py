@@ -421,6 +421,8 @@ def draw_heatmaps(df, outfile, title, taxonomic_rank, colour):
                 
                 aggregated = False
                 
+                df.fillna(0, inplace=True)
+          
                 samples = df["Sample_name"].astype(str)
                 scaffolds = df["scaffold_name"].astype(str)
                 assigned = df["tax_name"].astype(str)
