@@ -351,7 +351,6 @@ fi
 ###? Failsafe 2 for the sample sheet
 if [ "${SHEET_SUCCESS}" == "TRUE" ]; then
     echo -e "Succesfully generated the sample sheet"
-    ready_for_start
 else
     echo "Something went wrong with the sample sheet, aborting jovian process..."
     exit 1
@@ -365,6 +364,7 @@ if [ "${MAKE_SAMPLE_SHEET}" == "TRUE" ]; then
     exit 0
 fi
 
+
 ###> Unlock snakemake if, for some reason, snakemake was unable to unlock the working directory by itself
 if [ "${SNAKEMAKE_UNLOCK}" == "TRUE" ]; then
     printf "\nUnlocking working directory...\n"
@@ -372,6 +372,20 @@ if [ "${SNAKEMAKE_UNLOCK}" == "TRUE" ]; then
     printf "\nDone.\n"
     exit 0
 fi
+
+#@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#@ Last Preflight checkers here.
+if ! bash bin/includes/Preflight_check_databases; then
+    exit 1
+fi
+
+
+
+ready_for_start
+#@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+
+
 
 ###> Actual snakemake command with checkers for required files.
 ###> Here the UNIQUE_ID and HOSTNAME variables are actually set
