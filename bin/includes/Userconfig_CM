@@ -39,7 +39,7 @@ elif [ "${cm_installeranswers_compmode}" == "S" ]; then
     echo -e "Jovian is running in the standalone computing mode"
     sed -i '\|drmaa|d' config/config.yaml
 elif [ "${cm_installeranswers_compmode}" == "G" ]; then
-    echo -e "Jovian is set to run in Grid-mode.\nSetting some of the variables."
+    echo -e "Jovian is set to run in computing mode: Grid.\n"
     sed -i '\|drmaa|d' config/config.yaml
     echo -e "drmaa: \" -q ${cm_installeranswers_queue} -n {threads} -R \\\"span[hosts=1]\\\"\"" >> config/config.yaml
     echo -e "drmaa-log-dir: logs/drmaa" >> config/config.yaml

@@ -375,16 +375,19 @@ fi
 
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #@ Last Preflight checkers here.
+
+###> Check databases locations, exit if something is missing
 if ! bash bin/includes/Preflight_check_databases; then
     exit 1
 fi
+###> Check the reads and change pipeline parameters acccordingly
+echo -e "\n\nCalculating average read length and configuring the Jovian settings accordingly"
+(bash bin/includes/Preflight_readlength-counter)& spinner
 
 
 
 ready_for_start
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
-
 
 
 ###> Actual snakemake command with checkers for required files.
