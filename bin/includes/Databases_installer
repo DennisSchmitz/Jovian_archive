@@ -146,8 +146,8 @@ if [ "${PATHING_SINGLE}" == "TRUE" ]; then
             # ! download mgkit db
             cd "${DB_PATH_MGKIT}" || exit
             printf "\nDownloading MGKit database... \n"
-            bash "${CONDA_PREFIX}"/bin/download-taxonomy.sh ./
-            curl -o nucl_gb.accession2taxid.gz -L ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz
+            bash "${CONDA_PREFIX}"/bin/download-taxonomy.sh
+            curl -o nucl_gb.accession2taxid.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz
             curl -o nucl_gb.accession2taxid.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz.md5
             md5sum -c nucl_gb.accession2taxid.gz.md5
 
@@ -196,8 +196,8 @@ perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress taxdb
 
 ### UPDATING MGKIT
 cd "${DB_PATH_MGKIT}" || exit 1
-bash "${CONDA_PREFIX}"/bin/download-taxonomy.sh ./
-curl -o nucl_gb.accession2taxid.gz -L ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz
+bash "${CONDA_PREFIX}"/bin/download-taxonomy.sh
+curl -o nucl_gb.accession2taxid.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz
 curl -o nucl_gb.accession2taxid.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz.md5
 md5sum -c nucl_gb.accession2taxid.gz.md5
 
@@ -321,8 +321,8 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
 
             cd "${DB_PATH_MGKIT}" || exit
             printf "\nDownloading MGKit LCA database... \n"
-            bash "${CONDA_PREFIX}"/bin/download-taxonomy.sh ./
-            curl -o nucl_gb.accession2taxid.gz -L ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz
+            bash "${CONDA_PREFIX}"/bin/download-taxonomy.sh
+            curl -o nucl_gb.accession2taxid.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz
             curl -o nucl_gb.accession2taxid.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz.md5
             md5sum -c nucl_gb.accession2taxid.gz.md5
                 
@@ -377,8 +377,8 @@ perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress taxdb
 
 ### UPDATING MGKIT
 cd "${DB_PATH_MGKIT}" || exit 1
-bash "${CONDA_PREFIX}"/bin/download-taxonomy.sh ./
-curl -o nucl_gb.accession2taxid.gz -L ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz
+bash "${CONDA_PREFIX}"/bin/download-taxonomy.sh
+curl -o nucl_gb.accession2taxid.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz
 curl -o nucl_gb.accession2taxid.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz.md5
 md5sum -c nucl_gb.accession2taxid.gz.md5
 
