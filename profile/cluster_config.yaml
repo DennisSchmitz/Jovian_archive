@@ -82,6 +82,31 @@ Krona_chart_combine:
   vmem: 32G
   time: 04:00:00
 
+make_gff:
+  threads: 1
+  vmem: 2G
+  time: 00:10:00
+  
+addtaxa_gff:
+  threads: 1
+  vmem: 6G
+  time: 01:00:00
+  
+taxfilter_gff:
+  threads: 1
+  vmem: 4G
+  time: 00:10:00
+  
+qfilter_gff:
+  threads: 1
+  vmem: 2G
+  time: 00:10:00
+  
+lca_mgkit:
+  threads: 1
+  vmem: 4G
+  time: 00:10:00
+
 quantify_output:
   threads: 4
   vmem: 4G
