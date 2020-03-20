@@ -64,8 +64,6 @@ server_info: # This is used for IGVjs, discuss this with your IT department, dep
 ######################################
 
 reference_alignment:
-    # Set the path to the proper (.fasta/.fa) reference file to which you want to align.
-    reference: nCoV_refseq_NC045512.fasta
     # Specify the input directory (default: data/cleaned_fastq/). N.B. end the path with a "/" character
     input_dir: data/cleaned_fastq/
     # Specify where all the output of the ref alignment extension will go (default: reference_alignment/). N.B. end the path with a "/" character
@@ -76,6 +74,10 @@ reference_alignment:
 ######################################
 ### Technical parameters           ###
 ######################################
+
+sample_sheet_core: sample_sheet.yaml
+
+sample_sheet_reference_alignment: sample_sheet_ref_alignment.yaml
 
 threads:
     Clean_the_data: 4
@@ -93,4 +95,5 @@ remove_temp: 1 # For development and debug only. If you set this to 0 you will k
 ######################################
 ### Databases                      ###
 ######################################
+
 

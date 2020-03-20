@@ -34,7 +34,7 @@ import yaml
 yaml.warnings({'YAMLLoadWarning': False}) # Suppress yaml "unsafe" warnings.
 
 SAMPLES = {}
-with open(config["sample_sheet"]) as sample_sheet_file:
+with open(config["sample_sheet_core"]) as sample_sheet_file:
     SAMPLES = yaml.load(sample_sheet_file) # SAMPLES is a dict with sample in the form sample > read number > file. E.g.: SAMPLES["sample_1"]["R1"] = "x_R1.gz"
 
 #@################################################################################

@@ -15,13 +15,17 @@ Output (automatically generated):
   logs/                             Contains all log files.
   results/                          Contains all final results, these are visualized via the
                                     web-report (Notebook_report.ipynb).
+Reference alignment:
+  --ra, --reference-alignment [reference.fasta]
+                                    Work-in-progress. Does a reference alignment against the
+                                    user specified fasta file.
 Parameters:
-  -m, --mode [strict|relaxed]       Work-in-progress. Automatically configures Jovian to be
-                                    stringent or relaxed in taxonomic classification of
-                                    scaffolds. Please see the publication for details. In short,
-                                    use 'strict' for high precision at the cost of sensitivity
-                                    and use 'relaxed' for high sensitivity at the cost of more
-                                    spurious results (contamination).
+  -m, --mode [strict|relaxed]       Automatically configures Jovian to be stringent or relaxed
+                                    in taxonomic classification of scaffolds. Please see the 
+                                    publication for details. In short, use 'strict' for high 
+                                    precision at the cost of sensitivity and use 'relaxed' for
+                                    high sensitivity at the cost of more spurious results
+                                    (contamination).
   -vt-help, --virus-typing-help     Print additional information about the virus-typing, i.e.
                                     which family/genus is selected and which species are typed.
   -vt, --virus-typing [NoV|EV|RVA|HAV|HEV|PV|Flavi]

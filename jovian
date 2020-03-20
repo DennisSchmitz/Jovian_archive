@@ -166,6 +166,14 @@ do
         shift # Next
         shift # Next
         ;;
+        --ra|--reference-alignment)
+        REFERENCE_ALIGNMENT="TRUE"
+        REFERENCE_FASTA="$2"
+        export REFERENCE_ALIGNMENT
+        export REFERENCE_FASTA
+        shift # Next
+        shift # Next
+        ;;
         *) # Any other option
         POSITIONAL+=("$1") # save in array
         shift # Next
@@ -411,21 +419,41 @@ ready_for_start
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 
-###> Actual snakemake command with checkers for required files.
+###> Core Jovian workflow snakemake command with checkers for required files.
 ###> Here the UNIQUE_ID and HOSTNAME variables are actually set
-if [ -e sample_sheet.yaml ]; then
-    echo -e "Starting snakemake"
-    set +ue #turn off bash strict mode because snakemake and conda can't work with it properly
-    echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > config/variables.yaml
-    echo -e "Server_host:\n    hostname: http://${HOSTNAME}" >> config/variables.yaml
-    eval $(parse_yaml config/variables.yaml "config_")
-    snakemake -s bin/Snakefile --profile "${PROFILE}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
-    set -ue #turn bash strict mode back on
+if [ "${REFERENCE_ALIGNMENT}" != "TRUE" ]; then #TODO make this better, it's to skip the core workflow and go straight to the RA part
+    if [ -e sample_sheet.yaml ]; then
+        echo -e "Starting core metagenomics workflow"
+        set +ue #turn off bash strict mode because snakemake and conda can't work with it properly
+        echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > config/variables.yaml
+        echo -e "Server_host:\n    hostname: http://${HOSTNAME}" >> config/variables.yaml
+        eval $(parse_yaml config/variables.yaml "config_")
+        snakemake -s bin/Snakefile --profile "${PROFILE}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
+        set -ue #turn bash strict mode back on
+    else
+        echo -e "sample_sheet.yaml could not be found"
+        echo -e "This also means that Jovian was unable to generate a new sample sheet for you"
+        echo -e "Please inspect the input directory (${INPUT_DIR}) and make sure the right files are present"
+        exit 1
+    fi
 else
-    echo -e "Sample_sheet.yaml could not be found"
-    echo -e "This also means that Jovian was unable to generate a new sample sheet for you"
-    echo -e "Please inspect the input directory (${INPUT_DIR}) and make sure the right files are present"
-    exit 1
+    ###> Optional reference alignment extension with checkers for required files.
+    ###> #TODO zelfde maken als bij core snakefile
+    ###> #TODO checken of er een tweede parameter is opgegeven, anders exit met error "please give fasta file"
+    ###> #TODO checken of gegeven file bestaat, en wel een fasta is (bv check extension is .fa of .fasta)
+    ###> #TODO exit if core jovian has'nt been run, e.g. by checking the required input dir; with errors message to first start the core pipeline.
+
+    if [ -e sample_sheet_ref_alignment.yaml ]; then
+        echo -e "Starting optional reference alignment extension"
+        set +ue #turn off bash strict mode because snakemake and conda can't work with it properly
+        snakemake -s bin/Ref_alignment.smk --profile "${PROFILE}" --config reference="${REFERENCE_FASTA}" ${@}
+        set -ue #turn bash strict mode back on
+    else
+        echo -e "sample_sheet_ref_alignment.yaml could not be found"
+        echo -e "This also means that Jovian was unable to generate a new sample sheet for you"
+        echo -e "Please inspect the input directory (${INPUT_DIR}) and make sure the right files are present"
+        exit 1
+    fi
 fi
 
 exit 0 

@@ -73,11 +73,12 @@ import yaml
 yaml.warnings({'YAMLLoadWarning': False}) # Suppress yaml "unsafe" warnings.
 
 SAMPLES = {}
-#with open(config["sample_sheet"]) as sample_sheet_file: # TODO voor latere versie
-with open("sample_sheet_ref_alignment.yaml") as sample_sheet_file:
+with open(config["sample_sheet_reference_alignment"]) as sample_sheet_file:
     SAMPLES = yaml.load(sample_sheet_file) # SAMPLES is a dict with sample in the form sample > read number > file. E.g.: SAMPLES["sample_1"]["R1"] = "x_R1.gz"
 
-REFERENCE = config["reference_alignment"]["reference"]
+# This file is given as a snakemake CLI argument from within the wrapper
+REFERENCE = config["reference"]
+
 READS_INPUT_DIR = config["reference_alignment"]["input_dir"]
 RESULTS_OUTPUT_DIR = config["reference_alignment"]["output_dir"]
 LOGS_OUTPUT_DIR = config["reference_alignment"]["log_dir"]
@@ -96,8 +97,8 @@ localrules:
 
 rule all:
     input:
-        RESULTS_OUTPUT_DIR + "reference/" + os.path.basename(config["reference_alignment"]["reference"]), # Copy of the reference fasta (for standardization and easy logging)
-        RESULTS_OUTPUT_DIR + "reference/" + os.path.basename(config["reference_alignment"]["reference"]) + ".1.bt2", # The bowtie2 index files (I've only specified one, but the "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2" and "rev.2.bt2" are implicitly generated)
+        RESULTS_OUTPUT_DIR + "reference/" + os.path.basename(config["reference"]), # Copy of the reference fasta (for standardization and easy logging)
+        RESULTS_OUTPUT_DIR + "reference/" + os.path.basename(config["reference"]) + ".1.bt2", # The bowtie2 index files (I've only specified one, but the "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2" and "rev.2.bt2" are implicitly generated)
         expand("{out}alignment/{sample}_sorted.{extension}", out = RESULTS_OUTPUT_DIR, sample = SAMPLES, extension = [ 'bam', 'bam.bai' ]), # The reference alignment (bam format) files.
         expand("{out}consensus_seqs/raw/{sample}_{extension}", out = RESULTS_OUTPUT_DIR, sample = SAMPLES, extension = [ 'calls.vcf.gz', 'raw_consensus.fa' ]), # A zipped vcf file contained SNPs versus the given reference and a RAW consensus sequence, see explanation below for the meaning of RAW.
         expand("{out}consensus_seqs/{sample}.bedgraph", out = RESULTS_OUTPUT_DIR, sample = SAMPLES), # Lists the coverage of the alignment against the reference in a bedgraph format, is used to determine the coverage mask files below.
@@ -114,10 +115,10 @@ rule all:
 
 rule RA_index_reference:
     input:
-        reference=config["reference_alignment"]["reference"]
+        reference=config["reference"]
     output:
-        reference_copy= RESULTS_OUTPUT_DIR + "reference/" + os.path.basename(config["reference_alignment"]["reference"]),
-        reference_index= RESULTS_OUTPUT_DIR + "reference/" + os.path.basename(config["reference_alignment"]["reference"]) + ".1.bt2",
+        reference_copy= RESULTS_OUTPUT_DIR + "reference/" + os.path.basename(config["reference"]),
+        reference_index= RESULTS_OUTPUT_DIR + "reference/" + os.path.basename(config["reference"]) + ".1.bt2",
     conda:
         "envs/RA_ref_alignment.yaml"
     benchmark:
