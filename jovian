@@ -1,4 +1,25 @@
 #!/bin/bash
+############################################################################################################
+### Authors:                                                                                             ###
+###     Dennis Schmitz, Sam Nooij, Florian Zwagemaker, Robert Verhagen,                                  ###
+###     Jeroen Cremer, Thierry Janssens, Mark Kroon, Erwin van Wieringen,                                ###
+###     Annelies Kroneman, Harry Vennema, Marion Koopmans                                                ###
+### Organization:                                                                                        ###
+###     Rijksinstituut voor Volksgezondheid en Milieu (RIVM)                                             ###
+###     Dutch Public Health institute (https://www.rivm.nl/en)                                           ###
+### Department:                                                                                          ###
+###     Virology - Emerging and Endemic Viruses (EEV)                                                    ###
+###     Virology - Viruses of the Vaccination Program (VVP)                                              ###
+### Date and license:                                                                                    ###
+###     23-08-2018, AGPL3 license                                                                        ###
+### Homepage containing documentation, examples and a changelog:                                         ###
+###     https://github.com/DennisSchmitz/Jovian                                                          ###
+### Funding:                                                                                             ###
+###     This project/research has received funding from the European Union’s                             ###
+###     Horizon 2020 research and innovation programme under grant agreement                             ###
+###     No. 643476. and the Dutch working group on molecular diagnostics (WMDI).                         ###
+############################################################################################################
+
 # shellcheck disable=SC1091
 #set -euo pipefail
 #set -v

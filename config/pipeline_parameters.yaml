@@ -1,5 +1,6 @@
 ######################################
-### Software parameters            ###
+### Jovian core workflow           ###
+### software parameters            ###
 ######################################
 
 Trimmomatic:
@@ -18,9 +19,9 @@ HuGo_removal:
 SPAdes:
     # TODO: kmersizes kunnen waarschijnlijk worden verwijderd, moet getest worden.
     # uncomment this line if you want to use the pipeline for short Illumina reads (<250 nt in length). Then also comment the line below.
-#    kmersizes: 21,33,55,77
+    kmersizes: 21,33,55,77
     # uncomment this line if you want to use the pipeline for longer Illumina reads (>250 nt in length). Then also comment the line above.
-    kmersizes: 21,33,55,77,99,127
+#    kmersizes: 21,33,55,77,99,127
 
 scaffold_minLen_filter:
     # ! test settings for best "relaxed" mode
@@ -58,17 +59,38 @@ server_info: # This is used for IGVjs, discuss this with your IT department, dep
     port: 8083
 
 ######################################
+### OPTIONAL ref alignment         ###
+### software parameters            ###
+######################################
+
+reference_alignment:
+    # Set the path to the proper (.fasta/.fa) reference file to which you want to align.
+    reference: nCoV_refseq_NC045512.fasta
+    # Specify the input directory (default: data/cleaned_fastq/). N.B. end the path with a "/" character
+    input_dir: data/cleaned_fastq/
+    # Specify where all the output of the ref alignment extension will go (default: reference_alignment/). N.B. end the path with a "/" character
+    output_dir: reference_alignment/
+    # Specify the log output directory (default: logs/). N.B. end the path with a "/" character
+    log_dir: logs/
+
+######################################
 ### Technical parameters           ###
 ######################################
 
 threads:
     Clean_the_data: 4
-    HuGo_removal: 4
+    HuGo_removal: 12
     De_novo_assembly: 12
     Taxonomic_classification_of_scaffolds: 12
     SNP_calling: 12
     Fragment_length_analysis: 4
     quantify_output: 4
+    # Settings for the optional reference alignment steps:
+    RA_align_to_reference: 12
 
 remove_temp: 1 # For development and debug only. If you set this to 0 you will keep the HuGo alignment data which can lead to patient privacy concerns.
+
+######################################
+### Databases                      ###
+######################################
 

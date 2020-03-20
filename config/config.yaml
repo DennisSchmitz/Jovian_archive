@@ -1,5 +1,5 @@
-local-cores: 4
-cores: 120
+local-cores: 8
+cores: 300
 config:
    sample_sheet=sample_sheet.yaml
 latency-wait: 60
