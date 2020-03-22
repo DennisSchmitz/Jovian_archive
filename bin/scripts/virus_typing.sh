@@ -37,6 +37,9 @@ The first argument should always be one of the keyword listed below:
     ---------------------------------------------------
     | KEYWORD | TYPEABLE VIRUSSES                     |
     |-------------------------------------------------|
+    | all     | perform all the different typing-tools|
+    |         | listed below.                         |
+    |-------------------------------------------------|
     | NoV     | Caliciviridae family;                 |
     |         | - Norwalk virus (GI & GII),           |
     |         | - Sapporo virus                       |
@@ -84,7 +87,7 @@ wrong_tt_keyword_err_msg() {
 }
 
 validate_input_tt_keyword() {
-   if [[ "${1}" =~ ^(nov|ev|hav|hev|rva|pv|flavi)$ ]]; then
+   if [[ "${1}" =~ ^(nov|ev|hav|hev|rva|pv|flavi|all)$ ]]; then
         if [ ! -d "${INPUT_FOLDER}" ]; then
             echo -e "No '"${INPUT_FOLDER}"' folder found. Virus typing can only be performed after a completed Jovian analysis."
             exit 1
@@ -236,7 +239,18 @@ echo -e "\nStarting with ${WHICH_TT} typingtool analysis.\nN.B. depending on the
 for FILE in ${INPUT_FILES}
 do
     BASENAME=${FILE##*/}   # Filename without path but WITH suffixes
-    typingtool "${FILE}" "${BASENAME}" "${WHICH_TT}"
+    if [ "${WHICH_TT}" == "all" ]; then
+        #TODO make this more elegant with a list of keywords
+        typingtool "${FILE}" "${BASENAME}" "nov"
+        typingtool "${FILE}" "${BASENAME}" "ev"
+        typingtool "${FILE}" "${BASENAME}" "hav"
+        typingtool "${FILE}" "${BASENAME}" "hev"
+        typingtool "${FILE}" "${BASENAME}" "rva"
+        typingtool "${FILE}" "${BASENAME}" "pv"
+        typingtool "${FILE}" "${BASENAME}" "flavi"
+    else
+        typingtool "${FILE}" "${BASENAME}" "${WHICH_TT}"
+    fi
 done
 
 #################################################################################

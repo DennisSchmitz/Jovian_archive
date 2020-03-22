@@ -27,11 +27,12 @@ Extensions:                         Note, these functions require a finished Jov
   Virus typing:
     -vt-help, --virus-typing-help   Print additional information about the virus-typing, i.e.
                                     which family/genus is selected and which species are typed.
-    -vt, --virus-typing [NoV|EV|RVA|HAV|HEV|PV|Flavi]
+    -vt, --virus-typing [all|NoV|EV|RVA|HAV|HEV|PV|Flavi]
                                     After a Jovian analyses has completed, do viral typing for
                                     Norovirus (NoV), Enterovirus (EV), Hepatitis A (HAV), 
                                     Hepatitis E (HEV), Rotavirus A (RVA), Papillomaviruses (PV),
-                                    Flaviviruses (Flavi).
+                                    Flaviviruses (Flavi). Or use the 'all' keyword to perform
+                                    virus typing for all above listed viruses.
                                     For additional explanation, --vt-help
     -vt-force, --virus-typing-force [NoV|EV|RVA|HAV|HEV|PV|Flavi]
                                     Same as above, but overwrites existing output. 
