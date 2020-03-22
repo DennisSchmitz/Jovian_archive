@@ -20,6 +20,8 @@ INPUT_FILES="${INPUT_FOLDER}*_taxClassified.tsv" # Combine the INPUT_FOLDER with
 OUTPUT_FOLDER="data/virus_typing_tables/"
 mkdir -p ${OUTPUT_FOLDER}
 
+WHICH_TT=${1,,} # The ${var,,} syntax converts it all to lowercase, this makes it easier to regex/match the keywords later and makes the keywords case-insensitive.
+
 usage_msg() {
     cat <<HELP_USAGE
 Usage: bash jovian -vt [virus-keyword]
@@ -32,7 +34,6 @@ bash jovian -vt-force [virus-keyword]   Force overwrite existing output.
 bash jovian -vt-help                    Print this help message.
 
 The first argument should always be one of the keyword listed below:
-    N.B. Keywords are case-sensitive
     ---------------------------------------------------
     | KEYWORD | TYPEABLE VIRUSSES                     |
     |-------------------------------------------------|
@@ -83,7 +84,7 @@ wrong_tt_keyword_err_msg() {
 }
 
 validate_input_tt_keyword() {
-   if [[ "${1}" =~ ^(NoV|EV|HAV|HEV|RVA|PV|Flavi)$ ]]; then
+   if [[ "${1}" =~ ^(nov|ev|hav|hev|rva|pv|flavi)$ ]]; then
         if [ ! -d "${INPUT_FOLDER}" ]; then
             echo -e "No '"${INPUT_FOLDER}"' folder found. Virus typing can only be performed after a completed Jovian analysis."
             exit 1
@@ -98,10 +99,9 @@ validate_input_tt_keyword() {
 if [[ "$*" == *--help* ]]; then
     usage_msg
     exit 0
-#! If $1 is not empty, and $2 is not empty, and number of arguments is equal to 2
+#! If $1 is not empty, and $2 is not empty, and number of arguments is equal to 2 --> so the check if a virus keyword was given with the --force keyword
 elif [ ! -z "${1}" -a ! -z "${2}" -a $# -eq 2 ]; then
-    validate_input_tt_keyword "${1}"
-    WHICH_TT="${1}"
+    validate_input_tt_keyword "${WHICH_TT}"
     #! If $2 equal the literal --force
     if [ "${2}" == "--force" ]; then
         FORCE_FLAG="TRUE"
@@ -109,10 +109,9 @@ elif [ ! -z "${1}" -a ! -z "${2}" -a $# -eq 2 ]; then
         echo -e "\nUnknown parameter '"${2}"' given. Did you mean '"--force"'?"
         exit 1
     fi
-#! If $1 is not empty, and number of arguments is equal to 1
+#! If $1 is not empty, and number of arguments is equal to 1 --> so the check if only a virus keyword was given without --force keyword
 elif [ ! -z "${1}" -a $# -eq 1 ]; then
-    validate_input_tt_keyword "${1}"
-    WHICH_TT="${1}"
+    validate_input_tt_keyword "${WHICH_TT}"
 else
     echo -e "Invalid input parameters, please use one of these parameters:\n"
     usage_msg
@@ -145,49 +144,49 @@ typingtool() {
     local sample_name=${basename/_taxClassified.tsv/}   # Base sample name without path and suffixes
 
     # Set proper variables depending on chosen typingtool (either 'NoV', 'EV', 'HAV' or 'HEV')
-    if [ "${which_tt}" == "NoV" ]; then
+    if [ "${which_tt}" == "nov" ]; then
         local tt_url="https://www.rivm.nl/mpf/typingservice/norovirus/"
         local parser_py="bin/scripts/typingtool_NoV_XML_to_csv_parser.py"
         local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_NoV.fa}
         local extract_name="Caliciviridae" # Family
         local extract_field="8" # Family
         local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with family == Caliciviridae found."
-    elif [ "${which_tt}" == "EV" ]; then
+    elif [ "${which_tt}" == "ev" ]; then
         local tt_url="https://www.rivm.nl/mpf/typingservice/enterovirus/"
         local parser_py="bin/scripts/typingtool_EV_XML_to_csv_parser.py"
         local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_EV.fa}
         local extract_name="Picornaviridae" # Family
         local extract_field="8" # Family
         local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with family == Picornaviridae found."
-    elif [ "${which_tt}" == "HAV" ]; then
+    elif [ "${which_tt}" == "hav" ]; then
         local tt_url="https://www.rivm.nl/mpf/typingservice/hav/"
         local parser_py="bin/scripts/typingtool_HAV_XML_to_csv_parser.py"
         local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_HAV.fa}
         local extract_name="Hepatovirus" # Genus
         local extract_field="7" # Genus
         local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with genus == Hepatovirus found."
-    elif [ "${which_tt}" == "HEV" ]; then
+    elif [ "${which_tt}" == "hev" ]; then
         local tt_url="https://www.rivm.nl/mpf/typingservice/hev/"
         local parser_py="bin/scripts/typingtool_HEV_XML_to_csv_parser.py"
         local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_HEV.fa}
         local extract_name="Orthohepevirus" # Genus
         local extract_field="7" # Genus
         local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with genus == Orthohepevirus found."
-    elif [ "${which_tt}" == "RVA" ]; then
+    elif [ "${which_tt}" == "rva" ]; then
         local tt_url="https://www.rivm.nl/mpf/typingservice/rotavirusa/"
         local parser_py="bin/scripts/typingtool_RVA_XML_to_csv_parser.py"
         local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_RVA.fa}
         local extract_name="Rotavirus" # Genus
         local extract_field="7" # Genus
         local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with genus == Rotavirus found."
-    elif [ "${which_tt}" == "PV" ]; then
+    elif [ "${which_tt}" == "pv" ]; then
         local tt_url="https://www.rivm.nl/mpf/typingservice/papillomavirus/"
         local parser_py="bin/scripts/typingtool_PV_XML_to_csv_parser.py"
         local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_PV.fa}
         local extract_name="Papillomaviridae" # Family
         local extract_field="8" # Family
         local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with family == Papillomaviridae found."
-    elif [ "${which_tt}" == "Flavi" ]; then
+    elif [ "${which_tt}" == "flavi" ]; then
         local tt_url="https://www.rivm.nl/mpf/typingservice/flavivirus/"
         local parser_py="bin/scripts/typingtool_Flavi_XML_to_csv_parser.py"
         local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_Flavi.fa}
