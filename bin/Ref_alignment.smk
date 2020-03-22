@@ -181,7 +181,7 @@ samtools index -@ {threads} {output.sorted_bam} >> {log} 2>&1
 #? the -d 8000 is to be identical to the samtools default settings (bcftools default is 250) and -O u is to give it the same
 #? output as the samtools output: there was a difference in SNP calling between the two (bcftools did not call one SNP that
 #? samtools did). So I'm reluctant to change it. Leaving this here for an eventual later update.
-#? Versions used: samtools 1.10 and bcftools 1.10
+#? Versions used: samtools 1.10 and bcftools 1.10 (also see https://github.com/samtools/bcftools/issues/852 )
 ##################################################################################################################################
 rule RA_extract_raw_consensus:
     input:
