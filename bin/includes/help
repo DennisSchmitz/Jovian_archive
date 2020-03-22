@@ -15,10 +15,26 @@ Output (automatically generated):
   logs/                             Contains all log files.
   results/                          Contains all final results, these are visualized via the
                                     web-report (Notebook_report.ipynb).
-Reference alignment:
-  --ra, --reference-alignment [reference.fasta]
+Extensions:                         Note, these functions require a finished Jovian analysis
+                                    to function.
+  Reference alignment:
+    --ra, --reference-alignment [reference.fasta]
                                     Work-in-progress. Does a reference alignment against the
-                                    user specified fasta file.
+                                    user specified fasta file. N.B. only provide a single
+                                    genome of your organism of interest. If you add more than
+                                    one, e.g. two genomes of the same virus genotype, the
+                                    breadth of coverage calculation will be wrong.
+  Virus typing:
+    -vt-help, --virus-typing-help   Print additional information about the virus-typing, i.e.
+                                    which family/genus is selected and which species are typed.
+    -vt, --virus-typing [NoV|EV|RVA|HAV|HEV|PV|Flavi]
+                                    After a Jovian analyses has completed, do viral typing for
+                                    Norovirus (NoV), Enterovirus (EV), Hepatitis A (HAV), 
+                                    Hepatitis E (HEV), Rotavirus A (RVA), Papillomaviruses (PV),
+                                    Flaviviruses (Flavi).
+                                    For additional explanation, --vt-help
+    -vt-force, --virus-typing-force [NoV|EV|RVA|HAV|HEV|PV|Flavi]
+                                    Same as above, but overwrites existing output. 
 Parameters:
   -m, --mode [strict|relaxed]       Automatically configures Jovian to be stringent or relaxed
                                     in taxonomic classification of scaffolds. Please see the 
@@ -26,16 +42,6 @@ Parameters:
                                     precision at the cost of sensitivity and use 'relaxed' for
                                     high sensitivity at the cost of more spurious results
                                     (contamination).
-  -vt-help, --virus-typing-help     Print additional information about the virus-typing, i.e.
-                                    which family/genus is selected and which species are typed.
-  -vt, --virus-typing [NoV|EV|RVA|HAV|HEV|PV|Flavi]
-                                    After a Jovian analyses has completed, do viral typing for
-                                    Norovirus (NoV), Enterovirus (EV), Hepatitis A (HAV), 
-                                    Hepatitis E (HEV), Rotavirus A (RVA), Papillomaviruses (PV),
-                                    Flaviviruses (Flavi).
-                                    For additional explanation, --vt-help
-  -vt-force, --virus-typing-force [NoV|EV|RVA|HAV|HEV|PV|Flavi]
-                                    Same as above, but overwrites existing output. 
   -h, --help                        Print the Jovian help document.
   -sh, --snakemake-help             Print the Snakemake help document.
   --clean (-y)                      Removes Jovian output. (-y forces "Yes" on all prompts)

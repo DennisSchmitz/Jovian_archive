@@ -103,7 +103,7 @@ rule all:
         expand("{out}consensus_seqs/raw/{sample}_{extension}", out = RESULTS_OUTPUT_DIR, sample = SAMPLES, extension = [ 'calls.vcf.gz', 'raw_consensus.fa' ]), # A zipped vcf file contained SNPs versus the given reference and a RAW consensus sequence, see explanation below for the meaning of RAW.
         expand("{out}consensus_seqs/{sample}.bedgraph", out = RESULTS_OUTPUT_DIR, sample = SAMPLES), # Lists the coverage of the alignment against the reference in a bedgraph format, is used to determine the coverage mask files below.
         expand("{out}consensus_seqs/{sample}_{filt_character}-filt_cov_ge_{thresholds}.fa", out = RESULTS_OUTPUT_DIR, sample = SAMPLES, filt_character = [ 'N', 'minus' ], thresholds = [ '1', '5', '10', '30', '100' ]), # Consensus sequences filtered for different coverage thresholds (1, 5, 10, 30 and 100). For each threshold two files are generated, one where failed positioned are replaced with a N nucleotide and the other where its replaced with a minus character (gap).
-        expand("{out}consensus_seqs/BoC_analysis/{sample}_BoC{extension}", out = RESULTS_OUTPUT_DIR, sample = SAMPLES, extension = [ '.vcf', '_int.tsv', '_pct.tsv' ] ), # Output of the BoC analysis #TODO can probably removed after the concat rule is added.
+        expand("{out}consensus_seqs/BoC_analysis/{sample}_BoC{extension}", out = RESULTS_OUTPUT_DIR, sample = SAMPLES, extension = [ '.pileup', '_int.tsv', '_pct.tsv' ] ), # Output of the BoC analysis #TODO can probably removed after the concat rule is added.
         RESULTS_OUTPUT_DIR + "results/BoC_integer.tsv", # Integer BoC overview in .tsv format
         RESULTS_OUTPUT_DIR + "results/BoC_percentage.tsv", # Percentage BoC overview in .tsv format
 
@@ -151,7 +151,6 @@ rule RA_align_to_reference:
         LOGS_OUTPUT_DIR + "RA_align_to_reference_{sample}.log"
     params:
         alignment_type="--local",
-        #alignment_type=config["HuGo_removal"]["alignment_type"] # TODO voor latere versie
     shell:
         """
 bowtie2 --time --threads {threads} {params.alignment_type} \
@@ -165,16 +164,25 @@ samtools index -@ {threads} {output.sorted_bam} >> {log} 2>&1
         """
 
 
-# This rule overwrites nucleotides in the ref based on the input reads and creates a RAW consensus sequence, RAW means:
+##################################################################################################################################
+# The rule below overwrites nucleotides in the ref based on the input reads and creates a RAW consensus sequence, RAW means:
 #### A consensus genome is generated even if there is 0 coverage. At positions where no reads aligned it just takes
 #### the reference nucleotide and inserts that into the consensus fasta. Obviously, this is not desirable and prone
 #### to misinterpretation! Therefore, in a rule below, all positions with a coverage of 0 are masked, i.e. nucleotides
 #### at that position are replaced with "N" or "-". Both replacements are made, since many aligners can handle gaps ("-")
 #### but they cannot handle N's. However, the file with N's can be used to check for indels since this cannot be seen
 #### in the file where every missing nucleotide is replaced with a "-".
-#! basecalling kan niet multithreaded, hoe ze het bij HuGo doen is door het te splitten op chromosome of regio's.
-#TODO bovenstaande toch even uitzoeken en bronnn aan de code toevoegen.
-#TODO de output consensus fasta is nu een size-limited multi-line fasta, hier nog een two-line fasta van maken. Zie Jovian seqtk.
+##################################################################################################################################
+#? This code cannot easily be made multithreaded for monopartite sequences, see https://github.com/samtools/bcftools/issues/949
+#? If we ever get additional time later we can probably look into splitting it up, but now there is no time.
+##################################################################################################################################
+#? You will get deprecation warning saying 'samtools mpileup option `u` is functional, but deprecated' and that you should
+#? use bcftools mpileup instead. I've tried this on 20200322 with 'bcftools mpileup -d 8000 -O u -f reference.fasta input.bam',
+#? the -d 8000 is to be identical to the samtools default settings (bcftools default is 250) and -O u is to give it the same
+#? output as the samtools output: there was a difference in SNP calling between the two (bcftools did not call one SNP that
+#? samtools did). So I'm reluctant to change it. Leaving this here for an eventual later update.
+#? Versions used: samtools 1.10 and bcftools 1.10
+##################################################################################################################################
 rule RA_extract_raw_consensus:
     input:
         bam= rules.RA_align_to_reference.output.sorted_bam,
@@ -201,7 +209,6 @@ bcftools consensus {output.gzipped_vcf} | seqtk seq - > {output.raw_consensus_fa
 
 
 #TODO kijken of dit multithreaded kan worden.
-#TODO de fasta headers moeten nog een suffix krijgen met de cov en de filtering character, anders is het niet duidelijk bij het catten van de files.
 rule RA_extract_clean_consensus:
     input:
         bam= rules.RA_align_to_reference.output.sorted_bam,
@@ -242,7 +249,7 @@ rule RA_determine_BoC_at_diff_cov_thresholds:
         bam= rules.RA_align_to_reference.output.sorted_bam,
         reference= rules.RA_index_reference.output.reference_copy,
     output:
-        BoC_vcf= RESULTS_OUTPUT_DIR + "consensus_seqs/BoC_analysis/{sample}_BoC.vcf",
+        BoC_pileup= RESULTS_OUTPUT_DIR + "consensus_seqs/BoC_analysis/{sample}_BoC.pileup",
         percentage_BoC_tsv= RESULTS_OUTPUT_DIR + "consensus_seqs/BoC_analysis/{sample}_BoC_pct.tsv",
         integer_BoC_tsv= RESULTS_OUTPUT_DIR + "consensus_seqs/BoC_analysis/{sample}_BoC_int.tsv",
     conda:
@@ -253,10 +260,10 @@ rule RA_determine_BoC_at_diff_cov_thresholds:
     log:
         LOGS_OUTPUT_DIR + "RA_determine_BoC_at_diff_cov_thresholds_{sample}.log"
     params:
-    shell: # Source: http://www.metagenomics.wiki/tools/samtools/breadth-of-coverage
+    shell: # Source: http://www.metagenomics.wiki/tools/samtools/breadth-of-coverage . Pileup fileformat: https://en.wikipedia.org/wiki/Pileup_format
         """
 bash bin/scripts/RA_BoC_analysis.sh {wildcards.sample} {input.bam} {input.reference} \
-{output.BoC_vcf} {output.percentage_BoC_tsv} {output.integer_BoC_tsv} >> {log} 2>&1
+{output.BoC_pileup} {output.percentage_BoC_tsv} {output.integer_BoC_tsv} >> {log} 2>&1
         """
 
 
