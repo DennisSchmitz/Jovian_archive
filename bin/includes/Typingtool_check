@@ -29,7 +29,7 @@ bash jovian -vt-help                    Print this help message.
 
 The first argument should always be one of the keyword listed below:
     ---------------------------------------------------
-    | KEYWORD | TYPEABLE VIRUSSES                     |
+    | KEYWORD | TYPEABLE VIRUSES                      |
     |-------------------------------------------------|
     | all     | perform all the different typing-tools|
     |         | listed below.                         |
