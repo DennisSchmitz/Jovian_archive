@@ -78,6 +78,8 @@ with open(config["sample_sheet_reference_alignment"]) as sample_sheet_file:
 
 # This file is given as a snakemake CLI argument from within the wrapper
 REFERENCE = config["reference"]
+REFERENCE_BASENAME = os.path.splitext(os.path.basename(REFERENCE))[0]    # source: https://stackoverflow.com/questions/678236/how-to-get-the-filename-without-the-extension-from-a-path-in-python
+
 
 READS_INPUT_DIR = config["reference_alignment"]["input_dir"]
 RESULTS_OUTPUT_DIR = config["reference_alignment"]["output_dir"]
@@ -106,6 +108,7 @@ rule all:
         expand("{out}consensus_seqs/BoC_analysis/{sample}_BoC{extension}", out = RESULTS_OUTPUT_DIR, sample = SAMPLES, extension = [ '.pileup', '_int.tsv', '_pct.tsv' ] ), # Output of the BoC analysis #TODO can probably removed after the concat rule is added.
         RESULTS_OUTPUT_DIR + "results/BoC_integer.tsv", # Integer BoC overview in .tsv format
         RESULTS_OUTPUT_DIR + "results/BoC_percentage.tsv", # Percentage BoC overview in .tsv format
+        expand("{out}reference/{ref_basename}_{extension}", out = RESULTS_OUTPUT_DIR, ref_basename = REFERENCE_BASENAME , sample = SAMPLES, extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi' ]), # Prodigal ORF prediction output, required for the IGVjs visualisation
 
 
 #@################################################################################
@@ -130,6 +133,39 @@ rule RA_index_reference:
         """
 cp {input.reference} {output.reference_copy}
 bowtie2-build --threads {threads} {output.reference_copy} {output.reference_copy} >> {log} 2>&1
+        """
+
+
+# Gejat uit Jovian core met minor changes, kunnen we waarschijlijk efficienter doen.
+rule RA_reference_ORF_analysis:
+    input:
+        reference=config["reference"]
+    output: 
+        ORF_AA_fasta= RESULTS_OUTPUT_DIR + "reference/" + REFERENCE_BASENAME + "_ORF_AA.fa",
+        ORF_NT_fasta= RESULTS_OUTPUT_DIR + "reference/" + REFERENCE_BASENAME + "_ORF_NT.fa",
+        ORF_annotation_gff= RESULTS_OUTPUT_DIR + "reference/" + REFERENCE_BASENAME + "_annotation.gff",
+        zipped_gff3= RESULTS_OUTPUT_DIR + "reference/" + REFERENCE_BASENAME + "_annotation.gff.gz",
+        index_zipped_gff3= RESULTS_OUTPUT_DIR + "reference/" + REFERENCE_BASENAME + "_annotation.gff.gz.tbi",
+    conda:
+        "envs/scaffold_analyses.yaml"
+    log:
+        "logs/RA_reference_ORF_analysis.log"
+    benchmark:
+        "logs/benchmark/RA_reference_ORF_analysis.txt"
+    threads: 1
+    params: #? Currently it's using the same prodigal settings as the main workflow, I see no problems with it since it's both foremost intended for viruses.
+        procedure=config["ORF_prediction"]["procedure"],
+        output_format=config["ORF_prediction"]["output_format"]
+    shell:
+        """
+prodigal -q -i {input.reference} \
+-a {output.ORF_AA_fasta} \
+-d {output.ORF_NT_fasta} \
+-o {output.ORF_annotation_gff} \
+-p {params.procedure} \
+-f {params.output_format} > {log} 2>&1
+bgzip -c {output.ORF_annotation_gff} 2>> {log} 1> {output.zipped_gff3}
+tabix -p gff {output.zipped_gff3} >> {log} 2>&1
         """
 
 
