@@ -30,8 +30,6 @@ Funding:
 #TODO:
 - integrate with IGVjs so you can assess the read alignment
 - realign against new consensus? or too slow?
-- Seems to be an errors/discrepancy between the consensus seq calling and the mpileup file for the BoC determination. No files gives 100% coverage while there are 100% covered consensus seqs, e.g. sample 30 at cov ge 1
-- Make the genomecov threshold a parameter instead of only 0 cov regions are replaced with N-nucleotides
 - Maybe MM2 is a better/faster aligner?
 - Make a multiple alignment of all contigs/scaffolds versus the ref-alignment method as a double check!
    - the scaffolds then also need to be put in the proper orientation for MA to work.
@@ -112,7 +110,7 @@ rule all:
         expand("{out}{sample}_{extension}", out = OUTPUT_DIR_CONSENSUS_RAW, sample = SAMPLES, extension = [ 'calls.vcf.gz', 'raw_consensus.fa' ]), # A zipped vcf file contained SNPs versus the given reference and a RAW consensus sequence, see explanation below for the meaning of RAW.
         expand("{out}{sample}.bedgraph", out = OUTPUT_DIR_CONSENSUS_FILT, sample = SAMPLES), # Lists the coverage of the alignment against the reference in a bedgraph format, is used to determine the coverage mask files below.
         expand("{out}{sample}_{filt_character}-filt_cov_ge_{thresholds}.fa", out = OUTPUT_DIR_CONSENSUS_FILT, sample = SAMPLES, filt_character = [ 'N', 'minus' ], thresholds = [ '1', '5', '10', '30', '100' ]), # Consensus sequences filtered for different coverage thresholds (1, 5, 10, 30 and 100). For each threshold two files are generated, one where failed positioned are replaced with a N nucleotide and the other where its replaced with a minus character (gap).
-        expand("{out}{sample}_BoC{extension}", out = OUTPUT_DIR_BOC_ANALYSIS, sample = SAMPLES, extension = [ '.pileup', '_int.tsv', '_pct.tsv' ] ), # Output of the BoC analysis #TODO can probably removed after the concat rule is added.
+        expand("{out}{sample}_BoC{extension}", out = OUTPUT_DIR_BOC_ANALYSIS, sample = SAMPLES, extension = [ '_int.tsv', '_pct.tsv' ] ), # Output of the BoC analysis #TODO can probably removed after the concat rule is added.
         OUTPUT_DIR_RESULTS + "BoC_integer.tsv", # Integer BoC overview in .tsv format
         OUTPUT_DIR_RESULTS + "BoC_percentage.tsv", # Percentage BoC overview in .tsv format
         expand("{out}{ref_basename}_{extension}", out = OUTPUT_DIR_REFERENCE, ref_basename = REFERENCE_BASENAME , sample = SAMPLES, extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi' ]), # Prodigal ORF prediction output, required for the IGVjs visualisation
@@ -286,13 +284,12 @@ bash bin/scripts/RA_consensus_at_diff_coverages.sh {wildcards.sample} {input.bam
 
 
 #TODO make a python script or bash function/include to do this more efficiently, currently it's hacky, but it works
-#TODO the mpileup in this rule is probably superfluous since I think that the pileup of the rule above can be reused (after minor tweaks to the BoC_script), but currently no time for it
+#TODO multithreaden met parallel functie, 5 awks in parallel voor de verschillende thresholds
 rule RA_determine_BoC_at_diff_cov_thresholds:
     input:
-        bam= rules.RA_align_to_reference.output.sorted_bam,
+        bedgraph= rules.RA_extract_clean_consensus.output.bedgraph,
         reference= rules.RA_index_reference.output.reference_copy,
     output:
-        BoC_pileup= OUTPUT_DIR_BOC_ANALYSIS + "{sample}_BoC.pileup",
         percentage_BoC_tsv= OUTPUT_DIR_BOC_ANALYSIS + "{sample}_BoC_pct.tsv",
         integer_BoC_tsv= OUTPUT_DIR_BOC_ANALYSIS + "{sample}_BoC_int.tsv",
     conda:
@@ -303,10 +300,10 @@ rule RA_determine_BoC_at_diff_cov_thresholds:
     log:
         OUTPUT_DIR_LOGS + "RA_determine_BoC_at_diff_cov_thresholds_{sample}.log"
     params:
-    shell: # Source: http://www.metagenomics.wiki/tools/samtools/breadth-of-coverage . Pileup fileformat: https://en.wikipedia.org/wiki/Pileup_format
+    shell:
         """
-bash bin/scripts/RA_BoC_analysis.sh {wildcards.sample} {input.bam} {input.reference} \
-{output.BoC_pileup} {output.percentage_BoC_tsv} {output.integer_BoC_tsv} >> {log} 2>&1
+bash bin/scripts/RA_BoC_analysis.sh {wildcards.sample} {input.bedgraph} {input.reference} \
+{output.percentage_BoC_tsv} {output.integer_BoC_tsv} >> {log} 2>&1
         """
 
 
