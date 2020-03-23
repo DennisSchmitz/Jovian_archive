@@ -29,7 +29,8 @@ Funding:
 """
 #TODO:
 - integrate with IGVjs so you can assess the read alignment
-    - Add prodigal ORF prediction, or parse from reference
+- realign against new consensus? or too slow?
+- Seems to be an errors/discrepancy between the consensus seq calling and the mpileup file for the BoC determination. No files gives 100% coverage while there are 100% covered consensus seqs, e.g. sample 30 at cov ge 1
 - Make the genomecov threshold a parameter instead of only 0 cov regions are replaced with N-nucleotides
 - Maybe MM2 is a better/faster aligner?
 - Make a multiple alignment of all contigs/scaffolds versus the ref-alignment method as a double check!
@@ -45,18 +46,6 @@ Funding:
 """
 
 
-"""
-###! First, from the `Jovian_master` env do:
-###!    ./generate_sample_sheet.py private_cleaned_data > sample_sheet_ref_alignment.yaml
-###! And then the actual run:
-###!    snakemake -s Snakefile --latency-wait 60 --cores 300 --local-cores 4 --use-conda --cluster 'bsub -q bio -e lsf_log.stderr -o lsf_log.stdout -n {threads} -R "span[hosts=1]"'
-#######! For better debugging:
-###!    snakemake -s Snakefile -p --latency-wait 60 --cores 300 --local-cores 4 --use-conda --cluster 'bsub -q bio -e lsf_log.stderr -o lsf_log.stdout -n {threads} -R "span[hosts=1]"'
-###! Or a shorter (using Jovian's config files):
-###!     snakemake -s bin/Ref_alignment --profile config
-"""
-
-
 #@################################################################################
 #@#### Import config file, sample_sheet and set output folder names          #####
 #@################################################################################
@@ -64,27 +53,45 @@ Funding:
 
 shell.executable("/bin/bash")
 
+# Load config files
 configfile: "config/pipeline_parameters.yaml"
 configfile: "config/variables.yaml"
 
+# Load libraries
 import pprint
 import os
 import yaml
 yaml.warnings({'YAMLLoadWarning': False}) # Suppress yaml "unsafe" warnings.
 
+# Import sample sheet
 SAMPLES = {}
 with open(config["sample_sheet_reference_alignment"]) as sample_sheet_file:
     SAMPLES = yaml.load(sample_sheet_file) # SAMPLES is a dict with sample in the form sample > read number > file. E.g.: SAMPLES["sample_1"]["R1"] = "x_R1.gz"
 
-# This file is given as a snakemake CLI argument from within the wrapper
+# The reference file is given as a snakemake CLI argument from within the wrapper, so NOT via the pipeline_parameters.yaml
 REFERENCE = config["reference"]
 REFERENCE_BASENAME = os.path.splitext(os.path.basename(REFERENCE))[0]    # source: https://stackoverflow.com/questions/678236/how-to-get-the-filename-without-the-extension-from-a-path-in-python
 
+# Set input directory, this is dependent on the Jovian output dir
+INPUT_DIR_FILT_READS = config["reference_alignment"]["input_dir"]
 
-READS_INPUT_DIR = config["reference_alignment"]["input_dir"]
-RESULTS_OUTPUT_DIR = config["reference_alignment"]["output_dir"]
-LOGS_OUTPUT_DIR = config["reference_alignment"]["log_dir"]
+# Set dir with conda-env files
+CONDA_ENVS_DIR = "envs/"
 
+# Set output base dir and sub-folder names, useful for easily changing the output locations during development.
+OUTPUT_BASE_DIR = config["reference_alignment"]["output_dir"]
+OUTPUT_DIR_REFERENCE = OUTPUT_BASE_DIR + "reference/"
+OUTPUT_DIR_ALIGNMENT = OUTPUT_BASE_DIR + "alignment/"
+OUTPUT_DIR_CONSENSUS_RAW = OUTPUT_BASE_DIR + "consensus_seqs/raw/"
+OUTPUT_DIR_CONSENSUS_FILT = OUTPUT_BASE_DIR + "consensus_seqs/"
+OUTPUT_DIR_BOC_ANALYSIS = OUTPUT_BASE_DIR + "BoC_analysis/"
+
+# Set output dir of results
+OUTPUT_DIR_RESULTS = OUTPUT_BASE_DIR + "results/"
+
+# Set output dir of logfiles
+OUTPUT_DIR_LOGS = config["reference_alignment"]["log_dir"] # NB the DRMAA logs will go the same dir as Jovian-core since this is set in the config.yaml file.
+OUTPUT_DIR_BENCHMARKS = OUTPUT_DIR_LOGS + "benchmark/"
 
 #@################################################################################
 #@#### Specify Jovian's final output:                                        #####
@@ -99,16 +106,16 @@ localrules:
 
 rule all:
     input:
-        RESULTS_OUTPUT_DIR + "reference/" + os.path.basename(config["reference"]), # Copy of the reference fasta (for standardization and easy logging)
-        RESULTS_OUTPUT_DIR + "reference/" + os.path.basename(config["reference"]) + ".1.bt2", # The bowtie2 index files (I've only specified one, but the "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2" and "rev.2.bt2" are implicitly generated)
-        expand("{out}alignment/{sample}_sorted.{extension}", out = RESULTS_OUTPUT_DIR, sample = SAMPLES, extension = [ 'bam', 'bam.bai' ]), # The reference alignment (bam format) files.
-        expand("{out}consensus_seqs/raw/{sample}_{extension}", out = RESULTS_OUTPUT_DIR, sample = SAMPLES, extension = [ 'calls.vcf.gz', 'raw_consensus.fa' ]), # A zipped vcf file contained SNPs versus the given reference and a RAW consensus sequence, see explanation below for the meaning of RAW.
-        expand("{out}consensus_seqs/{sample}.bedgraph", out = RESULTS_OUTPUT_DIR, sample = SAMPLES), # Lists the coverage of the alignment against the reference in a bedgraph format, is used to determine the coverage mask files below.
-        expand("{out}consensus_seqs/{sample}_{filt_character}-filt_cov_ge_{thresholds}.fa", out = RESULTS_OUTPUT_DIR, sample = SAMPLES, filt_character = [ 'N', 'minus' ], thresholds = [ '1', '5', '10', '30', '100' ]), # Consensus sequences filtered for different coverage thresholds (1, 5, 10, 30 and 100). For each threshold two files are generated, one where failed positioned are replaced with a N nucleotide and the other where its replaced with a minus character (gap).
-        expand("{out}consensus_seqs/BoC_analysis/{sample}_BoC{extension}", out = RESULTS_OUTPUT_DIR, sample = SAMPLES, extension = [ '.pileup', '_int.tsv', '_pct.tsv' ] ), # Output of the BoC analysis #TODO can probably removed after the concat rule is added.
-        RESULTS_OUTPUT_DIR + "results/BoC_integer.tsv", # Integer BoC overview in .tsv format
-        RESULTS_OUTPUT_DIR + "results/BoC_percentage.tsv", # Percentage BoC overview in .tsv format
-        expand("{out}reference/{ref_basename}_{extension}", out = RESULTS_OUTPUT_DIR, ref_basename = REFERENCE_BASENAME , sample = SAMPLES, extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi' ]), # Prodigal ORF prediction output, required for the IGVjs visualisation
+        OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + ".fasta", # Copy of the reference fasta (for standardization and easy logging)
+        OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + ".fasta.1.bt2", # The bowtie2 index files (I've only specified one, but the "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2" and "rev.2.bt2" are implicitly generated)
+        expand("{out}{sample}_sorted.{extension}", out = OUTPUT_DIR_ALIGNMENT, sample = SAMPLES, extension = [ 'bam', 'bam.bai' ]), # The reference alignment (bam format) files.
+        expand("{out}{sample}_{extension}", out = OUTPUT_DIR_CONSENSUS_RAW, sample = SAMPLES, extension = [ 'calls.vcf.gz', 'raw_consensus.fa' ]), # A zipped vcf file contained SNPs versus the given reference and a RAW consensus sequence, see explanation below for the meaning of RAW.
+        expand("{out}{sample}.bedgraph", out = OUTPUT_DIR_CONSENSUS_FILT, sample = SAMPLES), # Lists the coverage of the alignment against the reference in a bedgraph format, is used to determine the coverage mask files below.
+        expand("{out}{sample}_{filt_character}-filt_cov_ge_{thresholds}.fa", out = OUTPUT_DIR_CONSENSUS_FILT, sample = SAMPLES, filt_character = [ 'N', 'minus' ], thresholds = [ '1', '5', '10', '30', '100' ]), # Consensus sequences filtered for different coverage thresholds (1, 5, 10, 30 and 100). For each threshold two files are generated, one where failed positioned are replaced with a N nucleotide and the other where its replaced with a minus character (gap).
+        expand("{out}{sample}_BoC{extension}", out = OUTPUT_DIR_BOC_ANALYSIS, sample = SAMPLES, extension = [ '.pileup', '_int.tsv', '_pct.tsv' ] ), # Output of the BoC analysis #TODO can probably removed after the concat rule is added.
+        OUTPUT_DIR_RESULTS + "BoC_integer.tsv", # Integer BoC overview in .tsv format
+        OUTPUT_DIR_RESULTS + "BoC_percentage.tsv", # Percentage BoC overview in .tsv format
+        expand("{out}{ref_basename}_{extension}", out = OUTPUT_DIR_REFERENCE, ref_basename = REFERENCE_BASENAME , sample = SAMPLES, extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi' ]), # Prodigal ORF prediction output, required for the IGVjs visualisation
 
 
 #@################################################################################
@@ -118,17 +125,17 @@ rule all:
 
 rule RA_index_reference:
     input:
-        reference=config["reference"]
+        reference= REFERENCE
     output:
-        reference_copy= RESULTS_OUTPUT_DIR + "reference/" + os.path.basename(config["reference"]),
-        reference_index= RESULTS_OUTPUT_DIR + "reference/" + os.path.basename(config["reference"]) + ".1.bt2",
+        reference_copy= OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + ".fasta",
+        reference_index= OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + ".fasta.1.bt2", #TODO hier nog met die multiext syntax werken om de andere files ook aan the maken
     conda:
-        "envs/RA_ref_alignment.yaml"
+        CONDA_ENVS_DIR + "RA_ref_alignment.yaml"
     benchmark:
-        LOGS_OUTPUT_DIR + "benchmark/RA_index_reference.txt"
+        OUTPUT_DIR_BENCHMARKS + "RA_index_reference.txt"
     threads: 4
     log:
-        LOGS_OUTPUT_DIR + "RA_index_reference.log"
+        OUTPUT_DIR_LOGS + "RA_index_reference.log"
     shell: # The reference is copied to the hardcoded subdir to make it standardized and easily logged.
         """
 cp {input.reference} {output.reference_copy}
@@ -139,19 +146,19 @@ bowtie2-build --threads {threads} {output.reference_copy} {output.reference_copy
 # Gejat uit Jovian core met minor changes, kunnen we waarschijlijk efficienter doen.
 rule RA_reference_ORF_analysis:
     input:
-        reference=config["reference"]
+        reference= REFERENCE
     output: 
-        ORF_AA_fasta= RESULTS_OUTPUT_DIR + "reference/" + REFERENCE_BASENAME + "_ORF_AA.fa",
-        ORF_NT_fasta= RESULTS_OUTPUT_DIR + "reference/" + REFERENCE_BASENAME + "_ORF_NT.fa",
-        ORF_annotation_gff= RESULTS_OUTPUT_DIR + "reference/" + REFERENCE_BASENAME + "_annotation.gff",
-        zipped_gff3= RESULTS_OUTPUT_DIR + "reference/" + REFERENCE_BASENAME + "_annotation.gff.gz",
-        index_zipped_gff3= RESULTS_OUTPUT_DIR + "reference/" + REFERENCE_BASENAME + "_annotation.gff.gz.tbi",
+        ORF_AA_fasta= OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + "_ORF_AA.fa",
+        ORF_NT_fasta= OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + "_ORF_NT.fa",
+        ORF_annotation_gff= OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + "_annotation.gff",
+        zipped_gff3= OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + "_annotation.gff.gz",
+        index_zipped_gff3= OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + "_annotation.gff.gz.tbi",
     conda:
-        "envs/scaffold_analyses.yaml"
-    log:
-        "logs/RA_reference_ORF_analysis.log"
+        CONDA_ENVS_DIR + "scaffold_analyses.yaml"
     benchmark:
-        "logs/benchmark/RA_reference_ORF_analysis.txt"
+        OUTPUT_DIR_BENCHMARKS + "RA_reference_ORF_analysis.txt"
+    log:
+        OUTPUT_DIR_LOGS + "RA_reference_ORF_analysis.log"
     threads: 1
     params: #? Currently it's using the same prodigal settings as the main workflow, I see no problems with it since it's both foremost intended for viruses.
         procedure=config["ORF_prediction"]["procedure"],
@@ -171,20 +178,20 @@ tabix -p gff {output.zipped_gff3} >> {log} 2>&1
 
 rule RA_align_to_reference:
     input:
-        pR1= READS_INPUT_DIR + "{sample}_pR1.fq",
-        pR2= READS_INPUT_DIR + "{sample}_pR2.fq",
-        unpaired= READS_INPUT_DIR + "{sample}_unpaired.fq",
+        pR1= INPUT_DIR_FILT_READS + "{sample}_pR1.fq",
+        pR2= INPUT_DIR_FILT_READS + "{sample}_pR2.fq",
+        unpaired= INPUT_DIR_FILT_READS + "{sample}_unpaired.fq",
         reference= rules.RA_index_reference.output.reference_copy
     output:
-        sorted_bam= RESULTS_OUTPUT_DIR + "alignment/{sample}_sorted.bam",
-        sorted_bam_index= RESULTS_OUTPUT_DIR + "alignment/{sample}_sorted.bam.bai",
+        sorted_bam= OUTPUT_DIR_ALIGNMENT + "{sample}_sorted.bam",
+        sorted_bam_index= OUTPUT_DIR_ALIGNMENT + "{sample}_sorted.bam.bai",
     conda:
-        "envs/RA_ref_alignment.yaml"
+        CONDA_ENVS_DIR + "RA_ref_alignment.yaml"
     benchmark:
-        LOGS_OUTPUT_DIR + "benchmark/RA_align_to_reference_{sample}.txt"
+        OUTPUT_DIR_BENCHMARKS + "RA_align_to_reference_{sample}.txt"
     threads: config["threads"]["RA_align_to_reference"]
     log:
-        LOGS_OUTPUT_DIR + "RA_align_to_reference_{sample}.log"
+        OUTPUT_DIR_LOGS + "RA_align_to_reference_{sample}.log"
     params:
         alignment_type="--local",
     shell:
@@ -224,15 +231,15 @@ rule RA_extract_raw_consensus:
         bam= rules.RA_align_to_reference.output.sorted_bam,
         reference= rules.RA_index_reference.output.reference_copy,
     output:
-        gzipped_vcf= RESULTS_OUTPUT_DIR + "consensus_seqs/raw/{sample}_calls.vcf.gz",
-        raw_consensus_fasta= RESULTS_OUTPUT_DIR + "consensus_seqs/raw/{sample}_raw_consensus.fa",
+        gzipped_vcf= OUTPUT_DIR_CONSENSUS_RAW + "{sample}_calls.vcf.gz",
+        raw_consensus_fasta= OUTPUT_DIR_CONSENSUS_RAW + "{sample}_raw_consensus.fa",
     conda:
-        "envs/RA_ref_alignment.yaml"
+        CONDA_ENVS_DIR + "RA_ref_alignment.yaml"
     benchmark:
-        LOGS_OUTPUT_DIR + "benchmark/RA_extract_raw_consensus_{sample}.txt"
+        OUTPUT_DIR_BENCHMARKS + "RA_extract_raw_consensus_{sample}.txt"
     threads: 1
     log:
-        LOGS_OUTPUT_DIR + "RA_extract_raw_consensus_{sample}.log"
+        OUTPUT_DIR_LOGS + "RA_extract_raw_consensus_{sample}.log"
     params:
     shell: # Source: https://github.com/samtools/bcftools/wiki/HOWTOs#consensus-calling
         """
@@ -251,26 +258,26 @@ rule RA_extract_clean_consensus:
         reference= rules.RA_index_reference.output.reference_copy,
         raw_consensus= rules.RA_extract_raw_consensus.output.raw_consensus_fasta, # Only needed for when there are no positions in the bed with a coverage of 0; in that case the RAW fasta is actually suitable for downstream processes and it is simply copied.
     output:
-        bedgraph= RESULTS_OUTPUT_DIR + "consensus_seqs/{sample}.bedgraph",
-        filt_consensus_N_filt_ge_1= RESULTS_OUTPUT_DIR + "consensus_seqs/{sample}_N-filt_cov_ge_1.fa",
-        filt_consensus_N_filt_ge_5= RESULTS_OUTPUT_DIR + "consensus_seqs/{sample}_N-filt_cov_ge_5.fa",
-        filt_consensus_N_filt_ge_10= RESULTS_OUTPUT_DIR + "consensus_seqs/{sample}_N-filt_cov_ge_10.fa",
-        filt_consensus_N_filt_ge_30= RESULTS_OUTPUT_DIR + "consensus_seqs/{sample}_N-filt_cov_ge_30.fa",
-        filt_consensus_N_filt_ge_100= RESULTS_OUTPUT_DIR + "consensus_seqs/{sample}_N-filt_cov_ge_100.fa",
-        filt_consensus_minus_filt_ge_1= RESULTS_OUTPUT_DIR + "consensus_seqs/{sample}_minus-filt_cov_ge_1.fa",
-        filt_consensus_minus_filt_ge_5= RESULTS_OUTPUT_DIR + "consensus_seqs/{sample}_minus-filt_cov_ge_5.fa",
-        filt_consensus_minus_filt_ge_10= RESULTS_OUTPUT_DIR + "consensus_seqs/{sample}_minus-filt_cov_ge_10.fa",
-        filt_consensus_minus_filt_ge_30= RESULTS_OUTPUT_DIR + "consensus_seqs/{sample}_minus-filt_cov_ge_30.fa",
-        filt_consensus_minus_filt_ge_100= RESULTS_OUTPUT_DIR + "consensus_seqs/{sample}_minus-filt_cov_ge_100.fa",
+        bedgraph= OUTPUT_DIR_CONSENSUS_FILT + "{sample}.bedgraph",
+        filt_consensus_N_filt_ge_1= OUTPUT_DIR_CONSENSUS_FILT + "{sample}_N-filt_cov_ge_1.fa",
+        filt_consensus_N_filt_ge_5= OUTPUT_DIR_CONSENSUS_FILT + "{sample}_N-filt_cov_ge_5.fa",
+        filt_consensus_N_filt_ge_10= OUTPUT_DIR_CONSENSUS_FILT + "{sample}_N-filt_cov_ge_10.fa",
+        filt_consensus_N_filt_ge_30= OUTPUT_DIR_CONSENSUS_FILT + "{sample}_N-filt_cov_ge_30.fa",
+        filt_consensus_N_filt_ge_100= OUTPUT_DIR_CONSENSUS_FILT + "{sample}_N-filt_cov_ge_100.fa",
+        filt_consensus_minus_filt_ge_1= OUTPUT_DIR_CONSENSUS_FILT + "{sample}_minus-filt_cov_ge_1.fa",
+        filt_consensus_minus_filt_ge_5= OUTPUT_DIR_CONSENSUS_FILT + "{sample}_minus-filt_cov_ge_5.fa",
+        filt_consensus_minus_filt_ge_10= OUTPUT_DIR_CONSENSUS_FILT + "{sample}_minus-filt_cov_ge_10.fa",
+        filt_consensus_minus_filt_ge_30= OUTPUT_DIR_CONSENSUS_FILT + "{sample}_minus-filt_cov_ge_30.fa",
+        filt_consensus_minus_filt_ge_100= OUTPUT_DIR_CONSENSUS_FILT + "{sample}_minus-filt_cov_ge_100.fa",
     conda:
-        "envs/RA_ref_alignment.yaml"
+        CONDA_ENVS_DIR + "RA_ref_alignment.yaml"
     benchmark:
-        LOGS_OUTPUT_DIR + "benchmark/RA_extract_clean_consensus_{sample}.txt"
+        OUTPUT_DIR_BENCHMARKS + "RA_extract_clean_consensus_{sample}.txt"
     threads: 1
     log:
-        LOGS_OUTPUT_DIR + "RA_extract_clean_consensus_{sample}.log"
+        OUTPUT_DIR_LOGS + "RA_extract_clean_consensus_{sample}.log"
     params:
-        output_folder= RESULTS_OUTPUT_DIR + "consensus_seqs/",
+        output_folder= OUTPUT_DIR_CONSENSUS_FILT,
     shell:
         """
 bash bin/scripts/RA_consensus_at_diff_coverages.sh {wildcards.sample} {input.bam} {input.reference} {input.raw_consensus} \
@@ -285,16 +292,16 @@ rule RA_determine_BoC_at_diff_cov_thresholds:
         bam= rules.RA_align_to_reference.output.sorted_bam,
         reference= rules.RA_index_reference.output.reference_copy,
     output:
-        BoC_pileup= RESULTS_OUTPUT_DIR + "consensus_seqs/BoC_analysis/{sample}_BoC.pileup",
-        percentage_BoC_tsv= RESULTS_OUTPUT_DIR + "consensus_seqs/BoC_analysis/{sample}_BoC_pct.tsv",
-        integer_BoC_tsv= RESULTS_OUTPUT_DIR + "consensus_seqs/BoC_analysis/{sample}_BoC_int.tsv",
+        BoC_pileup= OUTPUT_DIR_BOC_ANALYSIS + "{sample}_BoC.pileup",
+        percentage_BoC_tsv= OUTPUT_DIR_BOC_ANALYSIS + "{sample}_BoC_pct.tsv",
+        integer_BoC_tsv= OUTPUT_DIR_BOC_ANALYSIS + "{sample}_BoC_int.tsv",
     conda:
-        "envs/RA_ref_alignment.yaml"
+        CONDA_ENVS_DIR + "RA_ref_alignment.yaml"
     benchmark:
-        LOGS_OUTPUT_DIR + "RA_benchmark/determine_BoC_at_diff_cov_thresholds_{sample}.txt"
+        OUTPUT_DIR_BENCHMARKS + "determine_BoC_at_diff_cov_thresholds_{sample}.txt"
     threads: 1
     log:
-        LOGS_OUTPUT_DIR + "RA_determine_BoC_at_diff_cov_thresholds_{sample}.log"
+        OUTPUT_DIR_LOGS + "RA_determine_BoC_at_diff_cov_thresholds_{sample}.log"
     params:
     shell: # Source: http://www.metagenomics.wiki/tools/samtools/breadth-of-coverage . Pileup fileformat: https://en.wikipedia.org/wiki/Pileup_format
         """
@@ -305,18 +312,18 @@ bash bin/scripts/RA_BoC_analysis.sh {wildcards.sample} {input.bam} {input.refere
 
 rule RA_concat_BoC_metrics:
     input:
-        BoC_int_tsv= expand("{out}consensus_seqs/BoC_analysis/{sample}_BoC_int.tsv", out = RESULTS_OUTPUT_DIR, sample = SAMPLES),
-        BoC_pct_tsv= expand("{out}consensus_seqs/BoC_analysis/{sample}_BoC_pct.tsv", out = RESULTS_OUTPUT_DIR, sample = SAMPLES),
+        BoC_int_tsv= expand("{out}{sample}_BoC_int.tsv", out = OUTPUT_DIR_BOC_ANALYSIS, sample = SAMPLES),
+        BoC_pct_tsv= expand("{out}{sample}_BoC_pct.tsv", out = OUTPUT_DIR_BOC_ANALYSIS, sample = SAMPLES),
     output:
-        combined_BoC_int_tsv= RESULTS_OUTPUT_DIR + "results/BoC_integer.tsv",
-        combined_BoC_pct_tsv= RESULTS_OUTPUT_DIR + "results/BoC_percentage.tsv",
+        combined_BoC_int_tsv= OUTPUT_DIR_RESULTS + "BoC_integer.tsv",
+        combined_BoC_pct_tsv= OUTPUT_DIR_RESULTS + "BoC_percentage.tsv",
     conda:
-        "envs/RA_ref_alignment.yaml"
+        CONDA_ENVS_DIR + "RA_ref_alignment.yaml"
     benchmark:
-        LOGS_OUTPUT_DIR + "RA_benchmark/concat_BoC_metrics.txt"
+        OUTPUT_DIR_BENCHMARKS + "concat_BoC_metrics.txt"
     threads: 1
     log:
-        LOGS_OUTPUT_DIR + "RA_concat_BoC_metrics.log"
+        OUTPUT_DIR_LOGS + "RA_concat_BoC_metrics.log"
     params:
     shell:
         """
