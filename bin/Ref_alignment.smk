@@ -28,7 +28,7 @@ Funding:
 
 """
 #TODO:
-- integrate with IGVjs so you can assess the read alignment
+#! Bug? the GC-contents track on IGVjs don't load. Same in the core workflow... weird.
 - realign against new consensus? or too slow?
 - Maybe MM2 is a better/faster aligner?
 - Make a multiple alignment of all contigs/scaffolds versus the ref-alignment method as a double check!
@@ -36,9 +36,10 @@ Funding:
 - Simplify code with https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#the-multiext-function
 - Add Ti/Tv ratio to BoC rule? Transitions versus transversions?
 - See tips for improving variant filtering here: https://github.com/samtools/bcftools/wiki/HOWTOs#consensus-calling
+- See tips for improving variant filtering in mail Jeroen EMC, 20200323
 - Remove unneeded temp/intermediate files
     - Via onSucces clause
-- Voeg de nieuwe consensus ook toe aan de IGVjs overview!
+- Voeg de nieuwe consensus ook toe aan de IGVjs overview! --> kan niet
 #TODO Onderstaande is ook handig voor Jovian zelf
 - Verwijzen naar de output van een andere rule: https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#rule-dependencies
 - For JupyterNotebook integration: https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#jupyter-notebook-integration
@@ -123,7 +124,8 @@ rule all:
         OUTPUT_DIR_RESULTS + "BoC_integer.tsv", # Integer BoC overview in .tsv format
         OUTPUT_DIR_RESULTS + "BoC_percentage.tsv", # Percentage BoC overview in .tsv format
         expand("{out}{ref_basename}_{extension}", out = OUTPUT_DIR_REFERENCE, ref_basename = REFERENCE_BASENAME , sample = SAMPLES, extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi' ]), # Prodigal ORF prediction output, required for the IGVjs visualisation
-        OUTPUT_DIR_IGVjs + "js-end.ok"
+        OUTPUT_DIR_IGVjs + "js-end.ok",
+        OUTPUT_IGVjs_HTML
         #! moet heir ook geen OUTPUT_DIR_RESULTS igv.html kkomen te staan?
 
 
@@ -384,7 +386,8 @@ cat {input.BoC_pct_tsv} >> {output.combined_BoC_pct_tsv}
 
 rule RA_HTML_IGVJs_part1_static_head:
     output:
-        OUTPUT_DIR_IGVjs + "html_head.ok"
+        html_head= OUTPUT_DIR_IGVjs + "html_head.ok", #! not sure if these checkers are still needed in new smk setup
+        output_html= OUTPUT_IGVjs_HTML
     conda:
         CONDA_ENVS_DIR + "data_wrangling.yaml"
     benchmark:
@@ -393,10 +396,10 @@ rule RA_HTML_IGVJs_part1_static_head:
     log:
         OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_part1_static_head.log"
     params:
-        output_html= OUTPUT_IGVjs_HTML
+        #!output_html= OUTPUT_IGVjs_HTML
     shell:
         """
-bash bin/html/RA_igvjs_write_html_head.sh {output} {params.output_html}
+bash bin/html/RA_igvjs_write_html_head.sh {output.html_head} {output.output_html}
         """
 
 # The {input} variable given as the last positional argument to the script is only to trick smk into making a DAG, it's not used and serves as a checkpoint only.
@@ -404,7 +407,7 @@ bash bin/html/RA_igvjs_write_html_head.sh {output} {params.output_html}
 #? {wildcards.sample} zou $1 moeten zijn in het bash script, maar je definieert {output} als $1?
 rule RA_HTML_IGVJs_part2_tabs:
     input:
-        rules.RA_HTML_IGVJs_part1_static_head.output
+        html_head= rules.RA_HTML_IGVJs_part1_static_head.output.html_head
     output:
         OUTPUT_DIR_IGVjs + "html_tabs.{sample}.ok"
     conda:
@@ -418,7 +421,7 @@ rule RA_HTML_IGVJs_part2_tabs:
         output_html= OUTPUT_IGVjs_HTML
     shell:
         """
-bash bin/html/RA_igvjs_write_tabs.sh {wildcards.sample} {output} {params.output_html} {input} 
+bash bin/html/RA_igvjs_write_tabs.sh {wildcards.sample} {output} {params.output_html} {input.html_head} 
         """
 
 # The {input} variable given as the last positional argument to the script is only to trick smk into making a DAG, it's not used and serves as a checkpoint only.
@@ -529,14 +532,14 @@ rule RA_HTML_IGVJs_part7_end_js:
 bash bin/html/RA_igvjs_write_static_js_end.sh {output} {params.output_html} {input} 
         """
 
-#onsuccess:
-#    shell("""
-#        echo -e "\nCleaning up..."
-#        rm -rf reference_alignment/html/   #! this causes the snakemake to continuously do the IGVjs steps, need to update the smk so that doesn't happen anymore
-#        #! Also, I don't know if it's possible to use the python global var OUTPUT_DIR_IGVjs to specify the directory, will try later, for now: hardcoded
-#
-#        echo -e "\tCreating symlinks for the interactive genome viewer..."
-#        bin/scripts/set_symlink.sh
-#
-#        echo -e "Finished"
-#    """)
+onsuccess:
+    shell("""
+        echo -e "\nCleaning up..."
+        rm -rf reference_alignment/html/   #! this causes the snakemake to continuously do the IGVjs steps, need to update the smk so that doesn't happen anymore
+        #! Also, I don't know if it's possible to use the python global var OUTPUT_DIR_IGVjs to specify the directory, will try later, for now: hardcoded
+
+        echo -e "\tCreating symlinks for the interactive genome viewer..."
+        bin/scripts/set_symlink.sh
+
+        echo -e "Finished"
+    """)
