@@ -5,13 +5,12 @@
 # this script should be called for every sample.
 
 INPUT="$1"
-OUTPUT="$2"
-OUTPUT_HTML="$3"
-INPUT_REF_FASTA="$4"
-INPUT_REF_GC_BEDGRAPH="$5"
-INPUT_REF_ZIPPED_ORF_GFF="$6"
-INPUT_ZIPPED_SNP_VCF="$7"
-INPUT_SORTED_BAM="$8"
+OUTPUT_HTML="$2"
+INPUT_REF_FASTA="$3"
+INPUT_REF_GC_BEDGRAPH="$4"
+INPUT_REF_ZIPPED_ORF_GFF="$5"
+INPUT_ZIPPED_SNP_VCF="$6"
+INPUT_SORTED_BAM="$7"
 
 
 SAMPLE="sample_${INPUT//-/_}"
@@ -90,5 +89,3 @@ cat << EOF >> ${OUTPUT_HTML}
         igv.createBrowser(${SAMPLE}, options);
 
 EOF
-
-touch "${OUTPUT}"

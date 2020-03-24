@@ -4,8 +4,7 @@
 # This script (part 7) this script writes the last (static) part of the required JavaScript and closes the html file
 # this script should be called only once.
 
-OUTPUT="$1"
-OUTPUT_HTML="$2"
+OUTPUT_HTML="$1"
 
 cat << EOF >> ${OUTPUT_HTML}
     }
@@ -85,5 +84,3 @@ cat << EOF >> ${OUTPUT_HTML}
 </body>
 </html>
 EOF
-
-touch "${OUTPUT}"

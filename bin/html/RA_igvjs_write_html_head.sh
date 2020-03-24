@@ -4,8 +4,7 @@
 # This script (part 1) writes the standard header information
 # it should only be called once
 
-OUTPUT="$1"
-OUTPUT_HTML="$2"
+OUTPUT_HTML="$1"
 
 cat << EOF > ${OUTPUT_HTML}
 <!doctype html>
@@ -80,4 +79,3 @@ cat << EOF > ${OUTPUT_HTML}
     <li><a href="#standardTab">Explanation</a></li>
 EOF
 
-touch "${OUTPUT}"

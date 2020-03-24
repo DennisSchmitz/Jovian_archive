@@ -124,9 +124,7 @@ rule all:
         OUTPUT_DIR_RESULTS + "BoC_integer.tsv", # Integer BoC overview in .tsv format
         OUTPUT_DIR_RESULTS + "BoC_percentage.tsv", # Percentage BoC overview in .tsv format
         expand("{out}{ref_basename}_{extension}", out = OUTPUT_DIR_REFERENCE, ref_basename = REFERENCE_BASENAME , sample = SAMPLES, extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi' ]), # Prodigal ORF prediction output, required for the IGVjs visualisation
-        OUTPUT_DIR_IGVjs + "js-end.ok",
-        OUTPUT_IGVjs_HTML
-        #! moet heir ook geen OUTPUT_DIR_RESULTS igv.html kkomen te staan?
+        OUTPUT_IGVjs_HTML, # IGVjs output html
 
 
 #@################################################################################
@@ -386,8 +384,7 @@ cat {input.BoC_pct_tsv} >> {output.combined_BoC_pct_tsv}
 
 rule RA_HTML_IGVJs_part1_static_head:
     output:
-        html_head= OUTPUT_DIR_IGVjs + "html_head.ok", #! not sure if these checkers are still needed in new smk setup
-        output_html= OUTPUT_IGVjs_HTML
+        output_html= OUTPUT_DIR_IGVjs + "1_head"
     conda:
         CONDA_ENVS_DIR + "data_wrangling.yaml"
     benchmark:
@@ -396,10 +393,9 @@ rule RA_HTML_IGVJs_part1_static_head:
     log:
         OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_part1_static_head.log"
     params:
-        #!output_html= OUTPUT_IGVjs_HTML
     shell:
         """
-bash bin/html/RA_igvjs_write_html_head.sh {output.html_head} {output.output_html}
+bash bin/html/RA_igvjs_write_html_head.sh {output.output_html}
         """
 
 # The {input} variable given as the last positional argument to the script is only to trick smk into making a DAG, it's not used and serves as a checkpoint only.
@@ -407,9 +403,9 @@ bash bin/html/RA_igvjs_write_html_head.sh {output.html_head} {output.output_html
 #? {wildcards.sample} zou $1 moeten zijn in het bash script, maar je definieert {output} als $1?
 rule RA_HTML_IGVJs_part2_tabs:
     input:
-        html_head= rules.RA_HTML_IGVJs_part1_static_head.output.html_head
+        html_head= rules.RA_HTML_IGVJs_part1_static_head.output.output_html
     output:
-        OUTPUT_DIR_IGVjs + "html_tabs.{sample}.ok"
+        OUTPUT_DIR_IGVjs + "2_tab_{sample}"
     conda:
         CONDA_ENVS_DIR + "data_wrangling.yaml"
     benchmark:
@@ -418,18 +414,17 @@ rule RA_HTML_IGVJs_part2_tabs:
     log:
         OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_part2_tabs_{sample}.log"
     params:
-        output_html= OUTPUT_IGVjs_HTML
     shell:
         """
-bash bin/html/RA_igvjs_write_tabs.sh {wildcards.sample} {output} {params.output_html} {input.html_head} 
+bash bin/html/RA_igvjs_write_tabs.sh {wildcards.sample} {output} {input.html_head} 
         """
 
 # The {input} variable given as the last positional argument to the script is only to trick smk into making a DAG, it's not used and serves as a checkpoint only.
 rule RA_HTML_IGVJs_part3_close_tabs:
     input:
-        expand("{out}html_tabs.{sample}.ok", out = OUTPUT_DIR_IGVjs, sample = SAMPLES)
+        expand("{out}2_tab_{sample}", out = OUTPUT_DIR_IGVjs, sample = SAMPLES)
     output:
-        OUTPUT_DIR_IGVjs + "tabs_closed.ok"
+        OUTPUT_DIR_IGVjs + "3_tab_close"
     conda:
         CONDA_ENVS_DIR + "data_wrangling.yaml"
     benchmark:
@@ -438,10 +433,9 @@ rule RA_HTML_IGVJs_part3_close_tabs:
     log:
         OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_part3_close_tabs.log"
     params:
-        output_html= OUTPUT_IGVjs_HTML
     shell:
         """
-bash bin/html/RA_igvjs_close_tabs.sh {output} {params.output_html} {input} 
+bash bin/html/RA_igvjs_close_tabs.sh {output} {input} 
         """
 
 # The {input} variable given as the last positional argument to the script is only to trick smk into making a DAG, it's not used and serves as a checkpoint only.
@@ -449,7 +443,7 @@ rule RA_HTML_IGVJs_part4_divs:
     input:
         rules.RA_HTML_IGVJs_part3_close_tabs.output
     output:
-        OUTPUT_DIR_IGVjs + "html_divs.{sample}.ok"
+        OUTPUT_DIR_IGVjs + "4_html_divs_{sample}"
     conda:
         CONDA_ENVS_DIR + "data_wrangling.yaml"
     benchmark:
@@ -458,18 +452,17 @@ rule RA_HTML_IGVJs_part4_divs:
     log:
         OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_part4_divs_{sample}.log"
     params:
-        output_html= OUTPUT_IGVjs_HTML
     shell:
         """
-bash bin/html/RA_igvjs_write_divs.sh {wildcards.sample} {output} {params.output_html} {input} 
+bash bin/html/RA_igvjs_write_divs.sh {wildcards.sample} {output} {input} 
         """
 
 # The {input} variable given as the last positional argument to the script is only to trick smk into making a DAG, it's not used and serves as a checkpoint only.
 rule RA_HTML_IGVJs_part5_begin_js:
     input:
-        expand("{out}html_divs.{sample}.ok", out = OUTPUT_DIR_IGVjs, sample = SAMPLES)
+        expand("{out}4_html_divs_{sample}", out = OUTPUT_DIR_IGVjs, sample = SAMPLES)
     output:
-        OUTPUT_DIR_IGVjs + "js-begin.ok"
+        OUTPUT_DIR_IGVjs + "5_js_begin"
     conda:
         CONDA_ENVS_DIR + "data_wrangling.yaml"
     benchmark:
@@ -478,10 +471,9 @@ rule RA_HTML_IGVJs_part5_begin_js:
     log:
         OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_part5_begin_js.log"
     params:
-        output_html= OUTPUT_IGVjs_HTML
     shell:
         """
-bash bin/html/RA_igvjs_write_static_js_begin.sh {output} {params.output_html} {input} 
+bash bin/html/RA_igvjs_write_static_js_begin.sh {output} {input} 
         """
 
 # The {input} variable given as the last positional argument to the script is only to trick smk into making a DAG, it's not used and serves as a checkpoint only.
@@ -490,7 +482,7 @@ rule RA_HTML_IGVJs_part6_middle_js:
     input:
         rules.RA_HTML_IGVJs_part5_begin_js.output
     output:
-        OUTPUT_DIR_IGVjs + "js-flex.{sample}.ok"
+        OUTPUT_DIR_IGVjs + "6_js_flex_{sample}"
     conda:
         CONDA_ENVS_DIR + "data_wrangling.yaml"
     benchmark:
@@ -499,7 +491,6 @@ rule RA_HTML_IGVJs_part6_middle_js:
     log:
         OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_part6_middle_js_{sample}.log"
     params:
-        output_html= OUTPUT_IGVjs_HTML,
         input_fasta= rules.RA_index_reference.output.reference_copy,
         input_ref_GC_bedgraph= rules.RA_determine_GC_content.output.GC_bed,
         input_ref_zipped_ORF_gff= rules.RA_reference_ORF_analysis.output.zipped_gff3,
@@ -507,7 +498,7 @@ rule RA_HTML_IGVJs_part6_middle_js:
         input_basepath_sorted_bam= OUTPUT_DIR_ALIGNMENT,
     shell:
         """
-bash bin/html/RA_igvjs_write_flex_js_middle.sh {wildcards.sample} {output} {params.output_html} \
+bash bin/html/RA_igvjs_write_flex_js_middle.sh {wildcards.sample} {output} \
 {params.input_fasta} {params.input_ref_GC_bedgraph} {params.input_ref_zipped_ORF_gff} \
 {params.input_basepath_zipped_SNP_vcf} {params.input_basepath_sorted_bam} {input} 
         """
@@ -515,9 +506,9 @@ bash bin/html/RA_igvjs_write_flex_js_middle.sh {wildcards.sample} {output} {para
 # The {input} variable given as the last positional argument to the script is only to trick smk into making a DAG, it's not used and serves as a checkpoint only.
 rule RA_HTML_IGVJs_part7_end_js:
     input:
-        expand("{out}js-flex.{sample}.ok", out = OUTPUT_DIR_IGVjs, sample = SAMPLES)
+        expand("{out}6_js_flex_{sample}", out = OUTPUT_DIR_IGVjs, sample = SAMPLES)
     output:
-        OUTPUT_DIR_IGVjs + "js-end.ok"
+        OUTPUT_IGVjs_HTML
     conda:
         CONDA_ENVS_DIR + "data_wrangling.yaml"
     benchmark:
@@ -526,10 +517,11 @@ rule RA_HTML_IGVJs_part7_end_js:
     log:
         OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_part7_end_js.log"
     params:
-        output_html= OUTPUT_IGVjs_HTML
+        html_chunk_dir= OUTPUT_DIR_IGVjs
     shell:
         """
-bash bin/html/RA_igvjs_write_static_js_end.sh {output} {params.output_html} {input} 
+cat {params.html_chunk_dir}* > {output}
+bash bin/html/RA_igvjs_write_static_js_end.sh {output} {input} 
         """
 
 onsuccess:

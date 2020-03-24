@@ -4,8 +4,7 @@
 # This script (part 3) closes the html tabs-list and writes the basic explanation
 # this script should be called only once
 
-OUTPUT="$1"
-OUTPUT_HTML="$2"
+OUTPUT_HTML="$1"
 
 cat << EOF >> ${OUTPUT_HTML}
 </ul>
@@ -18,5 +17,3 @@ cat << EOF >> ${OUTPUT_HTML}
     </ul>
 </div>
 EOF
-
-touch "${OUTPUT}"
