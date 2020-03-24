@@ -6,8 +6,7 @@
 
 INPUT="$1"
 OUTPUT="$2"
-# $3 is input file from smk rule, it's only to trick the smk into making a DAG it's not used in this script
-OUTPUT_HTML="$4"
+OUTPUT_HTML="$3"
 
 SAMPLE="sample_${INPUT//-/_}"
 
