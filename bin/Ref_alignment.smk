@@ -104,14 +104,8 @@ localrules:
     all,
     RA_index_reference,
     RA_concat_BoC_metrics,
-    RA_HTML_IGVJs_part1_static_head,
-    RA_HTML_IGVJs_part2_tabs,
-    RA_HTML_IGVJs_part3_close_tabs,
-    RA_HTML_IGVJs_part4_divs,
-    RA_HTML_IGVJs_part5_begin_js,
-    RA_HTML_IGVJs_part6_middle_js,
-    RA_HTML_IGVJs_part7_end_js
-
+    RA_HTML_IGVJs_variable_parts,
+    RA_HTML_IGVJs_generate_final
 
 rule all:
     input:
@@ -376,159 +370,81 @@ cat {input.BoC_pct_tsv} >> {output.combined_BoC_pct_tsv}
         """
 
 
-#@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-#@  IGVjs boilerplate
-#@ 
-#@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-################! All code below here should be made more efficient/integrated with Jovian core script, now, for sake of time, I took the dirty route
+#@################################################################################
+#@#### Make IGVjs html                                                       #####
+#@################################################################################
+#############! All code below here should be integrated with Jovian core workflow
 
-rule RA_HTML_IGVJs_part1_static_head:
+
+rule RA_HTML_IGVJs_variable_parts:
+    input:
+        fasta= rules.RA_index_reference.output.reference_copy,
+        ref_GC_bedgraph= rules.RA_determine_GC_content.output.GC_bed,
+        ref_zipped_ORF_gff= rules.RA_reference_ORF_analysis.output.zipped_gff3,
+        basepath_zipped_SNP_vcf= rules.RA_extract_raw_consensus.output.gzipped_vcf,
+        basepath_sorted_bam= rules.RA_align_to_reference.output.sorted_bam,
     output:
-        output_html= OUTPUT_DIR_IGVjs + "1_head"
+        tab_output= OUTPUT_DIR_IGVjs + "2_tab_{sample}",
+        div_output= OUTPUT_DIR_IGVjs + "4_html_divs_{sample}",
+        js_flex_output= OUTPUT_DIR_IGVjs + "6_js_flex_{sample}",
     conda:
         CONDA_ENVS_DIR + "data_wrangling.yaml"
     benchmark:
-        OUTPUT_DIR_BENCHMARKS + "RA_HTML_IGVJs_part1_static_head.txt"
+        OUTPUT_DIR_BENCHMARKS + "RA_HTML_IGVJs_variable_parts_{sample}.txt"
     threads: 1
     log:
-        OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_part1_static_head.log"
+        OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_variable_parts_{sample}.log"
     params:
     shell:
         """
-bash bin/html/RA_igvjs_write_html_head.sh {output.output_html}
+bash bin/html/RA_igvjs_write_tabs.sh {wildcards.sample} {output.tab_output}
+
+bash bin/html/RA_igvjs_write_divs.sh {wildcards.sample} {output.div_output}
+
+bash bin/html/RA_igvjs_write_flex_js_middle.sh {wildcards.sample} {output.js_flex_output} \
+{input.fasta} {input.ref_GC_bedgraph} {input.ref_zipped_ORF_gff} \
+{input.basepath_zipped_SNP_vcf} {input.basepath_sorted_bam}
         """
 
-# The {input} variable given as the last positional argument to the script is only to trick smk into making a DAG, it's not used and serves as a checkpoint only.
-#? vraag aan Flo, hoe haalt ie hier zijn {sample} op?
-#? {wildcards.sample} zou $1 moeten zijn in het bash script, maar je definieert {output} als $1?
-rule RA_HTML_IGVJs_part2_tabs:
-    input:
-        html_head= rules.RA_HTML_IGVJs_part1_static_head.output.output_html
-    output:
-        OUTPUT_DIR_IGVjs + "2_tab_{sample}"
-    conda:
-        CONDA_ENVS_DIR + "data_wrangling.yaml"
-    benchmark:
-        OUTPUT_DIR_BENCHMARKS + "RA_HTML_IGVJs_part2_tabs_{sample}.txt"
-    threads: 1
-    log:
-        OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_part2_tabs_{sample}.log"
-    params:
-    shell:
-        """
-bash bin/html/RA_igvjs_write_tabs.sh {wildcards.sample} {output} {input.html_head} 
-        """
 
-# The {input} variable given as the last positional argument to the script is only to trick smk into making a DAG, it's not used and serves as a checkpoint only.
-rule RA_HTML_IGVJs_part3_close_tabs:
+rule RA_HTML_IGVJs_generate_final:
     input:
-        expand("{out}2_tab_{sample}", out = OUTPUT_DIR_IGVjs, sample = SAMPLES)
-    output:
-        OUTPUT_DIR_IGVjs + "3_tab_close"
-    conda:
-        CONDA_ENVS_DIR + "data_wrangling.yaml"
-    benchmark:
-        OUTPUT_DIR_BENCHMARKS + "RA_HTML_IGVJs_part3_close_tabs.txt"
-    threads: 1
-    log:
-        OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_part3_close_tabs.log"
-    params:
-    shell:
-        """
-bash bin/html/RA_igvjs_close_tabs.sh {output} {input} 
-        """
-
-# The {input} variable given as the last positional argument to the script is only to trick smk into making a DAG, it's not used and serves as a checkpoint only.
-rule RA_HTML_IGVJs_part4_divs:
-    input:
-        rules.RA_HTML_IGVJs_part3_close_tabs.output
-    output:
-        OUTPUT_DIR_IGVjs + "4_html_divs_{sample}"
-    conda:
-        CONDA_ENVS_DIR + "data_wrangling.yaml"
-    benchmark:
-        OUTPUT_DIR_BENCHMARKS + "RA_HTML_IGVJs_part4_divs_{sample}.txt"
-    threads: 1
-    log:
-        OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_part4_divs_{sample}.log"
-    params:
-    shell:
-        """
-bash bin/html/RA_igvjs_write_divs.sh {wildcards.sample} {output} {input} 
-        """
-
-# The {input} variable given as the last positional argument to the script is only to trick smk into making a DAG, it's not used and serves as a checkpoint only.
-rule RA_HTML_IGVJs_part5_begin_js:
-    input:
-        expand("{out}4_html_divs_{sample}", out = OUTPUT_DIR_IGVjs, sample = SAMPLES)
-    output:
-        OUTPUT_DIR_IGVjs + "5_js_begin"
-    conda:
-        CONDA_ENVS_DIR + "data_wrangling.yaml"
-    benchmark:
-        OUTPUT_DIR_BENCHMARKS + "RA_HTML_IGVJs_part5_begin_js.txt"
-    threads: 1
-    log:
-        OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_part5_begin_js.log"
-    params:
-    shell:
-        """
-bash bin/html/RA_igvjs_write_static_js_begin.sh {output} {input} 
-        """
-
-# The {input} variable given as the last positional argument to the script is only to trick smk into making a DAG, it's not used and serves as a checkpoint only.
-#####! the rest of the smk parts are static I believe, I've only copied and editted the script in this smk. This can be fixed more elegantly, but if I make the script more portable it requires adapting the core workflow to, so I'm holding it off for now.
-rule RA_HTML_IGVJs_part6_middle_js:
-    input:
-        rules.RA_HTML_IGVJs_part5_begin_js.output
-    output:
-        OUTPUT_DIR_IGVjs + "6_js_flex_{sample}"
-    conda:
-        CONDA_ENVS_DIR + "data_wrangling.yaml"
-    benchmark:
-        OUTPUT_DIR_BENCHMARKS + "RA_HTML_IGVJs_part6_middle_js_{sample}.txt"
-    threads: 1
-    log:
-        OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_part6_middle_js_{sample}.log"
-    params:
-        input_fasta= rules.RA_index_reference.output.reference_copy,
-        input_ref_GC_bedgraph= rules.RA_determine_GC_content.output.GC_bed,
-        input_ref_zipped_ORF_gff= rules.RA_reference_ORF_analysis.output.zipped_gff3,
-        input_basepath_zipped_SNP_vcf= OUTPUT_DIR_CONSENSUS_RAW,
-        input_basepath_sorted_bam= OUTPUT_DIR_ALIGNMENT,
-    shell:
-        """
-bash bin/html/RA_igvjs_write_flex_js_middle.sh {wildcards.sample} {output} \
-{params.input_fasta} {params.input_ref_GC_bedgraph} {params.input_ref_zipped_ORF_gff} \
-{params.input_basepath_zipped_SNP_vcf} {params.input_basepath_sorted_bam} {input} 
-        """
-
-# The {input} variable given as the last positional argument to the script is only to trick smk into making a DAG, it's not used and serves as a checkpoint only.
-rule RA_HTML_IGVJs_part7_end_js:
-    input:
-        expand("{out}6_js_flex_{sample}", out = OUTPUT_DIR_IGVjs, sample = SAMPLES)
+        expand("{out}{chunk_name}_{sample}", out = OUTPUT_DIR_IGVjs, chunk_name = [ '2_tab', '4_html_divs', '6_js_flex' ], sample = SAMPLES)
     output:
         OUTPUT_IGVjs_HTML
     conda:
         CONDA_ENVS_DIR + "data_wrangling.yaml"
     benchmark:
-        OUTPUT_DIR_BENCHMARKS + "RA_HTML_IGVJs_part7_end_js.txt"
+        OUTPUT_DIR_BENCHMARKS + "RA_HTML_IGVJs_generate_final.txt"
     threads: 1
     log:
-        OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_part7_end_js.log"
+        OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_generate_final.log"
     params:
-        html_chunk_dir= OUTPUT_DIR_IGVjs
+        tab_basename= OUTPUT_DIR_IGVjs + "2_tab_",
+        div_basename= OUTPUT_DIR_IGVjs + "4_html_divs_",
+        js_flex_output= OUTPUT_DIR_IGVjs + "6_js_flex_",
     shell:
         """
-cat {params.html_chunk_dir}* > {output}
-bash bin/html/RA_igvjs_write_static_js_end.sh {output} {input} 
+cat files/html_chunks/1_header.html > {output}
+cat {params.tab_basename}* >> {output}
+cat files/html_chunks/3_tab_explanation_RA.html >> {output}
+cat {params.div_basename}* >> {output}
+cat files/html_chunks/5_js_begin.html >> {output}
+cat {params.js_flex_output}* >> {output}
+cat files/html_chunks/7_js_end.html >> {output}
         """
+
+
+#@################################################################################
+#@#### These are the conditional cleanup rules                               #####
+#@################################################################################
+
 
 onsuccess:
     shell("""
         echo -e "\nCleaning up..."
-        rm -rf reference_alignment/html/   #! this causes the snakemake to continuously do the IGVjs steps, need to update the smk so that doesn't happen anymore
-        #! Also, I don't know if it's possible to use the python global var OUTPUT_DIR_IGVjs to specify the directory, will try later, for now: hardcoded
+        #TODO hier nog zo'n remove temp checker inbouwen.
+        rm -rf {OUTPUT_DIR_IGVjs}   # Remove intermediate IGVjs html chunks.
 
         echo -e "\tCreating symlinks for the interactive genome viewer..."
         bin/scripts/set_symlink.sh

@@ -1,12 +1,3 @@
-#!/bin/bash
-
-#####
-# This script (part 1) writes the standard header information
-# it should only be called once
-
-OUTPUT_HTML="$1"
-
-cat << EOF > ${OUTPUT_HTML}
 <!doctype html>
 <head>
 
@@ -77,5 +68,3 @@ cat << EOF > ${OUTPUT_HTML}
 
 <ul id="tabs">
     <li><a href="#standardTab">Explanation</a></li>
-EOF
-
