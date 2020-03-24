@@ -38,6 +38,7 @@ Funding:
 - See tips for improving variant filtering here: https://github.com/samtools/bcftools/wiki/HOWTOs#consensus-calling
 - Remove unneeded temp/intermediate files
     - Via onSucces clause
+- Voeg de nieuwe consensus ook toe aan de IGVjs overview!
 #TODO Onderstaande is ook handig voor Jovian zelf
 - Verwijzen naar de output van een andere rule: https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#rule-dependencies
 - For JupyterNotebook integration: https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#jupyter-notebook-integration
@@ -83,9 +84,11 @@ OUTPUT_DIR_ALIGNMENT = OUTPUT_BASE_DIR + "alignment/"
 OUTPUT_DIR_CONSENSUS_RAW = OUTPUT_BASE_DIR + "consensus_seqs/raw/"
 OUTPUT_DIR_CONSENSUS_FILT = OUTPUT_BASE_DIR + "consensus_seqs/"
 OUTPUT_DIR_BOC_ANALYSIS = OUTPUT_BASE_DIR + "BoC_analysis/"
+OUTPUT_DIR_IGVjs = OUTPUT_BASE_DIR + "html/"
 
 # Set output dir of results
 OUTPUT_DIR_RESULTS = OUTPUT_BASE_DIR + "results/"
+OUTPUT_IGVjs_HTML = OUTPUT_DIR_RESULTS + "igvjs.html"
 
 # Set output dir of logfiles
 OUTPUT_DIR_LOGS = config["reference_alignment"]["log_dir"] # NB the DRMAA logs will go the same dir as Jovian-core since this is set in the config.yaml file.
@@ -100,12 +103,18 @@ localrules:
     all,
     RA_index_reference,
     RA_concat_BoC_metrics,
+    RA_HTML_IGVJs_part1_static_head,
+    RA_HTML_IGVJs_part2_tabs,
+    RA_HTML_IGVJs_part3_close_tabs,
+    RA_HTML_IGVJs_part4_divs,
+    RA_HTML_IGVJs_part5_begin_js,
+    RA_HTML_IGVJs_part6_middle_js,
+    RA_HTML_IGVJs_part7_end_js
 
 
 rule all:
     input:
-        OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + ".fasta", # Copy of the reference fasta (for standardization and easy logging)
-        OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + ".fasta.1.bt2", # The bowtie2 index files (I've only specified one, but the "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2" and "rev.2.bt2" are implicitly generated)
+        expand("{out}{ref_basename}{extension}", out = OUTPUT_DIR_REFERENCE, ref_basename = REFERENCE_BASENAME, extension = [ '.fasta', '.fasta.1.bt2', '.fasta.fai', '.fasta.sizes', '.windows', '_GC.bedgraph' ]), # Copy of the reference file (for standardization and easy logging), bowtie2-indices (I've only specified one, but the "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2" and "rev.2.bt2" are implicitly generated) and the GC-content files.
         expand("{out}{sample}_sorted.{extension}", out = OUTPUT_DIR_ALIGNMENT, sample = SAMPLES, extension = [ 'bam', 'bam.bai' ]), # The reference alignment (bam format) files.
         expand("{out}{sample}_{extension}", out = OUTPUT_DIR_CONSENSUS_RAW, sample = SAMPLES, extension = [ 'calls.vcf.gz', 'raw_consensus.fa' ]), # A zipped vcf file contained SNPs versus the given reference and a RAW consensus sequence, see explanation below for the meaning of RAW.
         expand("{out}{sample}.bedgraph", out = OUTPUT_DIR_CONSENSUS_FILT, sample = SAMPLES), # Lists the coverage of the alignment against the reference in a bedgraph format, is used to determine the coverage mask files below.
@@ -114,6 +123,8 @@ rule all:
         OUTPUT_DIR_RESULTS + "BoC_integer.tsv", # Integer BoC overview in .tsv format
         OUTPUT_DIR_RESULTS + "BoC_percentage.tsv", # Percentage BoC overview in .tsv format
         expand("{out}{ref_basename}_{extension}", out = OUTPUT_DIR_REFERENCE, ref_basename = REFERENCE_BASENAME , sample = SAMPLES, extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi' ]), # Prodigal ORF prediction output, required for the IGVjs visualisation
+        OUTPUT_DIR_IGVjs + "js-end.ok"
+        #! moet heir ook geen OUTPUT_DIR_RESULTS igv.html kkomen te staan?
 
 
 #@################################################################################
@@ -126,7 +137,7 @@ rule RA_index_reference:
         reference= REFERENCE
     output:
         reference_copy= OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + ".fasta",
-        reference_index= OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + ".fasta.1.bt2", #TODO hier nog met die multiext syntax werken om de andere files ook aan the maken
+        reference_index= OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + ".fasta.1.bt2", # I've only specified ".fasta.1.bt2", but the "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2" and "rev.2.bt2" are implicitly generated. #TODO find a way to specify all output correctly (multiext snakemake syntax?)
     conda:
         CONDA_ENVS_DIR + "RA_ref_alignment.yaml"
     benchmark:
@@ -141,10 +152,11 @@ bowtie2-build --threads {threads} {output.reference_copy} {output.reference_copy
         """
 
 
-# Gejat uit Jovian core met minor changes, kunnen we waarschijlijk efficienter doen.
+##########################!
+# Nuttig voor IGVjs vis. Gejat uit Jovian core met minor changes, kunnen we waarschijlijk efficienter doen.
 rule RA_reference_ORF_analysis:
     input:
-        reference= REFERENCE
+        reference= rules.RA_index_reference.output.reference_copy
     output: 
         ORF_AA_fasta= OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + "_ORF_AA.fa",
         ORF_NT_fasta= OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + "_ORF_NT.fa",
@@ -171,6 +183,39 @@ prodigal -q -i {input.reference} \
 -f {params.output_format} > {log} 2>&1
 bgzip -c {output.ORF_annotation_gff} 2>> {log} 1> {output.zipped_gff3}
 tabix -p gff {output.zipped_gff3} >> {log} 2>&1
+        """
+
+
+############################!
+# Nuttig voor IGVjs vis. Gejat uit Jovian core met minor changes, kunnen we waarschijnlijk efficienter doen.
+rule RA_determine_GC_content:
+    input:
+        fasta= rules.RA_index_reference.output.reference_copy,
+    output:
+        fasta_fai= OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + ".fasta.fai",
+        fasta_sizes= OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + ".fasta.sizes",
+        bed_windows= OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + ".windows",
+        GC_bed= OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + "_GC.bedgraph",
+    conda:
+        CONDA_ENVS_DIR + "scaffold_analyses.yaml"
+    benchmark:
+        OUTPUT_DIR_BENCHMARKS + "RA_determine_GC_content.txt"
+    log:
+        OUTPUT_DIR_LOGS + "RA_determine_GC_content.log"
+    threads: 1
+    params:
+        window_size="50"
+    shell:
+        """
+samtools faidx -o {output.fasta_fai} {input.fasta} > {log} 2>&1
+cut -f 1,2 {output.fasta_fai} 2> {log} 1> {output.fasta_sizes}
+bedtools makewindows \
+-g {output.fasta_sizes} \
+-w {params.window_size} 2>> {log} 1> {output.bed_windows}
+bedtools nuc \
+-fi {input.fasta} \
+-bed {output.bed_windows} 2>> {log} |\
+cut -f 1-3,5 2>> {log} 1> {output.GC_bed}
         """
 
 
@@ -284,7 +329,6 @@ bash bin/scripts/RA_consensus_at_diff_coverages.sh {wildcards.sample} {input.bam
 
 
 #TODO make a python script or bash function/include to do this more efficiently, currently it's hacky, but it works
-#TODO multithreaden met parallel functie, 5 awks in parallel voor de verschillende thresholds
 rule RA_determine_BoC_at_diff_cov_thresholds:
     input:
         bedgraph= rules.RA_extract_clean_consensus.output.bedgraph,
@@ -330,3 +374,169 @@ cat {input.BoC_int_tsv} >> {output.combined_BoC_int_tsv}
 echo -e "Sample_name\tTotal_ref_size\tBoC_at_coverage_threshold_1\tBoC_at_coverage_threshold_5\tBoC_at_coverage_threshold_10\tBoC_at_coverage_threshold_30\tBoC_at_coverage_threshold_100" > {output.combined_BoC_pct_tsv}
 cat {input.BoC_pct_tsv} >> {output.combined_BoC_pct_tsv}
         """
+
+
+#@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#@  IGVjs boilerplate
+#@ 
+#@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+################! All code below here should be made more efficient/integrated with Jovian core script, now, for sake of time, I took the dirty route
+
+rule RA_HTML_IGVJs_part1_static_head:
+    output:
+        OUTPUT_DIR_IGVjs + "html_head.ok"
+    conda:
+        CONDA_ENVS_DIR + "data_wrangling.yaml"
+    benchmark:
+        OUTPUT_DIR_BENCHMARKS + "RA_HTML_IGVJs_part1_static_head.txt"
+    threads: 1
+    log:
+        OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_part1_static_head.log"
+    params:
+        output_html= OUTPUT_IGVjs_HTML
+    shell:
+        """
+bash bin/html/RA_igvjs_write_html_head.sh {output} {params.output_html}
+        """
+
+# The {input} variable given as the last positional argument to the script is only to trick smk into making a DAG, it's not used and serves as a checkpoint only.
+#? vraag aan Flo, hoe haalt ie hier zijn {sample} op?
+#? {wildcards.sample} zou $1 moeten zijn in het bash script, maar je definieert {output} als $1?
+rule RA_HTML_IGVJs_part2_tabs:
+    input:
+        rules.RA_HTML_IGVJs_part1_static_head.output
+    output:
+        OUTPUT_DIR_IGVjs + "html_tabs.{sample}.ok"
+    conda:
+        CONDA_ENVS_DIR + "data_wrangling.yaml"
+    benchmark:
+        OUTPUT_DIR_BENCHMARKS + "RA_HTML_IGVJs_part2_tabs_{sample}.txt"
+    threads: 1
+    log:
+        OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_part2_tabs_{sample}.log"
+    params:
+        output_html= OUTPUT_IGVjs_HTML
+    shell:
+        """
+bash bin/html/RA_igvjs_write_tabs.sh {wildcards.sample} {output} {params.output_html} {input} 
+        """
+
+# The {input} variable given as the last positional argument to the script is only to trick smk into making a DAG, it's not used and serves as a checkpoint only.
+rule RA_HTML_IGVJs_part3_close_tabs:
+    input:
+        expand("{out}html_tabs.{sample}.ok", out = OUTPUT_DIR_IGVjs, sample = SAMPLES)
+    output:
+        OUTPUT_DIR_IGVjs + "tabs_closed.ok"
+    conda:
+        CONDA_ENVS_DIR + "data_wrangling.yaml"
+    benchmark:
+        OUTPUT_DIR_BENCHMARKS + "RA_HTML_IGVJs_part3_close_tabs.txt"
+    threads: 1
+    log:
+        OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_part3_close_tabs.log"
+    params:
+        output_html= OUTPUT_IGVjs_HTML
+    shell:
+        """
+bash bin/html/RA_igvjs_close_tabs.sh {output} {params.output_html} {input} 
+        """
+
+# The {input} variable given as the last positional argument to the script is only to trick smk into making a DAG, it's not used and serves as a checkpoint only.
+rule RA_HTML_IGVJs_part4_divs:
+    input:
+        rules.RA_HTML_IGVJs_part3_close_tabs.output
+    output:
+        OUTPUT_DIR_IGVjs + "html_divs.{sample}.ok"
+    conda:
+        CONDA_ENVS_DIR + "data_wrangling.yaml"
+    benchmark:
+        OUTPUT_DIR_BENCHMARKS + "RA_HTML_IGVJs_part4_divs_{sample}.txt"
+    threads: 1
+    log:
+        OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_part4_divs_{sample}.log"
+    params:
+        output_html= OUTPUT_IGVjs_HTML
+    shell:
+        """
+bash bin/html/RA_igvjs_write_divs.sh {wildcards.sample} {output} {params.output_html} {input} 
+        """
+
+# The {input} variable given as the last positional argument to the script is only to trick smk into making a DAG, it's not used and serves as a checkpoint only.
+rule RA_HTML_IGVJs_part5_begin_js:
+    input:
+        expand("{out}html_divs.{sample}.ok", out = OUTPUT_DIR_IGVjs, sample = SAMPLES)
+    output:
+        OUTPUT_DIR_IGVjs + "js-begin.ok"
+    conda:
+        CONDA_ENVS_DIR + "data_wrangling.yaml"
+    benchmark:
+        OUTPUT_DIR_BENCHMARKS + "RA_HTML_IGVJs_part5_begin_js.txt"
+    threads: 1
+    log:
+        OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_part5_begin_js.log"
+    params:
+        output_html= OUTPUT_IGVjs_HTML
+    shell:
+        """
+bash bin/html/RA_igvjs_write_static_js_begin.sh {output} {params.output_html} {input} 
+        """
+
+# The {input} variable given as the last positional argument to the script is only to trick smk into making a DAG, it's not used and serves as a checkpoint only.
+#####! the rest of the smk parts are static I believe, I've only copied and editted the script in this smk. This can be fixed more elegantly, but if I make the script more portable it requires adapting the core workflow to, so I'm holding it off for now.
+rule RA_HTML_IGVJs_part6_middle_js:
+    input:
+        rules.RA_HTML_IGVJs_part5_begin_js.output
+    output:
+        OUTPUT_DIR_IGVjs + "js-flex.{sample}.ok"
+    conda:
+        CONDA_ENVS_DIR + "data_wrangling.yaml"
+    benchmark:
+        OUTPUT_DIR_BENCHMARKS + "RA_HTML_IGVJs_part6_middle_js_{sample}.txt"
+    threads: 1
+    log:
+        OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_part6_middle_js_{sample}.log"
+    params:
+        output_html= OUTPUT_IGVjs_HTML,
+        input_fasta= rules.RA_index_reference.output.reference_copy,
+        input_ref_GC_bedgraph= rules.RA_determine_GC_content.output.GC_bed,
+        input_ref_zipped_ORF_gff= rules.RA_reference_ORF_analysis.output.zipped_gff3,
+        input_basepath_zipped_SNP_vcf= OUTPUT_DIR_CONSENSUS_RAW,
+        input_basepath_sorted_bam= OUTPUT_DIR_ALIGNMENT,
+    shell:
+        """
+bash bin/html/RA_igvjs_write_flex_js_middle.sh {wildcards.sample} {output} {params.output_html} \
+{params.input_fasta} {params.input_ref_GC_bedgraph} {params.input_ref_zipped_ORF_gff} \
+{params.input_basepath_zipped_SNP_vcf} {params.input_basepath_sorted_bam} {input} 
+        """
+
+# The {input} variable given as the last positional argument to the script is only to trick smk into making a DAG, it's not used and serves as a checkpoint only.
+rule RA_HTML_IGVJs_part7_end_js:
+    input:
+        expand("{out}js-flex.{sample}.ok", out = OUTPUT_DIR_IGVjs, sample = SAMPLES)
+    output:
+        OUTPUT_DIR_IGVjs + "js-end.ok"
+    conda:
+        CONDA_ENVS_DIR + "data_wrangling.yaml"
+    benchmark:
+        OUTPUT_DIR_BENCHMARKS + "RA_HTML_IGVJs_part7_end_js.txt"
+    threads: 1
+    log:
+        OUTPUT_DIR_LOGS + "RA_HTML_IGVJs_part7_end_js.log"
+    params:
+        output_html= OUTPUT_IGVjs_HTML
+    shell:
+        """
+bash bin/html/RA_igvjs_write_static_js_end.sh {output} {params.output_html} {input} 
+        """
+
+#onsuccess:
+#    shell("""
+#        echo -e "\nCleaning up..."
+#        rm -rf reference_alignment/html/   #! this causes the snakemake to continuously do the IGVjs steps, need to update the smk so that doesn't happen anymore
+#        #! Also, I don't know if it's possible to use the python global var OUTPUT_DIR_IGVjs to specify the directory, will try later, for now: hardcoded
+#
+#        echo -e "\tCreating symlinks for the interactive genome viewer..."
+#        bin/scripts/set_symlink.sh
+#
+#        echo -e "Finished"
+#    """)
