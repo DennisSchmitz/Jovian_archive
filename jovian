@@ -443,6 +443,9 @@ else
     ###> #TODO checken of gegeven file bestaat, en wel een fasta is (bv check extension is .fa of .fasta)
     ###> #TODO exit if core jovian has'nt been run, e.g. by checking the required input dir; with errors message to first start the core pipeline.
 
+    #! ff er in gehackt, @Flo, even kijken hoe we dat gaan doen met die includes.
+    bin/scripts/RA_generate_sample_sheet.py data/cleaned_fastq/ > sample_sheet_ref_alignment.yaml
+
     if [ -e sample_sheet_ref_alignment.yaml ]; then
         echo -e "Starting optional reference alignment extension"
         set +ue #turn off bash strict mode because snakemake and conda can't work with it properly
