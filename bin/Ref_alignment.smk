@@ -39,7 +39,7 @@ Funding:
 - See tips for improving variant filtering in mail Jeroen EMC, 20200323
 - Remove unneeded temp/intermediate files
     - Via onSucces clause
-- Voeg de nieuwe consensus ook toe aan de IGVjs overview! --> kan niet
+- Voeg de nieuwe consensus ook toe aan de IGVjs overview! --> update: kan niet
 #TODO Onderstaande is ook handig voor Jovian zelf
 - Verwijzen naar de output van een andere rule: https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#rule-dependencies
 - For JupyterNotebook integration: https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#jupyter-notebook-integration

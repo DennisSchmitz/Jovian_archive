@@ -3,7 +3,8 @@
 
     line
     cat <<HELP_USAGE
-Jovian, version $VERSION, built with Snakemake
+Jovian, Public Health Toolkit
+version $VERSION, built with Snakemake
   Usage: bash jovian -i <INPUT_DIR> <parameters>
   N.B. it is designed for Illumina paired-end data only
 

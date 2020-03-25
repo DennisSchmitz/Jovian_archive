@@ -421,15 +421,25 @@ ready_for_start
 
 ###> Core Jovian workflow snakemake command with checkers for required files.
 ###> Here the UNIQUE_ID and HOSTNAME variables are actually set
+
+echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > config/variables.yaml
+echo -e "Server_host:\n    hostname: http://${HOSTNAME}" >> config/variables.yaml
+eval $(parse_yaml config/variables.yaml "config_")
+# TODO betere if tree:
+#? if sample sheet ! -s (doesnt exist or is empty); then error && exit 1
+#? elif "${REFERENCE_ALIGNMENT}" == "TRUE" -a ! -s "${REFERENCE_FASTA}"; then error ref fasta doesn't exist && exit 1
+#? elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" ] && [ "${REFERENCE_FASTA##*.}"=="fasta" -o "${REFERENCE_FASTA##*.}"=="fa" ]; then error ref file is no valid fasta && exit 1
+#? elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" ]; then start RA.smk && exit 0
+#? else start jovian.smk && exit 0
 if [ "${REFERENCE_ALIGNMENT}" != "TRUE" ]; then #TODO make this better, it's to skip the core workflow and go straight to the RA part
-    if [ -e sample_sheet.yaml ]; then
+    if [ -s sample_sheet.yaml ]; then
         echo -e "Starting core metagenomics workflow"
         set +ue #turn off bash strict mode because snakemake and conda can't work with it properly
-        echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > config/variables.yaml
-        echo -e "Server_host:\n    hostname: http://${HOSTNAME}" >> config/variables.yaml
-        eval $(parse_yaml config/variables.yaml "config_")
         snakemake -s bin/Snakefile --profile "${PROFILE}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
         set -ue #turn bash strict mode back on
+
+        # Start the TT with the "all" keyword        
+        bash bin/scripts/virus_typing.sh "all"
     else
         echo -e "sample_sheet.yaml could not be found"
         echo -e "This also means that Jovian was unable to generate a new sample sheet for you"
@@ -437,22 +447,16 @@ if [ "${REFERENCE_ALIGNMENT}" != "TRUE" ]; then #TODO make this better, it's to 
         exit 1
     fi
 else
-    ###> Optional reference alignment extension with checkers for required files.
-    ###> #TODO zelfde maken als bij core snakefile
-    ###> #TODO checken of er een tweede parameter is opgegeven, anders exit met error "please give fasta file"
-    ###> #TODO checken of gegeven file bestaat, en wel een fasta is (bv check extension is .fa of .fasta)
-    ###> #TODO exit if core jovian has'nt been run, e.g. by checking the required input dir; with errors message to first start the core pipeline.
-
-    #! Had to out comment the parts below while integrating the RA workflow with the core QC and cleaning rules. Can probably be removed after the test is successfull, then the RA sample_sheet.sh is also no longer needed.
-    #! ff er in gehackt, @Flo, even kijken hoe we dat gaan doen met die includes.
-    #!bin/scripts/RA_generate_sample_sheet.py data/cleaned_fastq/ > sample_sheet_ref_alignment.yaml
-
-    #!if [ -e sample_sheet_ref_alignment.yaml ]; then
-    if [ -e sample_sheet.yaml ]; then
-        echo -e "Starting optional reference alignment extension"
-        set +ue #turn off bash strict mode because snakemake and conda can't work with it properly
-        snakemake -s bin/Ref_alignment.smk --profile "${PROFILE}" --config reference="${REFERENCE_FASTA}" ${@}
-        set -ue #turn bash strict mode back on
+    if [ -s sample_sheet.yaml ]; then
+        if [ -s "${REFERENCE_FASTA}" ] && [ "${REFERENCE_FASTA##*.}"=="fasta" -o "${REFERENCE_FASTA##*.}"=="fa" ]; then
+            echo -e "Starting optional reference alignment extension"
+            set +ue #turn off bash strict mode because snakemake and conda can't work with it properly
+            snakemake -s bin/Ref_alignment.smk --profile "${PROFILE}" --config reference="${REFERENCE_FASTA}" ${@}
+            set -ue #turn bash strict mode back on
+        else
+            echo -e "The given reference file, ${REFERENCE_FASTA}, does not exist. Or does not look like a fasta file (.fa or .fasta). Exiting."
+            exit 1
+        fi
     else
         echo -e "sample_sheet_ref_alignment.yaml could not be found"
         echo -e "This also means that Jovian was unable to generate a new sample sheet for you"
