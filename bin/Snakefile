@@ -34,7 +34,7 @@ import yaml
 yaml.warnings({'YAMLLoadWarning': False}) # Suppress yaml "unsafe" warnings.
 
 SAMPLES = {}
-with open(config["sample_sheet_core"]) as sample_sheet_file:
+with open(config["sample_sheet"]) as sample_sheet_file:
     SAMPLES = yaml.load(sample_sheet_file) # SAMPLES is a dict with sample in the form sample > read number > file. E.g.: SAMPLES["sample_1"]["R1"] = "x_R1.gz"
 
 #@################################################################################
@@ -255,4 +255,7 @@ rule all:
         "results/heatmaps/Phage_heatmap.html", # Phage order|family|genus|species heatmaps for the entire run (based on a selection of phage families)
         "results/heatmaps/Bacteria_heatmap.html", # Bacteria phylum|class|order|family|genus|species level heatmap for the entire run
         expand("results/{file}.html", file = [ 'multiqc', 'krona' ]), # HTML Reports
-        expand("data/html/js-end.ok"),
+        expand("data/html/js-end.ok")
+        #! is die expand hierboven nodig?
+        #! moet hier ook geen results/igv.html komen te staan?
+

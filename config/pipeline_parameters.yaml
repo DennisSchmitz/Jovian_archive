@@ -75,9 +75,7 @@ reference_alignment:
 ### Technical parameters           ###
 ######################################
 
-sample_sheet_core: sample_sheet.yaml
-
-sample_sheet_reference_alignment: sample_sheet_ref_alignment.yaml
+sample_sheet: sample_sheet.yaml
 
 threads:
     Clean_the_data: 4

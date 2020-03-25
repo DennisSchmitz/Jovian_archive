@@ -65,7 +65,7 @@ yaml.warnings({'YAMLLoadWarning': False}) # Suppress yaml "unsafe" warnings.
 
 # Import sample sheet
 SAMPLES = {}
-with open(config["sample_sheet_reference_alignment"]) as sample_sheet_file:
+with open(config["sample_sheet"]) as sample_sheet_file:
     SAMPLES = yaml.load(sample_sheet_file) # SAMPLES is a dict with sample in the form sample > read number > file. E.g.: SAMPLES["sample_1"]["R1"] = "x_R1.gz"
 
 # The reference file is given as a snakemake CLI argument from within the wrapper, so NOT via the pipeline_parameters.yaml
@@ -90,6 +90,8 @@ OUTPUT_DIR_IGVjs = OUTPUT_BASE_DIR + "html/"
 # Set output dir of results
 OUTPUT_DIR_RESULTS = OUTPUT_BASE_DIR + "results/"
 OUTPUT_IGVjs_HTML = OUTPUT_DIR_RESULTS + "igvjs.html"
+OUTPUT_MULTIQC_REPORT = OUTPUT_DIR_RESULTS + "multiqc.html"
+OUTPUT_MULTIQC_REPORT_DATA = OUTPUT_DIR_RESULTS + "multiqc_data/"
 
 # Set output dir of logfiles
 OUTPUT_DIR_LOGS = config["reference_alignment"]["log_dir"] # NB the DRMAA logs will go the same dir as Jovian-core since this is set in the config.yaml file.
@@ -119,13 +121,41 @@ rule all:
         OUTPUT_DIR_RESULTS + "BoC_percentage.tsv", # Percentage BoC overview in .tsv format
         expand("{out}{ref_basename}_{extension}", out = OUTPUT_DIR_REFERENCE, ref_basename = REFERENCE_BASENAME , sample = SAMPLES, extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi' ]), # Prodigal ORF prediction output, required for the IGVjs visualisation
         OUTPUT_IGVjs_HTML, # IGVjs output html
+        OUTPUT_MULTIQC_REPORT, # MultiQC report
 
 
 #@################################################################################
 #@#### Reference alignment extension processes                               #####
 #@################################################################################
 
+#! rules via include statements are shared between core workflow and RA workflow
+#>############################################################################
+#>#### Data quality control and cleaning                                 #####
+#>############################################################################
 
+include: "rules/QC_raw.smk"
+include: "rules/CleanData.smk"
+include: 'rules/QC_clean.smk'
+
+#>############################################################################
+#>#### Removal of background host data                                   #####
+#>############################################################################
+
+include: "rules/BG_removal_1.smk"
+include: "rules/BG_removal_2.smk"
+include: "rules/BG_removal_3.smk"
+
+
+##########! Also include fragment length *done* analysis and multiqc *done*
+###? Tried adding the fraglength rule, but it break for samples without enough paired reads. Requires a touching of output files if the exit-code is non-zero. 
+###TODO fixing above issue is something to do later, this also causes problems in the core workflow. So has some priority.
+
+###########! nuttig om contig metrics rule ook toe te voegen?
+
+
+#>############################################################################
+#>#### Process the reference                                             #####
+#>############################################################################
 rule RA_index_reference:
     input:
         reference= REFERENCE
@@ -213,11 +243,14 @@ cut -f 1-3,5 2>> {log} 1> {output.GC_bed}
         """
 
 
+#>############################################################################
+#>#### Align to ref, call SNPs, generate new consensus                   #####
+#>############################################################################
 rule RA_align_to_reference:
     input:
-        pR1= INPUT_DIR_FILT_READS + "{sample}_pR1.fq",
-        pR2= INPUT_DIR_FILT_READS + "{sample}_pR2.fq",
-        unpaired= INPUT_DIR_FILT_READS + "{sample}_unpaired.fq",
+        pR1= rules.HuGo_removal_pt2_extract_paired_unmapped_reads.output.fastq_R1,
+        pR2= rules.HuGo_removal_pt2_extract_paired_unmapped_reads.output.fastq_R2,
+        unpaired= rules.HuGo_removal_pt3_extract_unpaired_unmapped_reads.output,
         reference= rules.RA_index_reference.output.reference_copy
     output:
         sorted_bam= OUTPUT_DIR_ALIGNMENT + "{sample}_sorted.bam",
@@ -367,6 +400,39 @@ cat {input.BoC_int_tsv} >> {output.combined_BoC_int_tsv}
 
 echo -e "Sample_name\tTotal_ref_size\tBoC_at_coverage_threshold_1\tBoC_at_coverage_threshold_5\tBoC_at_coverage_threshold_10\tBoC_at_coverage_threshold_30\tBoC_at_coverage_threshold_100" > {output.combined_BoC_pct_tsv}
 cat {input.BoC_pct_tsv} >> {output.combined_BoC_pct_tsv}
+        """
+
+
+##########################!
+# Gejat uit Jovian core met minor changes, kunnen we waarschijlijk efficienter doen.
+# TODO the report is still a bit dirty since we include two bowtie2 metric files:
+#### TODO one for the hugo removal
+#### TODO another for the ref alignment
+#### TODOD hence the '-d' flag in the multiqc command based on https://multiqc.info/docs/#directory-names
+rule RA_MultiQC_report:
+    input:
+        expand("data/FastQC_pretrim/{sample}_{read}_fastqc.zip", sample = SAMPLES, read = "R1 R2".split()), # TODO dit moet nog verbetert worden qua smk syntax
+        expand("data/FastQC_posttrim/{sample}_{read}_fastqc.zip", sample = SAMPLES, read = "pR1 pR2 uR1 uR2".split()), # TODO dit moet nog verbetert worden qua smk syntax
+        expand("logs/Clean_the_data_{sample}.log", sample = SAMPLES), # TODO dit moet nog verbetert worden qua smk syntax
+        expand("logs/HuGo_removal_pt1_alignment_{sample}.log", sample = SAMPLES), # TODO dit moet nog verbetert worden qua smk syntax
+        expand("{out}RA_align_to_reference_{sample}.log", out = OUTPUT_DIR_LOGS, sample = SAMPLES), # TODO dit moet nog verbetert worden qua smk syntax
+    output:
+        OUTPUT_MULTIQC_REPORT,
+        expand("{out}multiqc_{program}.txt", out = OUTPUT_MULTIQC_REPORT_DATA, program = ['trimmomatic','bowtie2','fastqc']),
+    conda:
+        CONDA_ENVS_DIR + "MultiQC_report.yaml"
+    benchmark:
+        OUTPUT_DIR_BENCHMARKS + "RA_MultiQC_report.txt"
+    threads: 1
+    params:
+        config_file="files/multiqc_config.yaml",
+        output_dir= OUTPUT_DIR_RESULTS,
+    log:
+        OUTPUT_DIR_LOGS + "RA_MultiQC_report.log"
+    shell:
+        """
+multiqc -d --force --config {params.config_file} \
+-o {params.output_dir} -n multiqc.html {input} > {log} 2>&1
         """
 
 

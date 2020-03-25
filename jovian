@@ -410,8 +410,8 @@ if ! bash bin/includes/Preflight_check_databases; then
     exit 1
 fi
 ###> Check the reads and change pipeline parameters acccordingly
-echo -e "\n\nCalculating average read length and configuring the Jovian settings accordingly"
-(bash bin/includes/Preflight_readlength-counter)& spinner
+###!echo -e "\n\nCalculating average read length and configuring the Jovian settings accordingly"
+###!(bash bin/includes/Preflight_readlength-counter)& spinner
 
 
 
@@ -443,10 +443,12 @@ else
     ###> #TODO checken of gegeven file bestaat, en wel een fasta is (bv check extension is .fa of .fasta)
     ###> #TODO exit if core jovian has'nt been run, e.g. by checking the required input dir; with errors message to first start the core pipeline.
 
+    #! Had to out comment the parts below while integrating the RA workflow with the core QC and cleaning rules. Can probably be removed after the test is successfull, then the RA sample_sheet.sh is also no longer needed.
     #! ff er in gehackt, @Flo, even kijken hoe we dat gaan doen met die includes.
-    bin/scripts/RA_generate_sample_sheet.py data/cleaned_fastq/ > sample_sheet_ref_alignment.yaml
+    #!bin/scripts/RA_generate_sample_sheet.py data/cleaned_fastq/ > sample_sheet_ref_alignment.yaml
 
-    if [ -e sample_sheet_ref_alignment.yaml ]; then
+    #!if [ -e sample_sheet_ref_alignment.yaml ]; then
+    if [ -e sample_sheet.yaml ]; then
         echo -e "Starting optional reference alignment extension"
         set +ue #turn off bash strict mode because snakemake and conda can't work with it properly
         snakemake -s bin/Ref_alignment.smk --profile "${PROFILE}" --config reference="${REFERENCE_FASTA}" ${@}
