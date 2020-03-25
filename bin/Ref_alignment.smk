@@ -39,7 +39,7 @@ Funding:
 - See tips for improving variant filtering in mail Jeroen EMC, 20200323
 - Remove unneeded temp/intermediate files
     - Via onSucces clause
-- Voeg de nieuwe consensus ook toe aan de IGVjs overview! --> update: kan niet
+- Voeg de nieuwe consensus ook toe aan de IGVjs overview! --> update: kan niet --> upd: kan het wel als een nieuwe "scaffold" toevoegen // dropdown menu
 #TODO Onderstaande is ook handig voor Jovian zelf
 - Verwijzen naar de output van een andere rule: https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#rule-dependencies
 - For JupyterNotebook integration: https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#jupyter-notebook-integration
@@ -111,6 +111,7 @@ localrules:
 
 rule all:
     input:
+        expand("data/cleaned_fastq/{sample}_{read}.fq", sample = SAMPLES, read = [ 'pR1', 'pR2', 'unpaired' ]), # Extract unmapped & paired reads AND unpaired from HuGo alignment; i.e. cleaned fastqs #TODO omschrijven naar betere smk syntax
         expand("{out}{ref_basename}{extension}", out = OUTPUT_DIR_REFERENCE, ref_basename = REFERENCE_BASENAME, extension = [ '.fasta', '.fasta.1.bt2', '.fasta.fai', '.fasta.sizes', '.windows', '_GC.bedgraph' ]), # Copy of the reference file (for standardization and easy logging), bowtie2-indices (I've only specified one, but the "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2" and "rev.2.bt2" are implicitly generated) and the GC-content files.
         expand("{out}{sample}_sorted.{extension}", out = OUTPUT_DIR_ALIGNMENT, sample = SAMPLES, extension = [ 'bam', 'bam.bai' ]), # The reference alignment (bam format) files.
         expand("{out}{sample}_{extension}", out = OUTPUT_DIR_CONSENSUS_RAW, sample = SAMPLES, extension = [ 'calls.vcf.gz', 'raw_consensus.fa' ]), # A zipped vcf file contained SNPs versus the given reference and a RAW consensus sequence, see explanation below for the meaning of RAW.
@@ -509,11 +510,20 @@ cat files/html_chunks/7_js_end.html >> {output}
 onsuccess:
     shell("""
         echo -e "\nCleaning up..."
-        #TODO hier nog zo'n remove temp checker inbouwen.
-        rm -rf {OUTPUT_DIR_IGVjs}   # Remove intermediate IGVjs html chunks.
+        
+        echo -e "\tRemoving temporary files..."
+        if [ "{config[remove_temp]}" != "0" ]; then
+            rm -rf {OUTPUT_DIR_IGVjs}   # Remove intermediate IGVjs html chunks.
+        else
+            echo -e "\t\tYou chose not to remove temp files, skipping..."
+        fi
 
         echo -e "\tCreating symlinks for the interactive genome viewer..."
         bin/scripts/set_symlink.sh
+
+        echo -e "\tGenerating Snakemake report..."
+        snakemake -s bin/Ref_alignment.smk --unlock --config config --config reference={REFERENCE}
+        snakemake -s bin/Ref_alignment.smk --report {OUTPUT_DIR_RESULTS}snakemake_report.html --config config --config reference={REFERENCE}
 
         echo -e "Finished"
     """)
