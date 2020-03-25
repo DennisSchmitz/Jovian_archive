@@ -291,16 +291,18 @@ if [ "${VIRUS_TYPING:-}" == "TRUE" ]; then
         exit 0
     elif [ "${FORCE_OVERWRITE_TT:-}" == "TRUE" ]; then
         
+        # Check if the URL's are accessible (sometimes they are overloaded/down for maintenance/crashed)
         if ! bash bin/includes/Typingtool_check "${WHICH_TT}"; then
-        exit 1
+            exit 1
         fi
 
         bash bin/scripts/virus_typing.sh "${WHICH_TT}" --force
         exit 0
     else
 
+        # Check if the URL's are accessible (sometimes they are overloaded/down for maintenance/crashed)
         if ! bash bin/includes/Typingtool_check "${WHICH_TT}"; then
-        exit 1
+            exit 1
         fi
         
         bash bin/scripts/virus_typing.sh "${WHICH_TT}"
@@ -419,50 +421,41 @@ ready_for_start
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 
-###> Core Jovian workflow snakemake command with checkers for required files.
 ###> Here the UNIQUE_ID and HOSTNAME variables are actually set
-
 echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > config/variables.yaml
 echo -e "Server_host:\n    hostname: http://${HOSTNAME}" >> config/variables.yaml
 eval $(parse_yaml config/variables.yaml "config_")
-# TODO betere if tree:
-#? if sample sheet ! -s (doesnt exist or is empty); then error && exit 1
-#? elif "${REFERENCE_ALIGNMENT}" == "TRUE" -a ! -s "${REFERENCE_FASTA}"; then error ref fasta doesn't exist && exit 1
-#? elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" ] && [ "${REFERENCE_FASTA##*.}"=="fasta" -o "${REFERENCE_FASTA##*.}"=="fa" ]; then error ref file is no valid fasta && exit 1
-#? elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" ]; then start RA.smk && exit 0
-#? else start jovian.smk && exit 0
-if [ "${REFERENCE_ALIGNMENT}" != "TRUE" ]; then #TODO make this better, it's to skip the core workflow and go straight to the RA part
-    if [ -s sample_sheet.yaml ]; then
-        echo -e "Starting core metagenomics workflow"
-        set +ue #turn off bash strict mode because snakemake and conda can't work with it properly
-        snakemake -s bin/Snakefile --profile "${PROFILE}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
-        set -ue #turn bash strict mode back on
 
-        # Start the TT with the "all" keyword        
-        bash bin/scripts/virus_typing.sh "all"
-    else
-        echo -e "sample_sheet.yaml could not be found"
-        echo -e "This also means that Jovian was unable to generate a new sample sheet for you"
-        echo -e "Please inspect the input directory (${INPUT_DIR}) and make sure the right files are present"
+###> Core Jovian workflow snakemake command with checkers for required files.
+if [ ! -s sample_sheet.yaml ]; then #? If sample_sheet.yaml does not exist or is empty...
+    echo -e "sample_sheet.yaml could not be found"
+    echo -e "This also means that Jovian was unable to generate a new sample sheet for you"
+    echo -e "Please inspect the input directory (${INPUT_DIR}) and make sure the right files are present"
+    exit 1
+elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" -a ! -s "${REFERENCE_FASTA}" ]; then #? If REFERENCE_ALIGNMENT is TRUE and the REFERENCE_ALIGNMENT file exists and is not empty...
+    echo -e "The given reference file, ${REFERENCE_FASTA}, does not exist. Please check your input. Exitting..."
+    exit 1
+elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" ] && [ "${REFERENCE_FASTA##*.}" != "fasta" -a "${REFERENCE_FASTA##*.}" != "fa" ]; then #? If REFERENCE_ALIGNMENT is TRUE and the REFERENCE_ALIGNMENT file has no .fasta AND .fa extension (i.e. it's not a .fa or .fasta file)...
+    echo -e "The given reference file, ${REFERENCE_FASTA}, does not look like a fasta file (.fa or .fasta extension). Please check your input. Exitting..."
+    exit 1
+elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" ]; then #? If REFERENCE_ALIGNMENT is TRUE, start RA.smk and exit with exit-code 0...
+    echo -e "Starting optional reference alignment extension"
+    set +ue #turn off bash strict mode because snakemake and conda don't work in strict mode
+    snakemake -s bin/Ref_alignment.smk --profile "${PROFILE}" --config reference="${REFERENCE_FASTA}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
+    set -ue #turn bash strict mode back on
+    exit 0
+else #? Else, start jovian_core.smk and do virus typing for all keywords.
+    echo -e "Starting core metagenomics workflow"
+    set +ue #turn off bash strict mode because snakemake and conda don't work in strict mode
+    snakemake -s bin/Snakefile --profile "${PROFILE}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
+    set -ue #turn bash strict mode back on
+
+    # Check if the URL's are accessible with the TT 'all' keyword (sometimes they are overloaded/down for maintenance/crashed)
+    if ! bash bin/includes/Typingtool_check "all"; then
         exit 1
     fi
-else
-    if [ -s sample_sheet.yaml ]; then
-        if [ -s "${REFERENCE_FASTA}" ] && [ "${REFERENCE_FASTA##*.}"=="fasta" -o "${REFERENCE_FASTA##*.}"=="fa" ]; then
-            echo -e "Starting optional reference alignment extension"
-            set +ue #turn off bash strict mode because snakemake and conda can't work with it properly
-            snakemake -s bin/Ref_alignment.smk --profile "${PROFILE}" --config reference="${REFERENCE_FASTA}" ${@}
-            set -ue #turn bash strict mode back on
-        else
-            echo -e "The given reference file, ${REFERENCE_FASTA}, does not exist. Or does not look like a fasta file (.fa or .fasta). Exiting."
-            exit 1
-        fi
-    else
-        echo -e "sample_sheet_ref_alignment.yaml could not be found"
-        echo -e "This also means that Jovian was unable to generate a new sample sheet for you"
-        echo -e "Please inspect the input directory (${INPUT_DIR}) and make sure the right files are present"
-        exit 1
-    fi
+    # Start the TT with the "all" keyword        
+    bash bin/scripts/virus_typing.sh "all"
 fi
 
 exit 0 
