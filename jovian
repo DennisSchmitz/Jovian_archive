@@ -390,7 +390,7 @@ fi
 
 ready_for_start
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-exit
+
 
 ###> Actual snakemake command with checkers for required files.
 ###> Here the UNIQUE_ID and HOSTNAME variables are actually set
