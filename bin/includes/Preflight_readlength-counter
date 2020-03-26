@@ -15,10 +15,10 @@ FILE4=$(find "${INPUT_DIR}" -type f -printf "%s %p\n" | sort -k 2 | awk 'NR==2 {
 filearray=("${FILE1##*/}" "${FILE2##*/}" "${FILE3##*/}" "${FILE3##*/}")
 
 #> get average reads length per file
-AVG_LENGTH1=$(unpigz -c --force "${FILE1}" | awk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}')
-AVG_LENGTH2=$(unpigz -c --force "${FILE2}" | awk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}')
-AVG_LENGTH3=$(unpigz -c --force "${FILE3}" | awk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}')
-AVG_LENGTH4=$(unpigz -c --force "${FILE4}" | awk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}')
+AVG_LENGTH1=$(pv "${FILE1}" | unpigz -c -p "${USE_CORES}" --force | awk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}')
+AVG_LENGTH2=$(pv "${FILE2}" | unpigz -c -p "${USE_CORES}" --force | awk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}') 
+AVG_LENGTH3=$(pv "${FILE3}" | unpigz -c -p "${USE_CORES}" --force | awk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}') 
+AVG_LENGTH4=$(pv "${FILE4}" | unpigz -c -p "${USE_CORES}" --force | awk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}') 
 
 #> Calculate single average length based on the sampled files
 array=("${AVG_LENGTH1%.*}" "${AVG_LENGTH2%.*}" "${AVG_LENGTH3%.*}" "${AVG_LENGTH4%.*}")

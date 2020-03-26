@@ -381,14 +381,16 @@ if ! bash bin/includes/Preflight_check_databases; then
     exit 1
 fi
 ###> Check the reads and change pipeline parameters acccordingly
-echo -e "\n\nCalculating average read length and configuring the Jovian settings accordingly"
-(bash bin/includes/Preflight_readlength-counter)& spinner
-
+echo -e "\n\nCalculating average read length of 4 input files and configuring the Jovian settings accordingly"
+if ! bash bin/includes/Preflight_readlength-counter; then
+echo ":("
+exit 1
+fi
 
 
 ready_for_start
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
+exit
 
 ###> Actual snakemake command with checkers for required files.
 ###> Here the UNIQUE_ID and HOSTNAME variables are actually set
