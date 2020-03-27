@@ -10,10 +10,9 @@
 set -o allexport
 [[ -f .env ]] && source .env
 source bin/includes/functions
-set +o allexport
-
 eval "$(parse_yaml config/pipeline_parameters.yaml "params_")"
 eval "$(parse_yaml config/config.yaml "configuration_")"
+set +o allexport
 
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #@ Parse the jovian commandline arguments.
@@ -381,12 +380,9 @@ if ! bash bin/includes/Preflight_check_databases; then
     exit 1
 fi
 ###> Check the reads and change pipeline parameters acccordingly
-echo -e "\n\nCalculating average read length of 4 input files and configuring the Jovian settings accordingly"
 if ! bash bin/includes/Preflight_readlength-counter; then
-echo ":("
 exit 1
 fi
-
 
 ready_for_start
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
