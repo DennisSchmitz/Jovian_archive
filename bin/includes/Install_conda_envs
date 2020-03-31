@@ -10,9 +10,11 @@ if [ "${INSTALL_CONDA_ENVS:-}" == "TRUE" ]; then
     mkdir -p installer_files
     echo -e "@example_read1\nGATTACA\n+\nAAAAAAA\n" > installer_files/example_R1.fq
     echo -e "@example_read2\nGATTACA\n+\nAAAAAAA\n" > installer_files/example_R2.fq
+    echo -e ">example_ref\nGATTACA\n" > installer_files/example_ref.fasta
     echo -e "installer:\n    R1: installer_files/example_R1.fq\n    R2: installer_files/example_R2.fq" >> sample_sheet.yaml
     echo -e "\nInstalling required conda environments, this can take up to an hour..."
     snakemake -s bin/Snakefile --use-conda --create-envs-only --profile "${PROFILE}"
+    snakemake -s bin/Ref_alignment.smk --use-conda --create-envs-only --profile "${PROFILE}" --config reference="installer_files/example_ref.fasta"
     rm sample_sheet.yaml
     rm config/variables.yaml
     rm -rf installer_files

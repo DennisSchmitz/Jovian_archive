@@ -4,7 +4,7 @@
 
 #> default vars + input
 #>################################
-INPUT="${1}"
+INPUT="${1,,}" # The ${var,,} syntax converts it all to lowercase, this makes it easier to regex/match the keywords later and makes the keywords case-insensitive.
 
 NOV_URL="https://www.rivm.nl/mpf/typingservice/norovirus/"
 EV_URL="https://www.rivm.nl/mpf/typingservice/enterovirus/"
@@ -28,9 +28,11 @@ bash jovian -vt-force [virus-keyword]   Force overwrite existing output.
 bash jovian -vt-help                    Print this help message.
 
 The first argument should always be one of the keyword listed below:
-    N.B. Keywords are case-sensitive
     ---------------------------------------------------
-    | KEYWORD | TYPEABLE VIRUSSES                     |
+    | KEYWORD | TYPEABLE VIRUSES                      |
+    |-------------------------------------------------|
+    | all     | perform all the different typing-tools|
+    |         | listed below.                         |
     |-------------------------------------------------|
     | NoV     | Caliciviridae family;                 |
     |         | - Norwalk virus (GI & GII),           |
@@ -72,7 +74,7 @@ HELP_USAGE
 
 #> Check if input parameter is supported
 #>################################
-if [[ ! "${INPUT}" =~ ^(NoV|EV|HAV|HEV|RVA|PV|Flavi)$ ]]; then
+if [[ ! "${INPUT}" =~ ^(nov|ev|hav|hev|rva|pv|flavi|all)$ ]]; then
 	echo -e "\nUnknown parameter '${1}' given.\n"
 	usage_msg
 fi
@@ -80,25 +82,33 @@ fi
 #> Run an actual curl to the specific typing tool url and print the response code
 #>################################
 
-if [ "${INPUT}" == "NoV" ]; then
+#TODO hier moet nog iets voor de all optie, dat alles getest wordt.
+
+if [ "${INPUT}" == "nov" ]; then
 	RESPONSE=$(curl -sSl -D - ${NOV_URL} -o /dev/null | awk '/HTTP/ {print $2}')
 
-elif [ "${INPUT}" == "EV" ]; then
+#!##########################################################################################################################################
+#TODO snelle hack om te zorgen dat de "all" keyword werkt, hier nog een betere oplossing voor maken. @Florian, voorkeur voor een oplossing?
+elif [ "${INPUT}" == "all" ]; then
+	RESPONSE=$(curl -sSl -D - ${NOV_URL} -o /dev/null | awk '/HTTP/ {print $2}')
+#!##########################################################################################################################################
+
+elif [ "${INPUT}" == "ev" ]; then
 	RESPONSE=$(curl -sSl -D - ${EV_URL} -o /dev/null | awk '/HTTP/ {print $2}')
 
-elif [ "${INPUT}" == "HAV" ]; then
+elif [ "${INPUT}" == "hav" ]; then
 	RESPONSE=$(curl -sSl -D - ${HAV_URL} -o /dev/null | awk '/HTTP/ {print $2}')
 
-elif [ "${INPUT}" == "HEV" ]; then
+elif [ "${INPUT}" == "hev" ]; then
 	RESPONSE=$(curl -sSl -D - ${HEV_URL} -o /dev/null | awk '/HTTP/ {print $2}')
 
-elif [ "${INPUT}" == "RVA" ]; then
+elif [ "${INPUT}" == "rva" ]; then
 	RESPONSE=$(curl -sSl -D - ${RVA_URL} -o /dev/null | awk '/HTTP/ {print $2}')
 
-elif [ "${INPUT}" == "PV" ]; then
+elif [ "${INPUT}" == "pv" ]; then
 	RESPONSE=$(curl -sSl -D - ${PV_URL} -o /dev/null | awk '/HTTP/ {print $2}')
 
-elif [ "${INPUT}" == "Flavi" ]; then
+elif [ "${INPUT}" == "flavi" ]; then
 	RESPONSE=$(curl -sSl -D - ${FLAVI_URL} -o /dev/null | awk '/HTTP/ {print $2}')
 
 fi
