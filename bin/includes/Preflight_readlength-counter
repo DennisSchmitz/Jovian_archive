@@ -6,19 +6,26 @@
 #* Change settings of config/pipeline_parameters.yaml accordingly
 #* # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
+if [ $params_WrapperSettings_ReadlengthDetection == "false" ]; then
+    echo "Skipping readlength detection"
+    exit 0
+fi
+
+echo -e "\n\nCalculating average read length of 4 input files and configuring the Jovian settings accordingly"
+
 #> find smallest file in input_dir
 FILE1=$(find "${INPUT_DIR}" -type f -printf "%s %p\n" | sort -n | awk 'NR==1 {print $2}')
 FILE2=$(find "${INPUT_DIR}" -type f -printf "%s %p\n" | sort -n | awk 'NR==2 {print $2}')
 FILE3=$(find "${INPUT_DIR}" -type f -printf "%s %p\n" | sort -k 2 | awk 'NR==1 {print $2}')
 FILE4=$(find "${INPUT_DIR}" -type f -printf "%s %p\n" | sort -k 2 | awk 'NR==2 {print $2}')
 
-filearray=("${FILE1##*/}" "${FILE2##*/}" "${FILE3##*/}" "${FILE3##*/}")
+filearray=("${FILE1##*/}" "${FILE2##*/}" "${FILE3##*/}" "${FILE4##*/}")
 
 #> get average reads length per file
-AVG_LENGTH1=$(unpigz -c --force "${FILE1}" | awk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}')
-AVG_LENGTH2=$(unpigz -c --force "${FILE2}" | awk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}')
-AVG_LENGTH3=$(unpigz -c --force "${FILE3}" | awk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}')
-AVG_LENGTH4=$(unpigz -c --force "${FILE4}" | awk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}')
+AVG_LENGTH1=$(pv "${FILE1}" | unpigz -c -p "${USE_CORES}" --force | awk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}')
+AVG_LENGTH2=$(pv "${FILE2}" | unpigz -c -p "${USE_CORES}" --force | awk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}') 
+AVG_LENGTH3=$(pv "${FILE3}" | unpigz -c -p "${USE_CORES}" --force | awk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}') 
+AVG_LENGTH4=$(pv "${FILE4}" | unpigz -c -p "${USE_CORES}" --force | awk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}') 
 
 #> Calculate single average length based on the sampled files
 array=("${AVG_LENGTH1%.*}" "${AVG_LENGTH2%.*}" "${AVG_LENGTH3%.*}" "${AVG_LENGTH4%.*}")
@@ -44,6 +51,11 @@ printf '%s\n' "${filearray[@]}"
 printf "\n"
 
 
+shortreads="kmersizes: 21,33,55,77"
+largereads="kmersizes: 21,33,55,77,99,127"
+params="config/pipeline_parameters.yaml"
+
+
 ###> Change parameters of `config/pipeline_parameters.yaml` to best match settings
 if [[ "${AVERAGE}" -gt "305" ]]
 then
@@ -52,10 +64,12 @@ then
 elif [[ "${AVERAGE}" -ge "250" ]]
 then
     echo -e "\tAverage read length is >=250 and <=305. \n\tSetting large kmer sizes."
+    sed -i "s/.*kmersizes:.*/    ${largereads}/g" "${params}"
     ##! http://cab.spbu.ru/files/release3.11.0/manual.html#sec3.4 (we use version 3.11.0 in Jovian)
 elif [[ "${AVERAGE}" -ge "50" ]]
 then
     echo -e "\tAverage read length is >=50 and <250. \n\tSetting small kmer sizes."
+    sed -i "s/.*kmersizes:.*/    ${shortreads}/g" "${params}"
     ##! http://cab.spbu.ru/files/release3.11.0/manual.html#sec3.4 (we use version 3.11.0 in Jovian)
 elif [[ "${AVERAGE}" -lt "50" ]]
 then
