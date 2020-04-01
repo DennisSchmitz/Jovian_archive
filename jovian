@@ -241,7 +241,7 @@ else
     set -o allexport
     source activate "${MASTER_NAME}"
     set +o allexport
-    echo -e "Succesfully activated Jovian_master environment"
+    echo -e "Successfully activated Jovian_master environment"
 fi
 
 ###> Install databases, as specified via CLI argument '-id'
