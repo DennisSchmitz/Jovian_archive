@@ -3,6 +3,10 @@
 ### software parameters            ###
 ######################################
 
+WrapperSettings:
+    ReadlengthDetection: true
+    
+
 Trimmomatic:
     # For the Nextera PE lib prep adapters
     adapter_removal_config: ILLUMINACLIP:files/trimmomatic_0.36_adapters_lists/NexteraPE-PE.fa:2:30:10:8:true
@@ -17,11 +21,13 @@ HuGo_removal:
     alignment_type: --local
 
 SPAdes:
-    # TODO: kmersizes kunnen waarschijnlijk worden verwijderd, moet getest worden.
-    # uncomment this line if you want to use the pipeline for short Illumina reads (<250 nt in length). Then also comment the line below.
     kmersizes: 21,33,55,77
-    # uncomment this line if you want to use the pipeline for longer Illumina reads (>250 nt in length). Then also comment the line above.
-#    kmersizes: 21,33,55,77,99,127
+    ## This defaults to short illumina reads. The wrapper changes the kmer sizes to fit the average read length of the given samples.
+    ## You can still use this manually by toggling off the read-length checker.
+    ## To disable the checker, type "bash jovian --disable-readchecker" or enable it with "bash jovian --enable-readchecker"
+    ## For reference the kmer sizes "21,33,55,77" are used for short Illumina reads (<250 nt in length)
+    ## The kmer sizes "21,33,55,77,99,127" are used for large Illumina reads (>250 nt in length)
+
 
 scaffold_minLen_filter:
     # ! test settings for best "relaxed" mode
