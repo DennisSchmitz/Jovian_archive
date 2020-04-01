@@ -26,4 +26,4 @@ dependencies:
   - pv==1.6.6
   - pip==19.2.3
   - pip:
-    - PyYAML==5.3.1  # otherwise you get a random "missing yaml module" error from the python scripts. Unclear why, since it should be installed above... It's a random error, irreproducible, but it seems like this fixes it.
+    - PyYAML==5.3.1
