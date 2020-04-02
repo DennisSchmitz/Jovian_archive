@@ -107,6 +107,7 @@ OUTPUT_DIR_BENCHMARKS = OUTPUT_DIR_LOGS + "benchmark/"
 localrules: 
     all,
     RA_index_reference,
+    RA_determine_BoC_at_diff_cov_thresholds,
     RA_concat_BoC_metrics,
     RA_HTML_IGVJs_variable_parts,
     RA_HTML_IGVJs_generate_final
