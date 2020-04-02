@@ -13,11 +13,11 @@ fi
 
 echo -e "\n\nCalculating average read length of 4 input files and configuring the Jovian settings accordingly"
 
-#> find smallest file in input_dir
-FILE1=$(find "${INPUT_DIR}" -maxdepth 1 -type f  -printf "%s %p\n" | sort -n | gawk 'NR==1 {print $2}')
-FILE2=$(find "${INPUT_DIR}" -maxdepth 1 -type f  -printf "%s %p\n" | sort -n | gawk 'NR==2 {print $2}')
-FILE3=$(find "${INPUT_DIR}" -maxdepth 1 -type f  -printf "%s %p\n" | sort -k 2 | gawk 'NR==1 {print $2}')
-FILE4=$(find "${INPUT_DIR}" -maxdepth 1 -type f  -printf "%s %p\n" | sort -k 2 | gawk 'NR==2 {print $2}')
+#> find smallest (gzipped) *.fq/*.fastq file in input_dir
+FILE1=$(find "${INPUT_DIR}" -maxdepth 1 -type f -regextype awk -regex '.*\.f(ast)?q(\.gz)?$' -printf "%s %p\n" | sort -n | gawk 'NR==1 {print $2}')
+FILE2=$(find "${INPUT_DIR}" -maxdepth 1 -type f -regextype awk -regex '.*\.f(ast)?q(\.gz)?$' -printf "%s %p\n" | sort -n | gawk 'NR==2 {print $2}')
+FILE3=$(find "${INPUT_DIR}" -maxdepth 1 -type f -regextype awk -regex '.*\.f(ast)?q(\.gz)?$' -printf "%s %p\n" | sort -k 2 | gawk 'NR==1 {print $2}')
+FILE4=$(find "${INPUT_DIR}" -maxdepth 1 -type f -regextype awk -regex '.*\.f(ast)?q(\.gz)?$' -printf "%s %p\n" | sort -k 2 | gawk 'NR==2 {print $2}')
 
 filearray=("${FILE1##*/}" "${FILE2##*/}" "${FILE3##*/}" "${FILE4##*/}")
 
