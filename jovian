@@ -165,7 +165,7 @@ do
         shift # Next
         shift # Next
         ;;
-        --ra|--reference-alignment)
+        -ra|--reference-alignment)
         REFERENCE_ALIGNMENT="TRUE"
         REFERENCE_FASTA="$2"
         export REFERENCE_ALIGNMENT

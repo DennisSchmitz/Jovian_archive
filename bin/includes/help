@@ -19,7 +19,7 @@ Output (automatically generated):
 Extensions:                         Note, these functions require a finished Jovian analysis
                                     to function.
   Reference alignment:
-    --ra, --reference-alignment [reference.fasta]
+    -ra, --reference-alignment [reference.fasta]
                                     Work-in-progress. Does a reference alignment against the
                                     user specified fasta file. N.B. only provide a single
                                     genome of your organism of interest. If you add more than
