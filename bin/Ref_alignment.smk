@@ -173,15 +173,15 @@ rule RA_index_reference:
     threads: 4
     log:
         OUTPUT_DIR_LOGS + "RA_index_reference.log"
-    shell: # The reference is copied to the hardcoded subdir to make it standardized and easily logged.
+    shell: # The reference is copied to the hardcoded subdir to make it standardized and easily logged. Convert it to a two-line fasta for easier downstream processing.
         """
-cp {input.reference} {output.reference_copy}
+cat {input.reference} | seqtk seq - > {output.reference_copy}
 bowtie2-build --threads {threads} {output.reference_copy} {output.reference_copy} >> {log} 2>&1
         """
 
 
 ##########################!
-# Nuttig voor IGVjs vis. Gejat uit Jovian core met minor changes, kunnen we waarschijlijk efficienter doen.
+# Nuttig voor IGVjs vis. Gejat uit Jovian core met minor changes, kunnen we waarschijlijk efficienter doen. Bijvoorbeeld door gewoon een goed gecureerde ORF annotatie toe te voegen bij starten van analyse.
 rule RA_reference_ORF_analysis:
     input:
         reference= rules.RA_index_reference.output.reference_copy
