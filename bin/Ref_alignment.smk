@@ -89,6 +89,7 @@ OUTPUT_DIR_IGVjs = OUTPUT_BASE_DIR + "html/"
 
 # Set output dir of results
 OUTPUT_DIR_RESULTS = OUTPUT_BASE_DIR + "results/"
+OUTPUT_DIR_CONSENSUS_SEQS = OUTPUT_DIR_RESULTS + "consensus_seqs/"
 OUTPUT_IGVjs_HTML = OUTPUT_DIR_RESULTS + "igvjs.html"
 OUTPUT_MULTIQC_REPORT = OUTPUT_DIR_RESULTS + "multiqc.html"
 OUTPUT_MULTIQC_REPORT_DATA = OUTPUT_DIR_RESULTS + "multiqc_data/"
@@ -96,6 +97,7 @@ OUTPUT_MULTIQC_REPORT_DATA = OUTPUT_DIR_RESULTS + "multiqc_data/"
 # Set output dir of logfiles
 OUTPUT_DIR_LOGS = config["reference_alignment"]["log_dir"] # NB the DRMAA logs will go the same dir as Jovian-core since this is set in the config.yaml file.
 OUTPUT_DIR_BENCHMARKS = OUTPUT_DIR_LOGS + "benchmark/"
+
 
 #@################################################################################
 #@#### Specify Jovian's final output:                                        #####
@@ -116,7 +118,7 @@ rule all:
         expand("{out}{sample}_sorted.{extension}", out = OUTPUT_DIR_ALIGNMENT, sample = SAMPLES, extension = [ 'bam', 'bam.bai' ]), # The reference alignment (bam format) files.
         expand("{out}{sample}_{extension}", out = OUTPUT_DIR_CONSENSUS_RAW, sample = SAMPLES, extension = [ 'calls.vcf.gz', 'raw_consensus.fa' ]), # A zipped vcf file contained SNPs versus the given reference and a RAW consensus sequence, see explanation below for the meaning of RAW.
         expand("{out}{sample}.bedgraph", out = OUTPUT_DIR_CONSENSUS_FILT, sample = SAMPLES), # Lists the coverage of the alignment against the reference in a bedgraph format, is used to determine the coverage mask files below.
-        expand("{out}{sample}_{filt_character}-filt_cov_ge_{thresholds}.fa", out = OUTPUT_DIR_CONSENSUS_FILT, sample = SAMPLES, filt_character = [ 'N', 'minus' ], thresholds = [ '1', '5', '10', '30', '100' ]), # Consensus sequences filtered for different coverage thresholds (1, 5, 10, 30 and 100). For each threshold two files are generated, one where failed positioned are replaced with a N nucleotide and the other where its replaced with a minus character (gap).
+        expand("{out}{sample}_{filt_character}-filt_cov_ge_{thresholds}.fa", out = OUTPUT_DIR_CONSENSUS_SEQS, sample = SAMPLES, filt_character = [ 'N', 'minus' ], thresholds = [ '1', '5', '10', '30', '100' ]), # Consensus sequences filtered for different coverage thresholds (1, 5, 10, 30 and 100). For each threshold two files are generated, one where failed positioned are replaced with a N nucleotide and the other where its replaced with a minus character (gap).
         expand("{out}{sample}_BoC{extension}", out = OUTPUT_DIR_BOC_ANALYSIS, sample = SAMPLES, extension = [ '_int.tsv', '_pct.tsv' ] ), # Output of the BoC analysis #TODO can probably removed after the concat rule is added.
         OUTPUT_DIR_RESULTS + "BoC_integer.tsv", # Integer BoC overview in .tsv format
         OUTPUT_DIR_RESULTS + "BoC_percentage.tsv", # Percentage BoC overview in .tsv format
@@ -330,16 +332,16 @@ rule RA_extract_clean_consensus:
         raw_consensus= rules.RA_extract_raw_consensus.output.raw_consensus_fasta, # Only needed for when there are no positions in the bed with a coverage of 0; in that case the RAW fasta is actually suitable for downstream processes and it is simply copied.
     output:
         bedgraph= OUTPUT_DIR_CONSENSUS_FILT + "{sample}.bedgraph",
-        filt_consensus_N_filt_ge_1= OUTPUT_DIR_CONSENSUS_FILT + "{sample}_N-filt_cov_ge_1.fa",
-        filt_consensus_N_filt_ge_5= OUTPUT_DIR_CONSENSUS_FILT + "{sample}_N-filt_cov_ge_5.fa",
-        filt_consensus_N_filt_ge_10= OUTPUT_DIR_CONSENSUS_FILT + "{sample}_N-filt_cov_ge_10.fa",
-        filt_consensus_N_filt_ge_30= OUTPUT_DIR_CONSENSUS_FILT + "{sample}_N-filt_cov_ge_30.fa",
-        filt_consensus_N_filt_ge_100= OUTPUT_DIR_CONSENSUS_FILT + "{sample}_N-filt_cov_ge_100.fa",
-        filt_consensus_minus_filt_ge_1= OUTPUT_DIR_CONSENSUS_FILT + "{sample}_minus-filt_cov_ge_1.fa",
-        filt_consensus_minus_filt_ge_5= OUTPUT_DIR_CONSENSUS_FILT + "{sample}_minus-filt_cov_ge_5.fa",
-        filt_consensus_minus_filt_ge_10= OUTPUT_DIR_CONSENSUS_FILT + "{sample}_minus-filt_cov_ge_10.fa",
-        filt_consensus_minus_filt_ge_30= OUTPUT_DIR_CONSENSUS_FILT + "{sample}_minus-filt_cov_ge_30.fa",
-        filt_consensus_minus_filt_ge_100= OUTPUT_DIR_CONSENSUS_FILT + "{sample}_minus-filt_cov_ge_100.fa",
+        filt_consensus_N_filt_ge_1= OUTPUT_DIR_CONSENSUS_SEQS + "{sample}_N-filt_cov_ge_1.fa",
+        filt_consensus_N_filt_ge_5= OUTPUT_DIR_CONSENSUS_SEQS + "{sample}_N-filt_cov_ge_5.fa",
+        filt_consensus_N_filt_ge_10= OUTPUT_DIR_CONSENSUS_SEQS + "{sample}_N-filt_cov_ge_10.fa",
+        filt_consensus_N_filt_ge_30= OUTPUT_DIR_CONSENSUS_SEQS + "{sample}_N-filt_cov_ge_30.fa",
+        filt_consensus_N_filt_ge_100= OUTPUT_DIR_CONSENSUS_SEQS + "{sample}_N-filt_cov_ge_100.fa",
+        filt_consensus_minus_filt_ge_1= OUTPUT_DIR_CONSENSUS_SEQS + "{sample}_minus-filt_cov_ge_1.fa",
+        filt_consensus_minus_filt_ge_5= OUTPUT_DIR_CONSENSUS_SEQS + "{sample}_minus-filt_cov_ge_5.fa",
+        filt_consensus_minus_filt_ge_10= OUTPUT_DIR_CONSENSUS_SEQS + "{sample}_minus-filt_cov_ge_10.fa",
+        filt_consensus_minus_filt_ge_30= OUTPUT_DIR_CONSENSUS_SEQS + "{sample}_minus-filt_cov_ge_30.fa",
+        filt_consensus_minus_filt_ge_100= OUTPUT_DIR_CONSENSUS_SEQS + "{sample}_minus-filt_cov_ge_100.fa",
     conda:
         CONDA_ENVS_DIR + "RA_ref_alignment.yaml"
     benchmark:
@@ -348,11 +350,12 @@ rule RA_extract_clean_consensus:
     log:
         OUTPUT_DIR_LOGS + "RA_extract_clean_consensus_{sample}.log"
     params:
-        output_folder= OUTPUT_DIR_CONSENSUS_FILT,
+        output_data_folder= OUTPUT_DIR_CONSENSUS_FILT,
+        output_results_folder= OUTPUT_DIR_CONSENSUS_SEQS
     shell:
         """
 bash bin/scripts/RA_consensus_at_diff_coverages.sh {wildcards.sample} {input.bam} {input.reference} {input.raw_consensus} \
-{params.output_folder} {log} >> {log} 2>&1
+{params.output_data_folder} {params.output_results_folder} {log} >> {log} 2>&1
         """
 
 

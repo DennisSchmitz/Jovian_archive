@@ -17,11 +17,16 @@ INPUT_SAMPLE_NAME="$1"
 INPUT_BAM="$2"
 INPUT_REFERENCE="$3"
 INPUT_RAW_CONSENSUS="$4"
-OUTPUT_FOLDER="$5"
-LOG_FILE="$6"
+OUTPUT_FOLDER_DATA="$5"
+OUTPUT_FOLDER_RESULTS="$6"
+LOG_FILE="$7"
 
-OUTPUT_BASENAME="${OUTPUT_FOLDER}/${INPUT_SAMPLE_NAME}"
-OUTPUT_BEDGRAPH="${OUTPUT_BASENAME}.bedgraph"
+OUTPUT_BASENAME_DATA="${OUTPUT_FOLDER_DATA}/${INPUT_SAMPLE_NAME}"
+OUTPUT_BEDGRAPH="${OUTPUT_BASENAME_DATA}.bedgraph"
+OUTPUT_BASENAME_RESULTS="${OUTPUT_FOLDER_RESULTS}/${INPUT_SAMPLE_NAME}"
+
+# Make the empty output dir:
+mkdir -p ${OUTPUT_FOLDER_RESULTS}
 
 #####################################################################################################################
 ### Define function                                                                                               ###
@@ -29,12 +34,11 @@ OUTPUT_BEDGRAPH="${OUTPUT_BASENAME}.bedgraph"
 
 function consensus_at_variable_cov_threshold {
     local coverage_threshold="$1"
-    local output_bed="${OUTPUT_BASENAME}_cov_ge_${coverage_threshold}.bed"
-    local output_bed="${OUTPUT_BASENAME}_cov_ge_${coverage_threshold}.bed"
-    local consensus_N_filt_tmp="${OUTPUT_BASENAME}_N-filt_cov_ge_${coverage_threshold}.tmp"
-    local consensus_N_filt="${OUTPUT_BASENAME}_N-filt_cov_ge_${coverage_threshold}.fa"
-    local consensus_minus_filt_tmp="${OUTPUT_BASENAME}_minus-filt_cov_ge_${coverage_threshold}.tmp"
-    local consensus_minus_filt="${OUTPUT_BASENAME}_minus-filt_cov_ge_${coverage_threshold}.fa"
+    local output_bed="${OUTPUT_BASENAME_DATA}_cov_ge_${coverage_threshold}.bed"
+    local consensus_N_filt_tmp="${OUTPUT_BASENAME_RESULTS}_N-filt_cov_ge_${coverage_threshold}.tmp"
+    local consensus_N_filt="${OUTPUT_BASENAME_RESULTS}_N-filt_cov_ge_${coverage_threshold}.fa"
+    local consensus_minus_filt_tmp="${OUTPUT_BASENAME_RESULTS}_minus-filt_cov_ge_${coverage_threshold}.tmp"
+    local consensus_minus_filt="${OUTPUT_BASENAME_RESULTS}_minus-filt_cov_ge_${coverage_threshold}.fa"
 
     # From the bedgraph, extract the regions that do NOT match the coverage threshold. These will be masked/filtered later on.
     gawk -v threshold="${coverage_threshold}" '$4 < threshold' ${OUTPUT_BEDGRAPH} > ${output_bed}
