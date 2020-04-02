@@ -71,7 +71,8 @@ cat << EOF >> ${OUTPUT_HTML}
                             indexURL: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/${INPUT_SORTED_BAM}.bai",
                             indexed: "true",
                             name: "Alignment",
-                            showSoftClips: true,
+                            showSoftClips: false,
+                            viewAsPairs: true,
                             order: 3
                         },
                         {
