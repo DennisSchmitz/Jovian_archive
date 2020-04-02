@@ -523,7 +523,7 @@ onsuccess:
         fi
 
         echo -e "\tCreating symlinks for the interactive genome viewer..."
-        bin/scripts/set_symlink.sh
+        bash bin/scripts/set_symlink.sh
 
         echo -e "\tGenerating Snakemake report..."
         snakemake -s bin/Ref_alignment.smk --unlock --config config --config reference={REFERENCE}

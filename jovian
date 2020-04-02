@@ -438,6 +438,9 @@ elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" ] && [ "${REFERENCE_FASTA##*.}" != "fa
     exit 1
 elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" ]; then #? If REFERENCE_ALIGNMENT is TRUE, start RA.smk and exit with exit-code 0...
     echo -e "Starting optional reference alignment extension"
+    # Starting nginx for IGVjs viz. In core pipeline this is started from report-jup. But since we don't have that for the extension, do it like this:
+    echo -e "\nChecking if nginx needs to be activated..."
+    (bin/includes/Start_nginx start)
     set +ue #turn off bash strict mode because snakemake and conda don't work in strict mode
     snakemake -s bin/Ref_alignment.smk --profile "${PROFILE}" --config reference="${REFERENCE_FASTA}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
     set -ue #turn bash strict mode back on
