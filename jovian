@@ -239,7 +239,7 @@ if ! bash bin/includes/Install_jovian-master; then
     exit 1
 else
     set -o allexport
-    source activate "${MASTER_NAME}"
+    conda activate "${MASTER_NAME}"
     set +o allexport
     echo -e "Successfully activated Jovian_master environment"
 fi

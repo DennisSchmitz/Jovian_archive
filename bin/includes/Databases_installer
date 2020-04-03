@@ -180,7 +180,7 @@ if [ "${PATHING_SINGLE}" == "TRUE" ]; then
 
             cat << EOF > ~/database-updater.sh
 #!/bin/bash
-source activate Jovian_helper
+conda activate Jovian_helper
 
 ### Updating BLAST taxdb
 cd "${DB_PATH_TAX}" || exit 1
@@ -347,7 +347,7 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
 
             cat << EOF > ~/database-updater.sh
 #!/bin/bash
-source activate Jovian_helper
+conda activate Jovian_helper
 
 ### Updating BLAST taxdb
 cd "${DB_PATH_TAX}" || exit 1

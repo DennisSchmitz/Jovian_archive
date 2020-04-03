@@ -13,7 +13,7 @@ if [[ $PATH != *${MASTER_NAME}* ]]; then
     set +ue # Turn bash strict mode off because that breaks conda
     
     
-    if ! source activate "${MASTER_NAME}"; then
+    if ! conda activate "${MASTER_NAME}"; then
     
     #? Attempt to activate master conda env, if exit statement is not 0, i.e. master conda env hasn't been installed yet, do...
     
@@ -23,7 +23,7 @@ if [[ $PATH != *${MASTER_NAME}* ]]; then
     
             echo -e "\tInstalling Jovian master environment..." | tee -a ${INSTALL_LOG}   
             conda env create -f ${PATH_JOVIAN_MASTER_YAML} | tee -a ${INSTALL_LOG} # Create the env from the specified yaml file
-            source activate "${MASTER_NAME}"
+            conda activate "${MASTER_NAME}"
             echo -e "DONE"
     
         else
@@ -35,7 +35,7 @@ if [[ $PATH != *${MASTER_NAME}* ]]; then
                 if [[ "${envanswer}" =~ ^(yes|y)$ ]]; then
                     echo -e "\tInstalling Jovian master environment..." | tee -a ${INSTALL_LOG}   
                     conda env create -f ${PATH_JOVIAN_MASTER_YAML} | tee -a ${INSTALL_LOG} # Create the env from the specified yaml file
-                    source activate "${MASTER_NAME}"
+                    conda activate "${MASTER_NAME}"
                     echo -e "DONE"
                     break
                 
