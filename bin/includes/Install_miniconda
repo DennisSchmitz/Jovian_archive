@@ -43,9 +43,14 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
         ### conda has been installed by previous step, confirm addition to PATH
         echo -e "Conda is installed but not yet added to PATH, do you wish to add conda to your PATH?"
         if [ "${SKIP_CONFIRMATION}" == "TRUE" ]; then
-            echo "PATH=$PATH:${HOME}/tmp/Miniconda3/bin" >> "${HOME}/.bashrc" | tee -a ${INSTALL_LOG}
-            source "${HOME}"/.bashrc | tee -a ${INSTALL_LOG}
             export PATH=${HOME}/tmp/Miniconda3/bin:$PATH
+            conda init bash | tee -a ${INSTALL_LOG}
+            echo "export -f conda" >> "${HOME}"/.bashrc
+            echo "export -f __conda_activate" >> "${HOME}"/.bashrc
+            echo "export -f __conda_reactivate" >> "${HOME}"/.bashrc
+            echo "export -f __conda_hashr" >> "${HOME}"/.bashrc
+            echo "export -f __add_sys_prefix_to_path" >> "${HOME}"/.bashrc
+            source "${HOME}"/.bashrc | tee -a ${INSTALL_LOG}
             tput reset
             line
             installer_intro
@@ -55,9 +60,14 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
             do
                 answer=${answer,,}
                 if [[ "${answer}" =~ ^(yes|y)$ ]]; then
-                    echo "PATH=$PATH:${HOME}/tmp/Miniconda3/bin" >> "${HOME}/.bashrc" | tee -a ${INSTALL_LOG}
-                    source "${HOME}"/.bashrc | tee -a ${INSTALL_LOG}
                     export PATH=${HOME}/tmp/Miniconda3/bin:$PATH
+                    conda init bash | tee -a ${INSTALL_LOG}
+                    echo "export -f conda" >> "${HOME}"/.bashrc
+                    echo "export -f __conda_activate" >> "${HOME}"/.bashrc
+                    echo "export -f __conda_reactivate" >> "${HOME}"/.bashrc
+                    echo "export -f __conda_hashr" >> "${HOME}"/.bashrc
+                    echo "export -f __add_sys_prefix_to_path" >> "${HOME}"/.bashrc
+                    source "${HOME}"/.bashrc | tee -a ${INSTALL_LOG}
                     tput reset
                     line
                     installer_intro
