@@ -94,6 +94,8 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
         echo -e "If you wish to use conda then it might be necessary to restart your terminal session"
         source "${HOME}"/.bashrc
 
+        conda config --set channel_priority false
+        
         echo -e "\n\nContinuing..."
         sleep 5
 
