@@ -229,7 +229,7 @@ if ! bash bin/includes/Install_miniconda; then
     exit 1
 fi
 
-if [ ! -e "${HOME}/tmp/Miniconda3" ]; then
+if [ -e "${HOME}/tmp/Miniconda3" ]; then
     set -o allexport
     source "${HOME}"/.jovianrc
     set +o allexport
