@@ -1,4 +1,4 @@
-#!/bin/bash -i
+#!/usr/bin/env bash
 # shellcheck disable=SC1091
 
 if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. the `conda` command is not available), if true, install it in ~/tmp. Otherwise, proceed.

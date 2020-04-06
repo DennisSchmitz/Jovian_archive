@@ -1,4 +1,4 @@
-#!/bin/bash -i
+#!/usr/bin/env bash
 ############################################################################################################
 ### Authors:                                                                                             ###
 ###     Dennis Schmitz, Sam Nooij, Florian Zwagemaker, Robert Verhagen,                                  ###

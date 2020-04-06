@@ -1,4 +1,4 @@
-#!/bin/bash -i
+#!/usr/bin/env bash
 # shellcheck disable=SC1091
 
 ### Install Jovian_master if it doesn't already exist, verify by activating master env in this nested shell.
