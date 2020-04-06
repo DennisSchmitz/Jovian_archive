@@ -26,26 +26,6 @@ Funding:
 """
 
 
-"""
-#TODO:
-#! Bug? the GC-contents track on IGVjs don't load. Same in the core workflow... weird.
-- realign against new consensus? or too slow?
-- Maybe MM2 is a better/faster aligner?
-- Make a multiple alignment of all contigs/scaffolds versus the ref-alignment method as a double check!
-   - the scaffolds then also need to be put in the proper orientation for MA to work.
-- Simplify code with https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#the-multiext-function
-- Add Ti/Tv ratio to BoC rule? Transitions versus transversions?
-- See tips for improving variant filtering here: https://github.com/samtools/bcftools/wiki/HOWTOs#consensus-calling
-- See tips for improving variant filtering in mail Jeroen EMC, 20200323
-- Remove unneeded temp/intermediate files
-    - Via onSucces clause
-- Voeg de nieuwe consensus ook toe aan de IGVjs overview! --> update: kan niet --> upd: kan het wel als een nieuwe "scaffold" toevoegen // dropdown menu
-#TODO Onderstaande is ook handig voor Jovian zelf
-- Verwijzen naar de output van een andere rule: https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#rule-dependencies
-- For JupyterNotebook integration: https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#jupyter-notebook-integration
-"""
-
-
 #@################################################################################
 #@#### Import config file, sample_sheet and set output folder names          #####
 #@################################################################################
