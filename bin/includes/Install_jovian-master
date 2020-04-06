@@ -19,7 +19,7 @@ if [[ $PATH != *${MASTER_NAME}* ]]; then
     
     #? Attempt to activate master conda env, if exit statement is not 0, i.e. master conda env hasn't been installed yet, do...
     
-
+        installer_intro
     
         if [ "${SKIP_CONFIRMATION}" = "TRUE" ]; then
     

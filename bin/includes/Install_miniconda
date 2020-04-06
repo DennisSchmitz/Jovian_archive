@@ -4,7 +4,7 @@
 if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. the `conda` command is not available), if true, install it in ~/tmp. Otherwise, proceed.
     if [ ! -e "${HOME}/tmp/Miniconda3" ]; then
         ### confirmation of conda installation
-
+        installer_intro
         echo -e "Miniconda missing. Installing Miniconda can take up to 15 minutes..."
         if [ "${SKIP_CONFIRMATION}" == "TRUE" ]; then
             echo "Jovian ${VERSION}" > ${INSTALL_LOG}
@@ -13,8 +13,8 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
             chmod +x latest.sh
             sh latest.sh -b -p "${HOME}/tmp/Miniconda3" | tee -a ${INSTALL_LOG}
             rm latest.sh
-
-
+            tput reset
+            installer_intro
         else
             while read -r -p "Do you wish to install (mini)conda now? [y/N] " response
             do
@@ -31,8 +31,8 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
                     chmod +x latest.sh
                     sh latest.sh -b -p "${HOME}/tmp/Miniconda3" | tee -a ${INSTALL_LOG}
                     rm latest.sh
-
-
+                    tput reset
+                    installer_intro
                     break
                 else
                     echo -e "Please answer with 'yes' or 'no'"
@@ -73,7 +73,7 @@ EOF
         echo -e "\n\nContinuing..."
         sleep 5
 
-
+        installer_intro
         line
         spacer
     fi
