@@ -15,7 +15,6 @@ SHOULD_I_EXIT="NO"
 
 #> folders
 BLASTNT="${db_installeranswers_BLASTNT}"
-BLASTNR="${db_installeranswers_BLASTNR}"
 NCBITAXDB="${db_installeranswers_NCBITAXDB}"
 KRONA="${db_installeranswers_kronataxonomy}"
 MGKIT="${db_installeranswers_mgkittaxonomy}"
@@ -34,14 +33,6 @@ if [ -d "${BLASTNT}" ]; then
 	no_response
 else
 	echo -e "The folder \033[1m${BLASTNT}\033[0m, which was specified during installation, does not exist."
-	echo -e "Please reconfigure the required databases with \033[1mbash jovian --db-reset\033[0m"
-	SHOULD_I_EXIT="YES"
-fi
-
-if [ -d "${BLASTNR}" ]; then
-	no_response
-else
-	echo -e "The folder \033[1m${BLASTNR}\033[0m, which was specified during installation, does not exist."
 	echo -e "Please reconfigure the required databases with \033[1mbash jovian --db-reset\033[0m"
 	SHOULD_I_EXIT="YES"
 fi
