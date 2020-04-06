@@ -227,11 +227,11 @@ fi
 ###> Runs if the command "conda" is not recognised by the host AND if the "~/tmp/miniconda3" path is non-existant
 if ! bash bin/includes/Install_miniconda; then
     exit 1
+else
+    set -o allexport
+    source "${HOME}"/.jovianrc
+    set +o allexport
 fi
-
-set -o allexport
-source "${HOME}"/.bashrc
-set +o allexport
 
 ###> Installer for Jovian_master environment.
 ###> Runs if the master environment is not active (in path) and is not installed either. Activates environment on finish

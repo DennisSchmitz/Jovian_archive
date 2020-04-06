@@ -43,15 +43,28 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
         ### conda has been installed by previous step, confirm addition to PATH
         echo -e "Conda is installed but not yet added to PATH, do you wish to add conda to your PATH?"
         if [ "${SKIP_CONFIRMATION}" == "TRUE" ]; then
-            export PATH=${HOME}/tmp/Miniconda3/bin:$PATH
-            conda init bash | tee -a ${INSTALL_LOG}
-            echo "export -f conda" >> "${HOME}"/.bashrc
-            echo "export -f __conda_activate" >> "${HOME}"/.bashrc
-            echo "export -f __conda_reactivate" >> "${HOME}"/.bashrc
-            echo "export -f __conda_hashr" >> "${HOME}"/.bashrc
-            echo "export -f __add_sys_prefix_to_path" >> "${HOME}"/.bashrc
-            source "${HOME}"/.bashrc | tee -a ${INSTALL_LOG}
+            touch "${HOME}"/.jovianrc
+            cat << EOF >> "${HOME}"/.jovianrc
+__conda_setup="$('${HOME}/tmp/Miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "${HOME}/tmp/Miniconda3/etc/profile.d/conda.sh" ]; then
+        . "${HOME}/tmp/Miniconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="${HOME}/tmp/Miniconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
 
+export -f conda
+export -f __conda_activate
+export -f __conda_reactivate
+export -f __conda_hashr
+export -f __add_sys_prefix_to_path
+
+EOF
+            source "${HOME}"/.jovianrc
             line
 
             echo -e "Conda succesfully added to PATH"
@@ -60,15 +73,29 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
             do
                 answer=${answer,,}
                 if [[ "${answer}" =~ ^(yes|y)$ ]]; then
-                    export PATH=${HOME}/tmp/Miniconda3/bin:$PATH
-                    conda init bash | tee -a ${INSTALL_LOG}
-                    echo "export -f conda" >> "${HOME}"/.bashrc
-                    echo "export -f __conda_activate" >> "${HOME}"/.bashrc
-                    echo "export -f __conda_reactivate" >> "${HOME}"/.bashrc
-                    echo "export -f __conda_hashr" >> "${HOME}"/.bashrc
-                    echo "export -f __add_sys_prefix_to_path" >> "${HOME}"/.bashrc
-                    source "${HOME}"/.bashrc | tee -a ${INSTALL_LOG}
+                    touch "${HOME}"/.jovianrc
+                    cat << EOF >> "${HOME}"/.jovianrc
+__conda_setup="$('${HOME}/tmp/Miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "${HOME}/tmp/Miniconda3/etc/profile.d/conda.sh" ]; then
+        . "${HOME}/tmp/Miniconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="${HOME}/tmp/Miniconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
 
+export -f conda
+export -f __conda_activate
+export -f __conda_reactivate
+export -f __conda_hashr
+export -f __add_sys_prefix_to_path
+
+EOF
+
+                    source "${HOME}"/.jovianrc
                     line
 
                     echo -e "Conda succesfully added to PATH"
@@ -92,7 +119,7 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
         echo -e "\n"
         echo -e "Installation of Conda is done"
         echo -e "If you wish to use conda then it might be necessary to restart your terminal session"
-        source "${HOME}"/.bashrc
+        source "${HOME}"/.jovianrc
 
         conda config --set channel_priority false
 
