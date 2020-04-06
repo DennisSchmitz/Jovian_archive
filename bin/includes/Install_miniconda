@@ -40,11 +40,9 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
                 fi
             done
         fi
-        ### conda has been installed by previous step, confirm addition to PATH
-        echo -e "Conda is installed but not yet added to PATH, do you wish to add conda to your PATH?"
-        if [ "${SKIP_CONFIRMATION}" == "TRUE" ]; then
-            touch "${HOME}"/.jovianrc
-            cat << EOF >> "${HOME}"/.jovianrc
+
+    touch "${HOME}"/.jovianrc
+    cat << EOF >> "${HOME}"/.jovianrc
 __conda_setup="$('${HOME}/tmp/Miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
 if [ $? -eq 0 ]; then
     eval "$__conda_setup"
@@ -64,57 +62,6 @@ export -f __conda_hashr
 export -f __add_sys_prefix_to_path
 
 EOF
-            source "${HOME}"/.jovianrc
-            line
-
-            echo -e "Conda succesfully added to PATH"
-        else
-            while read -r -p "The conda PATH will be added to your ~/.bashrc and will only affect you. [y/N] " answer
-            do
-                answer=${answer,,}
-                if [[ "${answer}" =~ ^(yes|y)$ ]]; then
-                    touch "${HOME}"/.jovianrc
-                    cat << EOF >> "${HOME}"/.jovianrc
-__conda_setup="$('${HOME}/tmp/Miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "${HOME}/tmp/Miniconda3/etc/profile.d/conda.sh" ]; then
-        . "${HOME}/tmp/Miniconda3/etc/profile.d/conda.sh"
-    else
-        export PATH="${HOME}/tmp/Miniconda3/bin:$PATH"
-    fi
-fi
-unset __conda_setup
-
-export -f conda
-export -f __conda_activate
-export -f __conda_reactivate
-export -f __conda_hashr
-export -f __add_sys_prefix_to_path
-
-EOF
-
-                    source "${HOME}"/.jovianrc
-                    line
-
-                    echo -e "Conda succesfully added to PATH"
-                    break
-                elif [[ "${answer}" =~ ^(no|n)$ ]]; then
-                    export PATH=${HOME}/tmp/Miniconda3/bin:$PATH | tee -a ${INSTALL_LOG}
-
-                    line
-
-                    line
-                    spacer
-                    echo -e "Conda has not been permanently added to PATH, this means you cannot use the conda command once this session closes."
-                    break
-                else
-                    echo -e "Please answer with 'yes' or 'no'"
-                    minispacer
-                fi
-            done
-        fi
     
         echo -e "\n"
         echo -e "Installation of Conda is done"
