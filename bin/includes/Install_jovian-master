@@ -4,6 +4,8 @@
 ### Install Jovian_master if it doesn't already exist, verify by activating master env in this nested shell.
 ### On succes, activate master env in real shell with an allexport
 
+source "${HOME}"/.bashrc
+
 if [[ $PATH != *${MASTER_NAME}* ]]; then 
 
 #? If the master environment is not in your path (i.e. it is not currently active), do...
