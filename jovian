@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -i
 ############################################################################################################
 ### Authors:                                                                                             ###
 ###     Dennis Schmitz, Sam Nooij, Florian Zwagemaker, Robert Verhagen,                                  ###
