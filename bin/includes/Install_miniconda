@@ -4,7 +4,7 @@
 if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. the `conda` command is not available), if true, install it in ~/tmp. Otherwise, proceed.
     if [ ! -e "${HOME}/tmp/Miniconda3" ]; then
         ### confirmation of conda installation
-        installer_intro
+
         echo -e "Miniconda missing. Installing Miniconda can take up to 15 minutes..."
         if [ "${SKIP_CONFIRMATION}" == "TRUE" ]; then
             echo "Jovian ${VERSION}" > ${INSTALL_LOG}
@@ -13,8 +13,8 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
             chmod +x latest.sh
             sh latest.sh -b -p "${HOME}/tmp/Miniconda3" | tee -a ${INSTALL_LOG}
             rm latest.sh
-            tput reset
-            installer_intro
+
+
         else
             while read -r -p "Do you wish to install (mini)conda now? [y/N] " response
             do
@@ -31,8 +31,8 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
                     chmod +x latest.sh
                     sh latest.sh -b -p "${HOME}/tmp/Miniconda3" | tee -a ${INSTALL_LOG}
                     rm latest.sh
-                    tput reset
-                    installer_intro
+
+
                     break
                 else
                     echo -e "Please answer with 'yes' or 'no'"
@@ -51,9 +51,9 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
             echo "export -f __conda_hashr" >> "${HOME}"/.bashrc
             echo "export -f __add_sys_prefix_to_path" >> "${HOME}"/.bashrc
             source "${HOME}"/.bashrc | tee -a ${INSTALL_LOG}
-            tput reset
+
             line
-            installer_intro
+
             echo -e "Conda succesfully added to PATH"
         else
             while read -r -p "The conda PATH will be added to your ~/.bashrc and will only affect you. [y/N] " answer
@@ -68,16 +68,16 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
                     echo "export -f __conda_hashr" >> "${HOME}"/.bashrc
                     echo "export -f __add_sys_prefix_to_path" >> "${HOME}"/.bashrc
                     source "${HOME}"/.bashrc | tee -a ${INSTALL_LOG}
-                    tput reset
+
                     line
-                    installer_intro
+
                     echo -e "Conda succesfully added to PATH"
                     break
                 elif [[ "${answer}" =~ ^(no|n)$ ]]; then
                     export PATH=${HOME}/tmp/Miniconda3/bin:$PATH | tee -a ${INSTALL_LOG}
-                    tput reset
+
                     line
-                    installer_intro
+
                     line
                     spacer
                     echo -e "Conda has not been permanently added to PATH, this means you cannot use the conda command once this session closes."
@@ -95,11 +95,11 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
         source "${HOME}"/.bashrc
 
         conda config --set channel_priority false
-        
+
         echo -e "\n\nContinuing..."
         sleep 5
 
-        installer_intro
+
         line
         spacer
     fi
