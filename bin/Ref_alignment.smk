@@ -66,6 +66,7 @@ OUTPUT_DIR_CONSENSUS_RAW = OUTPUT_BASE_DIR + "consensus_seqs/raw/"
 OUTPUT_DIR_CONSENSUS_FILT = OUTPUT_BASE_DIR + "consensus_seqs/"
 OUTPUT_DIR_BOC_ANALYSIS = OUTPUT_BASE_DIR + "BoC_analysis/"
 OUTPUT_DIR_IGVjs = OUTPUT_BASE_DIR + "html/"
+OUTPUT_DIR_GATK = OUTPUT_BASE_DIR + "gatk/"
 
 # Set output dir of results
 OUTPUT_DIR_RESULTS = OUTPUT_BASE_DIR + "results/"
@@ -90,12 +91,13 @@ localrules:
     RA_determine_BoC_at_diff_cov_thresholds,
     RA_concat_BoC_metrics,
     RA_HTML_IGVJs_variable_parts,
-    RA_HTML_IGVJs_generate_final
+    RA_HTML_IGVJs_generate_final,
+    RA_gatk_read_group_preprocessing
 
 rule all:
     input:
         expand("data/cleaned_fastq/{sample}_{read}.fq", sample = SAMPLES, read = [ 'pR1', 'pR2', 'unpaired' ]), # Extract unmapped & paired reads AND unpaired from HuGo alignment; i.e. cleaned fastqs #TODO omschrijven naar betere smk syntax
-        expand("{out}{ref_basename}{extension}", out = OUTPUT_DIR_REFERENCE, ref_basename = REFERENCE_BASENAME, extension = [ '.fasta', '.fasta.1.bt2', '.fasta.fai', '.fasta.sizes', '.windows', '_GC.bedgraph' ]), # Copy of the reference file (for standardization and easy logging), bowtie2-indices (I've only specified one, but the "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2" and "rev.2.bt2" are implicitly generated) and the GC-content files.
+        expand("{out}{ref_basename}{extension}", out = OUTPUT_DIR_REFERENCE, ref_basename = REFERENCE_BASENAME, extension = [ '.fasta', '.fasta.1.bt2', '.dict', '.fasta.fai', '.fasta.sizes', '.windows', '_GC.bedgraph' ]), # Copy of the reference file (for standardization and easy logging), bowtie2-indices (I've only specified one, but the "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2" and "rev.2.bt2" are implicitly generated) and the GC-content files.
         expand("{out}{sample}_sorted.{extension}", out = OUTPUT_DIR_ALIGNMENT, sample = SAMPLES, extension = [ 'bam', 'bam.bai' ]), # The reference alignment (bam format) files.
         expand("{out}{sample}_{extension}", out = OUTPUT_DIR_CONSENSUS_RAW, sample = SAMPLES, extension = [ 'calls.vcf.gz', 'raw_consensus.fa' ]), # A zipped vcf file contained SNPs versus the given reference and a RAW consensus sequence, see explanation below for the meaning of RAW.
         expand("{out}{sample}.bedgraph", out = OUTPUT_DIR_CONSENSUS_FILT, sample = SAMPLES), # Lists the coverage of the alignment against the reference in a bedgraph format, is used to determine the coverage mask files below.
@@ -106,6 +108,7 @@ rule all:
         expand("{out}{ref_basename}_{extension}", out = OUTPUT_DIR_REFERENCE, ref_basename = REFERENCE_BASENAME , sample = SAMPLES, extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi' ]), # Prodigal ORF prediction output, required for the IGVjs visualisation
         OUTPUT_IGVjs_HTML, # IGVjs output html
         OUTPUT_MULTIQC_REPORT, # MultiQC report
+        expand("{out}{sample}_{extension}", out = OUTPUT_DIR_GATK, sample = SAMPLES, extension = [ 'sorted_gatk.bam', 'sorted_gatk.bai' , 'gatk_MarkDup.metrics', 'gatk_MarkDup.bam', 'gatk_MarkDup.bai', 'gatk.vcf', 'gatk.vcf.gz', 'gatk.fa' ]) # GATK update JvR
 
 
 #@################################################################################
@@ -146,6 +149,7 @@ rule RA_index_reference:
     output:
         reference_copy= OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + ".fasta",
         reference_index= OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + ".fasta.1.bt2", # I've only specified ".fasta.1.bt2", but the "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2" and "rev.2.bt2" are implicitly generated. #TODO find a way to specify all output correctly (multiext snakemake syntax?)
+        reference_gatk_dict= OUTPUT_DIR_REFERENCE + REFERENCE_BASENAME + ".dict",
     conda:
         CONDA_ENVS_DIR + "RA_ref_alignment.yaml"
     benchmark:
@@ -157,6 +161,7 @@ rule RA_index_reference:
         """
 cat {input.reference} | seqtk seq - > {output.reference_copy}
 bowtie2-build --threads {threads} {output.reference_copy} {output.reference_copy} >> {log} 2>&1
+gatk CreateSequenceDictionary -R {output.reference_copy} >> {log} 2>&1
         """
 
 
@@ -262,24 +267,98 @@ samtools index -@ {threads} {output.sorted_bam} >> {log} 2>&1
 
 
 ##################################################################################################################################
-# The rule below overwrites nucleotides in the ref based on the input reads and creates a RAW consensus sequence, RAW means:
-#### A consensus genome is generated even if there is 0 coverage. At positions where no reads aligned it just takes
-#### the reference nucleotide and inserts that into the consensus fasta. Obviously, this is not desirable and prone
-#### to misinterpretation! Therefore, in a rule below, all positions with a coverage of 0 are masked, i.e. nucleotides
-#### at that position are replaced with "N" or "-". Both replacements are made, since many aligners can handle gaps ("-")
-#### but they cannot handle N's. However, the file with N's can be used to check for indels since this cannot be seen
-#### in the file where every missing nucleotide is replaced with a "-".
+# JvR update
 ##################################################################################################################################
-#? This code cannot easily be made multithreaded for monopartite sequences, see https://github.com/samtools/bcftools/issues/949
-#? If we ever get additional time later we can probably look into splitting it up, but now there is no time.
-##################################################################################################################################
-#? You will get deprecation warning saying 'samtools mpileup option `u` is functional, but deprecated' and that you should
-#? use bcftools mpileup instead. I've tried this on 20200322 with 'bcftools mpileup -d 8000 -O u -f reference.fasta input.bam',
-#? the -d 8000 is to be identical to the samtools default settings (bcftools default is 250) and -O u is to give it the same
-#? output as the samtools output: there was a difference in SNP calling between the two (bcftools did not call one SNP that
-#? samtools did). So I'm reluctant to change it. Leaving this here for an eventual later update.
-#? Versions used: samtools 1.10 and bcftools 1.10 (also see https://github.com/samtools/bcftools/issues/852 )
-##################################################################################################################################
+
+
+#TODO jovian verion includeren in de SAM/BAM header velden?
+#TODO uitzoeken of niet gewoon de .bam.bai van samtools gebruikt kan worden? Dan kan '-CREATE_INDEX TRUE' verwijderd worden.
+rule RA_gatk_read_group_preprocessing:
+    input:
+        bam= rules.RA_align_to_reference.output.sorted_bam,
+    output:
+        preprocessed_bam= OUTPUT_DIR_GATK + "{sample}_sorted_gatk.bam",
+        preprocessed_bam_bai= OUTPUT_DIR_GATK + "{sample}_sorted_gatk.bai"
+    conda:
+        CONDA_ENVS_DIR + "RA_ref_alignment.yaml"
+    benchmark:
+        OUTPUT_DIR_BENCHMARKS + "RA_gatk_read_group_preprocessing_{sample}.txt"
+    threads: 1
+    log:
+        OUTPUT_DIR_LOGS + "RA_gatk_read_group_preprocessing_{sample}.log"
+    params:
+    shell: # Based on this post (https://gatkforums.broadinstitute.org/gatk/discussion/24304/the-importance-of-sorting-markduplicate-output-files) we can apparently skip the gatk SortSam. #TODO still discuss with JvR and test this. For now, I'll hold this as true and NOT include gatk SortSam.
+        """
+gatk AddOrReplaceReadGroups -I {input.bam} \
+-CREATE_INDEX TRUE \
+-RGID Jovian \
+-RGCN RIVM \
+-RGLB RIVM \
+-RGPL ILL \
+-RGPU Jovian \
+-RGSM {wildcards.sample} \
+-O {output.preprocessed_bam} >> {log} 2>&1
+        """
+
+
+rule RA_gatk_MarkDuplicates:
+    input:
+        bam= rules.RA_gatk_read_group_preprocessing.output.preprocessed_bam,
+        reference= rules.RA_index_reference.output.reference_copy
+    output:
+        metrics= OUTPUT_DIR_GATK + "{sample}_gatk_MarkDup.metrics",
+        bam_markdup= OUTPUT_DIR_GATK + "{sample}_gatk_MarkDup.bam",
+        bam_bai_markdup= OUTPUT_DIR_GATK + "{sample}_gatk_MarkDup.bai"
+    conda:
+        CONDA_ENVS_DIR + "RA_ref_alignment.yaml"
+    benchmark:
+        OUTPUT_DIR_BENCHMARKS + "RA_gatk_MarkDuplicates_{sample}.txt"
+    threads: 6 # it uses only one thread, however, this is done to not exceed the max RAM of the nodes (i.e. 26 jobs with 30GB RAM on one node)
+    log:
+        OUTPUT_DIR_LOGS + "RA_gatk_MarkDuplicates_{sample}.log"
+    params:
+    shell:
+        """
+gatk MarkDuplicates --java-options "-Xmx30G" \
+-CREATE_INDEX TRUE \
+-I {input.bam} \
+-R {input.reference} \
+-M {output.metrics} \
+-O {output.bam_markdup} >> {log} 2>&1
+        """
+
+
+rule RA_gatk_haplotypecaller_and_raw_consensus:
+    input:
+        bam= rules.RA_gatk_MarkDuplicates.output.bam_markdup,
+        reference= rules.RA_index_reference.output.reference_copy
+    output:
+        vcf= OUTPUT_DIR_GATK + "{sample}_gatk.vcf",
+        gzipped_vcf= OUTPUT_DIR_GATK + "{sample}_gatk.vcf.gz",
+        raw_consensus_fasta= OUTPUT_DIR_GATK + "{sample}_gatk.fa",
+    conda:
+        CONDA_ENVS_DIR + "RA_ref_alignment.yaml"
+    benchmark:
+        OUTPUT_DIR_BENCHMARKS + "RA_gatk_haplotypecaller_and_raw_consensus_{sample}.txt"
+    threads: 6 # it uses only one thread, however, this is done to not exceed the max RAM of the nodes (i.e. 26 jobs with 30GB RAM on one node)
+    log:
+        OUTPUT_DIR_LOGS + "RA_gatk_haplotypecaller_and_raw_consensus_{sample}.log"
+    params: # Set field below to `--disable-read-filter NotDuplicateReadFilter` to NOT remove duplicate-marked reads. Set this field to ``, i.e. empty, to REMOVE duplicate-makred reads. #TODO testen of dit idd goed werkt met een leeg veld.
+        remove_duplicate_reads= "--disable-read-filter NotDuplicateReadFilter" #TODO hier nog een if statement for schrijven in pure python i.c.m. een checker bovenaan deze snakemake om de juiste params te krijgen.
+    shell:
+        """
+gatk HaplotypeCaller --java-options "-Xmx30G" \
+-R {input.reference} \
+-I {input.bam} \
+--sample-ploidy 1 \
+{params.remove_duplicate_reads} \
+-O {output.vcf} >> {log} 2>&1
+bcftools view -O z -o {output.gzipped_vcf} {output.vcf} >> {log} 2>&1
+tabix {output.gzipped_vcf} >> {log} 2>&1
+bcftools consensus {output.gzipped_vcf} | seqtk seq - > {output.raw_consensus_fasta} 2>> {log}
+        """
+
+
 rule RA_extract_raw_consensus:
     input:
         bam= rules.RA_align_to_reference.output.sorted_bam,
