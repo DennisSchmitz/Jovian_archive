@@ -3,6 +3,8 @@ Authors:
     Dennis Schmitz, Sam Nooij, Florian Zwagemaker, Robert Verhagen,
     Jeroen Cremer, Thierry Janssens, Mark Kroon, Erwin van Wieringen,
     Annelies Kroneman, Harry Vennema, Marion Koopmans
+Acknowledgements:
+    Jeroen van Rooij, André Uitterlinden
 Organization:
     Rijksinstituut voor Volksgezondheid en Milieu (RIVM)
     Dutch Public Health institute (https://www.rivm.nl/en)
@@ -66,7 +68,13 @@ OUTPUT_DIR_CONSENSUS_RAW = OUTPUT_BASE_DIR + "consensus_seqs/raw/"
 OUTPUT_DIR_CONSENSUS_FILT = OUTPUT_BASE_DIR + "consensus_seqs/"
 OUTPUT_DIR_BOC_ANALYSIS = OUTPUT_BASE_DIR + "BoC_analysis/"
 OUTPUT_DIR_IGVjs = OUTPUT_BASE_DIR + "html/"
+
+# gatk JvR upd
 OUTPUT_DIR_GATK = OUTPUT_BASE_DIR + "gatk/"
+OUTPUT_DIR_GATK_CONSENSUS_FILT = OUTPUT_DIR_GATK + "consensus/"
+OUTPUT_DIR_GATK_BoC = OUTPUT_DIR_GATK + "BoC/"
+OUTPUT_DIR_GATK_IGVjs = OUTPUT_DIR_GATK + "html/"
+OUTPUT_GATK_IGVjs_HTML = OUTPUT_DIR_GATK + "igvjs.html"
 
 # Set output dir of results
 OUTPUT_DIR_RESULTS = OUTPUT_BASE_DIR + "results/"
@@ -92,7 +100,12 @@ localrules:
     RA_concat_BoC_metrics,
     RA_HTML_IGVJs_variable_parts,
     RA_HTML_IGVJs_generate_final,
-    RA_gatk_read_group_preprocessing
+    RA_gatk_read_group_preprocessing,
+    RA_gatk_determine_BoC_at_diff_cov_thresholds,
+    RA_gatk_concat_BoC_metrics,
+    RA_gatk_HTML_IGVJs_variable_parts,
+    RA_gatk_HTML_IGVJs_generate_final
+    
 
 rule all:
     input:
@@ -108,7 +121,13 @@ rule all:
         expand("{out}{ref_basename}_{extension}", out = OUTPUT_DIR_REFERENCE, ref_basename = REFERENCE_BASENAME , sample = SAMPLES, extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi' ]), # Prodigal ORF prediction output, required for the IGVjs visualisation
         OUTPUT_IGVjs_HTML, # IGVjs output html
         OUTPUT_MULTIQC_REPORT, # MultiQC report
-        expand("{out}{sample}_{extension}", out = OUTPUT_DIR_GATK, sample = SAMPLES, extension = [ 'sorted_gatk.bam', 'sorted_gatk.bai' , 'gatk_MarkDup.metrics', 'gatk_MarkDup.bam', 'gatk_MarkDup.bai', 'gatk.vcf', 'gatk.vcf.gz', 'gatk.fa' ]) # GATK update JvR
+        expand("{out}{sample}_{extension}", out = OUTPUT_DIR_GATK, sample = SAMPLES, extension = [ 'sorted_gatk.bam', 'sorted_gatk.bai' , 'gatk_MarkDup.metrics', 'gatk_MarkDup.bam', 'gatk_MarkDup.bai', 'gatk.vcf', 'gatk.vcf.gz', 'gatk.fa' ]), # GATK update JvR
+        expand("{out}{sample}.bedgraph", out = OUTPUT_DIR_GATK, sample = SAMPLES), # JvR upd
+        expand("{out}{sample}_{filt_character}-filt_cov_ge_{thresholds}.fa", out = OUTPUT_DIR_GATK_CONSENSUS_FILT, sample = SAMPLES, filt_character = [ 'N', 'minus' ], thresholds = [ '1', '5', '10', '30', '100' ]), # JvR upd
+        OUTPUT_DIR_GATK_BoC + "results/" + "BoC_integer.tsv", # JvR upd
+        OUTPUT_DIR_GATK_BoC + "results/" + "BoC_percentage.tsv", # JvR upd
+        expand("{out}{sample}_BoC{extension}", out = OUTPUT_DIR_GATK_BoC, sample = SAMPLES, extension = [ '_int.tsv', '_pct.tsv' ] ), # JvR upd #TODO can probably removed after the concat rule is added.
+        OUTPUT_GATK_IGVjs_HTML, # IGVjs output html
 
 
 #@################################################################################
@@ -267,7 +286,7 @@ samtools index -@ {threads} {output.sorted_bam} >> {log} 2>&1
 
 
 ##################################################################################################################################
-# JvR update
+# BEGIN JvR update
 ##################################################################################################################################
 
 
@@ -344,7 +363,7 @@ rule RA_gatk_haplotypecaller_and_raw_consensus:
     log:
         OUTPUT_DIR_LOGS + "RA_gatk_haplotypecaller_and_raw_consensus_{sample}.log"
     params: # Set field below to `--disable-read-filter NotDuplicateReadFilter` to NOT remove duplicate-marked reads. Set this field to ``, i.e. empty, to REMOVE duplicate-makred reads. #TODO testen of dit idd goed werkt met een leeg veld.
-        remove_duplicate_reads= "--disable-read-filter NotDuplicateReadFilter" #TODO hier nog een if statement for schrijven in pure python i.c.m. een checker bovenaan deze snakemake om de juiste params te krijgen.
+        remove_duplicate_reads= "" #TODO hier nog een if statement for schrijven in pure python i.c.m. een checker bovenaan deze snakemake om de juiste params te krijgen.
     shell:
         """
 gatk HaplotypeCaller --java-options "-Xmx30G" \
@@ -355,8 +374,168 @@ gatk HaplotypeCaller --java-options "-Xmx30G" \
 -O {output.vcf} >> {log} 2>&1
 bcftools view -O z -o {output.gzipped_vcf} {output.vcf} >> {log} 2>&1
 tabix {output.gzipped_vcf} >> {log} 2>&1
-bcftools consensus {output.gzipped_vcf} | seqtk seq - > {output.raw_consensus_fasta} 2>> {log}
+bcftools consensus -f {input.reference} {output.gzipped_vcf} | seqtk seq - > {output.raw_consensus_fasta} 2>> {log}
         """
+
+
+#TODO, dirty copy, just a proof-of-principle test
+###! lijkt te werken, 1e ruwe test
+#TODO kijken of dit multithreaded kan worden.
+rule RA_gatk_extract_clean_consensus:
+    input:
+        bam= rules.RA_gatk_MarkDuplicates.output.bam_markdup,
+        reference= rules.RA_index_reference.output.reference_copy,
+        raw_consensus= rules.RA_gatk_haplotypecaller_and_raw_consensus.output.raw_consensus_fasta, # Only needed for when there are no positions in the bed with a coverage of 0; in that case the RAW fasta is actually suitable for downstream processes and it is simply copied.
+    output:
+        bedgraph= OUTPUT_DIR_GATK + "{sample}.bedgraph",
+        filt_consensus_N_filt_ge_1= OUTPUT_DIR_GATK_CONSENSUS_FILT + "{sample}_N-filt_cov_ge_1.fa",
+        filt_consensus_N_filt_ge_5= OUTPUT_DIR_GATK_CONSENSUS_FILT + "{sample}_N-filt_cov_ge_5.fa",
+        filt_consensus_N_filt_ge_10= OUTPUT_DIR_GATK_CONSENSUS_FILT + "{sample}_N-filt_cov_ge_10.fa",
+        filt_consensus_N_filt_ge_30= OUTPUT_DIR_GATK_CONSENSUS_FILT + "{sample}_N-filt_cov_ge_30.fa",
+        filt_consensus_N_filt_ge_100= OUTPUT_DIR_GATK_CONSENSUS_FILT + "{sample}_N-filt_cov_ge_100.fa",
+        filt_consensus_minus_filt_ge_1= OUTPUT_DIR_GATK_CONSENSUS_FILT + "{sample}_minus-filt_cov_ge_1.fa",
+        filt_consensus_minus_filt_ge_5= OUTPUT_DIR_GATK_CONSENSUS_FILT + "{sample}_minus-filt_cov_ge_5.fa",
+        filt_consensus_minus_filt_ge_10= OUTPUT_DIR_GATK_CONSENSUS_FILT + "{sample}_minus-filt_cov_ge_10.fa",
+        filt_consensus_minus_filt_ge_30= OUTPUT_DIR_GATK_CONSENSUS_FILT + "{sample}_minus-filt_cov_ge_30.fa",
+        filt_consensus_minus_filt_ge_100= OUTPUT_DIR_GATK_CONSENSUS_FILT + "{sample}_minus-filt_cov_ge_100.fa",
+    conda:
+        CONDA_ENVS_DIR + "RA_ref_alignment.yaml"
+    benchmark:
+        OUTPUT_DIR_BENCHMARKS + "RA_gatk_extract_clean_consensus_{sample}.txt"
+    threads: 1
+    log:
+        OUTPUT_DIR_LOGS + "RA_gatk_extract_clean_consensus_{sample}.log"
+    params:
+        output_data_folder= OUTPUT_DIR_GATK,
+        output_results_folder= OUTPUT_DIR_GATK_CONSENSUS_FILT
+    shell:
+        """
+bash bin/scripts/RA_consensus_at_diff_coverages.sh {wildcards.sample} {input.bam} {input.reference} {input.raw_consensus} \
+{params.output_data_folder} {params.output_results_folder} {log} >> {log} 2>&1
+        """
+
+
+
+#TODO, dirty copy, just a proof-of-principle test
+###! identieke output als de andere workflow, maar dat is logisch, zelfde dingen worden uitgevoerd (dit zit erin om, afhankelijk van uitkomst deze test, dit later verder uit te breiden)#TODO make a python script or bash function/include to do this more efficiently, currently it's hacky, but it works
+rule RA_gatk_determine_BoC_at_diff_cov_thresholds:
+    input:
+        bedgraph= rules.RA_gatk_extract_clean_consensus.output.bedgraph,
+        reference= rules.RA_index_reference.output.reference_copy,
+    output:
+        percentage_BoC_tsv= OUTPUT_DIR_GATK_BoC + "{sample}_BoC_pct.tsv",
+        integer_BoC_tsv= OUTPUT_DIR_GATK_BoC + "{sample}_BoC_int.tsv",
+    conda:
+        CONDA_ENVS_DIR + "RA_ref_alignment.yaml"
+    benchmark:
+        OUTPUT_DIR_BENCHMARKS + "RA_gatk_determine_BoC_at_diff_cov_thresholds_{sample}.txt"
+    threads: 1
+    log:
+        OUTPUT_DIR_LOGS + "RA_gatk_determine_BoC_at_diff_cov_thresholds_{sample}.log"
+    params:
+    shell:
+        """
+bash bin/scripts/RA_BoC_analysis.sh {wildcards.sample} {input.bedgraph} {input.reference} \
+{output.percentage_BoC_tsv} {output.integer_BoC_tsv} >> {log} 2>&1
+        """
+
+
+
+#TODO, dirty copy, just a proof-of-principle test
+###! identieke output als de andere workflow, maar dat is logisch, zelfde dingen worden uitgevoerd (dit zit erin om, afhankelijk van uitkomst deze test, dit later verder uit te breiden)
+rule RA_gatk_concat_BoC_metrics:
+    input:
+        BoC_int_tsv= expand("{out}{sample}_BoC_int.tsv", out = OUTPUT_DIR_GATK_BoC, sample = SAMPLES),
+        BoC_pct_tsv= expand("{out}{sample}_BoC_pct.tsv", out = OUTPUT_DIR_GATK_BoC, sample = SAMPLES),
+    output:
+        combined_BoC_int_tsv= OUTPUT_DIR_GATK_BoC + "results/" + "BoC_integer.tsv",
+        combined_BoC_pct_tsv= OUTPUT_DIR_GATK_BoC + "results/" + "BoC_percentage.tsv",
+    conda:
+        CONDA_ENVS_DIR + "RA_ref_alignment.yaml"
+    benchmark:
+        OUTPUT_DIR_BENCHMARKS + "RA_gatk_concat_BoC_metrics.txt"
+    threads: 1
+    log:
+        OUTPUT_DIR_LOGS + "RA_gatk_concat_BoC_metrics.log"
+    params:
+    shell:
+        """
+echo -e "Sample_name\tTotal_ref_size\tBoC_at_coverage_threshold_1\tBoC_at_coverage_threshold_5\tBoC_at_coverage_threshold_10\tBoC_at_coverage_threshold_30\tBoC_at_coverage_threshold_100" > {output.combined_BoC_int_tsv}
+cat {input.BoC_int_tsv} >> {output.combined_BoC_int_tsv}
+
+echo -e "Sample_name\tTotal_ref_size\tBoC_at_coverage_threshold_1\tBoC_at_coverage_threshold_5\tBoC_at_coverage_threshold_10\tBoC_at_coverage_threshold_30\tBoC_at_coverage_threshold_100" > {output.combined_BoC_pct_tsv}
+cat {input.BoC_pct_tsv} >> {output.combined_BoC_pct_tsv}
+        """
+
+
+#TODO, dirty copy, just a proof-of-principle test
+###! lijkt het goed weer te geven, je ziet dat MarkDup reads worden gemerged van multiple records naar 'e'en.
+rule RA_gatk_HTML_IGVJs_variable_parts:
+    input:
+        fasta= rules.RA_index_reference.output.reference_copy,
+        ref_GC_bedgraph= rules.RA_determine_GC_content.output.GC_bed, 
+        ref_zipped_ORF_gff= rules.RA_reference_ORF_analysis.output.zipped_gff3, 
+        basepath_zipped_SNP_vcf= rules.RA_gatk_haplotypecaller_and_raw_consensus.output.gzipped_vcf,
+        basepath_sorted_bam= rules.RA_gatk_MarkDuplicates.output.bam_markdup,
+    output:
+        tab_output= OUTPUT_DIR_GATK_IGVjs + "2_tab_{sample}",
+        div_output= OUTPUT_DIR_GATK_IGVjs + "4_html_divs_{sample}",
+        js_flex_output= OUTPUT_DIR_GATK_IGVjs + "6_js_flex_{sample}",
+    conda:
+        CONDA_ENVS_DIR + "data_wrangling.yaml"
+    benchmark:
+        OUTPUT_DIR_BENCHMARKS + "RA_gatk_HTML_IGVJs_variable_parts_{sample}.txt"
+    threads: 1
+    log:
+        OUTPUT_DIR_LOGS + "RA_gatk_HTML_IGVJs_variable_parts_{sample}.log"
+    params:
+    shell:
+        """
+bash bin/html/RA_igvjs_write_tabs.sh {wildcards.sample} {output.tab_output}
+
+bash bin/html/RA_igvjs_write_divs.sh {wildcards.sample} {output.div_output}
+
+bash bin/html/RA_igvjs_write_flex_js_middle.sh {wildcards.sample} {output.js_flex_output} \
+{input.fasta} {input.ref_GC_bedgraph} {input.ref_zipped_ORF_gff} \
+{input.basepath_zipped_SNP_vcf} {input.basepath_sorted_bam}
+        """
+
+
+#TODO, dirty copy, just a proof-of-principle test
+###! lijkt het goed weer te geven, je ziet dat MarkDup reads worden gemerged van multiple records naar 'e'en.
+###! wel een snelle hack moeten inbouwen voor de bam index file van MarkDup
+rule RA_gatk_HTML_IGVJs_generate_final:
+    input:
+        expand("{out}{chunk_name}_{sample}", out = OUTPUT_DIR_GATK_IGVjs, chunk_name = [ '2_tab', '4_html_divs', '6_js_flex' ], sample = SAMPLES)
+    output:
+        OUTPUT_GATK_IGVjs_HTML
+    conda:
+        CONDA_ENVS_DIR + "data_wrangling.yaml"
+    benchmark:
+        OUTPUT_DIR_BENCHMARKS + "RA_gatk_HTML_IGVJs_generate_final.txt"
+    threads: 1
+    log:
+        OUTPUT_DIR_LOGS + "RA_gatk_HTML_IGVJs_generate_final.log"
+    params:
+        tab_basename= OUTPUT_DIR_GATK_IGVjs + "2_tab_",
+        div_basename= OUTPUT_DIR_GATK_IGVjs + "4_html_divs_",
+        js_flex_output= OUTPUT_DIR_GATK_IGVjs + "6_js_flex_",
+    shell:
+        """
+cat files/html_chunks/1_header.html > {output}
+cat {params.tab_basename}* >> {output}
+cat files/html_chunks/3_tab_explanation_RA.html >> {output}
+cat {params.div_basename}* >> {output}
+cat files/html_chunks/5_js_begin.html >> {output}
+cat {params.js_flex_output}* >> {output}
+cat files/html_chunks/7_js_end.html >> {output}
+sed -i 's/gatk_MarkDup.bam.bai/gatk_MarkDup.bai/g' {output}
+        """ # Die sed op het laatst is een snelle hack om te werken met de output van gatk, die spuugt geen .bam.bai uit maar .bai.
+
+
+##################################################################################################################################
+# END JvR update
+##################################################################################################################################
 
 
 rule RA_extract_raw_consensus:
