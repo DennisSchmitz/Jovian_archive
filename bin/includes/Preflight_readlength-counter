@@ -30,7 +30,10 @@ if [ $params_WrapperSettings_ReadlengthDetection == "true" ]; then
     for f in "${realfilearray[@]}"
     do
         Reads_tempout=$(
-            unpigz -c -p "${USE_CORES}" --force "$f" | head -n 15000 | gawk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}' | xargs printf '%0.0f'
+            unpigz -c -p "${USE_CORES}" --force "$f" | \
+            head -n 15000 | \
+            gawk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}' | \
+            xargs printf '%0.0f'
             )
         avg_readlength+=( "$Reads_tempout" )
     done
