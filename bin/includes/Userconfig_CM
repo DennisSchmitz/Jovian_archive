@@ -3,6 +3,8 @@
 
 eval "$(parse_yaml "${HOME}"/.jovian_installchoice_compmode "cm_")"
 
+cores="cores: ${USE_CORES}"
+
 if [ "$cm_installeranswers_compmode" == "U" ]; then
     installer_intro
     echo -e "Jovian can run in two computing-modes. 'standalone' and 'HPC/Grid'"
@@ -15,6 +17,8 @@ if [ "$cm_installeranswers_compmode" == "U" ]; then
             echo -e "Standalone mode has been chosen. We will remember your choice so you don't have to do this step every time"
             echo -e "installeranswers:\n    compmode: S\n   queue: N" > "${HOME}"/.jovian_installchoice_compmode
             sed -i '\|drmaa|d' config/config.yaml
+            sed -i '\|local-cores|d' config/config.yaml
+            sed -i "s/.*cores:.*/${cores}/g" config/config.yaml
             break
         elif [[ "${cmanswer}" =~ ^(grid|g)$ ]]; then
             echo -e "Grid mode has been chosen. Please specify your grid settings so the pipeline will function properly."
@@ -38,6 +42,8 @@ if [ "$cm_installeranswers_compmode" == "U" ]; then
 elif [ "${cm_installeranswers_compmode}" == "S" ]; then
     echo -e "Jovian is running in the standalone computing mode"
     sed -i '\|drmaa|d' config/config.yaml
+    sed -i '\|local-cores|d' config/config.yaml
+    sed -i "s/.*cores:.*/${cores}/g" config/config.yaml
 elif [ "${cm_installeranswers_compmode}" == "G" ]; then
     echo -e "Jovian is set to run in computing mode: Grid.\n"
     sed -i '\|drmaa|d' config/config.yaml
