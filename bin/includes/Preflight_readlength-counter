@@ -6,12 +6,11 @@
 #* Change settings of config/pipeline_parameters.yaml accordingly
 #* # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-if [ $params_WrapperSettings_ReadlengthDetection == "false" ]; then
-    echo "Skipping readlength detection"
-    exit 0
-fi
 
-echo -e "\n\nCalculating average read length of 4 input files and configuring the Jovian settings accordingly"
+#@ standards
+shortreads="kmersizes: 21,33,55,77"
+largereads="kmersizes: 21,33,55,77,99,127"
+params="config/pipeline_parameters.yaml"
 
 #> find smallest (gzipped) *.fq/*.fastq file in input_dir
 FILE1=$(find "${INPUT_DIR}" -maxdepth 1 -type f -regextype awk -regex '.*\.f(ast)?q(\.gz)?$' -printf "%s %p\n" | sort -n | gawk 'NR==1 {print $2}')
@@ -19,62 +18,70 @@ FILE2=$(find "${INPUT_DIR}" -maxdepth 1 -type f -regextype awk -regex '.*\.f(ast
 FILE3=$(find "${INPUT_DIR}" -maxdepth 1 -type f -regextype awk -regex '.*\.f(ast)?q(\.gz)?$' -printf "%s %p\n" | sort -k 2 | gawk 'NR==1 {print $2}')
 FILE4=$(find "${INPUT_DIR}" -maxdepth 1 -type f -regextype awk -regex '.*\.f(ast)?q(\.gz)?$' -printf "%s %p\n" | sort -k 2 | gawk 'NR==2 {print $2}')
 
-filearray=("${FILE1##*/}" "${FILE2##*/}" "${FILE3##*/}" "${FILE4##*/}")
+realfilearray=("${FILE1}" "${FILE2}" "${FILE3}" "${FILE4}")
+cleanfilearray=("${FILE1##*/}" "${FILE2##*/}" "${FILE3##*/}" "${FILE4##*/}")
 
-#> get average reads length per file
-AVG_LENGTH1=$(pv "${FILE1}" | unpigz -c -p "${USE_CORES}" --force | gawk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}')
-AVG_LENGTH2=$(pv "${FILE2}" | unpigz -c -p "${USE_CORES}" --force | gawk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}') 
-AVG_LENGTH3=$(pv "${FILE3}" | unpigz -c -p "${USE_CORES}" --force | gawk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}') 
-AVG_LENGTH4=$(pv "${FILE4}" | unpigz -c -p "${USE_CORES}" --force | gawk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}') 
-
-#> Calculate single average length based on the sampled files
-array=("${AVG_LENGTH1%.*}" "${AVG_LENGTH2%.*}" "${AVG_LENGTH3%.*}" "${AVG_LENGTH4%.*}")
-n=4
-m=$n
-sum=0
-
-while [ $n -gt 0 ]
-do
-	num=${array[$((n -1))]}
-	sum=$((sum + num))
-	n=$((n - 1))
-done
-avg=$(echo "$sum / $m" | bc -l)
-AVERAGE=$(printf '%0.0f' "$avg")
+#@ Determine wether or not to actually count the reads...
+if [ $params_WrapperSettings_ReadlengthDetection == "true" ]; then
+    
+    echo -e "\n\nCalculating average read length of 4 input files and configuring the Jovian settings accordingly" 
+        
+    #> get average reads length per file through a for-loop and put the rounded results in an array
+    for f in "${realfilearray[@]}"
+    do
+        Reads_tempout=$(
+            unpigz -c -p "${USE_CORES}" --force "$f" | head -n 15000 | gawk '{if(NR%4==2) {count++; bases += length} } END{print bases/count}' | xargs printf '%0.0f'
+            )
+        avg_readlength+=( "$Reads_tempout" )
+    done
 
 
-###> Print results
-printf "done\n"
-printf "The average read length is %s NT\n" "${AVERAGE}"
-printf "This value is rounded to the nearest number and based on the following 4 samples:\n"
-printf '%s\n' "${filearray[@]}"
-printf "\n"
+    #> Calculate single average length based on the created readlength array
+        n=4
+        m=$n
+        sum=0
+        while [ $n -gt 0 ]
+        do
+        	num=${avg_readlength[$((n -1))]}
+        	sum=$((sum + num))
+        	n=$((n - 1))
+        done
+        avg=$(echo "$sum / $m" | bc -l)
+        AVERAGE=$(printf '%0.0f' "$avg")
 
 
-shortreads="kmersizes: 21,33,55,77"
-largereads="kmersizes: 21,33,55,77,99,127"
-params="config/pipeline_parameters.yaml"
+    ###> Print results
+        printf "done\n\n"
+        printf "The average read length is %s NT\n" "${AVERAGE}"
+        printf "This value is rounded to the nearest number and based on the following 4 samples:\n"
+        printf '%s\n' "${cleanfilearray[@]}"
+        printf "\n"
 
 
-###> Change parameters of `config/pipeline_parameters.yaml` to best match settings
-if [[ "${AVERAGE}" -gt "305" ]]
-then
-    echo -e "\tAverage read lenght is >305, are you sure this is illumina data? Are you sure the input data is a proper 4 lines per fastq record format?"
-    echo -e "Exiting..."; exit 1
-elif [[ "${AVERAGE}" -ge "250" ]]
-then
-    echo -e "\tAverage read length is >=250 and <=305. \n\tSetting large kmer sizes."
-    sed -i "s/.*kmersizes:.*/    ${largereads}/g" "${params}"
-    ##! http://cab.spbu.ru/files/release3.11.0/manual.html#sec3.4 (we use version 3.11.0 in Jovian)
-elif [[ "${AVERAGE}" -ge "50" ]]
-then
-    echo -e "\tAverage read length is >=50 and <250. \n\tSetting small kmer sizes."
-    sed -i "s/.*kmersizes:.*/    ${shortreads}/g" "${params}"
-    ##! http://cab.spbu.ru/files/release3.11.0/manual.html#sec3.4 (we use version 3.11.0 in Jovian)
-elif [[ "${AVERAGE}" -lt "50" ]]
-then
-    echo -e "\tAverage read length is <50, the pipeline doesn't work properly with such short reads."
-    echo -e "Exiting..."; exit 1
+    ###> Change parameters of `config/pipeline_parameters.yaml` to best match settings
+        if [[ "${AVERAGE}" -gt "305" ]]
+        then
+        echo -e "\tAverage read lenght is >305, are you sure this is illumina data? Are you sure the input data is a proper 4 lines per fastq record format?"
+        echo -e "Exiting..."; exit 1
+        elif [[ "${AVERAGE}" -ge "250" ]]
+        then
+        echo -e "\tAverage read length is >=250 and <=305. \n\tSetting large kmer sizes."
+        sed -i "s/.*kmersizes:.*/    ${largereads}/g" "${params}"
+        ##! http://cab.spbu.ru/files/release3.11.0/manual.html#sec3.4 (we use version 3.11.0 in Jovian)
+        elif [[ "${AVERAGE}" -ge "50" ]]
+        then
+        echo -e "\tAverage read length is >=50 and <250. \n\tSetting small kmer sizes."
+        sed -i "s/.*kmersizes:.*/    ${shortreads}/g" "${params}"
+        ##! http://cab.spbu.ru/files/release3.11.0/manual.html#sec3.4 (we use version 3.11.0 in Jovian)
+        elif [[ "${AVERAGE}" -lt "50" ]]
+        then
+        echo -e "\tAverage read length is <50, the pipeline doesn't work properly with such short reads."
+        echo -e "Exiting..."; exit 1
+        fi
+
+else
+    echo -e "skipping read length counter"
+    exit 0
 fi
 
 exit 0
