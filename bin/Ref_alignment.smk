@@ -96,7 +96,7 @@ rule all:
     input:
         expand("data/cleaned_fastq/{sample}_{read}.fq", sample = SAMPLES, read = [ 'pR1', 'pR2', 'unpaired' ]), # Extract unmapped & paired reads AND unpaired from HuGo alignment; i.e. cleaned fastqs #TODO omschrijven naar betere smk syntax
         expand("{out}{ref_basename}{extension}", out = OUTPUT_DIR_REFERENCE, ref_basename = REFERENCE_BASENAME, extension = [ '.fasta', '.fasta.1.bt2', '.fasta.fai', '.fasta.sizes', '.windows', '_GC.bedgraph' ]), # Copy of the reference file (for standardization and easy logging), bowtie2-indices (I've only specified one, but the "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2" and "rev.2.bt2" are implicitly generated) and the GC-content files.
-        expand("{out}{sample}_sorted.{extension}", out = OUTPUT_DIR_ALIGNMENT, sample = SAMPLES, extension = [ 'bam', 'bam.bai' ]), # The reference alignment (bam format) files.
+        expand("{out}{sample}_sorted.{extension}", out = OUTPUT_DIR_ALIGNMENT, sample = SAMPLES, extension = [ 'bam', 'bam.bai', 'MarkDup_metrics' ]), # The reference alignment (bam format) files.
         expand("{out}{sample}_{extension}", out = OUTPUT_DIR_CONSENSUS_RAW, sample = SAMPLES, extension = [ 'calls.vcf.gz', 'raw_consensus.fa' ]), # A zipped vcf file contained SNPs versus the given reference and a RAW consensus sequence, see explanation below for the meaning of RAW.
         expand("{out}{sample}.bedgraph", out = OUTPUT_DIR_CONSENSUS_FILT, sample = SAMPLES), # Lists the coverage of the alignment against the reference in a bedgraph format, is used to determine the coverage mask files below.
         expand("{out}{sample}_{filt_character}-filt_cov_ge_{thresholds}.fa", out = OUTPUT_DIR_CONSENSUS_SEQS, sample = SAMPLES, filt_character = [ 'N', 'minus' ], thresholds = [ '1', '5', '10', '30', '100' ]), # Consensus sequences filtered for different coverage thresholds (1, 5, 10, 30 and 100). For each threshold two files are generated, one where failed positioned are replaced with a N nucleotide and the other where its replaced with a minus character (gap).
@@ -227,9 +227,9 @@ cut -f 1-3,5 2>> {log} 1> {output.GC_bed}
         """
 
 
-#>############################################################################
-#>#### Align to ref, call SNPs, generate new consensus                   #####
-#>############################################################################
+#>##################################################################################################
+#>#### Align to ref, mark and optionally remove duplicates, call SNPs, generate new consensus  #####
+#>##################################################################################################
 rule RA_align_to_reference:
     input:
         pR1= rules.HuGo_removal_pt2_extract_paired_unmapped_reads.output.fastq_R1,
@@ -239,6 +239,7 @@ rule RA_align_to_reference:
     output:
         sorted_bam= OUTPUT_DIR_ALIGNMENT + "{sample}_sorted.bam",
         sorted_bam_index= OUTPUT_DIR_ALIGNMENT + "{sample}_sorted.bam.bai",
+        dup_metrics= OUTPUT_DIR_ALIGNMENT + "{sample}_sorted.MarkDup_metrics" #TODO deze toevoegen aan MultiQC?
     conda:
         CONDA_ENVS_DIR + "RA_ref_alignment.yaml"
     benchmark:
@@ -248,7 +249,10 @@ rule RA_align_to_reference:
         OUTPUT_DIR_LOGS + "RA_align_to_reference_{sample}.log"
     params:
         alignment_type="--local",
-    shell:
+        remove_dups="", # Set remove_dups to "" to NOT remove dups, set it to "-r" to DO remove dups. (WIP, test) #TODO hier nog een if statement voor schrijven in pure python met een link naar pipeline_variables.yaml file
+        markdup_mode="t", # This is the default mode, but there is also an "s" mode. Requires extra testing later.
+        max_read_length="300", # This is the default value and also the max read length of in-house sequencing.
+    shell: # Added a way to mark duplicates and optionally remove them via the "remove_dups" param above.
         """
 bowtie2 --time --threads {threads} {params.alignment_type} \
 -x {input.reference} \
@@ -256,7 +260,10 @@ bowtie2 --time --threads {threads} {params.alignment_type} \
 -2 {input.pR2} \
 -U {input.unpaired} 2> {log} |\
 samtools view -@ {threads} -uS - 2>> {log} |\
-samtools sort -@ {threads} - -o {output.sorted_bam} >> {log} 2>&1
+samtools collate -@ {threads} -O - 2>> {log} |\
+samtools fixmate -@ {threads} -m - - 2>> {log} |\
+samtools sort -@ {threads} - -o - 2>> {log} |\
+samtools markdup -@ {threads} -l {params.max_read_length} -m {params.markdup_mode} {params.remove_dups} -f {output.dup_metrics} - {output.sorted_bam} >> {log} 2>&1
 samtools index -@ {threads} {output.sorted_bam} >> {log} 2>&1
         """
 
@@ -351,7 +358,7 @@ rule RA_determine_BoC_at_diff_cov_thresholds:
     conda:
         CONDA_ENVS_DIR + "RA_ref_alignment.yaml"
     benchmark:
-        OUTPUT_DIR_BENCHMARKS + "determine_BoC_at_diff_cov_thresholds_{sample}.txt"
+        OUTPUT_DIR_BENCHMARKS + "RA_determine_BoC_at_diff_cov_thresholds_{sample}.txt"
     threads: 1
     log:
         OUTPUT_DIR_LOGS + "RA_determine_BoC_at_diff_cov_thresholds_{sample}.log"
@@ -373,7 +380,7 @@ rule RA_concat_BoC_metrics:
     conda:
         CONDA_ENVS_DIR + "RA_ref_alignment.yaml"
     benchmark:
-        OUTPUT_DIR_BENCHMARKS + "concat_BoC_metrics.txt"
+        OUTPUT_DIR_BENCHMARKS + "RA_concat_BoC_metrics.txt"
     threads: 1
     log:
         OUTPUT_DIR_LOGS + "RA_concat_BoC_metrics.log"
