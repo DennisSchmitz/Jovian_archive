@@ -6,6 +6,18 @@ eval "$(parse_yaml "${HOME}"/.jovian_installchoice_compmode "cm_")"
 cores="cores: ${USE_CORES}"
 gridmode_localcores="local-cores: ${USE_CORES}"
 
+if [ "${QUEUE_NAME_OVERRIDE}" == "TRUE" ]; then
+    if [ -z "${QUEUE_NAME_REPLACEMENT}" ]; then
+        echo -e "\n"
+        echo "A command was given to override the default grid-queue name, but no alternative name was given"
+        echo "Please check the command you've given and try again"
+        exit 1
+
+    else
+        cm_installeranswers_queue="${QUEUE_NAME_REPLACEMENT}"
+    fi
+fi
+
 if [ "$cm_installeranswers_compmode" == "U" ]; then
     installer_intro
     echo -e "Jovian can run in two computing-modes. 'standalone' and 'HPC/Grid'"
