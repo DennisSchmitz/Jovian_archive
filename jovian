@@ -165,6 +165,14 @@ do
         shift # Next
         shift # Next
         ;;
+        -cq|--cluster-queue)
+        QUEUE_NAME_OVERRIDE="TRUE"
+        QUEUE_NAME_REPLACEMENT="$2"
+        export QUEUE_NAME_OVERRIDE
+        export QUEUE_NAME_REPLACEMENT
+        shift # Next
+        shift # Next
+        ;;
         -ra|--reference-alignment)
         REFERENCE_ALIGNMENT="TRUE"
         REFERENCE_FASTA="$2"
@@ -254,8 +262,9 @@ fi
 bash bin/includes/Userconfig_DB
 
 ###> Fill in the global computing-mode configuration
-bash bin/includes/Userconfig_CM
-
+if ! bash bin/includes/Userconfig_CM; then
+    exit
+fi
 
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #@ 
