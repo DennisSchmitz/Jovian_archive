@@ -24,7 +24,7 @@ n1=${#realfilearray[@]}
 #@ Determine wether or not to actually count the reads...
 if [ $params_WrapperSettings_ReadlengthDetection == "true" ]; then
     
-    echo -e "\n\nCalculating average read length based on all \e[4mread 1\e[0m input files ($n1) and configuring the Jovian settings accordingly" 
+    echo -e "\n\nCalculating average read length based on all input files ($n1) and configuring the Jovian settings accordingly" 
         
     #> get average reads length per file through a for-loop and put the rounded results in an array
     for f in "${realfilearray[@]}"
@@ -55,7 +55,7 @@ if [ $params_WrapperSettings_ReadlengthDetection == "true" ]; then
     ###> Print results
         printf "done\n\n"
         printf "The average read length is %s NT\n" "${AVERAGE}"
-        printf "This value is rounded to the nearest number and based on all \e[4mread 1\e[0m files (%s) in the given input directory.\n" "$n1"
+        printf "This value is rounded to the nearest number and based on all fastq(.gz) files (%s) in the given input directory.\n" "$n1"
         printf "\n"
 
 
