@@ -17,10 +17,9 @@ params="config/pipeline_parameters.yaml"
 realfilearray=()
 while IFS= read -r -d $'\0'; do
     realfilearray+=("$REPLY")
-done < <(find "${INPUT_DIR}" -maxdepth 1 -type f -regextype awk -regex '(.*)(_|\.)R?(1)(?:_.*\.|\..*\.|\.)f(ast)?q(\.gz)?' -print0)
+done < <(find "${INPUT_DIR}" -maxdepth 1 -type f -regextype awk -regex '.*\.f(ast)?q(\.gz)?$' -print0)
 
 n1=${#realfilearray[@]}
-
 
 #@ Determine wether or not to actually count the reads...
 if [ $params_WrapperSettings_ReadlengthDetection == "true" ]; then
@@ -38,7 +37,6 @@ if [ $params_WrapperSettings_ReadlengthDetection == "true" ]; then
             )
         avg_readlength+=( "$Reads_tempout" )
     done
-
 
     #> Calculate single average length based on the created readlength array
         n=$n1
