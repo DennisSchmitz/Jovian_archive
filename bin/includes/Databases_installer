@@ -164,10 +164,15 @@ if [ "${PATHING_SINGLE}" == "TRUE" ]; then
             printf "\nDownloading NCBI New_taxdump database... \n"
             curl -o new_taxdump.tar.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
             curl -o new_taxdump.tar.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
-            tar -xzf new_taxdump.tar.gz
-            for file in *.dmp;
-                do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim;
-                done
+            if md5sum -c new_taxdump.tar.gz.md5
+            then
+                #the md5 is correct:
+                tar -xzf new_taxdump.tar.gz
+                for file in *.dmp; do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim; done
+            else
+                #the md5 does not match!
+                echo "The md5sum does not match new_taxdump.tar.gz! Please try downloading again."
+            fi
                 
             # ! download BLAST NT db
             cd "${DB_PATH_NT}" || exit
@@ -206,10 +211,15 @@ curl -o virushostdb.tsv -L ftp://ftp.genome.jp/pub/db/virushostdb/virushostdb.ts
 cd "${DB_PATH_NTAX}" || exit 1
 curl -o new_taxdump.tar.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
 curl -o new_taxdump.tar.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
-tar -xzf new_taxdump.tar.gz
-    for file in *.dmp;
-        do awk '{gsub("\t",""); if(substr(\$0,length(\$0),length(\$0))=="|") print substr(\$0,0,length(\$0)-1); else print \$0}' \${file} > \${file}.delim;
-        done
+if md5sum -c new_taxdump.tar.gz.md5
+then
+    #the md5 is correct:
+    tar -xzf new_taxdump.tar.gz
+    for file in *.dmp; do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim; done
+else
+    #the md5 does not match!
+    echo "The md5sum does not match new_taxdump.tar.gz! Please try downloading again."
+fi
 
 ### UPDATING BLAST NT
 cd "${DB_PATH_NT}" || exit 1
@@ -326,10 +336,15 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
             printf "\nDownloading NCBI New_taxdump database... \n"
             curl -o new_taxdump.tar.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
             curl -o new_taxdump.tar.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
-            tar -xzf new_taxdump.tar.gz
-            for file in *.dmp;
-                do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim;
-                done
+            if md5sum -c new_taxdump.tar.gz.md5
+            then
+                #the md5 is correct:
+                tar -xzf new_taxdump.tar.gz
+                for file in *.dmp; do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim; done
+            else
+                #the md5 does not match!
+                echo "The md5sum does not match new_taxdump.tar.gz! Please try downloading again."
+            fi
                     
             # ! download BLAST NT db
             cd "${DB_PATH_NT}" || exit
@@ -373,10 +388,15 @@ curl -o virushostdb.tsv -L ftp://ftp.genome.jp/pub/db/virushostdb/virushostdb.ts
 cd "${DB_PATH_NTAX}" || exit 1
 curl -o new_taxdump.tar.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
 curl -o new_taxdump.tar.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
-tar -xzf new_taxdump.tar.gz
-    for file in *.dmp;
-        do awk '{gsub("\t",""); if(substr(\$0,length(\$0),length(\$0))=="|") print substr(\$0,0,length(\$0)-1); else print \$0}' < \${file} > \${file}.delim;
-        done
+if md5sum -c new_taxdump.tar.gz.md5
+then
+    #the md5 is correct:
+    tar -xzf new_taxdump.tar.gz
+    for file in *.dmp; do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim; done
+else
+    #the md5 does not match!
+    echo "The md5sum does not match new_taxdump.tar.gz! Please try downloading again."
+fi
 
 ### UPDATING BLAST NT
 cd "${DB_PATH_NT}" || exit 1
