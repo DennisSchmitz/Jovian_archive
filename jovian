@@ -235,9 +235,11 @@ fi
 ###> Runs if the command "conda" is not recognised by the host AND if the "~/tmp/miniconda3" path is non-existant
 if ! bash bin/includes/Install_miniconda; then
     exit 1
-else
+fi
+
+if [ -e "${HOME}/tmp/Miniconda3" ]; then
     set -o allexport
-    source "${HOME}"/.bashrc
+    source "${HOME}"/.jovianrc
     set +o allexport
 fi
 
