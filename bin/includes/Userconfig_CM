@@ -1,11 +1,21 @@
 #!/bin/bash
 # shellcheck disable=SC1091
 
+
+#@ vars
 eval "$(parse_yaml "${HOME}"/.jovian_installchoice_compmode "cm_")"
 
-cores="cores: ${USE_CORES}"
+#@ vars for standalone mode
+standalone_cores="cores: ${USE_CORES}"
+standalone_hugo="HuGo_removal: ${USE_CORES}"
+standalone_assembly="De_novo_assembly: ${USE_CORES}"
+standalone_snp="SNP_calling: ${USE_CORES}"
+standalone_refal="RA_align_to_reference: ${USE_CORES}"
+
+#@ vars for gridmode
 gridmode_localcores="local-cores: ${USE_CORES}"
 
+#> manual queue name override
 if [ "${QUEUE_NAME_OVERRIDE}" == "TRUE" ]; then
     if [ -z "${QUEUE_NAME_REPLACEMENT}" ]; then
         echo -e "\n"
@@ -18,6 +28,8 @@ if [ "${QUEUE_NAME_OVERRIDE}" == "TRUE" ]; then
     fi
 fi
 
+
+#> Section that sets values for the CompMode
 if [ "$cm_installeranswers_compmode" == "U" ]; then
     installer_intro
     echo -e "Jovian can run in two computing-modes. 'standalone' and 'HPC/Grid'"
@@ -31,7 +43,7 @@ if [ "$cm_installeranswers_compmode" == "U" ]; then
             echo -e "installeranswers:\n    compmode: S\n   queue: N" > "${HOME}"/.jovian_installchoice_compmode
             sed -i '\|drmaa|d' config/config.yaml
             sed -i '\|local-cores|d' config/config.yaml
-            sed -i "s/.*cores:.*/${cores}/g" config/config.yaml
+            sed -i "s/.*cores:.*/${standalone_cores}/g" config/config.yaml
             break
         elif [[ "${cmanswer}" =~ ^(grid|g)$ ]]; then
             echo -e "Grid mode has been chosen. Please specify your grid settings so the pipeline will function properly."
@@ -53,11 +65,28 @@ if [ "$cm_installeranswers_compmode" == "U" ]; then
             echo -e "Please answer with 'standalone' or 'grid'."
         fi
     done
-elif [ "${cm_installeranswers_compmode}" == "S" ]; then
+fi
+
+if [ "${cm_installeranswers_compmode}" == "S" ]; then
+    
     echo -e "Jovian is running in the standalone computing mode"
+    
+    #> Change the basic settings of config.yaml
     sed -i '\|drmaa|d' config/config.yaml
     sed -i '\|local-cores|d' config/config.yaml
-    sed -i "s/.*cores:.*/${cores}/g" config/config.yaml
+    sed -i "s/.*cores:.*/${standalone_cores}/g" config/config.yaml
+
+    #> Change the rule-specific settings in pipeline-parameters.yaml
+    #? Background removal
+        sed -i "s/.*HuGo_removal:.*/    ${standalone_hugo}/g" config/pipeline_parameters.yaml
+    #? Assembly
+        sed -i "s/.*De_novo_assembly:.*/    ${standalone_assembly}/g" config/pipeline_parameters.yaml
+    #? SNP calling
+        sed -i "s/.*SNP_calling:.*/    ${standalone_snp}/g" config/pipeline_parameters.yaml
+    #? Reference alignment
+        sed -i "s/.*RA_align_to_reference:.*/    ${standalone_refal}/g" config/pipeline_parameters.yaml
+
+
 elif [ "${cm_installeranswers_compmode}" == "G" ]; then
     echo -e "Jovian is set to run in computing mode: Grid.\n"
     sed -i '\|drmaa|d' config/config.yaml

@@ -16,7 +16,7 @@ Trimmomatic:
     # Default: Remove anything smaller than 50 nucleotides
     minimum_length_config: MINLEN:50
     
-HuGo_removal:
+HuGo_removal_type:
     # Choose if you want to do "local" or "global" alignment. Keep this as "--local" unless you know what you're doing.
     alignment_type: --local
 
@@ -48,7 +48,7 @@ taxonomic_classification_LCA:
         quantile_threshold: .97
         bitscore_threshold: 100
         
-SNP_calling:
+SNP_calling_params:
     max_cov: 20000 # Maximum coverage that will be used for SNP calling. Dont change this value unless you know what youre doing.
     minimum_AF: 0.05 # This is the minimum At the end of the comment after "remove_temp" there were four Ss, probably accidentally typed in when saving the file (Ctrl + S, where Ctrl was not hit yet?).allelle frequency (=AF) for which you want a SNP to be reported. Default is 5%.
 
