@@ -15,11 +15,10 @@
 #####################################################################################################################
 INPUT_SAMPLE_NAME="$1"
 INPUT_BAM="$2"
-INPUT_REFERENCE="$3"
-INPUT_RAW_CONSENSUS="$4"
-OUTPUT_FOLDER_DATA="$5"
-OUTPUT_FOLDER_RESULTS="$6"
-LOG_FILE="$7"
+INPUT_RAW_CONSENSUS="$3"
+OUTPUT_FOLDER_DATA="$4"
+OUTPUT_FOLDER_RESULTS="$5"
+LOG_FILE="$6"
 
 OUTPUT_BASENAME_DATA="${OUTPUT_FOLDER_DATA}/${INPUT_SAMPLE_NAME}"
 OUTPUT_BEDGRAPH="${OUTPUT_BASENAME_DATA}.bedgraph"
@@ -47,7 +46,7 @@ function consensus_at_variable_cov_threshold {
     then #? bedfile is not empty, hence there are regions to be filtered
         # Mask the nucleotide positions in the genome that do not reach the coverage threshold based on the previously made .bed file which contains the failing nucleotide positions
         #### Importantly, the default setting is to replace the bed coordinates with N nucleotides, hence this generates the N nucleotide filtered consensus
-        bedtools maskfasta -fullHeader -fi ${INPUT_REFERENCE} -bed ${output_bed} -fo ${consensus_N_filt_tmp} 2>> ${LOG_FILE}
+        bedtools maskfasta -fullHeader -fi ${INPUT_RAW_CONSENSUS} -bed ${output_bed} -fo ${consensus_N_filt_tmp} 2>> ${LOG_FILE}
         # Convert the multi-line fasta output of bedtools maskfasta to the normal two-line fasta output.
         seqtk seq ${consensus_N_filt_tmp} > ${consensus_N_filt} 2>> ${LOG_FILE}
         rm ${consensus_N_filt_tmp}
@@ -58,7 +57,7 @@ function consensus_at_variable_cov_threshold {
         #### Importantly, here the bed coordinates are replaced with the minus ("-") character which represents a gap in alignment software. While it is NOT an actual gap, downstream
         #### alignment software is usually more compatible with gap characters than the default N characters. This was implemented on end-user request, they can decide which version
         #### of the output they want to use for downstream processing.
-        bedtools maskfasta -fullHeader -mc "-" -fi ${INPUT_REFERENCE} -bed ${output_bed} -fo ${consensus_minus_filt_tmp} 2>> ${LOG_FILE}
+        bedtools maskfasta -fullHeader -mc "-" -fi ${INPUT_RAW_CONSENSUS} -bed ${output_bed} -fo ${consensus_minus_filt_tmp} 2>> ${LOG_FILE}
         # Convert the multi-line fasta output of bedtools maskfasta to the normal two-line fasta output.
         seqtk seq ${consensus_minus_filt_tmp} > ${consensus_minus_filt} 2>> ${LOG_FILE}
         rm ${consensus_minus_filt_tmp}

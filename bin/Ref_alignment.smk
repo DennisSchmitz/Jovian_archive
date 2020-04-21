@@ -249,7 +249,7 @@ rule RA_align_to_reference:
         OUTPUT_DIR_LOGS + "RA_align_to_reference_{sample}.log"
     params:
         alignment_type="--local",
-        remove_dups="", # Set remove_dups to "" to NOT remove dups, set it to "-r" to DO remove dups. (WIP, test) #TODO hier nog een if statement voor schrijven in pure python met een link naar pipeline_variables.yaml file
+        remove_dups="", # Set remove_dups to "" to NOT remove dups, set it to "-r" to DO remove dups. (checked and discussed it 20200409, do not remove dups, just collapse them via markdup without -r) #TODO hier nog een if statement voor schrijven in pure python met een link naar pipeline_variables.yaml file
         markdup_mode="t", # This is the default mode, but there is also an "s" mode. Requires extra testing later.
         max_read_length="300", # This is the default value and also the max read length of in-house sequencing.
     shell: # Added a way to mark duplicates and optionally remove them via the "remove_dups" param above.
@@ -316,7 +316,6 @@ bcftools consensus {output.gzipped_vcf} | seqtk seq - > {output.raw_consensus_fa
 rule RA_extract_clean_consensus:
     input:
         bam= rules.RA_align_to_reference.output.sorted_bam,
-        reference= rules.RA_index_reference.output.reference_copy,
         raw_consensus= rules.RA_extract_raw_consensus.output.raw_consensus_fasta, # Only needed for when there are no positions in the bed with a coverage of 0; in that case the RAW fasta is actually suitable for downstream processes and it is simply copied.
     output:
         bedgraph= OUTPUT_DIR_CONSENSUS_FILT + "{sample}.bedgraph",
@@ -342,7 +341,7 @@ rule RA_extract_clean_consensus:
         output_results_folder= OUTPUT_DIR_CONSENSUS_SEQS
     shell:
         """
-bash bin/scripts/RA_consensus_at_diff_coverages.sh {wildcards.sample} {input.bam} {input.reference} {input.raw_consensus} \
+bash bin/scripts/RA_consensus_at_diff_coverages.sh {wildcards.sample} {input.bam} {input.raw_consensus} \
 {params.output_data_folder} {params.output_results_folder} {log} >> {log} 2>&1
         """
 

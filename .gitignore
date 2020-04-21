@@ -28,6 +28,6 @@ archive_*.tar
 archive_*.tar.gz
 .nfs*
 .ncbirc
-
+.jovianrc
 docs/build
 docs/source/_build
