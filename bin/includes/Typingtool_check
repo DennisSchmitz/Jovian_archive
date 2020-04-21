@@ -6,6 +6,8 @@
 #>################################
 INPUT="${1,,}" # The ${var,,} syntax converts it all to lowercase, this makes it easier to regex/match the keywords later and makes the keywords case-insensitive.
 
+RESPONSE="default"
+
 NOV_URL="https://www.rivm.nl/mpf/typingservice/norovirus/"
 EV_URL="https://www.rivm.nl/mpf/typingservice/enterovirus/"
 HAV_URL="https://www.rivm.nl/mpf/typingservice/hav/"
@@ -14,7 +16,16 @@ RVA_URL="https://www.rivm.nl/mpf/typingservice/rotavirusa/"
 PV_URL="https://www.rivm.nl/mpf/typingservice/papillomavirus/"
 FLAVI_URL="https://www.rivm.nl/mpf/typingservice/flavivirus/"
 
-RESPONSE="default"
+urls=(
+    "https://www.rivm.nl/mpf/typingservice/norovirus/" 
+    "https://www.rivm.nl/mpf/typingservice/enterovirus/"
+    "https://www.rivm.nl/mpf/typingservice/hav/"
+    "https://www.rivm.nl/mpf/typingservice/hev/"
+    "https://www.rivm.nl/mpf/typingservice/rotavirusa/"
+    "https://www.rivm.nl/mpf/typingservice/papillomavirus/"
+    "https://www.rivm.nl/mpf/typingservice/flavivirus/"
+    )
+
 
 usage_msg() {
     cat <<HELP_USAGE
@@ -82,16 +93,27 @@ fi
 #> Run an actual curl to the specific typing tool url and print the response code
 #>################################
 
-#TODO hier moet nog iets voor de all optie, dat alles getest wordt.
+if [ "${INPUT}" == "all" ]; then
+    for u in "${urls[@]}"
+    do
+        r=$(curl -sSl -D - "${u}" -o /dev/null | awk '/HTTP/ {print $2}')
+
+        if [ "${r}" != "200" ];then
+            echo -e "One or more virus-typing services are currently unavailable"
+            echo -e "Please try again later."
+            echo -e "You can also try use the individual virus-typing services"
+            exit 1
+        else
+            echo "All virus-typing services are online. Continuing..."
+            exit 0
+        fi
+
+    done
+fi
+
 
 if [ "${INPUT}" == "nov" ]; then
 	RESPONSE=$(curl -sSl -D - ${NOV_URL} -o /dev/null | awk '/HTTP/ {print $2}')
-
-#!##########################################################################################################################################
-#TODO snelle hack om te zorgen dat de "all" keyword werkt, hier nog een betere oplossing voor maken. @Florian, voorkeur voor een oplossing?
-elif [ "${INPUT}" == "all" ]; then
-	RESPONSE=$(curl -sSl -D - ${NOV_URL} -o /dev/null | awk '/HTTP/ {print $2}')
-#!##########################################################################################################################################
 
 elif [ "${INPUT}" == "ev" ]; then
 	RESPONSE=$(curl -sSl -D - ${EV_URL} -o /dev/null | awk '/HTTP/ {print $2}')
