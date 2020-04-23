@@ -10,6 +10,7 @@
 ### Department:                                                                                          ###
 ###     Virology - Emerging and Endemic Viruses (EEV)                                                    ###
 ###     Virology - Viruses of the Vaccination Program (VVP)                                              ###
+###     Bacteriology - Bacterial and Parasitic Diagnostics (BPD)                                         ###
 ### Date and license:                                                                                    ###
 ###     23-08-2018, AGPL3 license                                                                        ###
 ### Homepage containing documentation, examples and a changelog:                                         ###
@@ -18,6 +19,10 @@
 ###     This project/research has received funding from the European Union’s                             ###
 ###     Horizon 2020 research and innovation programme under grant agreement                             ###
 ###     No. 643476. and the Dutch working group on molecular diagnostics (WMDI).                         ###
+### Automation:                                                                                          ###
+###    iRODS automatically executes this workflow for all "vir-ngs" labelled                             ###
+###    Illumina sequencing runs. See the internal Gitlab repo for the wrapper                            ###
+###    with additional information.                                                                      ###
 ############################################################################################################
 
 # shellcheck disable=SC1091
@@ -399,9 +404,11 @@ fi
 
 ###> Make the sample sheet and then quit Jovian for manual running and debugging of the pipeline
 if [ "${MAKE_SAMPLE_SHEET}" == "TRUE" ]; then
+    echo -e "The sample sheet already exists."
+elif [ ! -s config/variables.yaml ]; then #? If config/variables.yaml does not exist or is empty...
     echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > config/variables.yaml
     echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> config/variables.yaml
-    echo -e "The sample sheet and variables file has now been created, you can now run the Jovian snakefile manually"
+    echo -e "The variables file has been created, you can now run the Jovian snakefile manually"
     exit 0
 fi
 
@@ -431,9 +438,13 @@ ready_for_start
 
 
 ###> Here the UNIQUE_ID and HOSTNAME variables are actually set
-echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > config/variables.yaml
-echo -e "Server_host:\n    hostname: http://${HOSTNAME}" >> config/variables.yaml
-eval $(parse_yaml config/variables.yaml "config_")
+if [ ! -s config/variables.yaml ]; then #? If config/variables.yaml does not exist or is empty...
+    echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > config/variables.yaml
+    echo -e "Server_host:\n    hostname: http://${HOSTNAME}" >> config/variables.yaml
+    eval $(parse_yaml config/variables.yaml "config_")
+else
+    eval $(parse_yaml config/variables.yaml "config_")
+fi
 
 ###> Core Jovian workflow snakemake command with checkers for required files.
 if [ ! -s sample_sheet.yaml ]; then #? If sample_sheet.yaml does not exist or is empty...

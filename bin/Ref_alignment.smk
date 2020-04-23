@@ -23,8 +23,16 @@ Funding:
     This project/research has received funding from the European Union’s
     Horizon 2020 research and innovation programme under grant agreement
     No. 643476. and the Dutch working group on molecular diagnostics (WMDI).
+Automation:
+    iRODS automatically executes this workflow for all "vir-ngs" labelled
+    Illumina sequencing runs. See the internal Gitlab repo for the wrapper
+    with additional information.
+    #TODO see below
+    N.B. this is currently a hacky implementation, it automatically assumes
+    samples are nCoV. Which is true for now but must be solved more elegantly
+    at a later time.
+    #TODO see above
 """
-
 
 #@################################################################################
 #@#### Import config file, sample_sheet and set output folder names          #####
@@ -129,10 +137,6 @@ include: "rules/BG_removal_1.smk"
 include: "rules/BG_removal_2.smk"
 include: "rules/BG_removal_3.smk"
 
-
-##########! Also include fragment length *done* analysis and multiqc *done*
-###? Tried adding the fraglength rule, but it break for samples without enough paired reads. Requires a touching of output files if the exit-code is non-zero. 
-###TODO fixing above issue is something to do later, this also causes problems in the core workflow. So has some priority.
 
 ###########! nuttig om contig metrics rule ook toe te voegen?
 
@@ -430,7 +434,6 @@ multiqc -d --force --config {params.config_file} \
 #@################################################################################
 #@#### Make IGVjs html                                                       #####
 #@################################################################################
-#############! All code below here should be integrated with Jovian core workflow
 
 
 rule RA_HTML_IGVJs_variable_parts:
