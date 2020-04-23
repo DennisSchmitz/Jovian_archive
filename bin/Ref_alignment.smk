@@ -249,10 +249,10 @@ rule RA_align_to_reference:
         OUTPUT_DIR_LOGS + "RA_align_to_reference_{sample}.log"
     params:
         alignment_type="--local",
-        remove_dups="", # Set remove_dups to "" to NOT remove dups, set it to "-r" to DO remove dups. (checked and discussed it 20200409, do not remove dups, just collapse them via markdup without -r) #TODO hier nog een if statement voor schrijven in pure python met een link naar pipeline_variables.yaml file
-        markdup_mode="t", # This is the default mode, but there is also an "s" mode. Requires extra testing later.
-        max_read_length="300", # This is the default value and also the max read length of in-house sequencing.
-    shell: # Added a way to mark duplicates and optionally remove them via the "remove_dups" param above.
+        remove_dups="", # Dups are collapsed either way, by setting remove_dups to "" you will collapse dups into one record/fragment/read, set it to "-r" to even remove the collapsed record/fragment/read. (checked and discussed it 20200409, do not remove dups, just collapse them via markdup without -r)
+        markdup_mode="t",
+        max_read_length="300", # This is the default value and also the max read length of Illumina in-house sequencing.
+    shell:
         """
 bowtie2 --time --threads {threads} {params.alignment_type} \
 -x {input.reference} \
@@ -454,9 +454,9 @@ rule RA_HTML_IGVJs_variable_parts:
     params:
     shell:
         """
-bash bin/html/RA_igvjs_write_tabs.sh {wildcards.sample} {output.tab_output}
+bash bin/html/igvjs_write_tabs.sh {wildcards.sample} {output.tab_output}
 
-bash bin/html/RA_igvjs_write_divs.sh {wildcards.sample} {output.div_output}
+bash bin/html/igvjs_write_divs.sh {wildcards.sample} {output.div_output}
 
 bash bin/html/RA_igvjs_write_flex_js_middle.sh {wildcards.sample} {output.js_flex_output} \
 {input.fasta} {input.ref_GC_bedgraph} {input.ref_zipped_ORF_gff} \

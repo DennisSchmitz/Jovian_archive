@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #####
-# This script (part 6) this script writes the flexible part of the required JavaScript
+# This script (part 3) this script writes the flexible part of the required JavaScript
 # this script should be called for every sample.
 
 INPUT="$1"

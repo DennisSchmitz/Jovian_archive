@@ -67,6 +67,8 @@ with open(config["sample_sheet"]) as sample_sheet_file:
     #>#### Scaffold analysis and metrics                                     #####
     #>############################################################################
 
+    #TODO hier nog een if statement hieronder maken met keuze rmDups yes or no, deze optie verplaatsen naar de config file.
+
     include: "rules/Fragment_length.smk"
     include: "rules/SNP_calling.smk"
     include: "rules/ORF_analysis.smk"
@@ -229,13 +231,8 @@ localrules:
     quantify_output,
     Concat_files,
     Concat_filtered_SNPs,
-    HTML_IGVJs_part1_static_head,
-    HTML_IGVJs_part2_tabs,
-    HTML_IGVJs_part3_close_tabs,
-    HTML_IGVJs_part4_divs,
-    HTML_IGVJs_part5_begin_js,
-    HTML_IGVJs_part6_middle_js,
-    HTML_IGVJs_part7_end_js
+    HTML_IGVJs_generate_final,
+    HTML_IGVJs_variable_parts
 
 
 rule all:
@@ -255,7 +252,5 @@ rule all:
         "results/heatmaps/Phage_heatmap.html", # Phage order|family|genus|species heatmaps for the entire run (based on a selection of phage families)
         "results/heatmaps/Bacteria_heatmap.html", # Bacteria phylum|class|order|family|genus|species level heatmap for the entire run
         expand("results/{file}.html", file = [ 'multiqc', 'krona' ]), # HTML Reports
-        expand("data/html/js-end.ok")
-        #! is die expand hierboven nodig?
-        #! moet hier ook geen results/igv.html komen te staan?
+        "results/igv.html", # IGVjs index
 
