@@ -8,9 +8,9 @@
 ###     Output:                                                                                                   ###
 ###            Sample_name     Total_ref_size  BoC_at_coverage_threshold_1     BoC_at_coverage_threshold_5 \      ###
 ###            BoC_at_coverage_threshold_10    BoC_at_coverage_threshold_30    BoC_at_coverage_threshold_100      ###
-###            RUN25-01_S1     29904           .9998   .9993   .9993   .9990   .9989                              ###
-###            RUN25-02_S6     29904           .9182   .8351   .8070   .4027   .4406                              ###
-###            RUN25-03_S11    29904           .8636   .7477   .5843   .0388   0                                  ###
+###            RUN25-01_S1     29904           .9999   .6666   .3333   .1000   0                                  ###
+###            RUN25-02_S6     29904           .9999   .6666   .3333   .1000   0                                  ###
+###            RUN25-03_S11    29904           .9999   .6666   .3333   .1000   0                                  ###
 #####################################################################################################################
 ### TODO can probably be made prettier via a function.
 ### TODO parallize via parallel function (would need to be included into the env)

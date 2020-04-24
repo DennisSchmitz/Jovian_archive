@@ -79,6 +79,9 @@ function consensus_at_variable_cov_threshold {
 #####################################################################################################################
 
 # First create a genome-coverage bedgraph that will be used as input for the downstream processes.
+#! See this gotcha with duplicate marked reads: https://groups.google.com/forum/#!msg/bedtools-discuss/wJNC2-icIb4/wflT6PnEHQAJ
+#! bedtools is not able to filter them out and includes those dup-reads in it's coverage metrics. So this method only works if the duplicates are HARD removed upstream.
+#TODO a solution would be to use samtools depth -a -d 0 -o output_file.bed input_sorted.bam --> for now I've just hardcoded the hard-removal of dups.
 bedtools genomecov -bga -ibam ${INPUT_BAM} > ${OUTPUT_BEDGRAPH} 2>> ${LOG_FILE}
 
 # Generate consensuses at different coverage thresholds

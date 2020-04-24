@@ -3,8 +3,9 @@
 #@ 
 #@ 
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#TODO This rule is only still included for debugging purposes, this, and the corresponding part in the main snakefile, can be removed in version 1.0
 
-rule Fragment_length_analysis:
+rule Read2scaffold_alignment_without_rmDup_and_fraglength:
     input:
         fasta="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"],
         pR1="data/cleaned_fastq/{sample}_pR1.fq",
@@ -17,9 +18,9 @@ rule Fragment_length_analysis:
     conda:
         "../envs/scaffold_analyses.yaml"
     log:
-        "logs/Fragment_length_analysis_{sample}.log"
+        "logs/Read2scaffold_alignment_without_rmDup_and_fraglength_{sample}.log"
     benchmark:
-        "logs/benchmark/Fragment_length_analysis_{sample}.txt"
+        "logs/benchmark/Read2scaffold_alignment_without_rmDup_and_fraglength_{sample}.txt"
     threads: config["threads"]["Fragment_length_analysis"]
     shell:
         """

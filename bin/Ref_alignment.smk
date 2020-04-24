@@ -253,7 +253,7 @@ rule RA_align_to_reference:
         OUTPUT_DIR_LOGS + "RA_align_to_reference_{sample}.log"
     params:
         alignment_type="--local",
-        remove_dups="", # Dups are collapsed either way, by setting remove_dups to "" you will collapse dups into one record/fragment/read, set it to "-r" to even remove the collapsed record/fragment/read. (checked and discussed it 20200409, do not remove dups, just collapse them via markdup without -r)
+        remove_dups="-r", #! Don't change this, see this gotcha with duplicate marked reads in bedtools genomecov (which is used downstream): https://groups.google.com/forum/#!msg/bedtools-discuss/wJNC2-icIb4/wflT6PnEHQAJ . bedtools genomecov is not able to filter them out and includes those dup-reads in it's coverage metrics. So the downstream BoC analysis and consensus at diff cov processes require dups to be HARD removed.
         markdup_mode="t",
         max_read_length="300", # This is the default value and also the max read length of Illumina in-house sequencing.
     shell:

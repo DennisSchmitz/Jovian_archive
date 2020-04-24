@@ -10,7 +10,6 @@ WrapperSettings:
 Trimmomatic:
     # For the Nextera PE lib prep adapters
     adapter_removal_config: ILLUMINACLIP:files/trimmomatic_0.36_adapters_lists/NexteraPE-PE.fa:2:30:10:8:true
-    # ! test settings for best "relaxed" mode
     # Default: 5 nucleotides window size, minimum average Phred score of 30
     quality_trimming_config: SLIDINGWINDOW:5:30
     # Default: Remove anything smaller than 50 nucleotides
@@ -30,7 +29,6 @@ SPAdes:
 
 
 scaffold_minLen_filter:
-    # ! test settings for best "relaxed" mode
     # Minimum allowed scaffold size to be allowed for downstream processessing. Advice, use a minimum length that is atleast 1nt greater than your Illumina read length
     minlen: 500
 
@@ -95,6 +93,8 @@ threads:
     RA_align_to_reference: 12
 
 remove_temp: 1 # For development and debug only. If you set this to 0 you will keep the HuGo alignment data which can lead to patient privacy concerns.
+
+PCR_dup_removal: true # For development and debug only. Set this to false to NOT remove PCR duplicates in the metagenomic output. N.B. this is not advised and mainly in here for debugging purposes: depending on the dataset, not removing PCR-dups gives a false sense of confidence (inflated coverage metrics), false SNP-calls and increases turnaround time of downstream processes.
 
 ######################################
 ### Databases                      ###

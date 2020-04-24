@@ -22,7 +22,7 @@ rule Generate_contigs_metrics:
     params:
         ""
     threads: 1
-    shell:
+    shell: #! bbtools' pileup.sh counts every read, even those marked as duplicate upstream. Hence, upstream all duplicates are HARD removed.
         """
 pileup.sh in={input.bam} \
 ref={input.fasta} \
