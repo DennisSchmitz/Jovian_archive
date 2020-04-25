@@ -292,14 +292,15 @@ rule RA_extract_raw_consensus:
         CONDA_ENVS_DIR + "RA_ref_alignment.yaml"
     benchmark:
         OUTPUT_DIR_BENCHMARKS + "RA_extract_raw_consensus_{sample}.txt"
-    threads: 1
+    threads: 1 # Increasing this makes no differences for monopartite references/viruses. I think it splits different chromosomes to different threads #TODO check this in future version that is compatible with segmented viruses.
     log:
         OUTPUT_DIR_LOGS + "RA_extract_raw_consensus_{sample}.log"
-    params:
+    params: #TODO move this param to pipeline_variables.yaml when we assess and optimize this value for different viral families.
+        calling_prior= "1.1e-3" # From manual: mutation rate (use bigger for greater sensitivity), use with -m [1.1e-3] #TODO this can be (has to be?) adapted to the different virus mutation rate. Assess later and optimize for different viral families
     shell: #TODO check if it can use bcf output instead of vcf for downstream processing, saves diskspace. Requires changes in the igvjs index
         """
-bcftools mpileup -O u -d 10000 -f {input.reference} {input.bam} 2>> {log} |\
-bcftools call --ploidy 1 -mv -O z -o {output.gzipped_vcf} >> {log} 2>&1
+bcftools mpileup --threads {threads} --ignore-RG -O u -d 10000 -f {input.reference} {input.bam} 2>> {log} |\
+bcftools call --threads {threads} -m --prior {params.calling_prior} --ploidy 1 -mv -O z -o {output.gzipped_vcf} >> {log} 2>&1
 tabix {output.gzipped_vcf} >> {log} 2>&1
 cat {input.reference} 2>> {log} |\
 bcftools consensus {output.gzipped_vcf} | seqtk seq - > {output.raw_consensus_fasta} 2>> {log}
