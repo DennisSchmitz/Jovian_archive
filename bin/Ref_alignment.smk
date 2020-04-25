@@ -281,16 +281,6 @@ samtools index -@ {threads} {output.sorted_bam} >> {log} 2>&1
 #### but they cannot handle N's. However, the file with N's can be used to check for indels since this cannot be seen
 #### in the file where every missing nucleotide is replaced with a "-".
 ##################################################################################################################################
-#? This code cannot easily be made multithreaded for monopartite sequences, see https://github.com/samtools/bcftools/issues/949
-#? If we ever get additional time later we can probably look into splitting it up, but now there is no time.
-##################################################################################################################################
-#? You will get deprecation warning saying 'samtools mpileup option `u` is functional, but deprecated' and that you should
-#? use bcftools mpileup instead. I've tried this on 20200322 with 'bcftools mpileup -d 8000 -O u -f reference.fasta input.bam',
-#? the -d 8000 is to be identical to the samtools default settings (bcftools default is 250) and -O u is to give it the same
-#? output as the samtools output: there was a difference in SNP calling between the two (bcftools did not call one SNP that
-#? samtools did). So I'm reluctant to change it. Leaving this here for an eventual later update.
-#? Versions used: samtools 1.10 and bcftools 1.10 (also see https://github.com/samtools/bcftools/issues/852 )
-##################################################################################################################################
 rule RA_extract_raw_consensus:
     input:
         bam= rules.RA_align_to_reference.output.sorted_bam,
@@ -306,9 +296,9 @@ rule RA_extract_raw_consensus:
     log:
         OUTPUT_DIR_LOGS + "RA_extract_raw_consensus_{sample}.log"
     params:
-    shell: # Source: https://github.com/samtools/bcftools/wiki/HOWTOs#consensus-calling
+    shell: #TODO check if it can use bcf output instead of vcf for downstream processing, saves diskspace. Requires changes in the igvjs index
         """
-samtools mpileup -uf {input.reference} {input.bam} 2>> {log} |\
+bcftools mpileup -O u -d 10000 -f {input.reference} {input.bam} 2>> {log} |\
 bcftools call --ploidy 1 -mv -O z -o {output.gzipped_vcf} >> {log} 2>&1
 tabix {output.gzipped_vcf} >> {log} 2>&1
 cat {input.reference} 2>> {log} |\
