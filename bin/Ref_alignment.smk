@@ -272,15 +272,6 @@ samtools index -@ {threads} {output.sorted_bam} >> {log} 2>&1
         """
 
 
-##################################################################################################################################
-# The rule below overwrites nucleotides in the ref based on the input reads and creates a RAW consensus sequence, RAW means:
-#### A consensus genome is generated even if there is 0 coverage. At positions where no reads aligned it just takes
-#### the reference nucleotide and inserts that into the consensus fasta. Obviously, this is not desirable and prone
-#### to misinterpretation! Therefore, in a rule below, all positions with a coverage of 0 are masked, i.e. nucleotides
-#### at that position are replaced with "N" or "-". Both replacements are made, since many aligners can handle gaps ("-")
-#### but they cannot handle N's. However, the file with N's can be used to check for indels since this cannot be seen
-#### in the file where every missing nucleotide is replaced with a "-".
-##################################################################################################################################
 rule RA_extract_raw_consensus:
     input:
         bam= rules.RA_align_to_reference.output.sorted_bam,
