@@ -403,12 +403,13 @@ else
 fi
 
 ###> Make the sample sheet and then quit Jovian for manual running and debugging of the pipeline
-if [ "${MAKE_SAMPLE_SHEET}" == "TRUE" ]; then
-    echo -e "The sample sheet already exists."
-elif [ ! -s config/variables.yaml ]; then #? If config/variables.yaml does not exist or is empty...
+if [ "${MAKE_SAMPLE_SHEET}" == "TRUE" ] && [ ! -s config/variables.yaml ]; then #? If config/variables.yaml does not exist or is empty AND manual make sample sheet is TRUE...
     echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > config/variables.yaml
-    echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> config/variables.yaml
+    echo -e "Server_host:\n    hostname: http://${HOSTNAME}" >> config/variables.yaml
     echo -e "The variables file has been created, you can now run the Jovian snakefile manually"
+    exit 0
+else
+    echo -e "Variable file not generated, it already existed. You are now able to run the Jovian snakefile manually."
     exit 0
 fi
 
