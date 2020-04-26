@@ -386,6 +386,8 @@ if ! bash bin/includes/Make_samplesheet; then
     exit 1
 fi
 
+#TODO cleanup/remove these failsaves, it's too complicated and probably redundant.
+
 ###? Failsafe 1 for the sample sheet
 if [ -e sample_sheet.yaml ]; then
     echo "sample sheet exists"
@@ -408,7 +410,7 @@ if [ "${MAKE_SAMPLE_SHEET}" == "TRUE" ] && [ ! -s config/variables.yaml ]; then 
     echo -e "Server_host:\n    hostname: http://${HOSTNAME}" >> config/variables.yaml
     echo -e "The variables file has been created, you can now run the Jovian snakefile manually"
     exit 0
-else
+elif [ "${MAKE_SAMPLE_SHEET}" == "TRUE" ] && [ -s config/variables.yaml ]; then
     echo -e "Variable file not generated, it already existed. You are now able to run the Jovian snakefile manually."
     exit 0
 fi
