@@ -8,4 +8,4 @@ dependencies:
   - blast==2.9.0
   - krona==2.7.1
   - mgkit==0.3.4
-
+  - make==4.2.1 # Not installed by default on WSL, needed for Krona db updater
