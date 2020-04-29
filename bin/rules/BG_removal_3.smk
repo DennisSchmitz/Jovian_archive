@@ -9,7 +9,7 @@ rule HuGo_removal_pt3_extract_unpaired_unmapped_reads:
         bam="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_sorted.bam",
         bam_index="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_sorted.bam.bai"
     output:
-        "data/cleaned_fastq/{sample}_unpaired.fq"
+        "data/cleaned_fastq/{sample}_unpaired.fq.gz"
     conda:
         "../envs/HuGo_removal.yaml"
     log:
@@ -19,7 +19,5 @@ rule HuGo_removal_pt3_extract_unpaired_unmapped_reads:
     threads: config["threads"]["HuGo_removal"]
     shell:
         """
-samtools view -@ {threads} -b -F 1 -f 4 {input.bam} 2> {log} |\
-samtools sort -@ {threads} -n - 2>> {log} |\
-bedtools bamtofastq -i - -fq {output} >> {log} 2>&1
+reformat.sh in={input.bam} out={output} filterbits=1 requiredbits=4 ow=t -da >> {log} 2>&1
         """

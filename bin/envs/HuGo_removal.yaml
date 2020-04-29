@@ -1,9 +1,12 @@
 name: HuGo_removal
 channels:
-  - bioconda
-  - conda-forge
-  - defaults
+ - bioconda
+ - conda-forge
+ - defaults
 dependencies:
-    - bowtie2==2.3.4.3
-    - samtools==1.9
-    - bedtools==2.27.1
+ - bowtie2==2.3.4.3
+ - samtools==1.9
+ - bedtools==2.27.1
+ - bbmap=38.22
+ - pigz=2.3.4
+ - sambamba=0.7.1

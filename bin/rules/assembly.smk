@@ -6,9 +6,9 @@
 
 rule De_novo_assembly:
     input:
-        fastq_pR1="data/cleaned_fastq/{sample}_pR1.fq",
-        fastq_pR2="data/cleaned_fastq/{sample}_pR2.fq",
-        fastq_unpaired="data/cleaned_fastq/{sample}_unpaired.fq"
+        fastq_pR1="data/cleaned_fastq/{sample}_pR1.fq.gz",
+        fastq_pR2="data/cleaned_fastq/{sample}_pR2.fq.gz",
+        fastq_unpaired="data/cleaned_fastq/{sample}_unpaired.fq.gz"
     output:
         all_scaffolds="data/scaffolds_raw/{sample}/scaffolds.fasta",
         filt_scaffolds="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"],
