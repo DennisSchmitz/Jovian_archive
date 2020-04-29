@@ -190,6 +190,10 @@ onerror:
 
 onsuccess:
     shell("""
+        echo -e "\nStarting virus typing, this may take a while...\n"
+        bash jovian -vt all
+        echo -e "Virus typing finished."
+
         echo -e "\nCleaning up..."
         echo -e "\tRemoving empty folders..."
         find data -depth -type d -not \( -path data/scaffolds_raw -prune \) -empty -delete

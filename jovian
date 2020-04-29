@@ -479,13 +479,6 @@ else #? Else, start jovian_core.smk and do virus typing for all keywords.
     set +ue #turn off bash strict mode because snakemake and conda don't work in strict mode
     snakemake -s bin/Snakefile --profile "${PROFILE}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
     set -ue #turn bash strict mode back on
-
-    # Check if the URL's are accessible with the TT 'all' keyword (sometimes they are overloaded/down for maintenance/crashed)
-    if ! bash bin/includes/Typingtool_check "all"; then
-        exit 1
-    fi
-    # Start the TT with the "all" keyword        
-    bash bin/scripts/virus_typing.sh "all"
 fi
 
 exit 0 
