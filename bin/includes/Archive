@@ -50,6 +50,14 @@ if [ "${SKIP_CONFIRMATION}" == "TRUE" ]; then
     else
         echo -e "Couldn't find the 'config' folder in this working directory, skipping this file in archiving"
     fi
+    
+    if [ -e reference_alignment/ ]; then
+        echo -e "Found 'reference_alignment' folder, appending to archive..."
+        (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar reference_alignment/) &
+        spinner
+    else
+        echo -e "Couldn't find the 'reference_alignment' folder in this working directory, skipping this file in archiving"
+    fi
 
     if [ -e archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar ]; then
         spacer
@@ -107,6 +115,14 @@ else
                 spinner
             else
                 echo -e "Couldn't find the 'config' folder in this working directory, skipping this file in archiving"
+            fi
+        
+            if [ -e reference_alignment/ ]; then
+                echo -e "Found 'reference_alignment' folder, appending to archive..."
+                (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar reference_alignment/) &
+                spinner
+            else
+                echo -e "Couldn't find the 'reference_alignment' folder in this working directory, skipping this file in archiving"
             fi
 
             if [ -e archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar ]; then
