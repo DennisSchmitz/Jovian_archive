@@ -117,6 +117,33 @@ rule all:
 
 
 #@################################################################################
+#@#### The `onstart` checker codeblock                                       #####
+#@################################################################################
+
+onstart:
+    shell("""
+        mkdir -p {OUTPUT_DIR_RESULTS}
+        echo -e "\nLogging pipeline settings..."
+
+        echo -e "\tGenerating methodological hash (fingerprint)..."
+        echo -e "This is the link to the code used for this analysis:\thttps://github.com/DennisSchmitz/Jovian/tree/$(git log -n 1 --pretty=format:"%H")" > {OUTPUT_DIR_RESULTS}/log_git.txt
+        echo -e "This code with unique fingerprint $(git log -n1 --pretty=format:"%H") was committed by $(git log -n1 --pretty=format:"%an <%ae>") at $(git log -n1 --pretty=format:"%ad")" >> {OUTPUT_DIR_RESULTS}/log_git.txt
+
+        echo -e "\tGenerating full software list of current Conda environment (\"Jovian_master\")..."
+        conda list > {OUTPUT_DIR_RESULTS}/log_conda.txt
+        
+        echo -e "\tGenerating config file log..."
+        rm -f {OUTPUT_DIR_RESULTS}/log_config.txt
+        for file in config/*.yaml
+        do
+            echo -e "\n==> Contents of file \"${{file}}\": <==" >> {OUTPUT_DIR_RESULTS}/log_config.txt
+            cat ${{file}} >> {OUTPUT_DIR_RESULTS}/log_config.txt
+            echo -e "\n\n" >> {OUTPUT_DIR_RESULTS}/log_config.txt
+        done
+    """)
+
+
+#@################################################################################
 #@#### Reference alignment extension processes                               #####
 #@################################################################################
 
