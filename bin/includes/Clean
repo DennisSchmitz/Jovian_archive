@@ -1,6 +1,7 @@
 #!/bin/bash
 # shellcheck disable=SC1091
 
+#TODO redundant code in here, collapse at a later time.
 
 line
 spacer
@@ -12,6 +13,7 @@ if [ "${SKIP_CONFIRMATION}" == "TRUE" ]; then
         rm -rf results/
         rm -f sample_sheet.yaml
         rm -f "${PROFILE}"/variables.yaml
+        rm -rf reference_alignment/
 
         ## clean the yaml files
         sed -i '\|databases|d' "${PROFILE}"/pipeline_parameters.yaml
@@ -34,6 +36,7 @@ else
             rm -rf results/
             rm -f sample_sheet.yaml
             rm -f "${PROFILE}"/variables.yaml
+            rm -rf reference_alignment/
 
             sed -i '\|databases|d' "${PROFILE}"/pipeline_parameters.yaml
             sed -i '\|background_ref|d' "${PROFILE}"/pipeline_parameters.yaml
