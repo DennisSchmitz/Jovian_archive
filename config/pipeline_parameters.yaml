@@ -11,7 +11,7 @@ Trimmomatic:
     # For the Nextera PE lib prep adapters
     adapter_removal_config: ILLUMINACLIP:files/trimmomatic_0.36_adapters_lists/NexteraPE-PE.fa:2:30:10:8:true
     # Default: 5 nucleotides window size, minimum average Phred score of 30
-    quality_trimming_config: SLIDINGWINDOW:5:30
+    quality_trimming_config: SLIDINGWINDOW:5:20
     # Default: Remove anything smaller than 50 nucleotides
     minimum_length_config: MINLEN:50
     
@@ -30,7 +30,7 @@ SPAdes:
 
 scaffold_minLen_filter:
     # Minimum allowed scaffold size to be allowed for downstream processessing. Advice, use a minimum length that is atleast 1nt greater than your Illumina read length
-    minlen: 500
+    minlen: 250
 
 taxonomic_classification: # NT database is hardcoded for now
     evalue: 0.05 # E-value threshold for saving hits
@@ -62,18 +62,6 @@ server_info: # This is used for IGVjs, discuss this with your IT department, dep
     # ? Kan gecheckt worden met netstat -tulpn | grep nginx
     port: 8083
 
-######################################
-### OPTIONAL ref alignment         ###
-### software parameters            ###
-######################################
-
-reference_alignment:
-    # Specify the input directory (default: data/cleaned_fastq/). N.B. end the path with a "/" character
-    input_dir: data/cleaned_fastq/
-    # Specify where all the output of the ref alignment extension will go (default: reference_alignment/). N.B. end the path with a "/" character
-    output_dir: reference_alignment/
-    # Specify the log output directory (default: logs/). N.B. end the path with a "/" character
-    log_dir: logs/
 
 ######################################
 ### Technical parameters           ###
@@ -92,9 +80,20 @@ threads:
     # Settings for the optional reference alignment steps:
     RA_align_to_reference: 12
 
+#! Options for the metagenomics workflow, for developers only
+#TODO hier nog aparte yaml parent voor maken, updaten verwijzingen in rest v/d code. Is duidelijker/leesbaarder.
 remove_temp: 1 # For development and debug only. If you set this to 0 you will keep the HuGo alignment data which can lead to patient privacy concerns.
-
 PCR_dup_removal: true # For development and debug only. Set this to false to NOT remove PCR duplicates in the metagenomic output. N.B. this is not advised and mainly in here for debugging purposes: depending on the dataset, not removing PCR-dups gives a false sense of confidence (inflated coverage metrics), false SNP-calls and increases turnaround time of downstream processes.
+
+#! Options for the RA extension, for developers only, do not change this as an end-user since this will break functionality of wrapper help-functions such as `clean` and `archive`
+reference_alignment:
+    # Specify the input directory (default: data/cleaned_fastq/). N.B. end the path with a "/" character
+    input_dir: data/cleaned_fastq/
+    # Specify where all the output of the ref alignment extension will go (default: reference_alignment/). N.B. end the path with a "/" character
+    output_dir: reference_alignment/
+    # Specify the log output directory (default: logs/). N.B. end the path with a "/" character
+    log_dir: logs/
+
 
 ######################################
 ### Databases                      ###

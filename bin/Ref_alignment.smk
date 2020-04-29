@@ -225,8 +225,6 @@ tabix -p gff {output.zipped_gff3} >> {log} 2>&1
         """
 
 
-############################!
-# Nuttig voor IGVjs vis. Gejat uit Jovian core met minor changes, kunnen we waarschijnlijk efficienter doen.
 rule RA_determine_GC_content:
     input:
         fasta= rules.RA_index_reference.output.reference_copy,
