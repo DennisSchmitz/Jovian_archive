@@ -23,6 +23,7 @@ dependencies:
   - nodejs==11.11.0
   - gawk==5.0.0
   - pigz==2.3.4
+  - seqkit==0.12.1
   - pv==1.6.6
   - pip==19.2.3
   - pip:

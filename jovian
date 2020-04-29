@@ -456,11 +456,15 @@ if [ ! -s sample_sheet.yaml ]; then #? If sample_sheet.yaml does not exist or is
     echo -e "Please inspect the input directory (${INPUT_DIR}) and make sure the right files are present"
     exit 1
 elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" -a ! -s "${REFERENCE_FASTA}" ]; then #? If REFERENCE_ALIGNMENT is TRUE and the REFERENCE_ALIGNMENT file exists and is not empty...
-    echo -e "The given reference file, ${REFERENCE_FASTA}, does not exist. Please check your input. Exitting..."
+    echo -e "The given reference file, ${REFERENCE_FASTA}, does not exist. Please check your input. Exiting..."
     exit 1
-elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" ] && [ "${REFERENCE_FASTA##*.}" != "fasta" -a "${REFERENCE_FASTA##*.}" != "fa" ]; then #? If REFERENCE_ALIGNMENT is TRUE and the REFERENCE_ALIGNMENT file has no .fasta AND .fa extension (i.e. it's not a .fa or .fasta file)...
-    echo -e "The given reference file, ${REFERENCE_FASTA}, does not look like a fasta file (.fa or .fasta extension). Please check your input. Exitting..."
+elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" ] && ! $( seqkit seq -v -t dna "${REFERENCE_FASTA}" > /dev/null ); then
+    echo -e "The given input reference FASTA does not appear to be valid, see the error message above. Exiting..."
     exit 1
+elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" ] && (( $( grep -c "^>" "${REFERENCE_FASTA}" ) > 1 )); then #TODO this is a failsafe until the next version, current version only allows single-record FASTA records since it's intended for nCoV first and foremost.
+    echo -e "This version of Jovian does not support multi-record FASTA references, only one sequence per FASTA allowed. This feature will come in the next version. Exiting..."
+    exit 1
+    #TODO remove/update this part in a future version of Jovian which is multi-record FASTA compatible (e.g. segmented viruses or multiple clades of the same species in one record)
 elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" ]; then #? If REFERENCE_ALIGNMENT is TRUE, start RA.smk and exit with exit-code 0...
     echo -e "Starting optional reference alignment extension"
     # Starting nginx for IGVjs viz. In core pipeline this is started from report-jup. But since we don't have that for the extension, do it like this:
