@@ -7,10 +7,10 @@
 rule HuGo_removal_pt1_alignment:
     input:
         background_ref=config["databases"]["background_ref"],
-        r1="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_pR1.fastq",
-        r2="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_pR2.fastq",
-        r1_unpaired="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_uR1.fastq",
-        r2_unpaired="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_uR2.fastq",
+        r1="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_pR1.fastq.gz",
+        r2="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_pR2.fastq.gz",
+        r1_unpaired="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_uR1.fastq.gz",
+        r2_unpaired="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_uR2.fastq.gz",
     output:
         sorted_bam="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_sorted.bam",
         sorted_bam_index="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_sorted.bam.bai",

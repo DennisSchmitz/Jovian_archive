@@ -8,10 +8,10 @@ rule Clean_the_data:
     input:
         lambda wildcards: (SAMPLES[wildcards.sample][i] for i in ("R1", "R2"))
     output:
-        r1="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_pR1.fastq",
-        r2="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_pR2.fastq",
-        r1_unpaired="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_uR1.fastq",
-        r2_unpaired="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_uR2.fastq",
+        r1="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_pR1.fastq.gz",
+        r2="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_pR2.fastq.gz",
+        r1_unpaired="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_uR1.fastq.gz",
+        r2_unpaired="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_uR2.fastq.gz",
     conda:
         "../envs/QC_and_clean.yaml"
     benchmark:

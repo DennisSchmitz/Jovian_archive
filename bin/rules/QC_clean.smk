@@ -6,7 +6,7 @@
 
 rule QC_clean_data:
     input:
-        "data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_{read}.fastq"
+        "data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_{read}.fastq.gz"
     output:
         html="data/FastQC_posttrim/{sample}_{read}_fastqc.html",
         zip="data/FastQC_posttrim/{sample}_{read}_fastqc.zip"
