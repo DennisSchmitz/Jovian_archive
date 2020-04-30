@@ -69,7 +69,8 @@ Jupyter Notebook (for data visualization):
                                     want to open the final report with the interactive graphs
                                     and tables.
 Installation:
-  -ic, --install-dependencies       Install the required software dependencies.
+  -ic, --install-dependencies       Install the required software dependencies for the
+                                    metagenomics and reference alignment workflows.
   -id, --install-databases          Install required databases.
 Debug only:
   --start-nginx                     Starts the nginx process.
