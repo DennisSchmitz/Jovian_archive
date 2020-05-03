@@ -98,7 +98,7 @@ EOF
         line
         spacer
 
-
+    fi
     else
         #! The location of conda is unknown AND the folder structure doesn't exist...
             #! This most likely means that something went very wrong and the user must debug themselves
@@ -143,3 +143,4 @@ export -f __add_sys_prefix_to_path
 EOF
 
 fi
+
