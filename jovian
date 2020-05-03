@@ -258,7 +258,7 @@ else
     echo -e "Successfully activated Jovian_master environment"
 fi
 
-exit
+
 ###> Install databases, as specified via CLI argument '-id'
 if [ "${INSTALL_DB:-}" == "TRUE" ]; then
     bash bin/includes/Databases

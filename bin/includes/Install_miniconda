@@ -1,6 +1,7 @@
 #!/bin/bash
 # shellcheck disable=SC1091
 
+conda_loc=$(which conda)
 
 if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. the `conda` command is not available), if true, install it in ~/UserBinaries. Otherwise, proceed.
     if [ ! -e "${HOME}/UserBinaries/Miniconda3" ]; then
@@ -47,7 +48,6 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
 fi
 
 
-conda_loc=$(which conda)
 rcfile="${HOME}/.jovianrc"
 
 if [ -f "${rcfile}" ]; then
@@ -62,28 +62,28 @@ if [ -z "$conda_loc" ]; then
         #* this means that conda wasn't installed before and probably has been installed now, 
         #* unless this has been aborted by the user
 
-    if [ -e "${HOME}/UserBinaries/Miniconda3" ]; then
+    if [ -d "${HOME}/UserBinaries/Miniconda3" ]; then
         #? The folder structure exists which indicates that Jovian has installed Conda for the user.
             #? Use this location for the >jovianrc< content
         
     touch "${HOME}"/.jovianrc
-    cat << EOF >> "${HOME}"/.jovianrc
-    __conda_setup="$('${HOME}/UserBinaries/Miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
-    if [ $? -eq 0 ]; then
-        eval "$__conda_setup"
+cat << EOF >> "${HOME}"/.jovianrc
+__conda_setup="$('${HOME}/UserBinaries/Miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "${HOME}/UserBinaries/Miniconda3/etc/profile.d/conda.sh" ]; then
+        . "${HOME}/UserBinaries/Miniconda3/etc/profile.d/conda.sh"
     else
-        if [ -f "${HOME}/UserBinaries/Miniconda3/etc/profile.d/conda.sh" ]; then
-            . "${HOME}/UserBinaries/Miniconda3/etc/profile.d/conda.sh"
-        else
-            export PATH="${HOME}/UserBinaries/Miniconda3/bin:$PATH"
-        fi
+        export PATH="${HOME}/UserBinaries/Miniconda3/bin:$PATH"
     fi
-    unset __conda_setup
-    export -f conda
-    export -f __conda_activate
-    export -f __conda_reactivate
-    export -f __conda_hashr
-    export -f __add_sys_prefix_to_path
+fi
+unset __conda_setup
+export -f conda
+export -f __conda_activate
+export -f __conda_reactivate
+export -f __conda_hashr
+export -f __add_sys_prefix_to_path
 EOF
 
         echo -e "\n"
@@ -100,7 +100,7 @@ EOF
         line
         spacer
 
-    elif [ ! -e "${HOME}/UserBinaries/Miniconda3" ]; then
+    elif [ ! -d "${HOME}/UserBinaries/Miniconda3" ]; then
         #! The location of conda is unknown AND the folder structure doesn't exist...
             #! This most likely means that something went very wrong and the user must debug themselves
             #! Manual installation of conda will be necessary
