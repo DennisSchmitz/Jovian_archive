@@ -6,7 +6,7 @@ conda_loc=$(which conda)
 if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. the `conda` command is not available), if true, install it in ~/UserBinaries. Otherwise, proceed.
     if [ ! -e "${HOME}/UserBinaries/Miniconda3" ]; then
         ### confirmation of conda installation
-        #installer_intro
+        installer_intro
         echo -e "Miniconda missing. Installing Miniconda can take up to 15 minutes..."
         if [ "${SKIP_CONFIRMATION}" == "TRUE" ]; then
             echo "Jovian ${VERSION}" > ${INSTALL_LOG}
@@ -16,8 +16,8 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
             sh latest.sh -b -p "${HOME}/UserBinaries/Miniconda3" | tee -a ${INSTALL_LOG}
             export PATH=${HOME}/UserBinaries/Miniconda3/bin:$PATH
             rm latest.sh
-            #tput reset
-            #installer_intro
+            tput reset
+            installer_intro
         else
             while read -r -p "Do you wish to install (mini)conda now? [y/N] " response
             do
@@ -35,8 +35,8 @@ if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. 
                     sh latest.sh -b -p "${HOME}/UserBinaries/Miniconda3" | tee -a ${INSTALL_LOG}
                     export PATH=${HOME}/UserBinaries/Miniconda3/bin:$PATH
                     rm latest.sh
-                    #tput reset
-                    #installer_intro
+                    tput reset
+                    installer_intro
                     break
                 else
                     echo -e "Please answer with 'yes' or 'no'"
