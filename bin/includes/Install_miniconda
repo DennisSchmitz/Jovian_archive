@@ -134,9 +134,24 @@ if [ ! -z "${conda_loc}" ]; then
         #@ 
         #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
+condadir="${conda_loc}"
+basedir=$(echo "${condadir}" | rev | cut -d'/' -f3- | rev)
+etcdir="${basedir}/etc/profile.d/conda.sh"
+bindir="${basedir}/bin"
+
 
     touch "${HOME}"/.jovianrc
     cat << EOF >> "${HOME}"/.jovianrc
+__conda_setup="$('${condadir}' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "${etcdir}" ]; then
+        . "${etcdir}"
+    else
+        export PATH="${bindir}:$PATH"
+    fi
+fi
 export -f conda
 export -f __conda_activate
 export -f __conda_reactivate
