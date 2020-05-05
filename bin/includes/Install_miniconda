@@ -69,22 +69,24 @@ if [ -z "${conda_loc}" ]; then
         
     touch "${HOME}"/.jovianrc
 cat << EOF >> "${HOME}"/.jovianrc
-__conda_setup="$('${HOME}/UserBinaries/Miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
+if [ -f "${HOME}/UserBinaries/Miniconda3/etc/profile.d/conda.sh" ]; then
+    . "${HOME}/UserBinaries/Miniconda3/etc/profile.d/conda.sh"
 else
-    if [ -f "${HOME}/UserBinaries/Miniconda3/etc/profile.d/conda.sh" ]; then
-        . "${HOME}/UserBinaries/Miniconda3/etc/profile.d/conda.sh"
-    else
-        export PATH="${HOME}/UserBinaries/Miniconda3/bin:$PATH"
-    fi
+    export PATH="${HOME}/UserBinaries/Miniconda3/bin:$PATH"
 fi
+
 unset __conda_setup
 export -f conda
 export -f __conda_activate
 export -f __conda_reactivate
 export -f __conda_hashr
 export -f __add_sys_prefix_to_path
+EOF
+
+cat << EOF >> "${HOME}/.bashrc"
+if [ -f "${HOME}/.jovianrc" ]; then
+    . "${HOME}/.jovianrc"
+fi
 EOF
 
         echo -e "\n"
@@ -142,21 +144,23 @@ bindir="${basedir}/bin"
 
     touch "${HOME}"/.jovianrc
     cat << EOF >> "${HOME}"/.jovianrc
-__conda_setup="$('${condadir}' 'shell.bash' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
+if [ -f "${etcdir}" ]; then
+    . "${etcdir}"
 else
-    if [ -f "${etcdir}" ]; then
-        . "${etcdir}"
-    else
-        export PATH="${bindir}:$PATH"
-    fi
+    export PATH="${bindir}:$PATH"
 fi
+
 export -f conda
 export -f __conda_activate
 export -f __conda_reactivate
 export -f __conda_hashr
 export -f __add_sys_prefix_to_path
+EOF
+
+cat << EOF >> "${HOME}/.bashrc"
+if [ -f "${HOME}/.jovianrc" ]; then
+    . "${HOME}/.jovianrc"
+fi
 EOF
 
         source "${HOME}"/.jovianrc
