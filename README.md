@@ -83,6 +83,7 @@ Jovian has several features necessary for diagnostic usage:
 - All cleaned reads are aligned against the user-provided reference fasta.  
 - SNPs are called and a consensus genome is generated.  
 - Consensus genomes are filtered at the following coverage cut-off thresholds: 1, 5, 10, 30 and 100x.  
+- A tabular overview of the breadth of coverage (BoC) at the different coverage cut-off thresholds is generated.  
 - Alignments and visualized via `IGVjs` and allow manual assessment and validation of consensus genomes.  
 
 ### Visualizations
