@@ -185,6 +185,8 @@ onerror:
     shell("""
         rm -f data/scaffolds_filtered/*.html
         rm -rf data/html/
+        rm -f data/taxonomic_classification/*_lca_*
+        rm -f data/taxonomic_classification/*_nolca_*
     """)
 
 
@@ -212,6 +214,8 @@ onsuccess:
             rm -f data/scaffolds_filtered/*.windows
             rm -f data/taxonomic_classification/*.taxtab
             rm -f data/taxonomic_classification/*.taxMagtab
+            rm -f data/taxonomic_classification/*_lca_*
+            rm -f data/taxonomic_classification/*_nolca_*
             rm -rf data/html/
         else
             echo -e "\t\tYou chose to not remove temp files: the human genome alignment files are not removed."

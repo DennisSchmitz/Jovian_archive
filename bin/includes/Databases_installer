@@ -1,6 +1,7 @@
 #!/bin/bash
 # shellcheck disable=SC1091
 
+#TODO lots of redundant code, cleanup later
 #* welcome to while-loop extravaganza
 
 database_installer_intro

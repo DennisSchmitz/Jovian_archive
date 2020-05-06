@@ -5,7 +5,7 @@ rule make_gff:
     input:
          "data/taxonomic_classification/{sample}.blastn"
     output:
-         temp("data/taxonomic_classification/{sample}_lca_raw.gff")
+         "data/taxonomic_classification/{sample}_lca_raw.gff" #? This is a temp file, removed in the onSuccess//onError clause.
     conda:
         "../envs/mgkit_lca.yaml"
     benchmark:
@@ -26,7 +26,7 @@ rule addtaxa_gff:
     input:
          "data/taxonomic_classification/{sample}_lca_raw.gff"
     output:
-         temp("data/taxonomic_classification/{sample}_lca_tax.gff")
+         "data/taxonomic_classification/{sample}_lca_tax.gff" #? This is a temp file, removed in the onSuccess//onError clause.
     conda:
         "../envs/mgkit_lca.yaml"
     benchmark:
@@ -46,7 +46,7 @@ rule taxfilter_gff:
     input:
          "data/taxonomic_classification/{sample}_lca_tax.gff"
     output:
-         temp("data/taxonomic_classification/{sample}_lca_taxfilt.gff")
+         "data/taxonomic_classification/{sample}_lca_taxfilt.gff" #? This is a temp file, removed in the onSuccess//onError clause.
     conda:
         "../envs/mgkit_lca.yaml"
     benchmark:
@@ -66,7 +66,7 @@ rule qfilter_gff:
     input:
          "data/taxonomic_classification/{sample}_lca_taxfilt.gff"
     output:
-         temp("data/taxonomic_classification/{sample}_lca_filt.gff")
+         "data/taxonomic_classification/{sample}_lca_filt.gff" #? This is a temp file, removed in the onSuccess//onError clause.
     conda:
         "../envs/mgkit_lca.yaml"
     benchmark:
@@ -93,7 +93,7 @@ rule lca_mgkit:
         filtgff="data/taxonomic_classification/{sample}_lca_filt.gff",
         stats="data/scaffolds_filtered/{sample}_perMinLenFiltScaffold.stats"
     output:
-        no_lca=temp("data/taxonomic_classification/{sample}_nolca_filt.gff"),
+        no_lca="data/taxonomic_classification/{sample}_nolca_filt.gff", #? This is a temp file, removed in the onSuccess//onError clause.
         taxtab="data/taxonomic_classification/{sample}.taxtab",
         taxMagtab="data/taxonomic_classification/{sample}.taxMagtab"
     conda:
