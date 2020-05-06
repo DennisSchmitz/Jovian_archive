@@ -1,0 +1,10 @@
+#!/bin/bash
+# shellcheck disable=SC1091
+
+eval "$(parse_yaml "${HOME}"/.jovian_installchoice_db "db_")"
+
+echo -e "; Lines starting with a semi-colon are considered comments" > .ncbirc
+echo -e "[BLAST]" >> .ncbirc
+echo -e "; Path to the BLAST databases" >> .ncbirc
+echo -e "BLASTDB=${db_installeranswers_BLASTNT}::${db_installeranswers_NCBITAXDB}" >> .ncbirc
+

@@ -1,0 +1,4 @@
+#!/bin/bash
+# shellcheck disable=SC1091
+
+echo -e "Jovian: ${VERSION}"

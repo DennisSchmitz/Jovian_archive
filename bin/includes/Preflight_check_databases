@@ -1,0 +1,113 @@
+#!/bin/bash
+# shellcheck disable=SC1091
+
+#@ This script checks wether all the listed and/or required databases are actually present before running
+source bin/includes/functions
+eval "$(parse_yaml "${HOME}"/.jovian_installchoice_db "db_")"
+
+no_response() {
+	echo "success" > /dev/null
+}
+
+#>###########
+#> define readable vars
+SHOULD_I_EXIT="NO"
+
+#> folders
+BLASTNT="${db_installeranswers_BLASTNT}"
+NCBITAXDB="${db_installeranswers_NCBITAXDB}"
+KRONA="${db_installeranswers_kronataxonomy}"
+MGKIT="${db_installeranswers_mgkittaxonomy}"
+
+#> files
+BG="${db_installeranswers_backgroundref}"
+VHDB="${db_installeranswers_virushostdb}"
+NTDMPR="${db_installeranswers_newtaxdumpranked}"
+NTDMPH="${db_installeranswers_newtaxdumphost}"
+NCBIRC=".ncbirc"
+
+
+#@ check for existance of required folders
+
+if [ -d "${BLASTNT}" ]; then
+	no_response
+else
+	echo -e "The folder \033[1m${BLASTNT}\033[0m, which was specified during installation, does not exist."
+	echo -e "Please reconfigure the required databases with \033[1mbash jovian --db-reset\033[0m"
+	SHOULD_I_EXIT="YES"
+fi
+
+if [ -d "${NCBITAXDB}" ]; then
+	no_response
+else
+	echo -e "The folder \033[1m${NCBITAXDB}\033[0m, which was specified during installation, does not exist."
+	echo -e "Please reconfigure the required databases with \033[1mbash jovian --db-reset\033[0m"
+	SHOULD_I_EXIT="YES"
+fi
+
+if [ -d "${KRONA}" ]; then
+	no_response
+else
+	echo -e "The folder \033[1m${KRONA}\033[0m, which was specified during installation, does not exist."
+	echo -e "Please reconfigure the required databases with \033[1mbash jovian --db-reset\033[0m"
+	SHOULD_I_EXIT="YES"
+fi
+
+if [ -d "${MGKIT}" ]; then
+	no_response
+else
+	echo -e "The folder \033[1m${MGKIT}\033[0m, which was specified during installation, does not exist."
+	echo -e "Please reconfigure the required databases with \033[1mbash jovian --db-reset\033[0m"
+	SHOULD_I_EXIT="YES"
+fi
+
+#@ Check the existance of required files here
+
+if [ -f "${BG}" ]; then
+	no_response
+else
+	echo -e "The file \033[1m${BG}\033[0m, which was specified during installation, does not exist."
+	echo -e "Please reconfigure the required databases with \033[1mbash jovian --db-reset\033[0m"
+	SHOULD_I_EXIT="YES"
+fi
+
+if [ -f "${VHDB}" ]; then
+	no_response
+else
+	echo -e "The file \033[1m${VHDB}\033[0m, which was specified during installation, does not exist."
+	echo -e "Please reconfigure the required databases with \033[1mbash jovian --db-reset\033[0m"
+	SHOULD_I_EXIT="YES"
+fi
+
+if [ -f "${NTDMPR}" ]; then
+	no_response
+else
+	echo -e "The file \033[1m${NTDMPR}\033[0m, which was specified during installation, does not exist."
+	echo -e "Please reconfigure the required databases with \033[1mbash jovian --db-reset\033[0m"
+	SHOULD_I_EXIT="YES"
+fi
+
+if [ -f "${NTDMPH}" ]; then
+	no_response
+else
+	echo -e "The file \033[1m${NTDMPH}\033[0m, which was specified during installation, does not exist."
+	echo -e "Please reconfigure the required databases with \033[1mbash jovian --db-reset\033[0m"
+	SHOULD_I_EXIT="YES"
+fi
+
+
+if [ -f "${NCBIRC}" ]; then
+	no_response
+else
+	echo -e "The file \033[1m${NCBIRC}\033[0m does not exist."
+	echo -e "This file should be automatically generated and is required for taxonomic classification of Jovian"
+	echo -e "Since this file does not exists, there is probably something wrong with the database locations as specified during the installation"
+	echo -e "Please reconfigure the required databases with \033[1mbash jovian --db-reset\033[0m"
+	SHOULD_I_EXIT="YES"
+fi
+
+if [ "${SHOULD_I_EXIT}" == "YES" ]; then
+	exit 1
+else
+	exit 0
+fi

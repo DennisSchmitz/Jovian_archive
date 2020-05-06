@@ -1,0 +1,171 @@
+#!/bin/bash
+# shellcheck disable=SC1091
+
+conda_loc=$(which conda)
+
+if ! command -v conda > /dev/null; then # Check if conda is not installed (i.e. the `conda` command is not available), if true, install it in ~/UserBinaries. Otherwise, proceed.
+    if [ ! -e "${HOME}/UserBinaries/Miniconda3" ]; then
+        ### confirmation of conda installation
+        installer_intro
+        echo -e "Miniconda missing. Installing Miniconda can take up to 15 minutes..."
+        if [ "${SKIP_CONFIRMATION}" == "TRUE" ]; then
+            echo "Jovian ${VERSION}" > ${INSTALL_LOG}
+            line | tee -a ${INSTALL_LOG}
+            curl -o latest.sh -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+            chmod +x latest.sh
+            sh latest.sh -b -p "${HOME}/UserBinaries/Miniconda3" | tee -a ${INSTALL_LOG}
+            export PATH=${HOME}/UserBinaries/Miniconda3/bin:$PATH
+            rm latest.sh
+            tput reset
+            installer_intro
+        else
+            while read -r -p "Do you wish to install (mini)conda now? [y/N] " response
+            do
+                response=${response,,}
+                if [[ "${response}" =~ ^(no|n) ]]; then
+                    minispacer
+                    echo -e "Conda is a requirement for Jovian to run."
+                    echo -e "Exiting because conda isn't installed and automatic installation of conda was declined by user"
+                    exit 1
+                elif [[ "${response}" =~ ^(yes|y)$ ]]; then
+                    echo "Jovian ${VERSION}" > ${INSTALL_LOG}
+                    line | tee -a ${INSTALL_LOG}
+                    curl -o latest.sh -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+                    chmod +x latest.sh
+                    sh latest.sh -b -p "${HOME}/UserBinaries/Miniconda3" | tee -a ${INSTALL_LOG}
+                    export PATH=${HOME}/UserBinaries/Miniconda3/bin:$PATH
+                    rm latest.sh
+                    tput reset
+                    installer_intro
+                    break
+                else
+                    echo -e "Please answer with 'yes' or 'no'"
+                    minispacer
+                fi
+            done
+        fi
+    fi
+fi
+
+
+rcfile="${HOME}/.jovianrc"
+
+
+
+if [ -f "${rcfile}" ]; then
+    exit 
+fi
+
+
+
+if [ -z "${conda_loc}" ]; then
+    #* conda location is unknown by "which"
+        #* this means that conda wasn't installed before and probably has been installed now, 
+        #* unless this has been aborted by the user
+
+    if [ -d "${HOME}/UserBinaries/Miniconda3" ]; then
+        #? The folder structure exists which indicates that Jovian has installed Conda for the user.
+            #? Use this location for the >jovianrc< content
+        
+    touch "${HOME}"/.jovianrc
+cat << EOF >> "${HOME}"/.jovianrc
+if [ -f "${HOME}/UserBinaries/Miniconda3/etc/profile.d/conda.sh" ]; then
+    . "${HOME}/UserBinaries/Miniconda3/etc/profile.d/conda.sh"
+else
+    export PATH="${HOME}/UserBinaries/Miniconda3/bin:$PATH"
+fi
+
+unset __conda_setup
+export -f conda
+export -f __conda_activate
+export -f __conda_reactivate
+export -f __conda_hashr
+export -f __add_sys_prefix_to_path
+EOF
+
+cat << EOF >> "${HOME}/.bashrc"
+if [ -f "${HOME}/.jovianrc" ]; then
+    . "${HOME}/.jovianrc"
+fi
+EOF
+
+        echo -e "\n"
+        echo -e "Installation of Conda is done"
+        echo -e "If you wish to use conda then it might be necessary to restart your terminal session"
+        source "${HOME}"/.jovianrc
+
+        conda config --set channel_priority false
+
+        echo -e "\n\nContinuing..."
+        sleep 5
+
+        installer_intro
+        line
+        spacer
+
+    elif [ ! -d "${HOME}/UserBinaries/Miniconda3" ]; then
+        #! The location of conda is unknown AND the folder structure doesn't exist...
+            #! This most likely means that something went very wrong and the user must debug themselves
+            #! Manual installation of conda will be necessary
+    
+        echo -e "\n\n"
+        echo -e "Something went wrong"
+        echo -e "We were unable to find conda on your system, and we couldn't succesfully install it for you\n"
+        echo -e "Please install (mini)Conda manually on your system before continuing. (or ask your system admin to do it)"
+        exit 1
+    fi
+
+fi
+if [ ! -z "${conda_loc}" ]; then
+    #* Conda location IS known by "which"
+        #* Meaning that our installation block was skipped
+        #* This can be because of two things
+            #> Conda was already installed on the system
+            #> Conda was previously installed by Jovian on the system.
+
+        #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+        #@ 
+        #@ Because the conda location is known, we will assume that we dont 
+        #@ have to make sure the core concepts of conda are functional.
+        #@ 
+        #@ Instead, we will only write the basic exports to the ~/.jovianrc file that
+        #@ make sure the command "conda activate <x>" actually works.
+        #@ 
+        #@ We will source the ~/.jovianrc file in the main wrapper so the created exports
+        #@ are passed on to all the various child processes and child-shells of Jovian.
+        #@ 
+        #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+condadir="${conda_loc}"
+basedir=$(echo "${condadir}" | rev | cut -d'/' -f3- | rev)
+etcdir="${basedir}/etc/profile.d/conda.sh"
+bindir="${basedir}/bin"
+
+
+    touch "${HOME}"/.jovianrc
+    cat << EOF >> "${HOME}"/.jovianrc
+if [ -f "${etcdir}" ]; then
+    . "${etcdir}"
+else
+    export PATH="${bindir}:$PATH"
+fi
+
+export -f conda
+export -f __conda_activate
+export -f __conda_reactivate
+export -f __conda_hashr
+export -f __add_sys_prefix_to_path
+EOF
+
+cat << EOF >> "${HOME}/.bashrc"
+if [ -f "${HOME}/.jovianrc" ]; then
+    . "${HOME}/.jovianrc"
+fi
+EOF
+
+        source "${HOME}"/.jovianrc
+
+        conda config --set channel_priority false
+
+fi
+

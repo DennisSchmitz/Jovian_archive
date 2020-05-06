@@ -1,0 +1,30 @@
+name: Jovian_master
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+  - eumetsat
+dependencies:
+  - snakemake==5.4.3
+  - pandas==0.24.2
+  - qgrid==1.1.1
+  - nb_conda==2.2.1
+  - nb_conda_kernels==2.2.1
+  - notebook==5.7.5 # Bugfix for https://github.com/DennisSchmitz/Jovian/issues/10
+  - tornado==5.1.1 # Bugfix for https://github.com/DennisSchmitz/Jovian/issues/10
+  - jupyter==1.0.0
+  - jupyter_contrib_nbextensions==0.5.1
+  - jupyterthemes==0.20.0
+  - nginx==1.15.9
+  - drmaa==0.7.9
+  - git==2.21.0
+  - parallel==20190322
+  - tree==1.7.0
+  - nodejs==11.11.0
+  - gawk==5.0.0
+  - pigz==2.3.4
+  - seqkit==0.12.1
+  - pv==1.6.6
+  - pip==19.2.3
+  - pip:
+    - PyYAML==5.3.1

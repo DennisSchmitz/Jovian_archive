@@ -1,0 +1,90 @@
+#!/bin/bash
+# shellcheck disable=SC1091
+
+cat <<HELP_USAGE
+
+Jovian, Public Health Toolkit version $VERSION, built with Snakemake
+  N.B. Current version only supports Illumina paired-end data, ONT compatibility is upcoming.
+__________________________________________________________________________________________________
+Use case 1, agnostic metagenomic analysis including virus typing (see below):
+      bash jovian -i <INPUT_DIR> <parameters>
+Use case 2, align against user-provided reference genome to generate a consensus genome:
+      bash jovian -i <INPUT_DIR> -ra <REFERENCE_FASTA> <parameters>
+__________________________________________________________________________________________________
+Input:
+  -i, --input [DIR]                 This is the folder containing your input fastq files.
+                                    Default is 'raw_data/' and only relative paths are accepted.
+Output (automatically generated):
+  data/                             Contains detailed intermediate files.
+  logs/                             Contains all log files.
+  results/                          Metagenomics workflow only. Contains all final results and
+                                    audit-trail. Results are visualized via the Jovian report.
+  reference_alignment/              Reference alignment workflow only. Contains detailed
+                                    intermediate files. Results are found in the "results/"
+                                    sub-folder.
+Virus typing:
+  -vt-help, --virus-typing-help     Print additional information about the virus-typing, i.e.
+                                    which family/genus is selected and which species are typed.
+  -vt, --virus-typing [all|NoV|EV|RVA|HAV|HEV|PV|Flavi]
+                                    After a Jovian analyses has completed, do viral typing for
+                                    Norovirus (NoV), Enterovirus (EV), Hepatitis A (HAV), 
+                                    Hepatitis E (HEV), Rotavirus A (RVA), Papillomaviruses (PV),
+                                    Flaviviruses (Flavi). Or use the 'all' keyword to perform
+                                    virus typing for all above listed viruses.
+                                    For additional explanation, --vt-help
+  -vt-force, --virus-typing-force [NoV|EV|RVA|HAV|HEV|PV|Flavi]
+                                    Same as above, but overwrites existing output. 
+Parameters:
+  -m, --mode [strict|relaxed]       Automatically configures Jovian to be stringent or relaxed
+                                    in taxonomic classification of scaffolds. Please see the 
+                                    publication for details. In short, use 'strict' for high 
+                                    precision at the cost of sensitivity and use 'relaxed' for
+                                    high sensitivity at the cost of more spurious results
+                                    (contamination). Default: relaxed.
+  -cq, --cluster-queue [Queue name] One-time override of the default cluster-queue settings.
+                                    Use this command when you wish to use a different computing-
+                                    queue without manually going through the jovian settings.
+                                    This does not change your default settings.
+  -h, --help                        Print the Jovian help document.
+  -sh, --snakemake-help             Print the Snakemake help document.
+  --clean (-y)                      Removes all Jovian output, both the metagenomics output and
+                                    reference alignment output. (-y forces "Yes" on all prompts)
+  -k, --keep-going                  Useful snakemake command: Go on with independent jobs if
+                                    a job fails.
+  -n, --dry-run                     Useful snakemake command: Do not execute anything, and
+                                    display what would be done.
+  -u, --unlock                      Removes the lock on the working directory. This happens when
+                                    a run ends abruptly and prevents you from doing subsequent
+                                    analyses.
+  -q, --quiet                       Useful snakemake command: Do not output any progress or
+                                    rule information.
+Archiving Jovian results:
+  --archive (-y)                    Archives the output of a Jovian analysis into single
+                                    compressed file. (-y forces "Yes" on all prompts)
+  --rebuild-archive                 Rebuilds Jovian results and logs from a previously made 
+                                    archive. It is important to use the same version of Jovian
+                                    as was initially used to build the archive. N.B. databases
+                                    are not restored.
+Jupyter Notebook (for data visualization):
+  --configure-jupyter               Sets the proper Jupyter settings. You only need to do this
+                                    once per user.
+  --start-jupyter                   Starts a Jupyter Notebook process. You must always have this
+                                    running in a separate terminal (or in the background) if you
+                                    want to open the final report with the interactive graphs
+                                    and tables.
+Installation:
+  -ic, --install-dependencies       Install the required software dependencies for the
+                                    metagenomics and reference alignment workflows.
+  -id, --install-databases          Install required databases.
+Debug only:
+  --start-nginx                     Starts the nginx process.
+  --stop-nginx                      Stops the nginx process.
+  --make-sample-sheet               Only make the sample sheet.
+Other:
+  -v, --version                     Print the current version of Jovian.
+  --update                          Updates Jovian to the latest release. Some files might be
+                                    reset to their default contents as shown on Github.
+  --update [Version tag]            Changes Jovian to the specified release. Only accepts major
+                                    releases. Files can get deleted in significant version changes.
+‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+HELP_USAGE

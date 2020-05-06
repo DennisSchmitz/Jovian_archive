@@ -1,0 +1,27 @@
+#!/bin/bash
+# shellcheck disable=SC1091
+
+
+spacer
+line
+echo -e "Preparing database installation process..."
+
+if [[ $PATH != *${HELPER_NAME}* ]]; then # If helper env is not in your path (i.e. it is not currently active), do...
+    set +ue # Turn bash strict mode off because that breaks conda
+
+    if ! conda activate "${HELPER_NAME}"; then # If exit statement is not 0, i.e. helper conda env hasn't been installed yet, do...
+        echo -e "\tInstalling Jovian helper environment..."
+        conda env create -f ${PATH_JOVIAN_HELPER_YAML} # Create the env from the specified yaml file
+        set -o allexport
+		conda activate "${HELPER_NAME}"
+		set +o allexport
+	fi
+
+    set -ue # Turn bash strict mode on again
+fi
+
+bash bin/includes/Databases_installer
+# The rest of the code is performed in the helper env, not in the master env.
+conda deactivate
+# conda deactivate # if you need to go back to the master_env. N.B. Wrap this command with set +u and set -u when working in strict bash mode.
+echo -e "DONE"

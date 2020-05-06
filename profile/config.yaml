@@ -1,7 +1,0 @@
-local-cores: 4
-cores: 120
-config:
-   sample_sheet=sample_sheet.yaml
-latency-wait: 60
-use-conda: true
-jobname: Jovian_{name}.jobid{jobid}

@@ -1,0 +1,148 @@
+#!/bin/bash
+# shellcheck disable=SC1091
+
+line
+spacer
+spacer
+echo -e "Archiving the Jovian data and results can take several hours depending on the size of your dataset(s)."
+echo -e "This archiving process will NOT include the raw dataset in the final archive"
+minispacer
+echo -e "It is advised to run the archiving process overnight, it is strongly advised to not stop the process once you started it"
+
+if [ "${SKIP_CONFIRMATION}" == "TRUE" ]; then
+    eval "$(parse_yaml config/variables.yaml "config_")"
+    if [ -e data/ ]; then
+        echo -e "Found the 'data/' folder, appending to archive..."
+        (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar data/) &
+        spinner
+    else
+        echo -e "Couldn't find the 'data/' folder in this working directory, skipping this folder in archiving"
+    fi
+
+    if [ -e logs/ ]; then
+        echo -e "Found the 'logs/' folder, appending to archive..."
+        (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar logs/) &
+        spinner
+    else
+        echo -e "Couldn't find the 'logs/' folder in this working directory, skipping this folder in archiving"
+    fi
+
+    if [ -e results/ ]; then
+        echo -e "Found the 'results/' folder, appending to archive..."
+        (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar results/) &
+        spinner
+    else
+        echo -e "Couldn't find the 'results/' folder in this working directory, skipping this folder in archiving"
+    fi
+
+    if [ -e sample_sheet.yaml ]; then
+        echo -e "Found 'sample_sheet.yaml', appending to archive..."
+        (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar sample_sheet.yaml) &
+        spinner
+    else
+        echo -e "Couldn't find the file 'sample_sheet.yaml' in this working directory, skipping this file in archiving"
+    fi
+
+    if [ -e config/ ]; then
+        echo -e "Found 'config' folder, appending to archive..."
+        (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar config/) &
+        spinner
+    else
+        echo -e "Couldn't find the 'config' folder in this working directory, skipping this file in archiving"
+    fi
+    
+    if [ -e reference_alignment/ ]; then
+        echo -e "Found 'reference_alignment' folder, appending to archive..."
+        (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar reference_alignment/) &
+        spinner
+    else
+        echo -e "Couldn't find the 'reference_alignment' folder in this working directory, skipping this file in archiving"
+    fi
+
+    if [ -e archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar ]; then
+        spacer
+        echo -e "Files and folders have been appended to the archive."
+        echo -e "Compressing archive..."
+        (pigz -p "${USE_CORES}" archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar) &
+        spinner
+    else
+        echo "No files and folders could be found for archiving."
+        exit 1
+    fi
+else
+    while read -r -p "Do you want to start the Jovian archiving process now? [y/N] " archive_answer
+    do
+        archive_answer=${archive_answer,,}
+        if [[ "${archive_answer}" =~ ^(yes|y)$ ]]; then
+            echo -e "\n\nStarting the archiving process\n\n"
+            eval "$(parse_yaml config/variables.yaml "config_")"
+
+            if [ -e data/ ]; then
+                echo -e "Found the 'data/' folder, appending to archive..."
+                (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar data/) &
+                spinner
+            else
+                echo -e "Couldn't find the 'data/' folder in this working directory, skipping this folder in archiving"
+            fi
+
+            if [ -e logs/ ]; then
+                echo -e "Found the 'logs/' folder, appending to archive..."
+                (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar logs/) &
+                spinner
+            else
+                echo -e "Couldn't find the 'logs/' folder in this working directory, skipping this folder in archiving"
+            fi
+
+            if [ -e results/ ]; then
+                echo -e "Found the 'results/' folder, appending to archive..."
+                (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar results/) &
+                spinner
+            else
+                echo -e "Couldn't find the 'results/' folder in this working directory, skipping this folder in archiving"
+            fi
+
+            if [ -e sample_sheet.yaml ]; then
+                echo -e "Found 'sample_sheet.yaml', appending to archive..."
+                (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar sample_sheet.yaml) &
+                spinner
+            else
+                echo -e "Couldn't find the file 'sample_sheet.yaml' in this working directory, skipping this file in archiving"
+            fi
+
+            if [ -e config/ ]; then
+                echo -e "Found 'config' folder, appending to archive..."
+                (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar config/) &
+                spinner
+            else
+                echo -e "Couldn't find the 'config' folder in this working directory, skipping this file in archiving"
+            fi
+        
+            if [ -e reference_alignment/ ]; then
+                echo -e "Found 'reference_alignment' folder, appending to archive..."
+                (tar --append --file=archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar reference_alignment/) &
+                spinner
+            else
+                echo -e "Couldn't find the 'reference_alignment' folder in this working directory, skipping this file in archiving"
+            fi
+
+            if [ -e archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar ]; then
+                echo -e "\n\nFiles and folders have been appended to the archive."
+                echo -e "Compressing archive..."
+                (pigz -p "${USE_CORES}" archive_"${config_Jovian_run_identifier}"_jovian-"${VERSION}".tar) &
+                spinner
+            else
+                echo "No files and folders could be found for archiving."
+                exit 1
+            fi
+        break
+        
+        elif [[ "${archive_answer}" =~ ^(no|n)$ ]]; then
+            echo -e "Aborting the archiving process on user request"
+            exit 0
+        else
+            echo -e "Please answer with 'yes'' or 'no'"
+            minispacer
+        fi
+    done
+fi
+exit 0

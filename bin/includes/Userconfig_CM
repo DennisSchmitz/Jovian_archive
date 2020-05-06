@@ -1,0 +1,96 @@
+#!/bin/bash
+# shellcheck disable=SC1091
+
+
+#@ vars
+eval "$(parse_yaml "${HOME}"/.jovian_installchoice_compmode "cm_")"
+
+#@ vars for standalone mode
+standalone_cores="cores: ${USE_CORES}"
+standalone_hugo="HuGo_removal: ${USE_CORES}"
+standalone_assembly="De_novo_assembly: ${USE_CORES}"
+standalone_snp="SNP_calling: ${USE_CORES}"
+standalone_refal="RA_align_to_reference: ${USE_CORES}"
+
+#@ vars for gridmode
+gridmode_localcores="local-cores: ${USE_CORES}"
+
+#> manual queue name override
+if [ "${QUEUE_NAME_OVERRIDE}" == "TRUE" ]; then
+    if [ -z "${QUEUE_NAME_REPLACEMENT}" ]; then
+        echo -e "\n"
+        echo "A command was given to override the default grid-queue name, but no alternative name was given"
+        echo "Please check the command you've given and try again"
+        exit 1
+
+    else
+        cm_installeranswers_queue="${QUEUE_NAME_REPLACEMENT}"
+    fi
+fi
+
+
+#> Section that sets values for the CompMode
+if [ "$cm_installeranswers_compmode" == "U" ]; then
+    installer_intro
+    echo -e "Jovian can run in two computing-modes. 'standalone' and 'HPC/Grid'"
+    echo -e "Please specify the computing-mode that you wish to use for Jovian.\n\n"
+    echo -e "\n\e[1;91;40m\tIf you don't know what this means then please contact your local system administrators before continuing.\e[0m\n\n"
+    while read -r -p "Do you wish to run Jovian in 'standalone' or 'grid' mode? [standalone/grid] " cmanswer
+    do
+        cmanswer=${cmanswer,,}
+        if [[ "${cmanswer}" =~ ^(standalone|s)$ ]]; then
+            echo -e "Standalone mode has been chosen. We will remember your choice so you don't have to do this step every time"
+            echo -e "installeranswers:\n    compmode: S\n   queue: N" > "${HOME}"/.jovian_installchoice_compmode
+            sed -i '\|drmaa|d' config/config.yaml
+            sed -i '\|local-cores|d' config/config.yaml
+            sed -i "s/.*cores:.*/${standalone_cores}/g" config/config.yaml
+            break
+        elif [[ "${cmanswer}" =~ ^(grid|g)$ ]]; then
+            echo -e "Grid mode has been chosen. Please specify your grid settings so the pipeline will function properly."
+            while read -r -p "Please specify the name of the Queue that your local grid/HPC cluster uses. Please enter exclusively the name of the queue. " queueanswer
+            do
+                queueanswer=${queueanswer,,}
+                echo -e "installeranswers:\n    compmode: G\n   queue: ${queueanswer}" > "${HOME}"/.jovian_installchoice_compmode
+                sed -i '\|drmaa|d' config/config.yaml
+                sed -i "s/.*local-cores:.*/${gridmode_localcores}/g" config/config.yaml
+                echo -e "drmaa: \" -q ${queueanswer} -n {threads} -R \\\"span[hosts=1]\\\"\"" >> config/config.yaml
+                echo -e "drmaa-log-dir: logs/drmaa" >> config/config.yaml
+                break
+            done
+            break
+        elif [[ "${cmanswer}" =~ ^(exit)$ ]]; then
+            break
+            exit
+        else
+            echo -e "Please answer with 'standalone' or 'grid'."
+        fi
+    done
+fi
+
+if [ "${cm_installeranswers_compmode}" == "S" ]; then
+    
+    echo -e "Jovian is running in the standalone computing mode"
+    
+    #> Change the basic settings of config.yaml
+    sed -i '\|drmaa|d' config/config.yaml
+    sed -i '\|local-cores|d' config/config.yaml
+    sed -i "s/.*cores:.*/${standalone_cores}/g" config/config.yaml
+
+    #> Change the rule-specific settings in pipeline-parameters.yaml
+    #? Background removal
+        sed -i "s/.*HuGo_removal:.*/    ${standalone_hugo}/g" config/pipeline_parameters.yaml
+    #? Assembly
+        sed -i "s/.*De_novo_assembly:.*/    ${standalone_assembly}/g" config/pipeline_parameters.yaml
+    #? SNP calling
+        sed -i "s/.*SNP_calling:.*/    ${standalone_snp}/g" config/pipeline_parameters.yaml
+    #? Reference alignment
+        sed -i "s/.*RA_align_to_reference:.*/    ${standalone_refal}/g" config/pipeline_parameters.yaml
+
+
+elif [ "${cm_installeranswers_compmode}" == "G" ]; then
+    echo -e "Jovian is set to run in computing mode: Grid.\n"
+    sed -i '\|drmaa|d' config/config.yaml
+    sed -i "s/.*local-cores:.*/${gridmode_localcores}/g" config/config.yaml
+    echo -e "drmaa: \" -q ${cm_installeranswers_queue} -n {threads} -R \\\"span[hosts=1]\\\"\"" >> config/config.yaml
+    echo -e "drmaa-log-dir: logs/drmaa" >> config/config.yaml
+fi
