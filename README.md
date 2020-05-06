@@ -162,8 +162,8 @@ There are two methods, the first is by using the "Jovian Portal" and the second 
 
 - First, start a Jupyter notebook background process as described [here](../../wiki/Installation-Instructions#Start-a-jupyter-Notebook-server-process). Or ask your system-admin to do this for you.  
 - Via the Jupyter Notebook connection established in the previous step, go to the `Jovian` folder [created during installation](../../wiki/Installation-Instructions). Then, open `Notebook_portal.ipynb`.  
-- Follow the instructions in this notebook to start an analysis.  
-  -  N.B. These reports work with Mozilla Firefox and Google Chrome, we do not recommend using Internet Explorer.  
+- Follow the instructions in this notebook to start a metagenomic analysis. N.B. use Mozilla Firefox or Google Chrome, do not use Internet Explorer.  
+  - N.B. in the current version you cannot perform the reference alignment via a notebook.  
 
 <b>Command-line interface:</b>  
 
@@ -171,10 +171,11 @@ There are two methods, the first is by using the "Jovian Portal" and the second 
 - Go to the folder where `Jovian` was installed.  
 - Pipeline parameters can be configured by changing [profile/pipeline_parameters.yaml](profile/pipeline_parameters.yaml).  
 - Optional: We recommended doing a `dry-run` before each analysis to check if there are any typo's, missing files or other errors. This can be done via `bash jovian -i <input_directory> -n`
-- If the dry-run has completed without errors, you are ready to start a real analysis with the following command:  
-`bash jovian -i <input_directory>`  
-- After the pipeline has finished, open `Notebook_report.ipynb` via your browser (Mozilla Firefox or Google Chrome). Click on `Cell` in the toolbar, then press `Run all` and wait for data to be imported.  
-  - N.B. You need to have a Jupyter notebook process running in the background, as described [here](../../wiki/Installation-Instructions#starting-the-jupyter-notebook-server-process).
+- You can perform the metagenomic analysis via `bash jovian -i <input_directory>`  
+  - After the pipeline has finished, open `Notebook_report.ipynb` via your browser (Mozilla Firefox or Google Chrome). Click on `Cell` in the toolbar, then press `Run all` and wait for data to be imported.  
+    - N.B. You need to have a Jupyter notebook process running in the background, as described [here](../../wiki/Installation-Instructions#starting-the-jupyter-notebook-server-process).
+- You can perform the reference-alignment analysis via `bash jovian -i <input directory> -ra <user-provided reference fasta>`  
+
 
 ### Explanation of output folders
 
