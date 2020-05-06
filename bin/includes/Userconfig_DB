@@ -14,7 +14,6 @@ if [ "$db_installeranswers_databases" == "U" ]; then
 
     while
     read -r -e -p "Please specify the location where your BLAST NT database is installed: " blastnt_db_path
-    read -r -e -p "Please specify the location where your BLAST NR database is installed: " blastnr_db_path
     read -r -e -p "Please specify the location where your TAXDB database is installed: " ncbi_taxdb_db_path
     read -r -e -p "Please specify the location where your Background Reference is installed: " bg_ref_path
     read -r -e -p "Please specify the location where the Krona Taxonomy database is installed: " krona_db_path
@@ -26,7 +25,6 @@ if [ "$db_installeranswers_databases" == "U" ]; then
         
 
         blastnt_db_path=${blastnt_db_path}
-        blastnr_db_path=${blastnr_db_path}
         ncbi_taxdb_db_path=${ncbi_taxdb_db_path}
         bg_ref_path=${bg_ref_path}
         krona_db_path=${krona_db_path}
@@ -38,7 +36,6 @@ if [ "$db_installeranswers_databases" == "U" ]; then
         minispacer
         echo -e "Your provided answers are as follows:"
         echo -e "\e[1mBLAST-NT database location: ${blastnt_db_path}\e[0m"
-        echo -e "\e[1mBLAST-NR database location: ${blastnr_db_path}\e[0m"
         echo -e "\e[1mNCBI TAXDB database location: ${ncbi_taxdb_db_path}\e[0m"
         echo -e "\e[1mBackground reference location: ${bg_ref_path}\e[0m"
         echo -e "\e[1mKrona taxonomy database location: ${krona_db_path}\e[0m"
@@ -63,7 +60,7 @@ if [ "$db_installeranswers_databases" == "U" ]; then
         done
 
         if [[  "${db_paths_confirm}" =~ ^(yes)$ ]]; then
-            echo -e "installeranswers:\n    databases: SET\n    BLASTNT: ${blastnt_db_path}\n    BLASTNR: ${blastnr_db_path}\n    NCBITAXDB: ${ncbi_taxdb_db_path}\n    backgroundref: ${bg_ref_path}\n    kronataxonomy: ${krona_db_path}\n    virushostdb: ${virushost_path}\n    newtaxdumpranked: ${newtaxdump_ranked_path}\n    newtaxdumphost: ${newtaxdump_host_path}\n    mgkittaxonomy: ${mgkit_db_path}" > "${HOME}"/.jovian_installchoice_db
+            echo -e "installeranswers:\n    databases: SET\n    BLASTNT: ${blastnt_db_path}\n    NCBITAXDB: ${ncbi_taxdb_db_path}\n    backgroundref: ${bg_ref_path}\n    kronataxonomy: ${krona_db_path}\n    virushostdb: ${virushost_path}\n    newtaxdumpranked: ${newtaxdump_ranked_path}\n    newtaxdumphost: ${newtaxdump_host_path}\n    mgkittaxonomy: ${mgkit_db_path}" > "${HOME}"/.jovian_installchoice_db
             sed -i '\|databases|d' "${PROFILE}"/pipeline_parameters.yaml
             sed -i '\|background_ref|d' "${PROFILE}"/pipeline_parameters.yaml
             sed -i '\|Krona_taxonomy|d' "${PROFILE}"/pipeline_parameters.yaml

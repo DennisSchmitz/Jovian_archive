@@ -10,6 +10,7 @@
 ### Department:                                                                                          ###
 ###     Virology - Emerging and Endemic Viruses (EEV)                                                    ###
 ###     Virology - Viruses of the Vaccination Program (VVP)                                              ###
+###     Bacteriology - Bacterial and Parasitic Diagnostics (BPD)                                         ###
 ### Date and license:                                                                                    ###
 ###     23-08-2018, AGPL3 license                                                                        ###
 ### Homepage containing documentation, examples and a changelog:                                         ###
@@ -18,6 +19,10 @@
 ###     This project/research has received funding from the European Union’s                             ###
 ###     Horizon 2020 research and innovation programme under grant agreement                             ###
 ###     No. 643476. and the Dutch working group on molecular diagnostics (WMDI).                         ###
+### Automation:                                                                                          ###
+###    iRODS automatically executes this workflow for all "vir-ngs" labelled                             ###
+###    Illumina sequencing runs. See the internal Gitlab repo for the wrapper                            ###
+###    with additional information.                                                                      ###
 ############################################################################################################
 
 # shellcheck disable=SC1091
@@ -165,7 +170,15 @@ do
         shift # Next
         shift # Next
         ;;
-        --ra|--reference-alignment)
+        -cq|--cluster-queue)
+        QUEUE_NAME_OVERRIDE="TRUE"
+        QUEUE_NAME_REPLACEMENT="$2"
+        export QUEUE_NAME_OVERRIDE
+        export QUEUE_NAME_REPLACEMENT
+        shift # Next
+        shift # Next
+        ;;
+        -ra|--reference-alignment)
         REFERENCE_ALIGNMENT="TRUE"
         REFERENCE_FASTA="$2"
         export REFERENCE_ALIGNMENT
@@ -224,14 +237,15 @@ if ! bash bin/includes/Pre_install_checker; then
 fi
 
 ###> Installer for miniconda.
-###> Runs if the command "conda" is not recognised by the host AND if the "~/tmp/miniconda3" path is non-existant
+###> Runs if the command "conda" is not recognised by the host AND if the "~/UserBinaries/Miniconda3" path is non-existant
 if ! bash bin/includes/Install_miniconda; then
     exit 1
-else
-    set -o allexport
-    source "${HOME}"/.bashrc
-    set +o allexport
 fi
+
+
+set -o allexport
+source "${HOME}"/.jovianrc
+set +o allexport
 
 ###> Installer for Jovian_master environment.
 ###> Runs if the master environment is not active (in path) and is not installed either. Activates environment on finish
@@ -239,10 +253,11 @@ if ! bash bin/includes/Install_jovian-master; then
     exit 1
 else
     set -o allexport
-    source activate "${MASTER_NAME}"
+    conda activate "${MASTER_NAME}"
     set +o allexport
-    echo -e "Succesfully activated Jovian_master environment"
+    echo -e "Successfully activated Jovian_master environment"
 fi
+
 
 ###> Install databases, as specified via CLI argument '-id'
 if [ "${INSTALL_DB:-}" == "TRUE" ]; then
@@ -254,8 +269,9 @@ fi
 bash bin/includes/Userconfig_DB
 
 ###> Fill in the global computing-mode configuration
-bash bin/includes/Userconfig_CM
-
+if ! bash bin/includes/Userconfig_CM; then
+    exit
+fi
 
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #@ 
@@ -370,6 +386,8 @@ if ! bash bin/includes/Make_samplesheet; then
     exit 1
 fi
 
+#TODO cleanup/remove these failsaves, it's too complicated and probably redundant.
+
 ###? Failsafe 1 for the sample sheet
 if [ -e sample_sheet.yaml ]; then
     echo "sample sheet exists"
@@ -387,10 +405,13 @@ else
 fi
 
 ###> Make the sample sheet and then quit Jovian for manual running and debugging of the pipeline
-if [ "${MAKE_SAMPLE_SHEET}" == "TRUE" ]; then
+if [ "${MAKE_SAMPLE_SHEET}" == "TRUE" ] && [ ! -s config/variables.yaml ]; then #? If config/variables.yaml does not exist or is empty AND manual make sample sheet is TRUE...
     echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > config/variables.yaml
-    echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> config/variables.yaml
-    echo -e "The sample sheet and variables file has now been created, you can now run the Jovian snakefile manually"
+    echo -e "Server_host:\n    hostname: http://${HOSTNAME}" >> config/variables.yaml
+    echo -e "The variables file has been created, you can now run the Jovian snakefile manually"
+    exit 0
+elif [ "${MAKE_SAMPLE_SHEET}" == "TRUE" ] && [ -s config/variables.yaml ]; then
+    echo -e "Variable file not generated, it already existed. You are now able to run the Jovian snakefile manually."
     exit 0
 fi
 
@@ -420,9 +441,13 @@ ready_for_start
 
 
 ###> Here the UNIQUE_ID and HOSTNAME variables are actually set
-echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > config/variables.yaml
-echo -e "Server_host:\n    hostname: http://${HOSTNAME}" >> config/variables.yaml
-eval $(parse_yaml config/variables.yaml "config_")
+if [ ! -s config/variables.yaml ]; then #? If config/variables.yaml does not exist or is empty...
+    echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > config/variables.yaml
+    echo -e "Server_host:\n    hostname: http://${HOSTNAME}" >> config/variables.yaml
+    eval $(parse_yaml config/variables.yaml "config_")
+else
+    eval $(parse_yaml config/variables.yaml "config_")
+fi
 
 ###> Core Jovian workflow snakemake command with checkers for required files.
 if [ ! -s sample_sheet.yaml ]; then #? If sample_sheet.yaml does not exist or is empty...
@@ -431,13 +456,20 @@ if [ ! -s sample_sheet.yaml ]; then #? If sample_sheet.yaml does not exist or is
     echo -e "Please inspect the input directory (${INPUT_DIR}) and make sure the right files are present"
     exit 1
 elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" -a ! -s "${REFERENCE_FASTA}" ]; then #? If REFERENCE_ALIGNMENT is TRUE and the REFERENCE_ALIGNMENT file exists and is not empty...
-    echo -e "The given reference file, ${REFERENCE_FASTA}, does not exist. Please check your input. Exitting..."
+    echo -e "The given reference file, ${REFERENCE_FASTA}, does not exist. Please check your input. Exiting..."
     exit 1
-elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" ] && [ "${REFERENCE_FASTA##*.}" != "fasta" -a "${REFERENCE_FASTA##*.}" != "fa" ]; then #? If REFERENCE_ALIGNMENT is TRUE and the REFERENCE_ALIGNMENT file has no .fasta AND .fa extension (i.e. it's not a .fa or .fasta file)...
-    echo -e "The given reference file, ${REFERENCE_FASTA}, does not look like a fasta file (.fa or .fasta extension). Please check your input. Exitting..."
+elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" ] && ! $( seqkit seq -v -t dna "${REFERENCE_FASTA}" > /dev/null ); then
+    echo -e "The given input reference FASTA does not appear to be valid, see the error message above. Exiting..."
     exit 1
+elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" ] && (( $( grep -c "^>" "${REFERENCE_FASTA}" ) > 1 )); then #TODO this is a failsafe until the next version, current version only allows single-record FASTA records since it's intended for nCoV first and foremost.
+    echo -e "This version of Jovian does not support multi-record FASTA references, only one sequence per FASTA allowed. This feature will come in the next version. Exiting..."
+    exit 1
+    #TODO remove/update this part in a future version of Jovian which is multi-record FASTA compatible (e.g. segmented viruses or multiple clades of the same species in one record)
 elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" ]; then #? If REFERENCE_ALIGNMENT is TRUE, start RA.smk and exit with exit-code 0...
     echo -e "Starting optional reference alignment extension"
+    # Starting nginx for IGVjs viz. In core pipeline this is started from report-jup. But since we don't have that for the extension, do it like this:
+    echo -e "\nChecking if nginx needs to be activated..."
+    (bin/includes/Start_nginx start)
     set +ue #turn off bash strict mode because snakemake and conda don't work in strict mode
     snakemake -s bin/Ref_alignment.smk --profile "${PROFILE}" --config reference="${REFERENCE_FASTA}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
     set -ue #turn bash strict mode back on
@@ -447,13 +479,6 @@ else #? Else, start jovian_core.smk and do virus typing for all keywords.
     set +ue #turn off bash strict mode because snakemake and conda don't work in strict mode
     snakemake -s bin/Snakefile --profile "${PROFILE}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
     set -ue #turn bash strict mode back on
-
-    # Check if the URL's are accessible with the TT 'all' keyword (sometimes they are overloaded/down for maintenance/crashed)
-    if ! bash bin/includes/Typingtool_check "all"; then
-        exit 1
-    fi
-    # Start the TT with the "all" keyword        
-    bash bin/scripts/virus_typing.sh "all"
 fi
 
 exit 0 

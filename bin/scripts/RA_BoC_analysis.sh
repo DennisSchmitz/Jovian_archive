@@ -8,9 +8,9 @@
 ###     Output:                                                                                                   ###
 ###            Sample_name     Total_ref_size  BoC_at_coverage_threshold_1     BoC_at_coverage_threshold_5 \      ###
 ###            BoC_at_coverage_threshold_10    BoC_at_coverage_threshold_30    BoC_at_coverage_threshold_100      ###
-###            RUN25-01_S1     29904           .9998   .9993   .9993   .9990   .9989                              ###
-###            RUN25-02_S6     29904           .9182   .8351   .8070   .4027   .4406                              ###
-###            RUN25-03_S11    29904           .8636   .7477   .5843   .0388   0                                  ###
+###            RUN25-01_S1     29904           .9999   .6666   .3333   .1000   0                                  ###
+###            RUN25-02_S6     29904           .9999   .6666   .3333   .1000   0                                  ###
+###            RUN25-03_S11    29904           .9999   .6666   .3333   .1000   0                                  ###
 #####################################################################################################################
 ### TODO can probably be made prettier via a function.
 ### TODO parallize via parallel function (would need to be included into the env)
@@ -38,15 +38,15 @@ OUTPUT_INT_BoC="$5"
 ref_total_size=$(bowtie2-inspect -s ${INPUT_REF} | gawk '{ FS = "\t" } ; BEGIN{L=1}; {L=L+$3}; END{print L}') # The `BEGIN{L=1}` is because the bowtie2-inspect length value starts counting at position 0 instead of 1, will be confusing for end-users.
 
 # Determine the BoC at different coverage thresholds (1, 5, 10, 30 and 100) both as integer and as percentage
-BoC_at_threshold_1=$(gawk -v threshold="1" 'BEGIN {covered_nt=0} {if ($4>=threshold) block_length=$3-$2; covered_nt+=block_length;} END { {if (covered_nt != 0) {covered_nt+=1; print covered_nt;} else {print covered_nt;}} }' ${INPUT_BEDGRAPH})
+BoC_at_threshold_1=$(gawk -v threshold="1" 'BEGIN {covered_nt=0} {if ($4>=threshold) {block_length=$3-$2; covered_nt+=block_length;}} END { {if (covered_nt != 0) {covered_nt+=1; print covered_nt;} else {print covered_nt;}} }' ${INPUT_BEDGRAPH})
 BoC_at_threshold_1_pct=$(gawk -v total_length="${ref_total_size}" -v counted_length="${BoC_at_threshold_1}" 'BEGIN {result = counted_length / total_length * 100; printf ("%.2f\n", result);}')
-BoC_at_threshold_5=$(gawk -v threshold="5" 'BEGIN {covered_nt=0} {if ($4>=threshold) block_length=$3-$2; covered_nt+=block_length;} END { {if (covered_nt != 0) {covered_nt+=1; print covered_nt;} else {print covered_nt;}} }' ${INPUT_BEDGRAPH})
+BoC_at_threshold_5=$(gawk -v threshold="5" 'BEGIN {covered_nt=0} {if ($4>=threshold) {block_length=$3-$2; covered_nt+=block_length;}} END { {if (covered_nt != 0) {covered_nt+=1; print covered_nt;} else {print covered_nt;}} }' ${INPUT_BEDGRAPH})
 BoC_at_threshold_5_pct=$(gawk -v total_length="${ref_total_size}" -v counted_length="${BoC_at_threshold_5}" 'BEGIN {result = counted_length / total_length * 100; printf ("%.2f\n", result);}')
-BoC_at_threshold_10=$(gawk -v threshold="10" 'BEGIN {covered_nt=0} {if ($4>=threshold) block_length=$3-$2; covered_nt+=block_length;} END { {if (covered_nt != 0) {covered_nt+=1; print covered_nt;} else {print covered_nt;}} }' ${INPUT_BEDGRAPH})
+BoC_at_threshold_10=$(gawk -v threshold="10" 'BEGIN {covered_nt=0} {if ($4>=threshold) {block_length=$3-$2; covered_nt+=block_length;}} END { {if (covered_nt != 0) {covered_nt+=1; print covered_nt;} else {print covered_nt;}} }' ${INPUT_BEDGRAPH})
 BoC_at_threshold_10_pct=$(gawk -v total_length="${ref_total_size}" -v counted_length="${BoC_at_threshold_10}" 'BEGIN {result = counted_length / total_length * 100; printf ("%.2f\n", result);}')
-BoC_at_threshold_30=$(gawk -v threshold="30" 'BEGIN {covered_nt=0} {if ($4>=threshold) block_length=$3-$2; covered_nt+=block_length;} END { {if (covered_nt != 0) {covered_nt+=1; print covered_nt;} else {print covered_nt;}} }' ${INPUT_BEDGRAPH})
+BoC_at_threshold_30=$(gawk -v threshold="30" 'BEGIN {covered_nt=0} {if ($4>=threshold) {block_length=$3-$2; covered_nt+=block_length;}} END { {if (covered_nt != 0) {covered_nt+=1; print covered_nt;} else {print covered_nt;}} }' ${INPUT_BEDGRAPH})
 BoC_at_threshold_30_pct=$(gawk -v total_length="${ref_total_size}" -v counted_length="${BoC_at_threshold_30}" 'BEGIN {result = counted_length / total_length * 100; printf ("%.2f\n", result);}')
-BoC_at_threshold_100=$(gawk -v threshold="100" 'BEGIN {covered_nt=0} {if ($4>=threshold) block_length=$3-$2; covered_nt+=block_length;} END { {if (covered_nt != 0) {covered_nt+=1; print covered_nt;} else {print covered_nt;}} }' ${INPUT_BEDGRAPH})
+BoC_at_threshold_100=$(gawk -v threshold="100" 'BEGIN {covered_nt=0} {if ($4>=threshold) {block_length=$3-$2; covered_nt+=block_length;}} END { {if (covered_nt != 0) {covered_nt+=1; print covered_nt;} else {print covered_nt;}} }' ${INPUT_BEDGRAPH})
 BoC_at_threshold_100_pct=$(gawk -v total_length="${ref_total_size}" -v counted_length="${BoC_at_threshold_100}" 'BEGIN {result = counted_length / total_length * 100; printf ("%.2f\n", result);}')
 
 # Print to the integer and percentage BoC output files.

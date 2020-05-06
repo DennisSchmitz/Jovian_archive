@@ -23,8 +23,8 @@ rule SNP_calling:
         "logs/benchmark/SNP_calling_{sample}.txt"
     threads: config["threads"]["SNP_calling"]
     params:
-        max_cov=config["SNP_calling"]["max_cov"],
-        minimum_AF=config["SNP_calling"]["minimum_AF"]
+        max_cov=config["SNP_calling_params"]["max_cov"],
+        minimum_AF=config["SNP_calling_params"]["minimum_AF"]
     shell:
         """
 samtools faidx -o {output.fasta_fai} {input.fasta} > {log} 2>&1

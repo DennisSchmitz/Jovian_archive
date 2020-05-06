@@ -1,12 +1,3 @@
-#!/bin/bash
-
-#####
-# This script (part 3) closes the html tabs-list and writes the basic explanation
-# this script should be called only once
-
-OUTPUT="$1"
-
-cat << EOF >> results/igv.html
 </ul>
 
 <div id="standardTab">
@@ -16,6 +7,3 @@ cat << EOF >> results/igv.html
         <li> Be aware that loading might take a very long time depending on the size of the scaffold. This usually is a non-issue for scaffolds smaller than 28k nucleotides.
     </ul>
 </div>
-EOF
-
-touch "${OUTPUT}"

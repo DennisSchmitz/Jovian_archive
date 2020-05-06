@@ -34,6 +34,8 @@ then
 fi
 
 mkdir -p /tmp/etc/nginx/sites.d/
+# To fix permission errors on a multi-user system: (source: https://stackoverflow.com/questions/3740152/how-do-i-change-permissions-for-a-folder-and-all-of-its-subfolders-and-files-in)
+find /tmp/etc -user ${currentuser} -type d -exec chmod 777 {} \;
 cp $CONDA_PREFIX/etc/nginx/sites.d/default-site.conf /tmp/etc/nginx/sites.d/default-site.conf
 
 if [ ! -f "/tmp/etc/nginx/sites.d/default-site.conf" ] || [ ! -f "$CONDA_PREFIX/bin/nginx" ]

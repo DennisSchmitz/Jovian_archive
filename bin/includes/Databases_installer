@@ -1,6 +1,7 @@
 #!/bin/bash
 # shellcheck disable=SC1091
 
+#TODO lots of redundant code, cleanup later
 #* welcome to while-loop extravaganza
 
 database_installer_intro
@@ -91,7 +92,6 @@ if [ "${PATHING_SINGLE}" == "TRUE" ]; then
         minispacer
         echo -e "With the path you specified, the database locations will look like this:"
         echo -e "\e[1m${db_path_single_response}/NT_database\e[0m"
-        echo -e "\e[1m${db_path_single_response}/NR_database\e[0m"
         echo -e "\e[1m${db_path_single_response}/taxdb\e[0m"
         echo -e "\e[1m${db_path_single_response}/new_taxdump\e[0m"
         echo -e "\e[1m${db_path_single_response}/krona_taxonomy\e[0m"
@@ -121,7 +121,6 @@ if [ "${PATHING_SINGLE}" == "TRUE" ]; then
 
         # ! Set paths
         DB_PATH_NT="${db_path_single_response}/NT_database"
-        DB_PATH_NR="${db_path_single_response}/NR_database"
         DB_PATH_TAX="${db_path_single_response}/taxdb"
         DB_PATH_NTAX="${db_path_single_response}/new_taxdump"
         DB_PATH_KRONA="${db_path_single_response}/krona_taxonomy"
@@ -130,7 +129,6 @@ if [ "${PATHING_SINGLE}" == "TRUE" ]; then
         
         # ! Make folders
         mkdir -p ${DB_PATH_NT}
-        mkdir -p ${DB_PATH_NR}
         mkdir -p ${DB_PATH_TAX}
         mkdir -p ${DB_PATH_NTAX}
         mkdir -p ${DB_PATH_KRONA}
@@ -167,20 +165,20 @@ if [ "${PATHING_SINGLE}" == "TRUE" ]; then
             printf "\nDownloading NCBI New_taxdump database... \n"
             curl -o new_taxdump.tar.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
             curl -o new_taxdump.tar.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
-            tar -xzf new_taxdump.tar.gz
-            for file in *.dmp;
-                do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim;
-                done
+            if md5sum -c new_taxdump.tar.gz.md5
+            then
+                #the md5 is correct:
+                tar -xzf new_taxdump.tar.gz
+                for file in *.dmp; do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim; done
+            else
+                #the md5 does not match!
+                echo "The md5sum does not match new_taxdump.tar.gz! Please try downloading again."
+            fi
                 
             # ! download BLAST NT db
             cd "${DB_PATH_NT}" || exit
             printf "\nDownloading NCBI BLAST NT database... \n"
             perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress nt
-            
-            # ! download BLAST NR db
-            cd "${DB_PATH_NR}" || exit
-            printf "\nDownloding NCBI BLAST NR database... \n"
-            perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress nr
 
             sleep 2
             printf "\nDone with downloading and installing the databases required for Jovian \n"
@@ -188,7 +186,7 @@ if [ "${PATHING_SINGLE}" == "TRUE" ]; then
 
             cat << EOF > ~/database-updater.sh
 #!/bin/bash
-source activate Jovian_helper
+conda activate Jovian_helper
 
 ### Updating BLAST taxdb
 cd "${DB_PATH_TAX}" || exit 1
@@ -214,18 +212,19 @@ curl -o virushostdb.tsv -L ftp://ftp.genome.jp/pub/db/virushostdb/virushostdb.ts
 cd "${DB_PATH_NTAX}" || exit 1
 curl -o new_taxdump.tar.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
 curl -o new_taxdump.tar.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
-tar -xzf new_taxdump.tar.gz
-    for file in *.dmp;
-        do awk '{gsub("\t",""); if(substr(\$0,length(\$0),length(\$0))=="|") print substr(\$0,0,length(\$0)-1); else print \$0}' \${file} > \${file}.delim;
-        done
+if md5sum -c new_taxdump.tar.gz.md5
+then
+    #the md5 is correct:
+    tar -xzf new_taxdump.tar.gz
+    for file in *.dmp; do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim; done
+else
+    #the md5 does not match!
+    echo "The md5sum does not match new_taxdump.tar.gz! Please try downloading again."
+fi
 
 ### UPDATING BLAST NT
 cd "${DB_PATH_NT}" || exit 1
 perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress nt
-
-### UPDATING BLAST NR
-cd "${DB_PATH_NR}" || exit 1
-perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress nr
 
 echo -e "Done with updating databases"
 exit
@@ -253,10 +252,9 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
     printf "\e[40;91m this/path/is/also/incorrect \e[0m\n"
     minispacer
 
-    while read -r -e -p "Please type out the path under which you want to install the BLAST NT database: " db_path_indiv_NT_response; read -r -e -p "Please type out the path under which you want to install the BLAST NR database: " db_path_indiv_NR_response; read -r -e -p "Please type out the path under which you want to install the TaxDB: " db_path_indiv_taxdb_response; read -r -e -p "Please type out the path under which you want to install the NewTaxdump database: " db_path_indiv_ntax_response; read -r -e -p "Please type out the path under which you want to install the MGKit database: " db_path_indiv_mgkit_response; read -r -e -p "Please type out the path under which you want to install the Krona LCA database: " db_path_indiv_krona_response; read -r -e -p "please type out the path under which you want to install the VirusHost Interaction database: " db_path_indiv_vhost_response
+    while read -r -e -p "Please type out the path under which you want to install the BLAST NT database: " db_path_indiv_NT_response; read -r -e -p "Please type out the path under which you want to install the TaxDB: " db_path_indiv_taxdb_response; read -r -e -p "Please type out the path under which you want to install the NewTaxdump database: " db_path_indiv_ntax_response; read -r -e -p "Please type out the path under which you want to install the MGKit database: " db_path_indiv_mgkit_response; read -r -e -p "Please type out the path under which you want to install the Krona LCA database: " db_path_indiv_krona_response; read -r -e -p "please type out the path under which you want to install the VirusHost Interaction database: " db_path_indiv_vhost_response
     do
         db_path_indiv_NT_response=${db_path_indiv_NT_response}
-        db_path_indiv_NR_response=${db_path_indiv_NR_response}
         db_path_indiv_taxdb_response=${db_path_indiv_taxdb_response}
         db_path_indiv_ntax_response=${db_path_indiv_ntax_response}
         db_path_indiv_krona_response=${db_path_indiv_krona_response}
@@ -266,7 +264,6 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
         minispacer
         printf "\nWith the paths you specified, the database locations will look like this:\n"
         printf "\e[1m%s/NT_database\e[0m\n" "${db_path_indiv_NT_response}"
-        printf "\e[1m%s/NR_database\e[0m\n" "${db_path_indiv_NR_response}"
         printf "\e[1m%s/taxdb\e[0m\n" "${db_path_indiv_taxdb_response}"
         printf "\e[1m%s/new_taxdump\e[0m\n" "${db_path_indiv_ntax_response}"
         printf "\e[1m%s/krona_taxonomy\e[0m\n" "${db_path_indiv_krona_response}"
@@ -296,7 +293,6 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
             
         # ! Set paths
         DB_PATH_NT="${db_path_indiv_NT_response}/NT_database"
-        DB_PATH_NR="${db_path_indiv_NR_response}/NR_database"
         DB_PATH_TAX="${db_path_indiv_taxdb_response}/taxdb"
         DB_PATH_NTAX="${db_path_indiv_ntax_response}/new_taxdump"
         DB_PATH_KRONA="${db_path_indiv_krona_response}/krona_taxonomy"
@@ -306,7 +302,6 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
 
         # ! Make folders
         mkdir -p ${DB_PATH_NT}
-        mkdir -p ${DB_PATH_NR}
         mkdir -p ${DB_PATH_TAX}
         mkdir -p ${DB_PATH_NTAX}
         mkdir -p ${DB_PATH_KRONA}
@@ -342,26 +337,25 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
             printf "\nDownloading NCBI New_taxdump database... \n"
             curl -o new_taxdump.tar.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
             curl -o new_taxdump.tar.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
-            tar -xzf new_taxdump.tar.gz
-            for file in *.dmp;
-                do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim;
-                done
+            if md5sum -c new_taxdump.tar.gz.md5
+            then
+                #the md5 is correct:
+                tar -xzf new_taxdump.tar.gz
+                for file in *.dmp; do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim; done
+            else
+                #the md5 does not match!
+                echo "The md5sum does not match new_taxdump.tar.gz! Please try downloading again."
+            fi
                     
             # ! download BLAST NT db
             cd "${DB_PATH_NT}" || exit
             printf "\nDownloading NCBI BLAST NT database... \n"
             perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress nt
                 
-            # ! download BLAST NR db
-            cd "${DB_PATH_NR}" || exit
-            printf "\nDownloding NCBI BLAST NR database... \n"
-            perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress nr
-
             sleep 2
             printf "\nDone with downloading and installing the databases required for Jovian \n"
             printf "The databases have been placed in the following folders:\n"
             printf "\e[1m%s/NT_database\e[0m\n" "${db_path_indiv_NT_response}"
-            printf "\e[1m%s/NR_database\e[0m\n" "${db_path_indiv_NR_response}"
             printf "\e[1m%s/taxdb\e[0m\n" "${db_path_indiv_taxdb_response}"
             printf "\e[1m%s/new_taxdump\e[0m\n" "${db_path_indiv_ntax_response}"
             printf "\e[1m%s/krona_taxonomy\e[0m\n" "${db_path_indiv_krona_response}"
@@ -369,7 +363,7 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
 
             cat << EOF > ~/database-updater.sh
 #!/bin/bash
-source activate Jovian_helper
+conda activate Jovian_helper
 
 ### Updating BLAST taxdb
 cd "${DB_PATH_TAX}" || exit 1
@@ -395,18 +389,19 @@ curl -o virushostdb.tsv -L ftp://ftp.genome.jp/pub/db/virushostdb/virushostdb.ts
 cd "${DB_PATH_NTAX}" || exit 1
 curl -o new_taxdump.tar.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
 curl -o new_taxdump.tar.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
-tar -xzf new_taxdump.tar.gz
-    for file in *.dmp;
-        do awk '{gsub("\t",""); if(substr(\$0,length(\$0),length(\$0))=="|") print substr(\$0,0,length(\$0)-1); else print \$0}' < \${file} > \${file}.delim;
-        done
+if md5sum -c new_taxdump.tar.gz.md5
+then
+    #the md5 is correct:
+    tar -xzf new_taxdump.tar.gz
+    for file in *.dmp; do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim; done
+else
+    #the md5 does not match!
+    echo "The md5sum does not match new_taxdump.tar.gz! Please try downloading again."
+fi
 
 ### UPDATING BLAST NT
 cd "${DB_PATH_NT}" || exit 1
 perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress nt
-
-### UPDATING BLAST NR
-cd "${DB_PATH_NR}" || exit 1
-perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress nr
 
 echo -e "Done with updating databases"
 exit

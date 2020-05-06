@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Generate sample sheet for Jovian pipeline.
 
 Usage:
@@ -34,8 +33,9 @@ def main(args):
         if file_.is_dir():
             continue
         match = fq_pattern.fullmatch(file_.name)
-        sample = samples.setdefault(match.group(1), {})
-        sample["R{}".format(match.group(3))] = str(file_)
+        if match:
+          sample = samples.setdefault(match.group(1), {})
+          sample["R{}".format(match.group(3))] = str(file_)
 
     print(yaml.dump(samples, default_flow_style=False))
 

@@ -59,7 +59,7 @@ Jovian depends on several databases. Jovian is able to download and install thes
 +-------------------------------------+--------------+
 | Database name                       | Links        |
 +=====================================+==============+
-| ``NCBI BLAST NT & BLAST NR``        | Blast_       |
+| ``NCBI BLAST NT``                   | Blast_       |
 +-------------------------------------+--------------+
 | ``NCBI Taxdump``                    | Taxdump_     |
 +-------------------------------------+--------------+

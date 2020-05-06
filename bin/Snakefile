@@ -17,6 +17,10 @@ Funding:
     This project/research has received funding from the European Union’s
     Horizon 2020 research and innovation programme under grant agreement
     No. 643476. and the Dutch working group on molecular diagnostics (WMDI).
+Automation:
+    iRODS automatically executes this workflow for all "vir-ngs" labelled
+    Illumina sequencing runs. See the internal Gitlab repo for the wrapper
+    with additional information.
 """
 
 #@################################################################################
@@ -67,7 +71,12 @@ with open(config["sample_sheet"]) as sample_sheet_file:
     #>#### Scaffold analysis and metrics                                     #####
     #>############################################################################
 
-    include: "rules/Fragment_length.smk"
+    if config["PCR_dup_removal"] == True:
+        include: "rules/Read2scaffold_alignment_with_rmDup_and_fraglength.smk"
+
+    if config["PCR_dup_removal"] == False:
+        include: "rules/Read2scaffold_alignment_without_rmDup_and_fraglength.smk"
+    
     include: "rules/SNP_calling.smk"
     include: "rules/ORF_analysis.smk"
     include: "rules/Contig_metrics.smk"
@@ -175,13 +184,18 @@ onstart:
 onerror:
     shell("""
         rm -f data/scaffolds_filtered/*.html
-        rm -f results/igv.html
         rm -rf data/html/
+        rm -f data/taxonomic_classification/*_lca_*
+        rm -f data/taxonomic_classification/*_nolca_*
     """)
 
 
 onsuccess:
     shell("""
+        echo -e "\nStarting virus typing, this may take a while...\n"
+        bash jovian -vt all
+        echo -e "Virus typing finished."
+
         echo -e "\nCleaning up..."
         echo -e "\tRemoving empty folders..."
         find data -depth -type d -not \( -path data/scaffolds_raw -prune \) -empty -delete
@@ -200,6 +214,8 @@ onsuccess:
             rm -f data/scaffolds_filtered/*.windows
             rm -f data/taxonomic_classification/*.taxtab
             rm -f data/taxonomic_classification/*.taxMagtab
+            rm -f data/taxonomic_classification/*_lca_*
+            rm -f data/taxonomic_classification/*_nolca_*
             rm -rf data/html/
         else
             echo -e "\t\tYou chose to not remove temp files: the human genome alignment files are not removed."
@@ -229,13 +245,8 @@ localrules:
     quantify_output,
     Concat_files,
     Concat_filtered_SNPs,
-    HTML_IGVJs_part1_static_head,
-    HTML_IGVJs_part2_tabs,
-    HTML_IGVJs_part3_close_tabs,
-    HTML_IGVJs_part4_divs,
-    HTML_IGVJs_part5_begin_js,
-    HTML_IGVJs_part6_middle_js,
-    HTML_IGVJs_part7_end_js
+    HTML_IGVJs_generate_final,
+    HTML_IGVJs_variable_parts
 
 
 rule all:
@@ -255,7 +266,5 @@ rule all:
         "results/heatmaps/Phage_heatmap.html", # Phage order|family|genus|species heatmaps for the entire run (based on a selection of phage families)
         "results/heatmaps/Bacteria_heatmap.html", # Bacteria phylum|class|order|family|genus|species level heatmap for the entire run
         expand("results/{file}.html", file = [ 'multiqc', 'krona' ]), # HTML Reports
-        expand("data/html/js-end.ok")
-        #! is die expand hierboven nodig?
-        #! moet hier ook geen results/igv.html komen te staan?
+        "results/igv.html", # IGVjs index
 
