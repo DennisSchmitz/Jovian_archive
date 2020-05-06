@@ -7,7 +7,7 @@
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/DennisSchmitz/Jovian_binder/master?filepath=Notebook_report.ipynb)
 
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3666157.svg)](https://doi.org/10.5281/zenodo.3666157)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3666156.svg)](https://doi.org/10.5281/zenodo.3666156)
 
 
 **IMPORTANT: manuscript is in preparation**
