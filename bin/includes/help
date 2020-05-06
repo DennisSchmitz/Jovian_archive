@@ -41,6 +41,10 @@ Parameters:
                                     precision at the cost of sensitivity and use 'relaxed' for
                                     high sensitivity at the cost of more spurious results
                                     (contamination). Default: relaxed.
+  -cq, --cluster-queue [Queue name] One-time override of the default cluster-queue settings.
+                                    Use this command when you wish to use a different computing-
+                                    queue without manually going through the jovian settings.
+                                    This does not change your default settings.
   -h, --help                        Print the Jovian help document.
   -sh, --snakemake-help             Print the Snakemake help document.
   --clean (-y)                      Removes all Jovian output, both the metagenomics output and
