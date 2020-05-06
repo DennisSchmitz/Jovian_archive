@@ -237,16 +237,15 @@ if ! bash bin/includes/Pre_install_checker; then
 fi
 
 ###> Installer for miniconda.
-###> Runs if the command "conda" is not recognised by the host AND if the "~/tmp/miniconda3" path is non-existant
+###> Runs if the command "conda" is not recognised by the host AND if the "~/UserBinaries/Miniconda3" path is non-existant
 if ! bash bin/includes/Install_miniconda; then
     exit 1
 fi
 
-if [ -e "${HOME}/tmp/Miniconda3" ]; then
-    set -o allexport
-    source "${HOME}"/.jovianrc
-    set +o allexport
-fi
+
+set -o allexport
+source "${HOME}"/.jovianrc
+set +o allexport
 
 ###> Installer for Jovian_master environment.
 ###> Runs if the master environment is not active (in path) and is not installed either. Activates environment on finish
@@ -258,6 +257,7 @@ else
     set +o allexport
     echo -e "Successfully activated Jovian_master environment"
 fi
+
 
 ###> Install databases, as specified via CLI argument '-id'
 if [ "${INSTALL_DB:-}" == "TRUE" ]; then
