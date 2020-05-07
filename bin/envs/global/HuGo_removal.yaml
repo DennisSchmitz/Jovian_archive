@@ -7,3 +7,4 @@ dependencies:
     - bowtie2==2.3.4.3
     - samtools==1.9
     - bedtools==2.27.1
+    - minimap2==2.17

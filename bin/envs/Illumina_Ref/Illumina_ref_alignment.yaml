@@ -1,0 +1,13 @@
+name: Illumina_ref_alignment
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+    - samtools==1.10
+    - bowtie2==2.3.5
+    - gawk==4.2.1
+    - bcftools==1.10
+    - bedtools==2.29.2
+    - tabix==0.2.6
+    - seqtk==1.2.0

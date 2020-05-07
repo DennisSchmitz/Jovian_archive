@@ -71,14 +71,14 @@ sample_sheet: sample_sheet.yaml
 
 threads:
     Clean_the_data: 4
-    HuGo_removal: 12
-    De_novo_assembly: 12
+    HuGo_removal: 14
+    De_novo_assembly: 14
     Taxonomic_classification_of_scaffolds: 12
-    SNP_calling: 12
+    SNP_calling: 14
     Fragment_length_analysis: 4
     quantify_output: 4
     # Settings for the optional reference alignment steps:
-    RA_align_to_reference: 12
+    RA_align_to_reference: 14
 
 #! Options for the metagenomics workflow, for developers only
 #TODO hier nog aparte yaml parent voor maken, updaten verwijzingen in rest v/d code. Is duidelijker/leesbaarder.
@@ -100,3 +100,10 @@ reference_alignment:
 ######################################
 
 
+databases:
+    background_ref: /data/db/Hugo/genome.fa
+    Krona_taxonomy: /data/db/krona_taxonomy/
+    virusHostDB: /data/db/Virus-Host_interaction_db/virushostdb.tsv
+    NCBI_new_taxdump_rankedlineage: /data/db/new_taxdump/rankedlineage.dmp.delim
+    NCBI_new_taxdump_host: /data/db/new_taxdump/host.dmp.delim
+    MGKit_taxonomy: /data/db/mgkit_taxonomy/
