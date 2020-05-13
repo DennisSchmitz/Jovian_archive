@@ -236,15 +236,15 @@ rule Illumina_reference_ORF_analysis:
         zipped_gff3 = outdir + refdir + reference_basename + "_annotation.gff.gz",
         index_zipped_gff3 = outdir + refdir + reference_basename + "_annotation.gff.gz.tbi",
     conda:
-        conda_envs + "scaffold_analyses.yaml"
+        conda_envs + "scaffold_analysis.yaml"
     benchmark:
         logdir + bench + "Illumina_reference_ORF_analysis.txt"
     log:
         logdir + "Illumina_reference_ORF_analysis.log"
     threads: 1
     params: #? Currently it's using the same prodigal settings as the main workflow, I see no problems with it since it's both foremost intended for viruses.
-        procedure = config["ORF_prediction"]["procedure"],
-        output_format = config["ORF_prediction"]["output_format"]
+        procedure = config["Global"]["ORF_procedure"],
+        output_format = config["Global"]["ORF_output_format"]
     shell:
         """
 prodigal -q -i {input.reference} \
@@ -267,14 +267,14 @@ rule Illumina_determine_GC_content:
         bed_windows = outdir + refdir + reference_basename + ".windows",
         GC_bed = outdir + refdir + reference_basename + "_GC.bedgraph",
     conda:
-        conda_envs + "scaffold_analyses.yaml"
+        conda_envs + "scaffold_analysis.yaml"
     benchmark:
         logdir + bench + "Illumina_determine_GC_content.txt"
     log:
         logdir + "Illumina_determine_GC_content.log"
     threads: 1
     params:
-        window_size = "50"
+        window_size = config["Illumina_ref"]["GC_window_size"]
     shell:
         """
 samtools faidx -o {output.fasta_fai} {input.fasta} > {log} 2>&1
@@ -310,10 +310,10 @@ rule Illumina_align_to_reference:
     log:
         logdir + "Illumina_align_to_reference_{sample}.log"
     params:
-        alignment_type = "--local",
-        remove_dups = "-r", #! Don't change this, see this gotcha with duplicate marked reads in bedtools genomecov (which is used downstream): https://groups.google.com/forum/#!msg/bedtools-discuss/wJNC2-icIb4/wflT6PnEHQAJ . bedtools genomecov is not able to filter them out and includes those dup-reads in it's coverage metrics. So the downstream BoC analysis and consensus at diff cov processes require dups to be HARD removed.
-        markdup_mode = "t",
-        max_read_length = "300", # This is the default value and also the max read length of Illumina in-house sequencing.
+        alignment_type = config["Illumina_ref"]["Alignment"]["Alignment_type"],
+        remove_dups = config["Illumina_ref"]["Alignment"]["Duplicates"], #! Don't change this, see this gotcha with duplicate marked reads in bedtools genomecov (which is used downstream): https://groups.google.com/forum/#!msg/bedtools-discuss/wJNC2-icIb4/wflT6PnEHQAJ . bedtools genomecov is not able to filter them out and includes those dup-reads in it's coverage metrics. So the downstream BoC analysis and consensus at diff cov processes require dups to be HARD removed.
+        markdup_mode = config["Illumina_ref"]["Alignment"]["Duplicate_marking"],
+        max_read_length = config["Illumina_ref"]["Alignment"]["Max_read_length"], # This is the default value and also the max read length of Illumina in-house sequencing.
     shell:
         """
 bowtie2 --time --threads {threads} {params.alignment_type} \

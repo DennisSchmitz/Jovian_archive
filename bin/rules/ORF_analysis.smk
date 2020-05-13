@@ -6,7 +6,7 @@
 
 rule ORF_analysis:
     input:
-        "data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"]
+        "data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["Illumina_meta"]["minlen"]
     output:
         ORF_AA_fasta="data/scaffolds_filtered/{sample}_ORF_AA.fa",
         ORF_NT_fasta="data/scaffolds_filtered/{sample}_ORF_NT.fa",
@@ -22,8 +22,8 @@ rule ORF_analysis:
         "logs/benchmark/ORF_prediction_{sample}.txt"
     threads: 1
     params:
-        procedure=config["ORF_prediction"]["procedure"],
-        output_format=config["ORF_prediction"]["output_format"]
+        procedure=config["Global"]["ORF_procedure"],
+        output_format=config["Global"]["ORF_output_format"]
     shell:
         """
 prodigal -q -i {input} \

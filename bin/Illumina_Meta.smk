@@ -100,10 +100,10 @@ with open(config["sample_sheet"]) as sample_sheet_file:
 
     include: "rules/Blast.smk"
 
-    if config["taxonomic_classification_LCA"]["Krona"] == True:
+    if config["Illumina_meta"]["LCA"]["Krona"] == True:
         include: "rules/Krona_LCA.smk"
 
-    if config["taxonomic_classification_LCA"]["mgkit"] == True:
+    if config["Illumina_meta"]["LCA"]["mgkit"] == True:
         include: "rules/mgkit_LCA.smk"
 
     include: "rules/KronaChart.smk"
@@ -253,7 +253,7 @@ rule all:
     input:
         expand("data/cleaned_fastq/{sample}_{read}.fq", sample = SAMPLES, read = [ 'pR1', 'pR2', 'unpaired' ]), # Extract unmapped & paired reads AND unpaired from HuGo alignment; i.e. cleaned fastqs
         expand("data/scaffolds_raw/{sample}/scaffolds.fasta", sample = SAMPLES), # SPAdes assembly output
-        expand("data/scaffolds_filtered/{sample}_scaffolds_ge{len}nt.{extension}", sample = SAMPLES, len = config["scaffold_minLen_filter"]["minlen"], extension = [ 'fasta', 'fasta.fai' ]), # Filtered SPAdes Scaffolds
+        expand("data/scaffolds_filtered/{sample}_scaffolds_ge{len}nt.{extension}", sample = SAMPLES, len = config["Illumina_meta"]["minlen"], extension = [ 'fasta', 'fasta.fai' ]), # Filtered SPAdes Scaffolds
         expand("data/scaffolds_filtered/{sample}_sorted.bam", sample = SAMPLES), # BWA mem alignment for fragment length analysis
         expand("data/scaffolds_filtered/{sample}_{extension}", sample = SAMPLES, extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi', 'contig_ORF_count_list.txt' ]), # Prodigal ORF prediction output
         expand("data/scaffolds_filtered/{sample}_{extension}", sample = SAMPLES, extension = [ 'unfiltered.vcf', 'filtered.vcf', 'filtered.vcf.gz', 'filtered.vcf.gz.tbi' ]), # SNP calling output

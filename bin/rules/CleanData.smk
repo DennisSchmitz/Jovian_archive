@@ -20,9 +20,9 @@ rule Clean_the_data:
     log:
         "logs/Clean_the_data_{sample}.log"
     params:
-        adapter_removal_config=config["Trimmomatic"]["adapter_removal_config"],
-        quality_trimming_config=config["Trimmomatic"]["quality_trimming_config"],
-        minimum_length_config=config["Trimmomatic"]["minimum_length_config"],
+        adapter_removal_config=config["Illumina"]["Clean"]["adapter_removal_config"],
+        quality_trimming_config=config["Illumina"]["Clean"]["quality_trimming_config"],
+        minimum_length_config=config["Illumina"]["Clean"]["minimum_length_config"],
     shell:
         """
 trimmomatic PE -threads {threads} \

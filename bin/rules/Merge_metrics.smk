@@ -8,7 +8,7 @@ rule Merge_all_metrics_into_single_tsv:
     input:
         bbtoolsFile="data/scaffolds_filtered/{sample}_perMinLenFiltScaffold.stats",
         kronaFile="data/taxonomic_classification/{sample}.taxtab",
-        minLenFiltScaffolds="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"],
+        minLenFiltScaffolds="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["Illumina_meta"]["minlen"],
         scaffoldORFcounts="data/scaffolds_filtered/{sample}_contig_ORF_count_list.txt",
         virusHostDB=config["databases"]["virusHostDB"],
         NCBI_new_taxdump_rankedlineage=config["databases"]["NCBI_new_taxdump_rankedlineage"],

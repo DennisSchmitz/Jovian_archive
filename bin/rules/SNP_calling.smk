@@ -6,15 +6,15 @@
 
 rule SNP_calling:
     input:
-        fasta="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"],
-        bam="data/scaffolds_filtered/{sample}_sorted.bam",
-        bam_bai="data/scaffolds_filtered/{sample}_sorted.bam.bai"
+        fasta = "data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["Illumina_meta"]["minlen"],
+        bam = "data/scaffolds_filtered/{sample}_sorted.bam",
+        bam_bai = "data/scaffolds_filtered/{sample}_sorted.bam.bai"
     output:
-        fasta_fai="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta.fai" % config["scaffold_minLen_filter"]["minlen"],
-        unfilt_vcf="data/scaffolds_filtered/{sample}_unfiltered.vcf",
-        filt_vcf="data/scaffolds_filtered/{sample}_filtered.vcf",
-        zipped_vcf="data/scaffolds_filtered/{sample}_filtered.vcf.gz",
-        zipped_vcf_index="data/scaffolds_filtered/{sample}_filtered.vcf.gz.tbi"
+        fasta_fai = "data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta.fai" % config["Illumina_meta"]["minlen"],
+        unfilt_vcf = "data/scaffolds_filtered/{sample}_unfiltered.vcf",
+        filt_vcf = "data/scaffolds_filtered/{sample}_filtered.vcf",
+        zipped_vcf = "data/scaffolds_filtered/{sample}_filtered.vcf.gz",
+        zipped_vcf_index = "data/scaffolds_filtered/{sample}_filtered.vcf.gz.tbi"
     conda:
         "../envs/scaffold_analyses.yaml"
     log:
@@ -23,8 +23,8 @@ rule SNP_calling:
         "logs/benchmark/SNP_calling_{sample}.txt"
     threads: config["threads"]["SNP_calling"]
     params:
-        max_cov=config["SNP_calling_params"]["max_cov"],
-        minimum_AF=config["SNP_calling_params"]["minimum_AF"]
+        max_cov = config["Illumina_meta"]["SNP_calling"]["Max_coverage"],
+        minimum_AF = config["Illumina_meta"]["SNP_calling"]["Minimum_AF"]
     shell:
         """
 samtools faidx -o {output.fasta_fai} {input.fasta} > {log} 2>&1

@@ -6,12 +6,12 @@
 
 rule De_novo_assembly:
     input:
-        fastq_pR1="data/cleaned_fastq/{sample}_pR1.fq",
-        fastq_pR2="data/cleaned_fastq/{sample}_pR2.fq",
-        fastq_unpaired="data/cleaned_fastq/{sample}_unpaired.fq"
+        fastq_pR1 = "data/cleaned_fastq/{sample}_pR1.fq",
+        fastq_pR2 = "data/cleaned_fastq/{sample}_pR2.fq",
+        fastq_unpaired = "data/cleaned_fastq/{sample}_unpaired.fq"
     output:
-        all_scaffolds="data/scaffolds_raw/{sample}/scaffolds.fasta",
-        filt_scaffolds="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"],
+        all_scaffolds = "data/scaffolds_raw/{sample}/scaffolds.fasta",
+        filt_scaffolds = "data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["Illumina_meta"]["minlen"],
     conda:
         "../envs/de_novo_assembly.yaml"
     benchmark:
@@ -20,10 +20,10 @@ rule De_novo_assembly:
     log:
         "logs/De_novo_assembly_{sample}.log"
     params:
-        max_GB_RAM="100",
-        kmersizes=config["SPAdes"]["kmersizes"],
-        outputfoldername="data/scaffolds_raw/{sample}/",
-        minlength=config["scaffold_minLen_filter"]["minlen"],
+        max_GB_RAM = "100",
+        kmersizes = config["Illumina_meta"]["Spades"]["kmersizes"],
+        outputfoldername = "data/scaffolds_raw/{sample}/",
+        minlength = config["Illumina_meta"]["minlen"],
     shell:
         """
 spades.py --meta \

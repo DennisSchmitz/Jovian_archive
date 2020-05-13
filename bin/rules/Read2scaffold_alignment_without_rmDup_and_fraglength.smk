@@ -7,7 +7,7 @@
 
 rule Read2scaffold_alignment_without_rmDup_and_fraglength:
     input:
-        fasta="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"],
+        fasta="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["Illumina_meta"]["minlen"],
         pR1="data/cleaned_fastq/{sample}_pR1.fq",
         pR2="data/cleaned_fastq/{sample}_pR2.fq",
     output:

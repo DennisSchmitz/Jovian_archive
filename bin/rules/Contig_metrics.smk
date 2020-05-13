@@ -6,13 +6,13 @@
 
 rule Generate_contigs_metrics:
     input:
-        bam="data/scaffolds_filtered/{sample}_sorted.bam",
-        fasta="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"],
-        ORF_NT_fasta="data/scaffolds_filtered/{sample}_ORF_NT.fa",
+        bam = "data/scaffolds_filtered/{sample}_sorted.bam",
+        fasta = "data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["Illumina_meta"]["minlen"],
+        ORF_NT_fasta = "data/scaffolds_filtered/{sample}_ORF_NT.fa",
     output:
-        summary="data/scaffolds_filtered/{sample}_MinLenFiltSummary.stats",
-        perScaffold="data/scaffolds_filtered/{sample}_perMinLenFiltScaffold.stats",
-        perORFcoverage="data/scaffolds_filtered/{sample}_perORFcoverage.stats",
+        summary = "data/scaffolds_filtered/{sample}_MinLenFiltSummary.stats",
+        perScaffold = "data/scaffolds_filtered/{sample}_perMinLenFiltScaffold.stats",
+        perORFcoverage = "data/scaffolds_filtered/{sample}_perORFcoverage.stats",
     conda:
         "../envs/scaffold_analyses.yaml"
     log:

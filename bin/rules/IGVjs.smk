@@ -7,7 +7,7 @@
 
 rule HTML_IGVJs_variable_parts:
     input:
-        fasta= "data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"],
+        fasta= "data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["Illumina_meta"]["minlen"],
         ref_GC_bedgraph= "data/scaffolds_filtered/{sample}_GC.bedgraph",
         ref_zipped_ORF_gff= "data/scaffolds_filtered/{sample}_annotation.gff.gz",
         basepath_zipped_SNP_vcf= "data/scaffolds_filtered/{sample}_filtered.vcf.gz",

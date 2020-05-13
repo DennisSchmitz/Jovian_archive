@@ -15,8 +15,8 @@ if [ "${JOVIAN_MODE}" == "strict" ]; then
         sed -i "s/    quality_trimming_config: $params_Trimmomatic_quality_trimming_config/    quality_trimming_config: SLIDINGWINDOW:5:30/g" config/pipeline_parameters.yaml
     fi
     #* Check the settings for the minlen filtering and change it when the setting does not match 500
-    if [ "$params_scaffold_minLen_filter_minlen" != "500" ]; then
-        sed -i "s/    minlen: $params_scaffold_minLen_filter_minlen/    minlen: 500/g" config/pipeline_parameters.yaml
+    if [ "$params_Illumina_meta_minlen" != "500" ]; then
+        sed -i "s/    minlen: $params_Illumina_meta_minlen/    minlen: 500/g" config/pipeline_parameters.yaml
     fi
     echo -e "Strict mode set..."
     exit 0
@@ -34,8 +34,8 @@ if [ "${JOVIAN_MODE}" == "relaxed" ]; then
         sed -i "s/    quality_trimming_config: $params_Trimmomatic_quality_trimming_config/    quality_trimming_config: SLIDINGWINDOW:5:20/g" config/pipeline_parameters.yaml
     fi
     #* Check the settings for the minlen filtering and change it when the setting does not match 250
-    if [ "$params_scaffold_minLen_filter_minlen" != "250" ]; then
-        sed -i "s/    minlen: $params_scaffold_minLen_filter_minlen/    minlen: 250/g" config/pipeline_parameters.yaml
+    if [ "$params_Illumina_meta_minlen" != "250" ]; then
+        sed -i "s/    minlen: $params_Illumina_meta_minlen/    minlen: 250/g" config/pipeline_parameters.yaml
     fi
     echo -e "Relaxed mode set..."
     exit 0
@@ -49,19 +49,19 @@ fi
 
 if [[ ! "${JOVIAN_MODE}" =~ ^(relaxed|strict)$ ]]; then
     #* Check if parameters match with strict mode
-    if [ "$params_Trimmomatic_quality_trimming_config" == "SLIDINGWINDOW:5:30" ] && [ "$params_scaffold_minLen_filter_minlen" == "500" ]; then
+    if [ "$params_Trimmomatic_quality_trimming_config" == "SLIDINGWINDOW:5:30" ] && [ "$params_Illumina_meta_minlen" == "500" ]; then
         echo -e "Jovian is set to run in strict mode"
         exit 0
     fi
     #* Check if parameters match with relaxed mode
-    if [ "$params_Trimmomatic_quality_trimming_config" == "SLIDINGWINDOW:5:20" ] && [ "$params_scaffold_minLen_filter_minlen" == "250" ]; then
+    if [ "$params_Trimmomatic_quality_trimming_config" == "SLIDINGWINDOW:5:20" ] && [ "$params_Illumina_meta_minlen" == "250" ]; then
         echo -e "Jovian is set to run in relaxed mode"
         exit 0
     fi
     #* Check if parameters do not match with any of the predefined modes, exit if true
     if [[ ! "$params_Trimmomatic_quality_trimming_config" =~ ^(SLIDINGWINDOW:5:20|SLIDINGWINDOW:5:30)$ ]]; then
         JOVIAN_MODE="CUSTOM"
-    elif [[ ! "$params_scaffold_minLen_filter_minlen" =~ ^(250|500)$ ]]; then
+    elif [[ ! "$params_Illumina_meta_minlen" =~ ^(250|500)$ ]]; then
         JOVIAN_MODE="CUSTOM"
     fi
 fi

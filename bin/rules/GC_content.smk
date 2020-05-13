@@ -6,12 +6,12 @@
 
 rule Determine_GC_content:
     input:
-        fasta="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"],
-        fasta_fai="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta.fai" % config["scaffold_minLen_filter"]["minlen"],
+        fasta = "data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["Illumina_meta"]["minlen"],
+        fasta_fai = "data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta.fai" % config["Illumina_meta"]["minlen"],
     output:
-        fasta_sizes="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta.sizes" % config["scaffold_minLen_filter"]["minlen"],
-        bed_windows="data/scaffolds_filtered/{sample}.windows",
-        GC_bed="data/scaffolds_filtered/{sample}_GC.bedgraph"
+        fasta_sizes = "data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta.sizes" % config["Illumina_meta"]["minlen"],
+        bed_windows = "data/scaffolds_filtered/{sample}.windows",
+        GC_bed = "data/scaffolds_filtered/{sample}_GC.bedgraph"
     conda:
         "../envs/scaffold_analyses.yaml"
     log:
@@ -20,7 +20,7 @@ rule Determine_GC_content:
         "logs/benchmark/Determine_GC_content_{sample}.txt"
     threads: 1
     params:
-        window_size="50"
+        window_size = config["Global"]["GC_window_size"]
     shell:
         """
 cut -f 1,2 {input.fasta_fai} 2> {log} 1> {output.fasta_sizes}

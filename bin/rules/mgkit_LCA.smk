@@ -14,7 +14,7 @@ rule make_gff:
     log:
         "logs/make_gff_{sample}.log"
     params:
-        bitscore_threshold=config["taxonomic_classification_LCA"]["mgkit_LCA"]["bitscore_threshold"] 
+        bitscore_threshold = config["Illumina_meta"]["LCA"]["bitscore_threshold"] 
     shell:
         """
         sed -i "/vector\|construct\|synthetic/Id" {input}; 
@@ -32,7 +32,7 @@ rule addtaxa_gff:
     benchmark:
         "logs/benchmark/addtaxa_gff_{sample}.txt"
     params:
-        mgkit_tax_db=config["databases"]["MGKit_taxonomy"]
+        mgkit_tax_db = config["databases"]["MGKit_taxonomy"]
     threads: 1
     log:
         "logs/addtaxa_gff_{sample}.log"
@@ -52,7 +52,7 @@ rule taxfilter_gff:
     benchmark:
         "logs/benchmark/taxfilter_gff_{sample}.txt"
     params:
-        mgkit_tax_db=config["databases"]["MGKit_taxonomy"]
+        mgkit_tax_db = config["databases"]["MGKit_taxonomy"]
     threads: 1
     log:
         "logs/taxfilter_gff_{sample}.log"
@@ -75,7 +75,7 @@ rule qfilter_gff:
     log:
         "logs/qfilter_gff_{sample}.log"
     params:
-        quantile_threshold=config["taxonomic_classification_LCA"]["mgkit_LCA"]["quantile_threshold"],
+        quantile_threshold = config["Illumina_meta"]["LCA"]["quantile_threshold"],
     shell:
         """
          filter-gff sequence -t -f quantile -l {params.quantile_threshold} -c ge {input} {output} > {log} 2>&1
@@ -90,17 +90,17 @@ rule qfilter_gff:
 ## `bin/krona_magnitudes.py` adds magnitude information for the Krona plot (same as default Krona method).
 rule lca_mgkit:
     input:
-        filtgff="data/taxonomic_classification/{sample}_lca_filt.gff",
-        stats="data/scaffolds_filtered/{sample}_perMinLenFiltScaffold.stats"
+        filtgff = "data/taxonomic_classification/{sample}_lca_filt.gff",
+        stats = "data/scaffolds_filtered/{sample}_perMinLenFiltScaffold.stats"
     output:
-        no_lca="data/taxonomic_classification/{sample}_nolca_filt.gff", #? This is a temp file, removed in the onSuccess//onError clause.
-        taxtab="data/taxonomic_classification/{sample}.taxtab",
-        taxMagtab="data/taxonomic_classification/{sample}.taxMagtab"
+        no_lca = "data/taxonomic_classification/{sample}_nolca_filt.gff", #? This is a temp file, removed in the onSuccess//onError clause.
+        taxtab = "data/taxonomic_classification/{sample}.taxtab",
+        taxMagtab = "data/taxonomic_classification/{sample}.taxMagtab"
     conda:
         "../envs/mgkit_lca.yaml"
     params:
-        mgkit_tax_db=config["databases"]["MGKit_taxonomy"],
-        bitscore_threshold=config["taxonomic_classification_LCA"]["mgkit_LCA"]["bitscore_threshold"]   
+        mgkit_tax_db = config["databases"]["MGKit_taxonomy"],
+        bitscore_threshold = config["Illumina_meta"]["LCA"]["bitscore_threshold"]   
     benchmark:
         "logs/benchmark/lca_mgkit_{sample}.txt"
     threads: 1
