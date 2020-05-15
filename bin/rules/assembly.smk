@@ -26,7 +26,7 @@ rule De_novo_assembly:
         minlength=config["scaffold_minLen_filter"]["minlen"],
     shell:
         """
-spades.py --meta \
+spades.py --only-assembler --meta \
 -1 {input.fastq_pR1} \
 -2 {input.fastq_pR2} \
 -s {input.fastq_unpaired} \
