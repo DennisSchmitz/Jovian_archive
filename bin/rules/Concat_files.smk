@@ -23,7 +23,12 @@ rule Concat_files:
         virusHost_glob="*_virusHost.tsv",
     shell:
         """
-find {params.search_folder} -type f -name "{params.classified_glob}" -exec awk 'NR==1 || FNR!=1' {{}} + 2> {log} 1> {output.taxClassified}
-find {params.search_folder} -type f -name "{params.unclassified_glob}" -exec awk 'NR==1 || FNR!=1' {{}} + 2>> {log} 1> {output.taxUnclassified}
-find {params.search_folder} -type f -name "{params.virusHost_glob}" -exec awk 'NR==1 || FNR!=1' {{}} + 2>> {log} 1> {output.virusHost}
+find {params.search_folder} -type f -name "{params.classified_glob}" -exec awk 'NR==1 || FNR!=1' {{}} + |\
+(read header; echo "$header"; sort -t$'\t' -k 1,1 -k 15,15nr) 2> {log} 1> {output.taxClassified}
+
+find {params.search_folder} -type f -name "{params.unclassified_glob}" -exec awk 'NR==1 || FNR!=1' {{}} + |\
+(read header; echo "$header"; sort -t$'\t' -k 1,1 -k 4,4nr) 2>> {log} 1> {output.taxUnclassified}
+
+find {params.search_folder} -type f -name "{params.virusHost_glob}" -exec awk 'NR==1 || FNR!=1' {{}} + |\
+(read header; echo "$header"; sort -t$'\t' -k 1,1 -k 2,2) 2>> {log} 1> {output.virusHost}
         """
