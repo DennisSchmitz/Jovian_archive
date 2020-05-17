@@ -5,7 +5,7 @@ channels:
   - defaults
   - eumetsat
 dependencies:
-  - snakemake==5.4.3
+  - snakemake==5.17.0
   - pandas==0.24.2
   - qgrid==1.1.1
   - nb_conda==2.2.1

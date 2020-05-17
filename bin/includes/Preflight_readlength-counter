@@ -67,12 +67,12 @@ if [ $params_WrapperSettings_ReadlengthDetection == "true" ]; then
         elif [[ "${AVERAGE}" -ge "250" ]]
         then
         echo -e "\tAverage read length is >=250 and <=305. \n\tSetting large kmer sizes."
-        sed -i "s/.*kmersizes:.*/    ${largereads}/g" "${params}"
+        sed -i "s/.*kmersizes:.*/        ${largereads}/g" "${params}"
         ##! http://cab.spbu.ru/files/release3.11.0/manual.html#sec3.4 (we use version 3.11.0 in Jovian)
         elif [[ "${AVERAGE}" -ge "50" ]]
         then
         echo -e "\tAverage read length is >=50 and <250. \n\tSetting small kmer sizes."
-        sed -i "s/.*kmersizes:.*/    ${shortreads}/g" "${params}"
+        sed -i "s/.*kmersizes:.*/        ${shortreads}/g" "${params}"
         ##! http://cab.spbu.ru/files/release3.11.0/manual.html#sec3.4 (we use version 3.11.0 in Jovian)
         elif [[ "${AVERAGE}" -lt "50" ]]
         then

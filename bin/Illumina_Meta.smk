@@ -41,94 +41,165 @@ SAMPLES = {}
 with open(config["sample_sheet"]) as sample_sheet_file:
     SAMPLES = yaml.load(sample_sheet_file) # SAMPLES is a dict with sample in the form sample > read number > file. E.g.: SAMPLES["sample_1"]["R1"] = "x_R1.gz"
 
+# set dirs
+logdir = "logs/"
+bench = "benchmark/"
+conda_envs = "../envs/"
+rls = "rules/"
+
+datadir = "data/"
+bindir = "bin/"
+scrdir = "scripts/"
+qc_pre = "FastQC_pretrim/"
+qc_post = "FastQC_posttrim/"
+cln = "cleaned_fastq/"
+hugo_no_rm = "fastq_without_HuGo_removal/"
+scf_raw = "scaffolds_raw/"
+scf_filt = "scaffolds_filtered/"
+
 #@################################################################################
 #@#### Jovian processes                                                      #####
 #@################################################################################
 
-    #>############################################################################
-    #>#### Data quality control and cleaning                                 #####
-    #>############################################################################
+localrules: 
+    all,
+    quantify_output,
+    Concat_files,
+    Concat_filtered_SNPs,
+    HTML_IGVJs_generate_final,
+    HTML_IGVJs_variable_parts
 
-    include: "rules/QC_raw.smk"
-    include: "rules/CleanData.smk"
-    include: 'rules/QC_clean.smk'
 
-    #>############################################################################
-    #>#### Removal of background host data                                   #####
-    #>############################################################################
+rule all:
+    input:
+        expand("data/cleaned_fastq/{sample}_{read}.fq",
+                sample = SAMPLES,
+                read = [ 'pR1', 'pR2', 'unpaired' ]
+                ), # Extract unmapped & paired reads AND unpaired from HuGo alignment; i.e. cleaned fastqs
+        expand("data/scaffolds_raw/{sample}/scaffolds.fasta",
+                sample = SAMPLES
+                ), # SPAdes assembly output
+        expand("data/scaffolds_filtered/{sample}_scaffolds_ge{len}nt.{extension}",
+                sample = SAMPLES,
+                len = config["Illumina_meta"]["minlen"],
+                extension = [ 'fasta', 'fasta.fai' ]
+                ), # Filtered SPAdes Scaffolds
+        expand("data/scaffolds_filtered/{sample}_sorted.bam",
+                sample = SAMPLES
+                ), # BWA mem alignment for fragment length analysis
+        expand("data/scaffolds_filtered/{sample}_{extension}",
+                sample = SAMPLES,
+                extension = [ 'ORF_AA.fa', 'ORF_NT.fa','annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi', 'contig_ORF_count_list.txt' ]
+                ), # Prodigal ORF prediction output
+        expand("data/scaffolds_filtered/{sample}_{extension}",
+                sample = SAMPLES,
+                extension = [ 'unfiltered.vcf', 'filtered.vcf', 'filtered.vcf.gz', 'filtered.vcf.gz.tbi' ]
+                ), # SNP calling output
+        expand("data/scaffolds_filtered/{sample}_GC.bedgraph",
+                sample = SAMPLES
+                ), # Percentage GC content per specified window
+        expand("data/taxonomic_classification/{sample}.blastn",
+                sample = SAMPLES
+                ), # MegablastN output
+        expand("data/tables/{sample}_{extension}",
+                sample = SAMPLES,
+                extension = [ 'taxClassified.tsv', 'taxUnclassified.tsv', 'virusHost.tsv' ]
+                ), # Tab seperated tables with merged data
+        expand("results/{file}",
+                file = [ 'all_taxClassified.tsv', 'all_taxUnclassified.tsv', 'all_virusHost.tsv', 'all_filtered_SNPs.tsv' ]
+                ), # Concatenated classification, virus host and typing tool tables
+        expand("results/{file}",
+                file = [ 'heatmaps/Superkingdoms_heatmap.html', 'Sample_composition_graph.html', 'Taxonomic_rank_statistics.tsv', 'Virus_rank_statistics.tsv', 'Phage_rank_statistics.tsv', 'Bacteria_rank_statistics.tsv' ]
+                ), # Taxonomic profile and heatmap output
+        "results/heatmaps/Virus_heatmap.html", # Virus (excl. phages) order|family|genus|species level heatmap for the entire run
+        "results/heatmaps/Phage_heatmap.html", # Phage order|family|genus|species heatmaps for the entire run (based on a selection of phage families)
+        "results/heatmaps/Bacteria_heatmap.html", # Bacteria phylum|class|order|family|genus|species level heatmap for the entire run
+        expand("results/{file}.html",
+                file = [ 'multiqc', 'krona' ]
+                ), # HTML Reports
+        "results/igv.html", # IGVjs index
 
-    include: "rules/BG_removal_1.smk"
-    include: "rules/BG_removal_2.smk"
-    include: "rules/BG_removal_3.smk"
 
-    #>############################################################################
-    #>#### De novo assembly and filtering                                    #####
-    #>############################################################################
+#>############################################################################
+#>#### Data quality control and cleaning                                 #####
+#>############################################################################
 
-    include: "rules/assembly.smk"
+include: rls + "QC_raw.smk"
+include: rls + "CleanData.smk"
+include: rls + "QC_clean.smk"
 
-    #>############################################################################
-    #>#### Scaffold analysis and metrics                                     #####
-    #>############################################################################
+#>############################################################################
+#>#### Removal of background host data                                   #####
+#>############################################################################
 
-    if config["PCR_dup_removal"] == True:
-        include: "rules/Read2scaffold_alignment_with_rmDup_and_fraglength.smk"
+include: rls + "BG_removal_1.smk"
+include: rls + "BG_removal_2.smk"
+include: rls + "BG_removal_3.smk"
 
-    if config["PCR_dup_removal"] == False:
-        include: "rules/Read2scaffold_alignment_without_rmDup_and_fraglength.smk"
-    
-    include: "rules/SNP_calling.smk"
-    include: "rules/ORF_analysis.smk"
-    include: "rules/Contig_metrics.smk"
-    include: "rules/GC_content.smk"
+#>############################################################################
+#>#### De novo assembly and filtering                                    #####
+#>############################################################################
 
-    #>############################################################################
-    #>#### Generate IGVjs HTML                                               #####
-    #>############################################################################
+include: rls + "assembly.smk"
 
-    include: "rules/IGVjs.smk"
+#>############################################################################
+#>#### Scaffold analysis and metrics                                     #####
+#>############################################################################
 
-    #>############################################################################
-    #>#### MultiQC report of pipeline metrics                                #####
-    #>############################################################################
+include: "rules/Read2scaffold_alignment_with_rmDup_and_fraglength.smk"
 
-    include: "rules/MultiQC.smk"
+include: "rules/SNP_calling.smk"
+include: "rules/ORF_analysis.smk"
+include: "rules/Contig_metrics.smk"
+include: "rules/GC_content.smk"
 
-    #>############################################################################
-    #>#### Taxonomic classification & LCA                                    #####
-    #>############################################################################
+#>############################################################################
+#>#### Generate IGVjs HTML                                               #####
+#>############################################################################
 
-    include: "rules/Blast.smk"
+include: rls + "IGVjs.smk"
 
-    if config["Illumina_meta"]["LCA"]["Krona"] == True:
-        include: "rules/Krona_LCA.smk"
+#>############################################################################
+#>#### MultiQC report of pipeline metrics                                #####
+#>############################################################################
 
-    if config["Illumina_meta"]["LCA"]["mgkit"] == True:
-        include: "rules/mgkit_LCA.smk"
+include: rls + "MultiQC.smk"
 
-    include: "rules/KronaChart.smk"
+#>############################################################################
+#>#### Taxonomic classification & LCA                                    #####
+#>############################################################################
 
-    #>############################################################################
-    #>#### Count annotated reads and visualize as stacked bar charts         #####
-    #>############################################################################
+include: rls + "Blast.smk"
 
-    include: "rules/Count_reads.smk"
-    include: "rules/Concat_reads.smk"
-    include: "rules/Quantify.smk"
+if config["Illumina_meta"]["LCA"]["Krona"] == True:
+    include: rls + "Krona_LCA.smk"
 
-    #>############################################################################
-    #>#### Make heatmaps for superkingdoms and viruses                       #####
-    #>############################################################################
+if config["Illumina_meta"]["LCA"]["mgkit"] == True:
+    include: rls + "mgkit_LCA.smk"
 
-    include: "rules/Heatmaps.smk"
+include: rls + "KronaChart.smk"
 
-    #>############################################################################
-    #>#### Data wrangling                                                    #####
-    #>############################################################################
+#>############################################################################
+#>#### Count annotated reads and visualize as stacked bar charts         #####
+#>############################################################################
 
-    include: "rules/Merge_metrics.smk"
-    include: "rules/Concat_files.smk"
-    include: "rules/Concat_SNPs.smk"
+include: rls + "Count_reads.smk"
+include: rls + "Concat_reads.smk"
+include: rls + "Quantify.smk"
+
+#>############################################################################
+#>#### Make heatmaps for superkingdoms and viruses                       #####
+#>############################################################################
+
+include: rls + "Heatmaps.smk"
+
+#>############################################################################
+#>#### Data wrangling                                                    #####
+#>############################################################################
+
+include: rls + "Merge_metrics.smk"
+include: rls + "Concat_files.smk"
+include: rls + "Concat_SNPs.smk"
 
 #@################################################################################
 #@#### The `onstart` checker codeblock                                       #####
@@ -165,7 +236,7 @@ onstart:
         echo -e "\n==> Virus-Host Interaction Database: <==\n$(ls -lah $(grep "    virusHostDB:" config/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> results/log_db.txt
         echo -e "\n==> Krona Taxonomy Database: <==\n$(ls -lah $(grep "    Krona_taxonomy:" config/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> results/log_db.txt
         echo -e "\n==> NCBI new_taxdump Database: <==\n$(ls -lah $(grep "    NCBI_new_taxdump_rankedlineage:" config/pipeline_parameters.yaml | cut -f 2 -d ":") $(grep "    NCBI_new_taxdump_host:" config/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> results/log_db.txt
-        echo -e "\n==> NCBI Databases as specified in ~/.ncbirc: <==\n$(ls -lah $(grep "BLASTDB=" .ncbirc | cut -f 2 -d "=" | tr "::" " "))\n" >> results/log_db.txt
+        echo -e "\n==> NCBI Databases as specified in .ncbirc: <==\n$(ls -lah $(grep "BLASTDB=" .ncbirc | cut -f 2 -d "=" | tr "::" " "))\n" >> results/log_db.txt
         
         echo -e "\tGenerating config file log..."
         rm -f results/log_config.txt
@@ -239,32 +310,3 @@ onsuccess:
 #@################################################################################
 #@#### Specify Jovian's final output:                                        #####
 #@################################################################################
-
-localrules: 
-    all,
-    quantify_output,
-    Concat_files,
-    Concat_filtered_SNPs,
-    HTML_IGVJs_generate_final,
-    HTML_IGVJs_variable_parts
-
-
-rule all:
-    input:
-        expand("data/cleaned_fastq/{sample}_{read}.fq", sample = SAMPLES, read = [ 'pR1', 'pR2', 'unpaired' ]), # Extract unmapped & paired reads AND unpaired from HuGo alignment; i.e. cleaned fastqs
-        expand("data/scaffolds_raw/{sample}/scaffolds.fasta", sample = SAMPLES), # SPAdes assembly output
-        expand("data/scaffolds_filtered/{sample}_scaffolds_ge{len}nt.{extension}", sample = SAMPLES, len = config["Illumina_meta"]["minlen"], extension = [ 'fasta', 'fasta.fai' ]), # Filtered SPAdes Scaffolds
-        expand("data/scaffolds_filtered/{sample}_sorted.bam", sample = SAMPLES), # BWA mem alignment for fragment length analysis
-        expand("data/scaffolds_filtered/{sample}_{extension}", sample = SAMPLES, extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi', 'contig_ORF_count_list.txt' ]), # Prodigal ORF prediction output
-        expand("data/scaffolds_filtered/{sample}_{extension}", sample = SAMPLES, extension = [ 'unfiltered.vcf', 'filtered.vcf', 'filtered.vcf.gz', 'filtered.vcf.gz.tbi' ]), # SNP calling output
-        expand("data/scaffolds_filtered/{sample}_GC.bedgraph", sample = SAMPLES), # Percentage GC content per specified window
-        expand("data/taxonomic_classification/{sample}.blastn", sample = SAMPLES), # MegablastN output
-        expand("data/tables/{sample}_{extension}", sample = SAMPLES, extension = [ 'taxClassified.tsv', 'taxUnclassified.tsv', 'virusHost.tsv' ]), # Tab seperated tables with merged data
-        expand("results/{file}", file = [ 'all_taxClassified.tsv', 'all_taxUnclassified.tsv', 'all_virusHost.tsv', 'all_filtered_SNPs.tsv' ]), # Concatenated classification, virus host and typing tool tables
-        expand("results/{file}", file = [ 'heatmaps/Superkingdoms_heatmap.html', 'Sample_composition_graph.html', 'Taxonomic_rank_statistics.tsv', 'Virus_rank_statistics.tsv', 'Phage_rank_statistics.tsv', 'Bacteria_rank_statistics.tsv' ]), # Taxonomic profile and heatmap output
-        "results/heatmaps/Virus_heatmap.html", # Virus (excl. phages) order|family|genus|species level heatmap for the entire run
-        "results/heatmaps/Phage_heatmap.html", # Phage order|family|genus|species heatmaps for the entire run (based on a selection of phage families)
-        "results/heatmaps/Bacteria_heatmap.html", # Bacteria phylum|class|order|family|genus|species level heatmap for the entire run
-        expand("results/{file}.html", file = [ 'multiqc', 'krona' ]), # HTML Reports
-        "results/igv.html", # IGVjs index
-

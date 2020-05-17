@@ -66,18 +66,24 @@ rule all:
     input: 
         expand("{path}{sample}.fasta",
                 path = datadir + cons + raw, 
-                sample = SAMPLES),
+                sample = SAMPLES
+                ),
         expand("{path}{sample}.bedgraph", 
                 path = datadir + cons + filt,
-                sample = SAMPLES),
+                sample = SAMPLES
+                ),
         expand("{path}BoC_int.tsv",
-                path = res),
+                path = res
+                ),
         expand("{path}BoC_pct.tsv",
-                path = res),
+                path = res
+                ),
         expand("{path}IGVjs.html",
-                path = res),
+                path = res
+                ),
         expand("{path}multiqc.html",
-                path = res)
+                path = res
+                )
 
     #>############################################################################
     #>#### Data quality control and cleaning                                 #####
@@ -338,10 +344,12 @@ rule concat_boc:
     input:
         boc_int = expand("{path}{sample}_BoC_int.tsv",
                             path = datadir + cons + boc,
-                            sample = SAMPLES),
+                            sample = SAMPLES
+                            ),
         boc_pct = expand("{path}{sample}_BoC_pct.tsv",
                             path = datadir + cons + boc,
-                            sample = SAMPLES),
+                            sample = SAMPLES
+                            ),
     output:
         conc_boc_int = res + "BoC_int.tsv",
         conc_boc_pct = res + "BoC_pct.tsv",
@@ -457,7 +465,8 @@ rule HTML_IGVJs_generate_file:
         expand("{path}{b}_{sample}",
                 path = datadir + igv,
                 b = [ '2_tab', '4_html_divs', '6_js_flex' ],
-                sample = SAMPLES)
+                sample = SAMPLES
+                )
     output:
         html = res + "IGVjs.html"
     conda:

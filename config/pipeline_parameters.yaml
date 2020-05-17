@@ -17,12 +17,12 @@ threads:
     Clean_the_data: 4
     HuGo_removal: 14
     De_novo_assembly: 14
-    Taxonomic_classification_of_scaffolds: 12
+    Classification_of_scaffolds: 12
     SNP_calling: 14
     Fragment_length_analysis: 4
     quantify_output: 4
     # Settings for the optional reference alignment steps:
-    RA_align_to_reference: 14
+    Illumina_align_to_reference: 14
 
 
 ######################################
@@ -30,7 +30,7 @@ threads:
 ######################################
 
 Global:
-    HuGo_removal: --local
+    HuGo_removal_method: --local
     ORF_procedure: meta # Set the prodigal procedure. Use "meta" for metagenomics data.
     ORF_output_format: gff # Set the ORF prediction output format. The format that IGVjs (the alignment viewer program) accepts is "gff"
     GC_window_size: 50
@@ -40,11 +40,8 @@ Global:
 
 Illumina:
     Clean:
-    # For the Nextera PE lib prep adapters
         adapter_removal_config: ILLUMINACLIP:files/trimmomatic_0.36_adapters_lists/NexteraPE-PE.fa:2:30:10:8:true
-    # Default: 5 nucleotides window size, minimum average Phred score of 20
         quality_trimming_config: SLIDINGWINDOW:5:20
-    # Default: Remove anything smaller than 50 nucleotides
         minimum_length_config: MINLEN:50
 
 Illumina_meta:
@@ -54,6 +51,7 @@ Illumina_meta:
         ## You can still use this manually by toggling off the read-length checker.
         ## For reference the kmer sizes "21,33,55,77" are used for short Illumina reads (<250 nt in length)
         ## The kmer sizes "21,33,55,77,99,127" are used for large Illumina reads (>250 nt in length)
+        Max_gb_ram: 100
 
     minlen: 250
     # Minimum allowed scaffold size to be allowed for downstream processessing. Advice, use a minimum length that is atleast 1nt greater than your Illumina read length
@@ -71,10 +69,14 @@ Illumina_meta:
         quantile_threshold: .97
         bitscore_threshold: 100
 
-    SNP_calling:
+    SNP:
         Max_coverage: 20000 # Maximum coverage that will be used for SNP calling. Dont change this value unless you know what youre doing.
         Minimum_AF: 0.05 # This is the minimum At the end of the comment after "remove_temp" there were four Ss, probably accidentally typed in when saving the file (Ctrl + S, where Ctrl was not hit yet?).allelle frequency (=AF) for which you want a SNP to be reported. Default is 5%.
 
+    Alignment:
+        Duplicates: -r
+        Duplicate_marking: t
+        Max_read_length: 300
 
 Illumina_ref:
     Alignment:
@@ -110,3 +112,10 @@ reference_alignment:
 ######################################
 
 
+databases:
+    background_ref: /data/db/Hugo/genome.fa
+    Krona_taxonomy: /data/db/krona_taxonomy/
+    virusHostDB: /data/db/Virus-Host_interaction_db/virushostdb.tsv
+    NCBI_new_taxdump_rankedlineage: /data/db/new_taxdump/rankedlineage.dmp.delim
+    NCBI_new_taxdump_host: /data/db/new_taxdump/host.dmp.delim
+    MGKit_taxonomy: /data/db/mgkit_taxonomy/

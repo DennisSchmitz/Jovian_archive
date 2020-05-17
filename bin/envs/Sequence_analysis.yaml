@@ -1,4 +1,4 @@
-name: scaffold_analyses
+name: Sequence_analysis
 channels:
   - bioconda
   - conda-forge

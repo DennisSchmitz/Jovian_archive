@@ -58,21 +58,26 @@ SAMPLES = {}
 with open(config["sample_sheet"]) as sample_sheet_file:
     SAMPLES = yaml.load(sample_sheet_file) # SAMPLES is a dict with sample in the form sample > read number > file. E.g.: SAMPLES["sample_1"]["R1"] = "x_R1.gz"
 
-# The reference file is given as a snakemake CLI argument from within the wrapper, so NOT via the pipeline_parameters.yaml
+
 reference = config["reference"]
-reference_basename = os.path.splitext(os.path.basename(reference))[0]    # source: https://stackoverflow.com/questions/678236/how-to-get-the-filename-without-the-extension-from-a-path-in-python
+reference_basename = os.path.splitext(os.path.basename(reference))[0]
 
 # Set base directories
 indir = config["reference_alignment"]["input_dir"]
 outdir = config["reference_alignment"]["output_dir"]
 logdir = config["reference_alignment"]["log_dir"]
 bench = "benchmark/"
-
-# Set dir with conda-env files
 conda_envs = "envs/"
 
 datadir = "data/"
+bindir = "bin/"
+html = "html/"
+conf = "config/"
 cln = "cleaned_fastq/"
+qc_pre = "FastQC_pretrim/"
+qc_post = "FastQC_posttrim/"
+files = "files/"
+chunks = "html_chunks/"
 refdir = "reference/"
 aln = "alignment/"
 cons = "consensus/"
@@ -125,7 +130,8 @@ rule all:
                 ), # A zipped vcf file contained SNPs versus the given reference and a IlluminaW consensus sequence, see explanation below for the meaning of IlluminaW.
         expand("{out}{sample}.bedgraph",
                 out = outdir + cons,
-                sample = SAMPLES), # Lists the coverage of the alignment against the reference in a bedgraph format, is used to determine the coverage mask files below.
+                sample = SAMPLES
+                ), # Lists the coverage of the alignment against the reference in a bedgraph format, is used to determine the coverage mask files below.
         expand("{out}{sample}_{filt_character}-filt_cov_ge_{thresholds}.fa",
                 out = outdir + res + cons,
                 sample = SAMPLES,
@@ -236,7 +242,7 @@ rule Illumina_reference_ORF_analysis:
         zipped_gff3 = outdir + refdir + reference_basename + "_annotation.gff.gz",
         index_zipped_gff3 = outdir + refdir + reference_basename + "_annotation.gff.gz.tbi",
     conda:
-        conda_envs + "scaffold_analysis.yaml"
+        conda_envs + "Sequence_analysis.yaml"
     benchmark:
         logdir + bench + "Illumina_reference_ORF_analysis.txt"
     log:
@@ -267,14 +273,14 @@ rule Illumina_determine_GC_content:
         bed_windows = outdir + refdir + reference_basename + ".windows",
         GC_bed = outdir + refdir + reference_basename + "_GC.bedgraph",
     conda:
-        conda_envs + "scaffold_analysis.yaml"
+        conda_envs + "Sequence_analysis.yaml"
     benchmark:
         logdir + bench + "Illumina_determine_GC_content.txt"
     log:
         logdir + "Illumina_determine_GC_content.log"
     threads: 1
     params:
-        window_size = config["Illumina_ref"]["GC_window_size"]
+        window_size = config["Global"]["GC_window_size"]
     shell:
         """
 samtools faidx -o {output.fasta_fai} {input.fasta} > {log} 2>&1
@@ -310,13 +316,13 @@ rule Illumina_align_to_reference:
     log:
         logdir + "Illumina_align_to_reference_{sample}.log"
     params:
-        alignment_type = config["Illumina_ref"]["Alignment"]["Alignment_type"],
+        aln_type = config["Illumina_ref"]["Alignment"]["Alignment_type"],
         remove_dups = config["Illumina_ref"]["Alignment"]["Duplicates"], #! Don't change this, see this gotcha with duplicate marked reads in bedtools genomecov (which is used downstream): https://groups.google.com/forum/#!msg/bedtools-discuss/wJNC2-icIb4/wflT6PnEHQAJ . bedtools genomecov is not able to filter them out and includes those dup-reads in it's coverage metrics. So the downstream BoC analysis and consensus at diff cov processes require dups to be HARD removed.
         markdup_mode = config["Illumina_ref"]["Alignment"]["Duplicate_marking"],
         max_read_length = config["Illumina_ref"]["Alignment"]["Max_read_length"], # This is the default value and also the max read length of Illumina in-house sequencing.
     shell:
         """
-bowtie2 --time --threads {threads} {params.alignment_type} \
+bowtie2 --time --threads {threads} {params.aln_type} \
 -x {input.reference} \
 -1 {input.pR1} \
 -2 {input.pR2} \
@@ -425,8 +431,8 @@ rule Illumina_concat_BoC_metrics:
                             sample = SAMPLES
                             ),
     output:
-        combined_BoC_int_tsv = OUTPUT_DIR_RESULTS + "BoC_integer.tsv",
-        combined_BoC_pct_tsv = OUTPUT_DIR_RESULTS + "BoC_percentage.tsv",
+        combined_BoC_int_tsv = outdir + res + "BoC_integer.tsv",
+        combined_BoC_pct_tsv = outdir + res + "BoC_percentage.tsv",
     conda:
         conda_envs + "Illumina_ref_alignment.yaml"
     benchmark:
@@ -453,18 +459,22 @@ cat {input.BoC_pct_tsv} >> {output.combined_BoC_pct_tsv}
 #### TODOD hence the '-d' flag in the multiqc command based on https://multiqc.info/docs/#directory-names
 rule Illumina_MultiQC_report:
     input:
-        expand("data/FastQC_pretrim/{sample}_{read}_fastqc.zip",
+        expand("{out}{sample}_{read}_fastqc.zip",
+                out = datadir + qc_pre,
                 sample = SAMPLES,
                 read = "R1 R2".split()
                 ), # TODO dit moet nog verbetert worden qua smk syntax
-        expand("data/FastQC_posttrim/{sample}_{read}_fastqc.zip",
+        expand("{out}{sample}_{read}_fastqc.zip",
+                out = datadir + qc_post,
                 sample = SAMPLES,
                 read = "pR1 pR2 uR1 uR2".split()
                 ), # TODO dit moet nog verbetert worden qua smk syntax
-        expand("logs/Clean_the_data_{sample}.log",
+        expand("{out}Clean_the_data_{sample}.log",
+                out = logdir,
                 sample = SAMPLES
                 ), # TODO dit moet nog verbetert worden qua smk syntax
-        expand("logs/HuGo_removal_pt1_alignment_{sample}.log",
+        expand("{out}HuGo_removal_pt1_alignment_{sample}.log",
+                out = logdir,
                 sample = SAMPLES
                 ), # TODO dit moet nog verbetert worden qua smk syntax
         expand("{out}Illumina_align_to_reference_{sample}.log",
@@ -484,7 +494,7 @@ rule Illumina_MultiQC_report:
     threads: 1
     params:
         config_file = "files/multiqc_config.yaml",
-        output_dir = OUTPUT_DIR_RESULTS,
+        output_dir = outdir + res,
     log:
         logdir + "Illumina_MultiQC_report.log"
     shell:
@@ -547,18 +557,19 @@ rule Illumina_HTML_IGVJs_generate_final:
     log:
         logdir + "Illumina_HTML_IGVJs_generate_final.log"
     params:
+        chunkpath = files + chunks, 
         tab_basename = outdir + igv + "2_tab_",
         div_basename = outdir + igv + "4_html_divs_",
         js_flex_output = outdir + igv + "6_js_flex_",
     shell:
         """
-cat files/html_chunks/1_header.html > {output}
+cat {params.chunkpath}1_header.html > {output}
 cat {params.tab_basename}* >> {output}
-cat files/html_chunks/3_tab_explanation_Illumina.html >> {output}
+cat {params.chunkpath}3_tab_explanation_Illumina.html >> {output}
 cat {params.div_basename}* >> {output}
-cat files/html_chunks/5_js_begin.html >> {output}
+cat {params.chunkpath}5_js_begin.html >> {output}
 cat {params.js_flex_output}* >> {output}
-cat files/html_chunks/7_js_end.html >> {output}
+cat {params.chunkpath}7_js_end.html >> {output}
         """
 
 
