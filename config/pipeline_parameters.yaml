@@ -110,12 +110,3 @@ reference_alignment:
 ######################################
 ### Databases                      ###
 ######################################
-
-
-databases:
-    background_ref: /data/db/Hugo/genome.fa
-    Krona_taxonomy: /data/db/krona_taxonomy/
-    virusHostDB: /data/db/Virus-Host_interaction_db/virushostdb.tsv
-    NCBI_new_taxdump_rankedlineage: /data/db/new_taxdump/rankedlineage.dmp.delim
-    NCBI_new_taxdump_host: /data/db/new_taxdump/host.dmp.delim
-    MGKit_taxonomy: /data/db/mgkit_taxonomy/
