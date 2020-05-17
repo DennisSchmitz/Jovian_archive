@@ -16,15 +16,15 @@ rule SNP_calling:
         zipped_vcf = "data/scaffolds_filtered/{sample}_filtered.vcf.gz",
         zipped_vcf_index = "data/scaffolds_filtered/{sample}_filtered.vcf.gz.tbi"
     conda:
-        "../envs/scaffold_analyses.yaml"
+        "../envs/Sequence_analysis.yaml"
     log:
         "logs/SNP_calling_{sample}.log"
     benchmark:
         "logs/benchmark/SNP_calling_{sample}.txt"
     threads: config["threads"]["SNP_calling"]
     params:
-        max_cov = config["Illumina_meta"]["SNP_calling"]["Max_coverage"],
-        minimum_AF = config["Illumina_meta"]["SNP_calling"]["Minimum_AF"]
+        max_cov = config["Illumina_meta"]["SNP"]["Max_coverage"],
+        minimum_AF = config["Illumina_meta"]["SNP"]["Minimum_AF"]
     shell:
         """
 samtools faidx -o {output.fasta_fai} {input.fasta} > {log} 2>&1

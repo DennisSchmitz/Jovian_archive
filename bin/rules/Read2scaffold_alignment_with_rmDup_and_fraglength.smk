@@ -16,7 +16,7 @@ rule Read2scaffold_alignment_with_rmDup_and_fraglength:
         txt="data/scaffolds_filtered/{sample}_insert_size_metrics.txt",
         pdf="data/scaffolds_filtered/{sample}_insert_size_histogram.pdf"
     conda:
-        "../envs/scaffold_analyses.yaml"
+        "../envs/Sequence_analysis.yaml"
     log:
         "logs/Read2scaffold_alignment_with_rmDup_and_fraglength_{sample}.log"
     benchmark:

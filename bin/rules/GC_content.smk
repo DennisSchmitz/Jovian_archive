@@ -13,7 +13,7 @@ rule Determine_GC_content:
         bed_windows = "data/scaffolds_filtered/{sample}.windows",
         GC_bed = "data/scaffolds_filtered/{sample}_GC.bedgraph"
     conda:
-        "../envs/scaffold_analyses.yaml"
+        "../envs/Sequence_analysis.yaml"
     log:
         "logs/Determine_GC_content_{sample}.log"
     benchmark:

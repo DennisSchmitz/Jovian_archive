@@ -20,7 +20,7 @@ rule HuGo_removal_pt1_alignment:
         "logs/benchmark/HuGo_removal_pt1_alignment_{sample}.txt"
     threads: config["threads"]["HuGo_removal"]
     params:
-        alignment_type=config["Global"]["HuGo_removal_type"]
+        alignment_type=config["Global"]["HuGo_removal_method"]
     log:
         "logs/HuGo_removal_pt1_alignment_{sample}.log"
     shell:

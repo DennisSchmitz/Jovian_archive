@@ -15,7 +15,7 @@ rule ORF_analysis:
         index_zipped_gff3="data/scaffolds_filtered/{sample}_annotation.gff.gz.tbi",
         contig_ORF_count_list="data/scaffolds_filtered/{sample}_contig_ORF_count_list.txt"
     conda:
-        "../envs/scaffold_analyses.yaml"
+        "../envs/Sequence_analysis.yaml"
     log:
         "logs/ORF_prediction_{sample}.log"
     benchmark:

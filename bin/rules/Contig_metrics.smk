@@ -14,7 +14,7 @@ rule Generate_contigs_metrics:
         perScaffold = "data/scaffolds_filtered/{sample}_perMinLenFiltScaffold.stats",
         perORFcoverage = "data/scaffolds_filtered/{sample}_perORFcoverage.stats",
     conda:
-        "../envs/scaffold_analyses.yaml"
+        "../envs/Sequence_analysis.yaml"
     log:
         "logs/Generate_contigs_metrics_{sample}.log"
     benchmark:
