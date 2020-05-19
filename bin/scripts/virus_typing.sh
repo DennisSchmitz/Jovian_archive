@@ -146,53 +146,53 @@ typingtool() {
     local which_tt="${3}"
     local sample_name=${basename/_taxClassified.tsv/}   # Base sample name without path and suffixes
 
-    # Set proper variables depending on chosen typingtool (either 'NoV', 'EV', 'HAV' or 'HEV')
+    # Set proper variables depending on chosen typingtool
     if [ "${which_tt}" == "nov" ]; then
         local tt_url="https://www.rivm.nl/mpf/typingservice/norovirus/"
         local parser_py="bin/scripts/typingtool_NoV_XML_to_csv_parser.py"
-        local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_NoV.fa}
+        local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_nov.fa}
         local extract_name="Caliciviridae" # Family
         local extract_field="8" # Family
         local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with family == Caliciviridae found."
     elif [ "${which_tt}" == "ev" ]; then
         local tt_url="https://www.rivm.nl/mpf/typingservice/enterovirus/"
         local parser_py="bin/scripts/typingtool_EV_XML_to_csv_parser.py"
-        local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_EV.fa}
+        local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_ev.fa}
         local extract_name="Picornaviridae" # Family
         local extract_field="8" # Family
         local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with family == Picornaviridae found."
     elif [ "${which_tt}" == "hav" ]; then
         local tt_url="https://www.rivm.nl/mpf/typingservice/hav/"
         local parser_py="bin/scripts/typingtool_HAV_XML_to_csv_parser.py"
-        local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_HAV.fa}
+        local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_hav.fa}
         local extract_name="Hepatovirus" # Genus
         local extract_field="7" # Genus
         local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with genus == Hepatovirus found."
     elif [ "${which_tt}" == "hev" ]; then
         local tt_url="https://www.rivm.nl/mpf/typingservice/hev/"
         local parser_py="bin/scripts/typingtool_HEV_XML_to_csv_parser.py"
-        local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_HEV.fa}
+        local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_hev.fa}
         local extract_name="Orthohepevirus" # Genus
         local extract_field="7" # Genus
         local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with genus == Orthohepevirus found."
     elif [ "${which_tt}" == "rva" ]; then
         local tt_url="https://www.rivm.nl/mpf/typingservice/rotavirusa/"
         local parser_py="bin/scripts/typingtool_RVA_XML_to_csv_parser.py"
-        local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_RVA.fa}
+        local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_rva.fa}
         local extract_name="Rotavirus" # Genus
         local extract_field="7" # Genus
         local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with genus == Rotavirus found."
     elif [ "${which_tt}" == "pv" ]; then
         local tt_url="https://www.rivm.nl/mpf/typingservice/papillomavirus/"
         local parser_py="bin/scripts/typingtool_PV_XML_to_csv_parser.py"
-        local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_PV.fa}
+        local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_pv.fa}
         local extract_name="Papillomaviridae" # Family
         local extract_field="8" # Family
         local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with family == Papillomaviridae found."
     elif [ "${which_tt}" == "flavi" ]; then
         local tt_url="https://www.rivm.nl/mpf/typingservice/flavivirus/"
         local parser_py="bin/scripts/typingtool_Flavi_XML_to_csv_parser.py"
-        local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_Flavi.fa}
+        local query_fasta=${OUTPUT_FOLDER}${basename/_taxClassified.tsv/_flavi.fa}
         local extract_name="Flaviviridae" # Family
         local extract_field="8" # Family
         local nothing_found_message="Sample:\t${sample_name}\tNo scaffolds with family == Flaviviridae found."
@@ -240,14 +240,9 @@ for FILE in ${INPUT_FILES}
 do
     BASENAME=${FILE##*/}   # Filename without path but WITH suffixes
     if [ "${WHICH_TT}" == "all" ]; then
-        #TODO make this more elegant with a list of keywords
-        typingtool "${FILE}" "${BASENAME}" "nov"
-        typingtool "${FILE}" "${BASENAME}" "ev"
-        typingtool "${FILE}" "${BASENAME}" "hav"
-        typingtool "${FILE}" "${BASENAME}" "hev"
-        typingtool "${FILE}" "${BASENAME}" "rva"
-        typingtool "${FILE}" "${BASENAME}" "pv"
-        typingtool "${FILE}" "${BASENAME}" "flavi"
+        for TT in "nov" "ev" "hav" "hev" "rva" "pv" "flavi"; do
+            typingtool "${FILE}" "${BASENAME}" "${TT}"
+        done
     else
         typingtool "${FILE}" "${BASENAME}" "${WHICH_TT}"
     fi
@@ -257,8 +252,14 @@ done
 ### Concatenate all indivual files together into one big file               #####
 #################################################################################
 
-if [ -n "$( find data/virus_typing_tables/ -maxdepth 1 -name "*_${WHICH_TT}.csv" -print -quit )" ]
-then
+if [ "${WHICH_TT}" == "all" ]; then
+    for TT in "nov" "ev" "hav" "hev" "rva" "pv" "flavi"; do
+        if [ -n "$( find data/virus_typing_tables/ -maxdepth 1 -name "*_${TT}.csv" -print -quit )" ]; then
+            # If any files were created in the first place; concat individual outputs into one combined output, the awk magic is to not repeat headers
+            gawk 'FNR==1 && NR!=1 { next; } { print }' data/virus_typing_tables/*_${TT}.csv > results/all_${TT}-TT.csv
+        fi
+    done
+elif [ -n "$( find data/virus_typing_tables/ -maxdepth 1 -name "*_${WHICH_TT}.csv" -print -quit )" ]; then
     # If any files were created in the first place; concat individual outputs into one combined output, the awk magic is to not repeat headers
     gawk 'FNR==1 && NR!=1 { next; } { print }' data/virus_typing_tables/*_${WHICH_TT}.csv > results/all_${WHICH_TT}-TT.csv
 fi
@@ -267,6 +268,7 @@ fi
 ### Cleanup #####
 #################################################################################
 find data/virus_typing_tables/ -type f -empty -delete
+#TODO After updates, not sure if a cleanup is really needed. If it is, better to include it in the for concatenation chunk above.
 #TODO rm -f data/virus_typing_tables/*_${WHICH_TT}.fa # Commented this out for debugging purposes, should be activated in v.1.0 (but please first see other #TODO above)
 #TODO rm -f data/virus_typing_tables/*_${WHICH_TT}.xml # Commented this out for debugging purposes, should be activated in v.1.0 (but please first see other #TODO above)
 echo -e "\nFinished"

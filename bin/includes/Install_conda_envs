@@ -6,7 +6,7 @@ if [ "${INSTALL_CONDA_ENVS:-}" == "TRUE" ]; then
     line
     touch sample_sheet.yaml
     echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > config/variables.yaml
-    echo -e "Server_host:\n    hostname: http://${SET_HOSTNAME}" >> config/variables.yaml
+    echo -e "Server_host:\n    hostname: http://${HOSTNAME}" >> config/variables.yaml
     mkdir -p installer_files
     echo -e "@example_read1\nGATTACA\n+\nAAAAAAA\n" > installer_files/example_R1.fq
     echo -e "@example_read2\nGATTACA\n+\nAAAAAAA\n" > installer_files/example_R2.fq
