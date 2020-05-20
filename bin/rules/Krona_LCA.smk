@@ -6,7 +6,7 @@ rule Krona_chart_and_LCA:
         taxtab = "data/taxonomic_classification/{sample}.taxtab",
         taxMagtab = "data/taxonomic_classification/{sample}.taxMagtab",
     conda:
-        "../envs/Krona_plot.yaml"
+        conda_envs + "Krona_plot.yaml"
     benchmark:
         "logs/benchmark/Krona_chart_and_LCA_{sample}.txt"
     threads: 1

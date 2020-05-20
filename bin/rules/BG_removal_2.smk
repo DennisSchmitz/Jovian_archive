@@ -6,13 +6,13 @@
 
 rule HuGo_removal_pt2_extract_paired_unmapped_reads:
     input:
-         bam="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_sorted.bam",
-         bam_index="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_sorted.bam.bai",
+         bam        =   rules.HuGo_removal_pt1_alignment.output.sorted_bam,
+         bam_index  =   rules.HuGo_removal_pt1_alignment.output.sorted_bam_index,
     output:
-         fastq_R1="data/cleaned_fastq/{sample}_pR1.fq",
-         fastq_R2="data/cleaned_fastq/{sample}_pR2.fq",
+         fastq_R1   =   "data/cleaned_fastq/{sample}_pR1.fq",
+         fastq_R2   =   "data/cleaned_fastq/{sample}_pR2.fq",
     conda:
-        "../envs/HuGo_removal.yaml"
+        conda_envs + "HuGo_removal.yaml"
     log:
         "logs/HuGo_removal_pt2_extract_paired_unmapped_reads_{sample}.log"
     benchmark:

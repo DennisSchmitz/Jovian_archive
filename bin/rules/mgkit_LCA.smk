@@ -3,11 +3,11 @@
 ## Remove any entry with a lower bitscore than the user specified bitscore_threshold (i.e. filter short alignments since every match is a +2 bitscore)
 rule make_gff: 
     input:
-         "data/taxonomic_classification/{sample}.blastn"
+         rules.Scaffold_classification.output
     output:
          "data/taxonomic_classification/{sample}_lca_raw.gff" #? This is a temp file, removed in the onSuccess//onError clause.
     conda:
-        "../envs/mgkit_lca.yaml"
+        conda_envs + "mgkit_lca.yaml"
     benchmark:
         "logs/benchmark/make_gff_{sample}.txt"
     threads: 1
@@ -24,11 +24,11 @@ rule make_gff:
 # Reformat gff with accession id blasthit into taxid
 rule addtaxa_gff:
     input:
-         "data/taxonomic_classification/{sample}_lca_raw.gff"
+         rules.make_gff.output
     output:
          "data/taxonomic_classification/{sample}_lca_tax.gff" #? This is a temp file, removed in the onSuccess//onError clause.
     conda:
-        "../envs/mgkit_lca.yaml"
+        conda_envs + "mgkit_lca.yaml"
     benchmark:
         "logs/benchmark/addtaxa_gff_{sample}.txt"
     params:
@@ -44,11 +44,11 @@ rule addtaxa_gff:
 # Filter taxid 81077 (https://www.ncbi.nlm.nih.gov/taxonomy/?term=81077 --> artificial sequences) and 12908 (https://www.ncbi.nlm.nih.gov/taxonomy/?term=12908 --> unclassified sequences)
 rule taxfilter_gff:
     input:
-         "data/taxonomic_classification/{sample}_lca_tax.gff"
+         rules.addtaxa_gff.output
     output:
          "data/taxonomic_classification/{sample}_lca_taxfilt.gff" #? This is a temp file, removed in the onSuccess//onError clause.
     conda:
-        "../envs/mgkit_lca.yaml"
+        conda_envs + "mgkit_lca.yaml"
     benchmark:
         "logs/benchmark/taxfilter_gff_{sample}.txt"
     params:
@@ -64,11 +64,11 @@ rule taxfilter_gff:
 # Filter gff on the user-specified bitscore-quantile settings.
 rule qfilter_gff:
     input:
-         "data/taxonomic_classification/{sample}_lca_taxfilt.gff"
+         rules.taxfilter_gff.output
     output:
          "data/taxonomic_classification/{sample}_lca_filt.gff" #? This is a temp file, removed in the onSuccess//onError clause.
     conda:
-        "../envs/mgkit_lca.yaml"
+        conda_envs + "mgkit_lca.yaml"
     benchmark:
         "logs/benchmark/qfilter_gff_{sample}.txt"
     threads: 1
@@ -90,17 +90,17 @@ rule qfilter_gff:
 ## `bin/krona_magnitudes.py` adds magnitude information for the Krona plot (same as default Krona method).
 rule lca_mgkit:
     input:
-        filtgff = "data/taxonomic_classification/{sample}_lca_filt.gff",
-        stats = "data/scaffolds_filtered/{sample}_perMinLenFiltScaffold.stats"
+        filtgff =   rules.qfilter_gff.output,
+        stats   =   rules.Generate_contigs_metrics.output.perScaffold
     output:
-        no_lca = "data/taxonomic_classification/{sample}_nolca_filt.gff", #? This is a temp file, removed in the onSuccess//onError clause.
-        taxtab = "data/taxonomic_classification/{sample}.taxtab",
-        taxMagtab = "data/taxonomic_classification/{sample}.taxMagtab"
+        no_lca      =   "data/taxonomic_classification/{sample}_nolca_filt.gff", #? This is a temp file, removed in the onSuccess//onError clause.
+        taxtab      =   "data/taxonomic_classification/{sample}.taxtab",
+        taxMagtab   =   "data/taxonomic_classification/{sample}.taxMagtab"
     conda:
-        "../envs/mgkit_lca.yaml"
+        conda_envs + "mgkit_lca.yaml"
     params:
-        mgkit_tax_db = config["databases"]["MGKit_taxonomy"],
-        bitscore_threshold = config["Illumina_meta"]["LCA"]["bitscore_threshold"]   
+        mgkit_tax_db        =   config["databases"]["MGKit_taxonomy"],
+        bitscore_threshold  =   config["Illumina_meta"]["LCA"]["bitscore_threshold"]   
     benchmark:
         "logs/benchmark/lca_mgkit_{sample}.txt"
     threads: 1

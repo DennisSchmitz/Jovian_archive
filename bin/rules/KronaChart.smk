@@ -6,18 +6,22 @@
 
 rule Krona_chart_combine:
     input:
-        sorted(expand("data/taxonomic_classification/{sample}.taxMagtab", sample = set(SAMPLES))),
+        sorted(
+            expand( rules.lca_mgkit.output.taxMagtab,
+                    sample  =   set(SAMPLES)
+                    )
+            )
     output:
         "results/krona.html"
     conda:
-        "../envs/Krona_plot.yaml"
+        conda_envs + "Krona_plot.yaml"
     benchmark:
         "logs/benchmark/Krona_chart_combine.txt"
     threads: 1
     log:
         "logs/Krona_chart_combine.log"
     params:
-        krona_tax_db=config["databases"]["Krona_taxonomy"]
+        krona_tax_db    =   config["databases"]["Krona_taxonomy"]
     shell:
         """
 if [ ! -L $(which ktClassifyBLAST | sed 's|/bin/ktClassifyBLAST|/opt/krona/taxonomy|g') ] # If symlink to Krona db does not exist...

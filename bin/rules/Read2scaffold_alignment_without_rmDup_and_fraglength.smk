@@ -7,16 +7,16 @@
 
 rule Read2scaffold_alignment_without_rmDup_and_fraglength:
     input:
-        fasta="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["Illumina_meta"]["minlen"],
-        pR1="data/cleaned_fastq/{sample}_pR1.fq",
-        pR2="data/cleaned_fastq/{sample}_pR2.fq",
+        fasta   =   "data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["Illumina_meta"]["minlen"],
+        pR1     =   "data/cleaned_fastq/{sample}_pR1.fq",
+        pR2     =   "data/cleaned_fastq/{sample}_pR2.fq",
     output:
-        bam="data/scaffolds_filtered/{sample}_sorted.bam",
-        bam_bai="data/scaffolds_filtered/{sample}_sorted.bam.bai",
-        txt="data/scaffolds_filtered/{sample}_insert_size_metrics.txt",
-        pdf="data/scaffolds_filtered/{sample}_insert_size_histogram.pdf"
+        bam     =   "data/scaffolds_filtered/{sample}_sorted.bam",
+        bam_bai =   "data/scaffolds_filtered/{sample}_sorted.bam.bai",
+        txt     =   "data/scaffolds_filtered/{sample}_insert_size_metrics.txt",
+        pdf     =   "data/scaffolds_filtered/{sample}_insert_size_histogram.pdf"
     conda:
-        "../envs/Sequence_analysis.yaml"
+        conda_envs + "Sequence_analysis.yaml"
     log:
         "logs/Read2scaffold_alignment_without_rmDup_and_fraglength_{sample}.log"
     benchmark:

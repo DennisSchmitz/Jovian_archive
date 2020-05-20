@@ -6,21 +6,21 @@
 
 rule HuGo_removal_pt1_alignment:
     input:
-        background_ref=config["databases"]["background_ref"],
-        r1="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_pR1.fastq",
-        r2="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_pR2.fastq",
-        r1_unpaired="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_uR1.fastq",
-        r2_unpaired="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_uR2.fastq",
+        background_ref  =   config["databases"]["background_ref"],
+        r1              =   rules.Clean_the_data.output.r1,
+        r2              =   rules.Clean_the_data.output.r2,
+        r1_unpaired     =   rules.Clean_the_data.output.r1_unpaired,
+        r2_unpaired     =   rules.Clean_the_data.output.r2_unpaired
     output:
-        sorted_bam="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_sorted.bam",
-        sorted_bam_index="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_sorted.bam.bai",
+        sorted_bam          =   "data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_sorted.bam",
+        sorted_bam_index    =   "data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_sorted.bam.bai"
     conda:
-        "../envs/HuGo_removal.yaml"
+        conda_envs + "HuGo_removal.yaml"
     benchmark:
         "logs/benchmark/HuGo_removal_pt1_alignment_{sample}.txt"
     threads: config["threads"]["HuGo_removal"]
     params:
-        alignment_type=config["Global"]["HuGo_removal_method"]
+        alignment_type  =   config["Global"]["HuGo_removal_method"]
     log:
         "logs/HuGo_removal_pt1_alignment_{sample}.log"
     shell:

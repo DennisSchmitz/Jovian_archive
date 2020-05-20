@@ -6,12 +6,12 @@
 
 rule QC_clean_data:
     input:
-        "data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_{read}.fastq"
+        rules.Clean_the_data.output
     output:
-        html="data/FastQC_posttrim/{sample}_{read}_fastqc.html",
-        zip="data/FastQC_posttrim/{sample}_{read}_fastqc.zip"
+        html    =   "data/FastQC_posttrim/{sample}_{read}_fastqc.html",
+        zip     =   "data/FastQC_posttrim/{sample}_{read}_fastqc.zip"
     conda:
-        "../envs/QC_and_clean.yaml"
+        conda_envs + "QC_and_clean.yaml"
     benchmark:
         "logs/benchmark/QC_clean_data_{sample}_{read}.txt"
     threads: 1

@@ -72,52 +72,86 @@ localrules:
 
 rule all:
     input:
-        expand("data/cleaned_fastq/{sample}_{read}.fq",
-                sample = SAMPLES,
-                read = [ 'pR1', 'pR2', 'unpaired' ]
+        expand( "data/cleaned_fastq/{sample}_{read}.fq",
+                sample  =   SAMPLES,
+                read    =   [   'pR1',
+                                'pR2',
+                                'unpaired'
+                                ]
                 ), # Extract unmapped & paired reads AND unpaired from HuGo alignment; i.e. cleaned fastqs
-        expand("data/scaffolds_raw/{sample}/scaffolds.fasta",
-                sample = SAMPLES
+        expand( "data/scaffolds_raw/{sample}/scaffolds.fasta",
+                sample  =   SAMPLES
                 ), # SPAdes assembly output
-        expand("data/scaffolds_filtered/{sample}_scaffolds_ge{len}nt.{extension}",
-                sample = SAMPLES,
-                len = config["Illumina_meta"]["minlen"],
-                extension = [ 'fasta', 'fasta.fai' ]
+        expand( "data/scaffolds_filtered/{sample}_scaffolds_ge{len}nt.{extension}",
+                sample      =   SAMPLES,
+                len         =   config["Illumina_meta"]["minlen"],
+                extension   =   [   'fasta',
+                                    'fasta.fai'
+                                    ]
                 ), # Filtered SPAdes Scaffolds
-        expand("data/scaffolds_filtered/{sample}_sorted.bam",
-                sample = SAMPLES
+        expand( "data/scaffolds_filtered/{sample}_sorted.bam",
+                sample  =   SAMPLES
                 ), # BWA mem alignment for fragment length analysis
-        expand("data/scaffolds_filtered/{sample}_{extension}",
-                sample = SAMPLES,
-                extension = [ 'ORF_AA.fa', 'ORF_NT.fa','annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi', 'contig_ORF_count_list.txt' ]
+        expand( "data/scaffolds_filtered/{sample}_{extension}",
+                sample      =   SAMPLES,
+                extension   =   [   'ORF_AA.fa',
+                                    'ORF_NT.fa',
+                                    'annotation.gff',
+                                    'annotation.gff.gz',
+                                    'annotation.gff.gz.tbi',
+                                    'contig_ORF_count_list.txt'
+                                    ]
                 ), # Prodigal ORF prediction output
-        expand("data/scaffolds_filtered/{sample}_{extension}",
-                sample = SAMPLES,
-                extension = [ 'unfiltered.vcf', 'filtered.vcf', 'filtered.vcf.gz', 'filtered.vcf.gz.tbi' ]
+        expand( "data/scaffolds_filtered/{sample}_{extension}",
+                sample      =   SAMPLES,
+                extension   =   [   'unfiltered.vcf',
+                                    'filtered.vcf',
+                                    'filtered.vcf.gz',
+                                    'filtered.vcf.gz.tbi'
+                                    ]
                 ), # SNP calling output
-        expand("data/scaffolds_filtered/{sample}_GC.bedgraph",
-                sample = SAMPLES
+        expand( "data/scaffolds_filtered/{sample}_GC.bedgraph",
+                sample  =   SAMPLES
                 ), # Percentage GC content per specified window
-        expand("data/taxonomic_classification/{sample}.blastn",
-                sample = SAMPLES
+        expand( "data/taxonomic_classification/{sample}.blastn",
+                sample  =   SAMPLES
                 ), # MegablastN output
-        expand("data/tables/{sample}_{extension}",
-                sample = SAMPLES,
-                extension = [ 'taxClassified.tsv', 'taxUnclassified.tsv', 'virusHost.tsv' ]
+        expand( "data/tables/{sample}_{extension}",
+                sample      =   SAMPLES,
+                extension   =   [   'taxClassified.tsv',
+                                    'taxUnclassified.tsv',
+                                    'virusHost.tsv'
+                                    ]
                 ), # Tab seperated tables with merged data
-        expand("results/{file}",
-                file = [ 'all_taxClassified.tsv', 'all_taxUnclassified.tsv', 'all_virusHost.tsv', 'all_filtered_SNPs.tsv' ]
+        expand( "results/{file}",
+                file    =   [   'all_taxClassified.tsv',
+                                'all_taxUnclassified.tsv',
+                                'all_virusHost.tsv',
+                                'all_filtered_SNPs.tsv'
+                                ]
                 ), # Concatenated classification, virus host and typing tool tables
-        expand("results/{file}",
-                file = [ 'heatmaps/Superkingdoms_heatmap.html', 'Sample_composition_graph.html', 'Taxonomic_rank_statistics.tsv', 'Virus_rank_statistics.tsv', 'Phage_rank_statistics.tsv', 'Bacteria_rank_statistics.tsv' ]
+        expand( "results/{file}",
+                file    =   [   'heatmaps/Superkingdoms_heatmap.html',
+                                'Sample_composition_graph.html',
+                                'Taxonomic_rank_statistics.tsv',
+                                'Virus_rank_statistics.tsv',
+                                'Phage_rank_statistics.tsv',
+                                'Bacteria_rank_statistics.tsv'
+                                ]
                 ), # Taxonomic profile and heatmap output
-        "results/heatmaps/Virus_heatmap.html", # Virus (excl. phages) order|family|genus|species level heatmap for the entire run
-        "results/heatmaps/Phage_heatmap.html", # Phage order|family|genus|species heatmaps for the entire run (based on a selection of phage families)
-        "results/heatmaps/Bacteria_heatmap.html", # Bacteria phylum|class|order|family|genus|species level heatmap for the entire run
-        expand("results/{file}.html",
-                file = [ 'multiqc', 'krona' ]
+        expand( "results/heatmaps/{tax}_heatmap.html",
+                tax =   [   'Virus',
+                            'Phage',
+                            'Bacteria'
+                            ]
+        ),
+        expand( "results/{file}.html",
+                file    =   [   'multiqc',
+                                'krona'
+                                ]
                 ), # HTML Reports
-        "results/igv.html", # IGVjs index
+        expand( "results/igv.html"
+                ) # IGVjs index
 
 
 #>############################################################################
@@ -185,13 +219,6 @@ include: rls + "KronaChart.smk"
 
 include: rls + "Count_reads.smk"
 include: rls + "Concat_reads.smk"
-include: rls + "Quantify.smk"
-
-#>############################################################################
-#>#### Make heatmaps for superkingdoms and viruses                       #####
-#>############################################################################
-
-include: rls + "Heatmaps.smk"
 
 #>############################################################################
 #>#### Data wrangling                                                    #####
@@ -200,6 +227,13 @@ include: rls + "Heatmaps.smk"
 include: rls + "Merge_metrics.smk"
 include: rls + "Concat_files.smk"
 include: rls + "Concat_SNPs.smk"
+include: rls + "Quantify.smk"
+
+#>############################################################################
+#>#### Make heatmaps for superkingdoms and viruses                       #####
+#>############################################################################
+
+include: rls + "Heatmaps.smk"
 
 #@################################################################################
 #@#### The `onstart` checker codeblock                                       #####

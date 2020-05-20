@@ -7,17 +7,17 @@
 
 rule HTML_IGVJs_variable_parts:
     input:
-        fasta= "data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["Illumina_meta"]["minlen"],
-        ref_GC_bedgraph= "data/scaffolds_filtered/{sample}_GC.bedgraph",
-        ref_zipped_ORF_gff= "data/scaffolds_filtered/{sample}_annotation.gff.gz",
-        basepath_zipped_SNP_vcf= "data/scaffolds_filtered/{sample}_filtered.vcf.gz",
-        basepath_sorted_bam= "data/scaffolds_filtered/{sample}_sorted.bam",
+        fasta                   =   rules.De_novo_assembly.output.filt_scaffolds,
+        ref_GC_bedgraph         =   rules.Determine_GC_content.output.GC_bed,
+        ref_zipped_ORF_gff      =   rules.ORF_analysis.output.zipped_gff3,
+        basepath_zipped_SNP_vcf =   rules.SNP_calling.output.zipped_vcf,
+        basepath_sorted_bam     =   rules.Read2scaffold_alignment_with_rmDup_and_fraglength.output.bam
     output:
         tab_output= "data/html/2_tab_{sample}",
         div_output= "data/html/4_html_divs_{sample}",
         js_flex_output= "data/html/6_js_flex_{sample}",
     conda:
-        "../envs/data_wrangling.yaml"
+        conda_envs + "data_wrangling.yaml"
     benchmark:
         "logs/benchmark/HTML_IGVJs_variable_parts_{sample}.txt"
     threads: 1
@@ -38,20 +38,26 @@ bash bin/html/meta_igvjs_write_flex_js_middle.sh {wildcards.sample} {output.js_f
 
 rule HTML_IGVJs_generate_final:
     input:
-        expand("data/html/{chunk_name}_{sample}", chunk_name = [ '2_tab', '4_html_divs', '6_js_flex' ], sample = SAMPLES)
+        expand( "data/html/{chunk_name}_{sample}",
+                chunk_name = [  '2_tab',
+                                '4_html_divs',
+                                '6_js_flex'
+                                ],
+                sample = SAMPLES
+                )
     output:
         "results/igv.html"
     conda:
-        "../envs/data_wrangling.yaml"
+        conda_envs + "data_wrangling.yaml"
     benchmark:
         "logs/benchmark/HTML_IGVJs_generate_final.txt"
     threads: 1
     log:
         "logs/HTML_IGVJs_generate_final.log"
     params:
-        tab_basename= "data/html/2_tab_",
-        div_basename= "data/html/4_html_divs_",
-        js_flex_output= "data/html/6_js_flex_",
+        tab_basename    =   "data/html/2_tab_",
+        div_basename    =   "data/html/4_html_divs_",
+        js_flex_output  =   "data/html/6_js_flex_",
     shell:
         """
 cat files/html_chunks/1_header.html > {output}

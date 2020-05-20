@@ -6,20 +6,20 @@
 
 rule draw_heatmaps:
     input:
-        classified = "results/all_taxClassified.tsv",
-        numbers = "results/multiqc_data/multiqc_trimmomatic.txt"
+        classified  =   rules.Concat_files.output.taxClassified,
+        numbers     =   "results/multiqc_data/multiqc_trimmomatic.txt"
     output:
-        super_quantities="results/Superkingdoms_quantities_per_sample.csv",
-        super="results/heatmaps/Superkingdoms_heatmap.html",
-        virus="results/heatmaps/Virus_heatmap.html",
-        phage="results/heatmaps/Phage_heatmap.html",
-        bact="results/heatmaps/Bacteria_heatmap.html",
-        stats="results/Taxonomic_rank_statistics.tsv",
-        vir_stats="results/Virus_rank_statistics.tsv",
-        phage_stats="results/Phage_rank_statistics.tsv",
-        bact_stats="results/Bacteria_rank_statistics.tsv"
+        super_quantities    =   "results/Superkingdoms_quantities_per_sample.csv",
+        super               =   "results/heatmaps/Superkingdoms_heatmap.html",
+        virus               =   "results/heatmaps/Virus_heatmap.html",
+        phage               =   "results/heatmaps/Phage_heatmap.html",
+        bact                =   "results/heatmaps/Bacteria_heatmap.html",
+        stats               =   "results/Taxonomic_rank_statistics.tsv",
+        vir_stats           =   "results/Virus_rank_statistics.tsv",
+        phage_stats         =   "results/Phage_rank_statistics.tsv",
+        bact_stats          =   "results/Bacteria_rank_statistics.tsv"
     conda:
-        "../envs/heatmaps.yaml"
+        conda_envs + "heatmaps.yaml"
     benchmark:
         "logs/benchmark/draw_heatmaps.txt"
     threads: 1

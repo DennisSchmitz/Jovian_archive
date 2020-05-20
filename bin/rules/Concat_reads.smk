@@ -6,9 +6,13 @@
 
 rule concatenate_read_counts:
     input:
-        expand("results/counts/Mapped_read_counts-{sample}.tsv", sample = SAMPLES)
+        expand( rules.count_mapped_reads.output,
+                sample = SAMPLES
+                )
     output:
         "results/counts/Mapped_read_counts.tsv"
+    conda:
+        conda_envs + "data_wrangling.yaml"
     benchmark:
         "logs/benchmark/concatenate_read_counts.txt"
     threads: 1
