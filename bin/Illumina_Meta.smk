@@ -29,33 +29,40 @@ Automation:
 
 shell.executable("/bin/bash")
 
-configfile: "config/pipeline_parameters.yaml"
-configfile: "config/variables.yaml"
-
 import pprint
 import os
 import yaml
 yaml.warnings({'YAMLLoadWarning': False}) # Suppress yaml "unsafe" warnings.
 
+# set dirs
+logdir      =   "logs/"
+cnf         =   "config/"
+bench       =   "benchmark/"
+conda_envs  =   "../envs/"
+rls         =   "rules/"
+
+datadir     =   "data/"
+bindir      =   "bin/"
+scrdir      =   "scripts/"
+qc_pre      =   "FastQC_pretrim/"
+qc_post     =   "FastQC_posttrim/"
+cln         =   "cleaned_fastq/"
+hugo_no_rm  =   "fastq_without_HuGo_removal/"
+scf_raw     =   "scaffolds_raw/"
+scf_filt    =   "scaffolds_filtered/"
+taxclas     =   "taxonomic_classification/"
+tbl         =   "tables/"
+res         =   "results/"
+hmap        =   "heatmaps/"
+
+
+configfile: f"{cnf}pipeline_parameters.yaml"
+configfile: f"{cnf}variables.yaml"
+
+
 SAMPLES = {}
 with open(config["sample_sheet"]) as sample_sheet_file:
     SAMPLES = yaml.load(sample_sheet_file) # SAMPLES is a dict with sample in the form sample > read number > file. E.g.: SAMPLES["sample_1"]["R1"] = "x_R1.gz"
-
-# set dirs
-logdir = "logs/"
-bench = "benchmark/"
-conda_envs = "../envs/"
-rls = "rules/"
-
-datadir = "data/"
-bindir = "bin/"
-scrdir = "scripts/"
-qc_pre = "FastQC_pretrim/"
-qc_post = "FastQC_posttrim/"
-cln = "cleaned_fastq/"
-hugo_no_rm = "fastq_without_HuGo_removal/"
-scf_raw = "scaffolds_raw/"
-scf_filt = "scaffolds_filtered/"
 
 #@################################################################################
 #@#### Jovian processes                                                      #####
@@ -72,27 +79,32 @@ localrules:
 
 rule all:
     input:
-        expand( "data/cleaned_fastq/{sample}_{read}.fq",
+        expand( "{p}{sample}_{read}.fq",
+                p       =   f"{datadir}{cln}",
                 sample  =   SAMPLES,
                 read    =   [   'pR1',
                                 'pR2',
                                 'unpaired'
                                 ]
                 ), # Extract unmapped & paired reads AND unpaired from HuGo alignment; i.e. cleaned fastqs
-        expand( "data/scaffolds_raw/{sample}/scaffolds.fasta",
+        expand( "{p}{sample}/scaffolds.fasta",
+                p       =   f"{datadir}{scf_raw}",
                 sample  =   SAMPLES
                 ), # SPAdes assembly output
-        expand( "data/scaffolds_filtered/{sample}_scaffolds_ge{len}nt.{extension}",
+        expand( "{p}{sample}_scaffolds_ge{l}nt.{extension}",
+                p           =   f"{datadir}{scf_filt}",
                 sample      =   SAMPLES,
-                len         =   config["Illumina_meta"]["minlen"],
+                l           =   config["Illumina_meta"]["minlen"],
                 extension   =   [   'fasta',
                                     'fasta.fai'
                                     ]
                 ), # Filtered SPAdes Scaffolds
-        expand( "data/scaffolds_filtered/{sample}_sorted.bam",
+        expand( "{p}{sample}_sorted.bam",
+                p       =   f"{datadir}{scf_filt}",
                 sample  =   SAMPLES
                 ), # BWA mem alignment for fragment length analysis
-        expand( "data/scaffolds_filtered/{sample}_{extension}",
+        expand( "{p}{sample}_{extension}",
+                p           =   f"{datadir}{scf_filt}",
                 sample      =   SAMPLES,
                 extension   =   [   'ORF_AA.fa',
                                     'ORF_NT.fa',
@@ -102,7 +114,8 @@ rule all:
                                     'contig_ORF_count_list.txt'
                                     ]
                 ), # Prodigal ORF prediction output
-        expand( "data/scaffolds_filtered/{sample}_{extension}",
+        expand( "{p}{sample}_{extension}",
+                p           =   f"{datadir}{scf_filt}",
                 sample      =   SAMPLES,
                 extension   =   [   'unfiltered.vcf',
                                     'filtered.vcf',
@@ -110,27 +123,32 @@ rule all:
                                     'filtered.vcf.gz.tbi'
                                     ]
                 ), # SNP calling output
-        expand( "data/scaffolds_filtered/{sample}_GC.bedgraph",
+        expand( "{p}{sample}_GC.bedgraph",
+                p       =   f"{datadir}{scf_filt}",
                 sample  =   SAMPLES
                 ), # Percentage GC content per specified window
-        expand( "data/taxonomic_classification/{sample}.blastn",
+        expand( "{p}{sample}.blastn",
+                p       =   f"{datadir}{taxclas}",
                 sample  =   SAMPLES
                 ), # MegablastN output
-        expand( "data/tables/{sample}_{extension}",
+        expand( "{p}{sample}_{extension}",
+                p           =   f"{datadir}{tbl}",
                 sample      =   SAMPLES,
                 extension   =   [   'taxClassified.tsv',
                                     'taxUnclassified.tsv',
                                     'virusHost.tsv'
                                     ]
                 ), # Tab seperated tables with merged data
-        expand( "results/{file}",
+        expand( "{p}{file}",
+                p       =   f"{res}",
                 file    =   [   'all_taxClassified.tsv',
                                 'all_taxUnclassified.tsv',
                                 'all_virusHost.tsv',
                                 'all_filtered_SNPs.tsv'
                                 ]
                 ), # Concatenated classification, virus host and typing tool tables
-        expand( "results/{file}",
+        expand( "{p}{file}",
+                p       =   f"{res}",
                 file    =   [   'heatmaps/Superkingdoms_heatmap.html',
                                 'Sample_composition_graph.html',
                                 'Taxonomic_rank_statistics.tsv',
@@ -139,18 +157,21 @@ rule all:
                                 'Bacteria_rank_statistics.tsv'
                                 ]
                 ), # Taxonomic profile and heatmap output
-        expand( "results/heatmaps/{tax}_heatmap.html",
+        expand( "{p}{tax}_heatmap.html",
+                p   =   f"{res}{hmap}",
                 tax =   [   'Virus',
                             'Phage',
                             'Bacteria'
                             ]
         ),
-        expand( "results/{file}.html",
+        expand( "{p}{file}.html",
+                p       =   f"{res}",
                 file    =   [   'multiqc',
                                 'krona'
                                 ]
                 ), # HTML Reports
-        expand( "results/igv.html"
+        expand( "{p}igv.html",
+                p   =   f"{res}"
                 ) # IGVjs index
 
 
@@ -158,82 +179,82 @@ rule all:
 #>#### Data quality control and cleaning                                 #####
 #>############################################################################
 
-include: rls + "QC_raw.smk"
-include: rls + "CleanData.smk"
-include: rls + "QC_clean.smk"
+include: f"{rls}QC_raw.smk"
+include: f"{rls}CleanData.smk"
+include: f"{rls}QC_clean.smk"
 
 #>############################################################################
 #>#### Removal of background host data                                   #####
 #>############################################################################
 
-include: rls + "BG_removal_1.smk"
-include: rls + "BG_removal_2.smk"
-include: rls + "BG_removal_3.smk"
+include: f"{rls}BG_removal_1.smk"
+include: f"{rls}BG_removal_2.smk"
+include: f"{rls}BG_removal_3.smk"
 
 #>############################################################################
 #>#### De novo assembly and filtering                                    #####
 #>############################################################################
 
-include: rls + "assembly.smk"
+include: f"{rls}assembly.smk"
 
 #>############################################################################
 #>#### Scaffold analysis and metrics                                     #####
 #>############################################################################
 
-include: "rules/Read2scaffold_alignment_with_rmDup_and_fraglength.smk"
+include: f"{rls}Read2scaffold_alignment_with_rmDup_and_fraglength.smk"
 
-include: "rules/SNP_calling.smk"
-include: "rules/ORF_analysis.smk"
-include: "rules/Contig_metrics.smk"
-include: "rules/GC_content.smk"
+include: f"{rls}SNP_calling.smk"
+include: f"{rls}ORF_analysis.smk"
+include: f"{rls}Contig_metrics.smk"
+include: f"{rls}GC_content.smk"
 
 #>############################################################################
 #>#### Generate IGVjs HTML                                               #####
 #>############################################################################
 
-include: rls + "IGVjs.smk"
+include: f"{rls}IGVjs.smk"
 
 #>############################################################################
 #>#### MultiQC report of pipeline metrics                                #####
 #>############################################################################
 
-include: rls + "MultiQC.smk"
+include: f"{rls}MultiQC.smk"
 
 #>############################################################################
 #>#### Taxonomic classification & LCA                                    #####
 #>############################################################################
 
-include: rls + "Blast.smk"
+include: f"{rls}Blast.smk"
 
 if config["Illumina_meta"]["LCA"]["Krona"] == True:
-    include: rls + "Krona_LCA.smk"
+    include: f"{rls}Krona_LCA.smk"
 
 if config["Illumina_meta"]["LCA"]["mgkit"] == True:
-    include: rls + "mgkit_LCA.smk"
+    include: f"{rls}mgkit_LCA.smk"
 
-include: rls + "KronaChart.smk"
+include: f"{rls}KronaChart.smk"
 
 #>############################################################################
 #>#### Count annotated reads and visualize as stacked bar charts         #####
 #>############################################################################
 
-include: rls + "Count_reads.smk"
-include: rls + "Concat_reads.smk"
+include: f"{rls}Count_reads.smk"
+include: f"{rls}Concat_reads.smk"
 
 #>############################################################################
 #>#### Data wrangling                                                    #####
 #>############################################################################
 
-include: rls + "Merge_metrics.smk"
-include: rls + "Concat_files.smk"
-include: rls + "Concat_SNPs.smk"
-include: rls + "Quantify.smk"
+include: f"{rls}Merge_metrics.smk"
+include: f"{rls}Concat_files.smk"
+include: f"{rls}Concat_SNPs.smk"
+include: f"{rls}Quantify.smk"
 
 #>############################################################################
 #>#### Make heatmaps for superkingdoms and viruses                       #####
 #>############################################################################
 
-include: rls + "Heatmaps.smk"
+include: f"{rls}Heatmaps.smk"
 
 #@################################################################################
 #@#### The `onstart` checker codeblock                                       #####
