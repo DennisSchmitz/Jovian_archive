@@ -8,18 +8,18 @@ rule ORF_analysis:
     input:
         rules.De_novo_assembly.output.filt_scaffolds
     output:
-        ORF_AA_fasta            =   "data/scaffolds_filtered/{sample}_ORF_AA.fa",
-        ORF_NT_fasta            =   "data/scaffolds_filtered/{sample}_ORF_NT.fa",
-        ORF_annotation_gff      =   "data/scaffolds_filtered/{sample}_annotation.gff",
-        zipped_gff3             =   "data/scaffolds_filtered/{sample}_annotation.gff.gz",
-        index_zipped_gff3       =   "data/scaffolds_filtered/{sample}_annotation.gff.gz.tbi",
-        contig_ORF_count_list   =   "data/scaffolds_filtered/{sample}_contig_ORF_count_list.txt"
+        ORF_AA_fasta            =   f"{datadir + scf_filt}" + "{sample}_ORF_AA.fa",
+        ORF_NT_fasta            =   f"{datadir + scf_filt}" + "{sample}_ORF_NT.fa",
+        ORF_annotation_gff      =   f"{datadir + scf_filt}" + "{sample}_annotation.gff",
+        zipped_gff3             =   f"{datadir + scf_filt}" + "{sample}_annotation.gff.gz",
+        index_zipped_gff3       =   f"{datadir + scf_filt}" + "{sample}_annotation.gff.gz.tbi",
+        contig_ORF_count_list   =   f"{datadir + scf_filt}" + "{sample}_contig_ORF_count_list.txt"
     conda:
-        conda_envs + "Sequence_analysis.yaml"
+        f"{conda_envs}Sequence_analysis.yaml"
     log:
-        "logs/ORF_prediction_{sample}.log"
+        f"{logdir}" + "ORF_prediction_{sample}.log"
     benchmark:
-        "logs/benchmark/ORF_prediction_{sample}.txt"
+        f"{logdir + bench}" + "ORF_prediction_{sample}.txt"
     threads: 1
     params:
         procedure       =   config["Global"]["ORF_procedure"],

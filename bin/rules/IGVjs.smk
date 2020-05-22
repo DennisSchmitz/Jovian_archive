@@ -13,17 +13,16 @@ rule HTML_IGVJs_variable_parts:
         basepath_zipped_SNP_vcf =   rules.SNP_calling.output.zipped_vcf,
         basepath_sorted_bam     =   rules.Read2scaffold_alignment_with_rmDup_and_fraglength.output.bam
     output:
-        tab_output= "data/html/2_tab_{sample}",
-        div_output= "data/html/4_html_divs_{sample}",
-        js_flex_output= "data/html/6_js_flex_{sample}",
+        tab_output      =   f"{datadir + html}" + "2_tab_{sample}",
+        div_output      =   f"{datadir + html}" + "4_html_divs_{sample}",
+        js_flex_output  =   f"{datadir + html}" + "6_js_flex_{sample}",
     conda:
-        conda_envs + "data_wrangling.yaml"
-    benchmark:
-        "logs/benchmark/HTML_IGVJs_variable_parts_{sample}.txt"
-    threads: 1
+        f"{conda_envs}data_wrangling.yaml"
     log:
-        "logs/HTML_IGVJs_variable_parts_{sample}.log"
-    params:
+        f"{logdir}" + "HTML_IGVJs_variable_parts_{sample}.log"
+    benchmark:
+        f"{logdir + bench}" + "HTML_IGVJs_variable_parts_{sample}.txt"
+    threads: 1
     shell:
         """
 bash bin/html/igvjs_write_tabs.sh {wildcards.sample} {output.tab_output}
@@ -38,26 +37,27 @@ bash bin/html/meta_igvjs_write_flex_js_middle.sh {wildcards.sample} {output.js_f
 
 rule HTML_IGVJs_generate_final:
     input:
-        expand( "data/html/{chunk_name}_{sample}",
-                chunk_name = [  '2_tab',
-                                '4_html_divs',
-                                '6_js_flex'
-                                ],
-                sample = SAMPLES
+        expand( "{p}{chunk_name}_{sample}",
+                p           =   f"{datadir + html}",
+                chunk_name  =   [   '2_tab',
+                                    '4_html_divs',
+                                    '6_js_flex'
+                                    ],
+                sample      =   SAMPLES
                 )
     output:
-        "results/igv.html"
+        f"{res}igv.html"
     conda:
-        conda_envs + "data_wrangling.yaml"
-    benchmark:
-        "logs/benchmark/HTML_IGVJs_generate_final.txt"
-    threads: 1
+        f"{conda_envs}data_wrangling.yaml"
     log:
-        "logs/HTML_IGVJs_generate_final.log"
+        f"{logdir}HTML_IGVJs_generate_final.log"
+    benchmark:
+        f"{logdir + bench}benchmark/HTML_IGVJs_generate_final.txt"
+    threads: 1
     params:
-        tab_basename    =   "data/html/2_tab_",
-        div_basename    =   "data/html/4_html_divs_",
-        js_flex_output  =   "data/html/6_js_flex_",
+        tab_basename    =   f"{datadir + html}2_tab_",
+        div_basename    =   f"{datadir + html}4_html_divs_",
+        js_flex_output  =   f"{datadir + html}6_js_flex_"
     shell:
         """
 cat files/html_chunks/1_header.html > {output}

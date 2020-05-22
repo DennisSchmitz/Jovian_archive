@@ -10,16 +10,16 @@ rule Concat_filtered_SNPs:
                 sample = SAMPLES
                 )
     output:
-        "results/all_filtered_SNPs.tsv"
+        f"{res}all_filtered_SNPs.tsv"
     conda:
-        conda_envs + "data_wrangling.yaml"
+        f"{conda_envs}data_wrangling.yaml"
+    log:
+        f"{logdir}Concat_filtered_SNPs.log"
     benchmark:
-        "logs/benchmark/Concat_filtered_SNPs.txt"
+        f"{logdir + bench}Concat_filtered_SNPs.txt"
     threads: 1
     params:
-        vcf_folder_glob =   "data/scaffolds_filtered/\*_filtered.vcf"
-    log:
-        "logs/Concat_filtered_SNPs.log"
+        vcf_folder_glob =   f"{datadir + scf_filt}/\*_filtered.vcf"
     shell:
         """
 python bin/scripts/concat_filtered_vcf.py {params.vcf_folder_glob} {output} > {log} 2>&1

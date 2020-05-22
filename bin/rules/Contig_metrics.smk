@@ -10,17 +10,15 @@ rule Generate_contigs_metrics:
         fasta           =   rules.De_novo_assembly.output.filt_scaffolds,
         ORF_NT_fasta    =   rules.ORF_analysis.output.ORF_NT_fasta,
     output:
-        summary         =   "data/scaffolds_filtered/{sample}_MinLenFiltSummary.stats",
-        perScaffold     =   "data/scaffolds_filtered/{sample}_perMinLenFiltScaffold.stats",
-        perORFcoverage  =   "data/scaffolds_filtered/{sample}_perORFcoverage.stats",
+        summary         =   f"{datadir + scf_filt}" + "{sample}_MinLenFiltSummary.stats",
+        perScaffold     =   f"{datadir + scf_filt}" + "{sample}_perMinLenFiltScaffold.stats",
+        perORFcoverage  =   f"{datadir + scf_filt}" + "{sample}_perORFcoverage.stats",
     conda:
-        conda_envs + "Sequence_analysis.yaml"
+        f"{conda_envs}Sequence_analysis.yaml"
     log:
-        "logs/Generate_contigs_metrics_{sample}.log"
+        f"{logdir}" + "Generate_contigs_metrics_{sample}.log"
     benchmark:
-        "logs/benchmark/Generate_contigs_metrics_{sample}.txt"
-    params:
-        ""
+        f"{logdir + bench}" + "Generate_contigs_metrics_{sample}.txt"
     threads: 1
     shell: #! bbtools' pileup.sh counts every read, even those marked as duplicate upstream. Hence, upstream all duplicates are HARD removed.
         """

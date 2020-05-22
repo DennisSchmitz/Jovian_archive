@@ -14,19 +14,19 @@ rule Concat_files:
                                 ]
                 ),
     output:
-        taxClassified   =   "results/all_taxClassified.tsv",
-        taxUnclassified =   "results/all_taxUnclassified.tsv",
-        virusHost       =   "results/all_virusHost.tsv",
-    benchmark:
-        "logs/benchmark/Concat_files.txt"
-    threads: 1
+        taxClassified   =   f"{res}all_taxClassified.tsv",
+        taxUnclassified =   f"{res}all_taxUnclassified.tsv",
+        virusHost       =   f"{res}all_virusHost.tsv"
     log:
-        "logs/Concat_files.log"
+        f"{logdir}Concat_files.log"
+    benchmark:
+        f"{logdir + bench}Concat_files.txt"
+    threads: 1
     params:
-        search_folder       =   "data/tables/",
+        search_folder       =   f"{datadir + tbl}",
         classified_glob     =   "*_taxClassified.tsv",
         unclassified_glob   =   "*_taxUnclassified.tsv",
-        virusHost_glob      =   "*_virusHost.tsv",
+        virusHost_glob      =   "*_virusHost.tsv"
     shell:
         """
 find {params.search_folder} -type f -name "{params.classified_glob}" -exec awk 'NR==1 || FNR!=1' {{}} + |\

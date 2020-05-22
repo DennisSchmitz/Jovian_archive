@@ -8,14 +8,14 @@ rule Scaffold_classification:
     input:
         rules.De_novo_assembly.output.filt_scaffolds
     output:
-        "data/taxonomic_classification/{sample}.blastn"
+        f"{datadir + taxclas}" + "{sample}.blastn"
     conda:
-        conda_envs + "scaffold_classification.yaml"
-    benchmark:
-        "logs/benchmark/Scaffold_classification_{sample}.txt"
-    threads: config["threads"]["Classification_of_scaffolds"]
+        f"{conda_envs}scaffold_classification.yaml"
     log:
-        "logs/Scaffold_classification_{sample}.log"
+        f"{logdir}" + "Scaffold_classification_{sample}.log"
+    benchmark:
+        f"{logdir + bench}" + "logs/benchmark/Scaffold_classification_{sample}.txt"
+    threads: config["threads"]["Classification_of_scaffolds"]
     params:
         outfmt          =   "6 std qseqid sseqid staxids sscinames stitle",
         evalue          =   config["Illumina_meta"]["Classification"]["e_value"],

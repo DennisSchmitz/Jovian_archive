@@ -41,6 +41,9 @@ bench       =   "benchmark/"
 conda_envs  =   "../envs/"
 rls         =   "rules/"
 
+configfile: f"{cnf}pipeline_parameters.yaml"
+configfile: f"{cnf}variables.yaml"
+
 datadir     =   "data/"
 bindir      =   "bin/"
 scrdir      =   "scripts/"
@@ -54,11 +57,11 @@ taxclas     =   "taxonomic_classification/"
 tbl         =   "tables/"
 res         =   "results/"
 hmap        =   "heatmaps/"
-
-
-configfile: f"{cnf}pipeline_parameters.yaml"
-configfile: f"{cnf}variables.yaml"
-
+cnt         =   "counts/"
+mqc_data    =   "multiqc_data/"
+html        =   "html/"
+fls         =   "files/"
+fai_size    =   config["Illumina_meta"]["minlen"]   
 
 SAMPLES = {}
 with open(config["sample_sheet"]) as sample_sheet_file:
@@ -80,7 +83,7 @@ localrules:
 rule all:
     input:
         expand( "{p}{sample}_{read}.fq",
-                p       =   f"{datadir}{cln}",
+                p       =   f"{datadir + cln}",
                 sample  =   SAMPLES,
                 read    =   [   'pR1',
                                 'pR2',
@@ -88,11 +91,11 @@ rule all:
                                 ]
                 ), # Extract unmapped & paired reads AND unpaired from HuGo alignment; i.e. cleaned fastqs
         expand( "{p}{sample}/scaffolds.fasta",
-                p       =   f"{datadir}{scf_raw}",
+                p       =   f"{datadir + scf_filt}",
                 sample  =   SAMPLES
                 ), # SPAdes assembly output
         expand( "{p}{sample}_scaffolds_ge{l}nt.{extension}",
-                p           =   f"{datadir}{scf_filt}",
+                p           =   f"{datadir + scf_filt}",
                 sample      =   SAMPLES,
                 l           =   config["Illumina_meta"]["minlen"],
                 extension   =   [   'fasta',
@@ -100,11 +103,11 @@ rule all:
                                     ]
                 ), # Filtered SPAdes Scaffolds
         expand( "{p}{sample}_sorted.bam",
-                p       =   f"{datadir}{scf_filt}",
+                p       =   f"{datadir + scf_filt}",
                 sample  =   SAMPLES
                 ), # BWA mem alignment for fragment length analysis
         expand( "{p}{sample}_{extension}",
-                p           =   f"{datadir}{scf_filt}",
+                p           =   f"{datadir + scf_filt}",
                 sample      =   SAMPLES,
                 extension   =   [   'ORF_AA.fa',
                                     'ORF_NT.fa',
@@ -115,7 +118,7 @@ rule all:
                                     ]
                 ), # Prodigal ORF prediction output
         expand( "{p}{sample}_{extension}",
-                p           =   f"{datadir}{scf_filt}",
+                p           =   f"{datadir + scf_filt}",
                 sample      =   SAMPLES,
                 extension   =   [   'unfiltered.vcf',
                                     'filtered.vcf',
@@ -124,15 +127,15 @@ rule all:
                                     ]
                 ), # SNP calling output
         expand( "{p}{sample}_GC.bedgraph",
-                p       =   f"{datadir}{scf_filt}",
+                p       =   f"{datadir + scf_filt}",
                 sample  =   SAMPLES
                 ), # Percentage GC content per specified window
         expand( "{p}{sample}.blastn",
-                p       =   f"{datadir}{taxclas}",
+                p       =   f"{datadir + taxclas}",
                 sample  =   SAMPLES
                 ), # MegablastN output
         expand( "{p}{sample}_{extension}",
-                p           =   f"{datadir}{tbl}",
+                p           =   f"{datadir + tbl}",
                 sample      =   SAMPLES,
                 extension   =   [   'taxClassified.tsv',
                                     'taxUnclassified.tsv',
@@ -158,7 +161,7 @@ rule all:
                                 ]
                 ), # Taxonomic profile and heatmap output
         expand( "{p}{tax}_heatmap.html",
-                p   =   f"{res}{hmap}",
+                p   =   f"{res + hmap}",
                 tax =   [   'Virus',
                             'Phage',
                             'Bacteria'

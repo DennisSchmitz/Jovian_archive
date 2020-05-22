@@ -17,29 +17,32 @@ rule MultiQC_report:
         expand( rules.Read2scaffold_alignment_with_rmDup_and_fraglength.output.txt,
                 sample  =   SAMPLES
                 ),
-        expand( "logs/Clean_the_data_{sample}.log",
+        expand( "{p}Clean_the_data_{sample}.log",
+                p       =   f"{logdir}",
                 sample  =   SAMPLES
                 ),
-        expand( "logs/HuGo_removal_pt1_alignment_{sample}.log",
+        expand( "{p}HuGo_removal_pt1_alignment_{sample}.log",
+                p       =   f"{logdir}",
                 sample  =   SAMPLES
                 ),
     output:
-        "results/multiqc.html",
-        expand( "results/multiqc_data/multiqc_{program}.txt",
+        f"{res}multiqc.html",
+        expand( "{p}multiqc_{program}.txt",
+                p       =   f"{res + mqc_data}",
                 program =   [   'trimmomatic',
                                 'bowtie2',
                                 'fastqc'
                             ]
                 ),
     conda:
-        conda_envs + "MultiQC_report.yaml"
+        f"{conda_envs}MultiQC_report.yaml"
     log:
-        "logs/MultiQC_report.log"
+        f"{logdir}MultiQC_report.log"
     benchmark:
-        "logs/benchmark/MultiQC_report.txt"
+        f"{logdir + bench}MultiQC_report.txt"
     threads: 1
     params:
-        config_file =   "files/multiqc_config.yaml"
+        config_file =   f"{fls}multiqc_config.yaml"
     shell:
         """
 multiqc --force --config {params.config_file} \

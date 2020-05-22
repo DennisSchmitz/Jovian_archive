@@ -10,14 +10,14 @@ rule concatenate_read_counts:
                 sample = SAMPLES
                 )
     output:
-        "results/counts/Mapped_read_counts.tsv"
+        f"{res + cnt}Mapped_read_counts.tsv"
     conda:
-        conda_envs + "data_wrangling.yaml"
-    benchmark:
-        "logs/benchmark/concatenate_read_counts.txt"
-    threads: 1
+        f"{conda_envs}data_wrangling.yaml"
     log:
-        "logs/concatenate_read_counts.txt"
+        f"{logdir}concatenate_read_counts.txt"
+    benchmark:
+        f"{logdir + bench}concatenate_read_counts.txt"
+    threads: 1
     shell:
         """
         bin/scripts/concatenate_mapped_read_counts.py \

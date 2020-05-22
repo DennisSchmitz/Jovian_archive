@@ -12,17 +12,17 @@ rule HuGo_removal_pt1_alignment:
         r1_unpaired     =   rules.Clean_the_data.output.r1_unpaired,
         r2_unpaired     =   rules.Clean_the_data.output.r2_unpaired
     output:
-        sorted_bam          =   "data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_sorted.bam",
-        sorted_bam_index    =   "data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_sorted.bam.bai"
+        sorted_bam          =   f"{datadir + cln + hugo_no_rm}" + "{sample}_sorted.bam",
+        sorted_bam_index    =   f"{datadir + cln + hugo_no_rm}" + "{sample}_sorted.bam.bai"
     conda:
-        conda_envs + "HuGo_removal.yaml"
+        f"{conda_envs}HuGo_removal.yaml"
+    log:
+        f"{logdir}" + "HuGo_removal_pt1_alignment_{sample}.log"
     benchmark:
-        "logs/benchmark/HuGo_removal_pt1_alignment_{sample}.txt"
+        f"{logdir + bench}" + "HuGo_removal_pt1_alignment_{sample}.txt"
     threads: config["threads"]["HuGo_removal"]
     params:
         alignment_type  =   config["Global"]["HuGo_removal_method"]
-    log:
-        "logs/HuGo_removal_pt1_alignment_{sample}.log"
     shell:
         """
 bowtie2 --time --threads {threads} {params.alignment_type} \

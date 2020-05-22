@@ -14,16 +14,16 @@ rule Merge_all_metrics_into_single_tsv:
         NCBI_new_taxdump_rankedlineage  =   config["databases"]["NCBI_new_taxdump_rankedlineage"],
         NCBI_new_taxdump_host           =   config["databases"]["NCBI_new_taxdump_host"],
     output:
-        taxClassifiedTable      =   "data/tables/{sample}_taxClassified.tsv",
-        taxUnclassifiedTable    =   "data/tables/{sample}_taxUnclassified.tsv",
-        virusHostTable          =   "data/tables/{sample}_virusHost.tsv",
+        taxClassifiedTable      =   f"{datadir + tbl}" + "{sample}_taxClassified.tsv",
+        taxUnclassifiedTable    =   f"{datadir + tbl}" + "{sample}_taxUnclassified.tsv",
+        virusHostTable          =   f"{datadir + tbl}" + "{sample}_virusHost.tsv",
     conda:
-        conda_envs + "data_wrangling.yaml"
-    benchmark:
-        "logs/benchmark/Merge_all_metrics_into_single_tsv_{sample}.txt"
-    threads: 1
+        f"{conda_envs}data_wrangling.yaml"
     log:
-        "logs/Merge_all_metrics_into_single_tsv_{sample}.log"
+        f"{logdir}" + "Merge_all_metrics_into_single_tsv_{sample}.log"
+    benchmark:
+        f"{logdir + bench}" + "Merge_all_metrics_into_single_tsv_{sample}.txt"
+    threads: 1
     shell:
         """
 python bin/scripts/merge_data.py {wildcards.sample} \

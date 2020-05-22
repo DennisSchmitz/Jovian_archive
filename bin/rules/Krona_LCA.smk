@@ -1,20 +1,20 @@
 rule Krona_chart_and_LCA:
     input:
-        classification = "data/taxonomic_classification/{sample}.blastn",
-        stats = "data/scaffolds_filtered/{sample}_perMinLenFiltScaffold.stats"
+        classification  =   f"{datadir + taxclas}" + "{sample}.blastn",
+        stats           =   f"{datadir + taxclas}" + "{sample}_perMinLenFiltScaffold.stats"
     output:
-        taxtab = "data/taxonomic_classification/{sample}.taxtab",
-        taxMagtab = "data/taxonomic_classification/{sample}.taxMagtab",
+        taxtab      =   f"{datadir + taxclas}" + "{sample}.taxtab",
+        taxMagtab   =   f"{datadir + taxclas}" + "{sample}.taxMagtab",
     conda:
-        conda_envs + "Krona_plot.yaml"
-    benchmark:
-        "logs/benchmark/Krona_chart_and_LCA_{sample}.txt"
-    threads: 1
+        f"{conda_envs}Krona_plot.yaml"
     log:
-        "logs/Krona_chart_and_LCA_{sample}.log"
+        f"{logdir}" + "Krona_chart_and_LCA_{sample}.log"
+    benchmark:
+        f"{logdir + bench}" + "Krona_chart_and_LCA_{sample}.txt"
+    threads: 1
     params:
-        bitscoreDelta = config["Illumina_meta"]["LCA"]["bitscoreDelta"],
-        krona_tax_db = config["databases"]["Krona_taxonomy"]
+        bitscoreDelta   =   config["Illumina_meta"]["LCA"]["bitscoreDelta"],
+        krona_tax_db    =   config["databases"]["Krona_taxonomy"]
     shell:  # We rm the [conda_path]/opt/krona/taxonomy folder and replace that to our specified krona_taxonomy path, updated weekly via crontab, see scripts Robert
         """
 if [ ! -L $(which ktClassifyBLAST | sed 's|/bin/ktClassifyBLAST|/opt/krona/taxonomy|g') ] # If symlink to Krona db does not exist...

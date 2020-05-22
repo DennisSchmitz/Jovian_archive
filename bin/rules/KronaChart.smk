@@ -12,14 +12,14 @@ rule Krona_chart_combine:
                     )
             )
     output:
-        "results/krona.html"
+        f"{res}krona.html"
     conda:
-        conda_envs + "Krona_plot.yaml"
-    benchmark:
-        "logs/benchmark/Krona_chart_combine.txt"
-    threads: 1
+        f"{conda_envs}Krona_plot.yaml"
     log:
-        "logs/Krona_chart_combine.log"
+        f"{logdir}Krona_chart_combine.log"
+    benchmark:
+        f"{logdir + bench}Krona_chart_combine.txt"
+    threads: 1
     params:
         krona_tax_db    =   config["databases"]["Krona_taxonomy"]
     shell:
