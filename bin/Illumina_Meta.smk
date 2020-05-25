@@ -34,38 +34,16 @@ import os
 import yaml
 yaml.warnings({'YAMLLoadWarning': False}) # Suppress yaml "unsafe" warnings.
 
-# set dirs
-logdir      =   "logs/"
-cnf         =   "config/"
-bench       =   "benchmark/"
-conda_envs  =   "../envs/"
-rls         =   "rules/"
+from globals import *
 
 configfile: f"{cnf}pipeline_parameters.yaml"
 configfile: f"{cnf}variables.yaml"
 
-datadir     =   "data/"
-bindir      =   "bin/"
-scrdir      =   "scripts/"
-qc_pre      =   "FastQC_pretrim/"
-qc_post     =   "FastQC_posttrim/"
-cln         =   "cleaned_fastq/"
-hugo_no_rm  =   "fastq_without_HuGo_removal/"
-scf_raw     =   "scaffolds_raw/"
-scf_filt    =   "scaffolds_filtered/"
-taxclas     =   "taxonomic_classification/"
-tbl         =   "tables/"
-res         =   "results/"
-hmap        =   "heatmaps/"
-cnt         =   "counts/"
-mqc_data    =   "multiqc_data/"
-html        =   "html/"
-fls         =   "files/"
-fai_size    =   config["Illumina_meta"]["minlen"]   
+minlensize  =   config["Illumina_meta"]["minlen"]  
 
-SAMPLES = {}
+SAMPLES     =   {}
 with open(config["sample_sheet"]) as sample_sheet_file:
-    SAMPLES = yaml.load(sample_sheet_file) # SAMPLES is a dict with sample in the form sample > read number > file. E.g.: SAMPLES["sample_1"]["R1"] = "x_R1.gz"
+    SAMPLES =   yaml.load(sample_sheet_file) # SAMPLES is a dict with sample in the form sample > read number > file. E.g.: SAMPLES["sample_1"]["R1"] = "x_R1.gz"
 
 #@################################################################################
 #@#### Jovian processes                                                      #####

@@ -10,7 +10,7 @@ rule SNP_calling:
         bam     =   rules.Read2scaffold_alignment_with_rmDup_and_fraglength.output.bam,
         bam_bai =   rules.Read2scaffold_alignment_with_rmDup_and_fraglength.output.bam_bai
     output:
-        fasta_fai           =   f"{datadir + scf_filt}" + "{sample}" + f"_scaffolds_ge{fai_size}nt.fasta.fai",
+        fasta_fai           =   f"{datadir + scf_filt}" + "{sample}" + f"_scaffolds_ge{minlensize}nt.fasta.fai",
         unfilt_vcf          =   f"{datadir + scf_filt}" + "{sample}_unfiltered.vcf",
         filt_vcf            =   f"{datadir + scf_filt}" + "{sample}_filtered.vcf",
         zipped_vcf          =   f"{datadir + scf_filt}" + "{sample}_filtered.vcf.gz",
