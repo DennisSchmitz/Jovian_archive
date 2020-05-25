@@ -23,39 +23,39 @@ SAMPLES = {}
 with open(config["sample_sheet"]) as sample_sheet_file:
     SAMPLES = yaml.load(sample_sheet_file)
 
-primerfile = config["primers"]
+primerfile  =   config["primers"]
 
-reference = config["reference"]
-reference_basename = os.path.splitext(os.path.basename(reference))[0]
+reference           =   config["reference"]
+reference_basename  =   os.path.splitext(os.path.basename(reference))[0]
 
 
 # set dirs
-conda_envs = "envs/"
-logdir = "logs/"
-benchmarkdir = "benchmark/"
+conda_envs      =   "envs/"
+logdir          =   "logs/"
+benchmarkdir    =   "benchmark/"
 
-datadir = "data/"
-refdir = "reference/"
-trims = "trimmed/"
-prdir = "primers/"
-cln = "cleaned_data/"
-withouthugo = "without_HuGo_removal/"
-QCdata = "data/"
-QChtml = "html/"
-QCjson = "json/"
-mapping = "mapped/"
-aln = "alignment/"
-bf = "bam-files/"
-vf = "vcf-files/"
-cons = "consensus/"
-raw = "raw/"
-filt = "filt/"
-seqs = "sequences/"
-boc = "BoC/"
-res = "results/"
-igv = "igv/"
-mqc = "multiqc_data/"
-MULTIQC_OUTPUT = "results/multiqc.html"
+datadir         =   "data/"
+refdir          =   "reference/"
+trims           =   "trimmed/"
+prdir           =   "primers/"
+cln             =   "cleaned_data/"
+withouthugo     =   "without_HuGo_removal/"
+QCdata          =   "data/"
+QChtml          =   "html/"
+QCjson          =   "json/"
+mapping         =   "mapped/"
+aln             =   "alignment/"
+bf              =   "bam-files/"
+vf              =   "vcf-files/"
+cons            =   "consensus/"
+raw             =   "raw/"
+filt            =   "filt/"
+seqs            =   "sequences/"
+boc             =   "BoC/"
+res             =   "results/"
+igv             =   "igv/"
+mqc             =   "multiqc_data/"
+MULTIQC_OUTPUT  =   "results/multiqc.html"
 
 
 #@################################################################################
@@ -64,25 +64,21 @@ MULTIQC_OUTPUT = "results/multiqc.html"
 
 rule all:
     input: 
-        expand("{path}{sample}.fasta",
-                path = datadir + cons + raw, 
-                sample = SAMPLES
+        expand( "{p}{sample}.fasta",
+                p       =   f"{datadir + cons + raw}", 
+                sample  =   SAMPLES
                 ),
-        expand("{path}{sample}.bedgraph", 
-                path = datadir + cons + filt,
-                sample = SAMPLES
+        expand("{p}{sample}.bedgraph", 
+                p       =   f"{datadir + cons + filt}",
+                sample  =   SAMPLES
                 ),
-        expand("{path}BoC_int.tsv",
-                path = res
+        expand(f"{res}BoC_int.tsv"
                 ),
-        expand("{path}BoC_pct.tsv",
-                path = res
+        expand(f"{path}BoC_pct.tsv"
                 ),
-        expand("{path}IGVjs.html",
-                path = res
+        expand(f"{res}IGVjs.html"
                 ),
-        expand("{path}multiqc.html",
-                path = res
+        expand(f"{res}multiqc.html"
                 )
 
     #>############################################################################

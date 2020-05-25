@@ -43,54 +43,26 @@ Automation:
 
 shell.executable("/bin/bash")
 
-# Load config files
-configfile: "config/pipeline_parameters.yaml"
-configfile: "config/variables.yaml"
-
 # Load libraries
 import pprint
 import os
 import yaml
 yaml.warnings({'YAMLLoadWarning': False}) # Suppress yaml "unsafe" warnings.
 
+from globals import *
+
+configfile: f"{cnf}pipeline_parameters.yaml"
+configfile: f"{cnf}variables.yaml"
+
+
 # Import sample sheet
-SAMPLES = {}
+SAMPLES     =   {}
 with open(config["sample_sheet"]) as sample_sheet_file:
-    SAMPLES = yaml.load(sample_sheet_file) # SAMPLES is a dict with sample in the form sample > read number > file. E.g.: SAMPLES["sample_1"]["R1"] = "x_R1.gz"
+    SAMPLES =   yaml.load(sample_sheet_file) # SAMPLES is a dict with sample in the form sample > read number > file. E.g.: SAMPLES["sample_1"]["R1"] = "x_R1.gz"
 
 
-reference = config["reference"]
-reference_basename = os.path.splitext(os.path.basename(reference))[0]
-
-# Set base directories
-indir = config["reference_alignment"]["input_dir"]
-outdir = config["reference_alignment"]["output_dir"]
-logdir = config["reference_alignment"]["log_dir"]
-bench = "benchmark/"
-conda_envs = "envs/"
-
-datadir = "data/"
-bindir = "bin/"
-html = "html/"
-conf = "config/"
-cln = "cleaned_fastq/"
-qc_pre = "FastQC_pretrim/"
-qc_post = "FastQC_posttrim/"
-files = "files/"
-chunks = "html_chunks/"
-refdir = "reference/"
-aln = "alignment/"
-cons = "consensus/"
-raw = "raw/"
-boc = "BoC_analysis/"
-igv = "igv/"
-res = "results/"
-mqc = "multiqc_data/"
-
-igv_rep = outdir + res + "igvjs.html"
-mqc_rep = outdir + res + "multiqc.html"
-
-
+reference           =   config["reference"]
+reference_basename  =   os.path.splitext(os.path.basename(reference))[0]
 
 
 #@################################################################################
@@ -108,51 +80,79 @@ localrules:
 
 rule all:
     input:
-        expand("{out}{sample}_{read}.fq",
-                out = datadir + cln,
-                sample = SAMPLES,
-                read = [ 'pR1', 'pR2', 'unpaired' ]
+        expand( "{p}{sample}_{read}.fq",
+                p       =   f"{datadir + cln}",
+                sample  =   SAMPLES,
+                read    =   [   'pR1',
+                                'pR2',
+                                'unpaired'
+                                ]
                 ), # Extract unmapped & paired reads AND unpaired from HuGo alignment; i.e. cleaned fastqs #TODO omschrijven naar betere smk syntax
-        expand("{out}{ref}{extension}",
-                out = outdir + refdir,
-                ref = reference_basename,
-                extension = [ '.fasta', '.fasta.1.bt2', '.fasta.fai', '.fasta.sizes', '.windows', '_GC.bedgraph' ]
+        expand( "{p}{ref}{extension}",
+                p           =   f"{datadir + refdir}",
+                ref         =   reference_basename,
+                extension   =   [   '.fasta',
+                                    '.fasta.1.bt2',
+                                    '.fasta.fai',
+                                    '.fasta.sizes', 
+                                    '.windows',
+                                    '_GC.bedgraph'
+                                    ]
                 ), # Copy of the reference file (for standardization and easy logging), bowtie2-indices (I've only specified one, but the "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2" and "rev.2.bt2" are implicitly generated) and the GC-content files.
-        expand("{out}{sample}_sorted.{extension}",
-                out = outdir + aln,
-                sample = SAMPLES,
-                extension = [ 'bam', 'bam.bai', 'MarkDup_metrics' ]
+        expand( "{p}{sample}_sorted.{extension}",
+                p           =   f"{datadir + aln}",
+                sample      =   SAMPLES,
+                extension   =   [   'bam',
+                                    'bam.bai',
+                                    'MarkDup_metrics'
+                                    ]
                 ), # The reference alignment (bam format) files.
-        expand("{out}{sample}_{extension}",
-                out = outdir + cons + raw,
-                sample = SAMPLES,
-                extension = [ 'calls.vcf.gz', 'raw_consensus.fa' ]
+        expand( "{p}{sample}_{extension}",
+                p           =   f"{datadir + cons + raw}",
+                sample      =   SAMPLES,
+                extension   =   [   'calls.vcf.gz', 
+                                    'raw_consensus.fa'
+                                    ]
                 ), # A zipped vcf file contained SNPs versus the given reference and a IlluminaW consensus sequence, see explanation below for the meaning of IlluminaW.
-        expand("{out}{sample}.bedgraph",
-                out = outdir + cons,
-                sample = SAMPLES
+        expand( "{p}{sample}.bedgraph",
+                p       =   f"{datadir + cons}",
+                sample  =   SAMPLES
                 ), # Lists the coverage of the alignment against the reference in a bedgraph format, is used to determine the coverage mask files below.
-        expand("{out}{sample}_{filt_character}-filt_cov_ge_{thresholds}.fa",
-                out = outdir + res + cons,
-                sample = SAMPLES,
-                filt_character = [ 'N', 'minus' ],
-                thresholds = [ '1', '5', '10', '30', '100' ]
+        expand( "{p}{sample}_{filt_character}-filt_cov_ge_{thresholds}.fa",
+                p               =   f"{datadir + res + cons}",
+                sample          =   SAMPLES,
+                filt_character  =   [   'N',
+                                        'minus'
+                                        ],
+                thresholds      =   [   '1',
+                                        '5', 
+                                        '10',
+                                        '30',
+                                        '100'
+                                        ]
                 ), # Consensus sequences filtered for different coverage thresholds (1, 5, 10, 30 and 100). For each threshold two files are generated, one where failed positioned are replaced with a N nucleotide and the other where its replaced with a minus character (gap).
-        expand("{out}{sample}_BoC{extension}",
-                out = outdir + boc,
-                sample = SAMPLES,
-                extension = [ '_int.tsv', '_pct.tsv' ]
+        expand( "{p}{sample}_BoC{extension}",
+                p           =   f"{datadir + boc}",
+                sample      =   SAMPLES,
+                extension   =   [   '_int.tsv',
+                                    '_pct.tsv'
+                                    ]
                 ), # Output of the BoC analysis #TODO can probably removed after the concat rule is added.
-        outdir + res + "BoC_integer.tsv", # Integer BoC overview in .tsv format
-        outdir + res + "BoC_percentage.tsv", # Percentage BoC overview in .tsv format
-        expand("{out}{ref}_{extension}",
-                out = outdir + refdir,
-                ref = reference_basename,
-                sample = SAMPLES,
-                extension = [ 'ORF_AA.fa', 'ORF_NT.fa', 'annotation.gff', 'annotation.gff.gz', 'annotation.gff.gz.tbi' ]
+        f"{datadir + res}BoC_integer.tsv", # Integer BoC overview in .tsv format
+        f"{datadir + res}BoC_percentage.tsv", # Percentage BoC overview in .tsv format
+        expand( "{p}{ref}_{extension}",
+                p           =   f"{datadir + refdir}",
+                ref         =   reference_basename,
+                sample      =   SAMPLES,
+                extension   =   [   'ORF_AA.fa',
+                                    'ORF_NT.fa',
+                                    'annotation.gff',
+                                    'annotation.gff.gz',
+                                    'annotation.gff.gz.tbi'
+                                    ]
                 ), # Prodigal ORF prediction output, required for the IGVjs visualisation
-        igv_rep, # IGVjs output html
-        mqc_rep, # MultiQC report
+        f"{res}igvjs.html", # IGVjs output html
+        f"{res}multiqc.html" # MultiQC report
 
 
 #@################################################################################
@@ -161,23 +161,23 @@ rule all:
 
 onstart:
     shell("""
-        mkdir -p {outdir}{res} 
+        mkdir -p {datadir}{res} 
         echo -e "\nLogging pipeline settings..."
 
         echo -e "\tGenerating methodological hash (fingerprint)..."
-        echo -e "This is the link to the code used for this analysis:\thttps://github.com/DennisSchmitz/Jovian/tree/$(git log -n 1 --pretty=format:"%H")" > {outdir}{res}/log_git.txt
-        echo -e "This code with unique fingerprint $(git log -n1 --pretty=format:"%H") was committed by $(git log -n1 --pretty=format:"%an <%ae>") at $(git log -n1 --pretty=format:"%ad")" >> {outdir}{res}/log_git.txt
+        echo -e "This is the link to the code used for this analysis:\thttps://github.com/DennisSchmitz/Jovian/tree/$(git log -n 1 --pretty=format:"%H")" > {datadir}{res}/log_git.txt
+        echo -e "This code with unique fingerprint $(git log -n1 --pretty=format:"%H") was committed by $(git log -n1 --pretty=format:"%an <%ae>") at $(git log -n1 --pretty=format:"%ad")" >> {datadir}{res}/log_git.txt
 
         echo -e "\tGenerating full software list of current Conda environment (\"Jovian_master\")..."
-        conda list > {outdir}{res}/log_conda.txt
+        conda list > {datadir}{res}/log_conda.txt
         
         echo -e "\tGenerating config file log..."
-        rm -f {outdir}{res}/log_config.txt
+        rm -f {datadir}{res}/log_config.txt
         for file in config/*.yaml
         do
-            echo -e "\n==> Contents of file \"${{file}}\": <==" >> {outdir}{res}/log_config.txt
-            cat ${{file}} >> {outdir}{res}/log_config.txt
-            echo -e "\n\n" >> {outdir}{res}/log_config.txt
+            echo -e "\n==> Contents of file \"${{file}}\": <==" >> {datadir}{res}/log_config.txt
+            cat ${{file}} >> {datadir}{res}/log_config.txt
+            echo -e "\n\n" >> {datadir}{res}/log_config.txt
         done
     """)
 
@@ -191,17 +191,17 @@ onstart:
 #>#### Data quality control and cleaning                                 #####
 #>############################################################################
 
-include: "rules/QC_raw.smk"
-include: "rules/CleanData.smk"
-include: 'rules/QC_clean.smk'
+include: f"{rls}QC_raw.smk"
+include: f"{rls}CleanData.smk"
+include: f"{rls}QC_clean.smk"
 
 #>############################################################################
 #>#### Removal of background host data                                   #####
 #>############################################################################
 
-include: "rules/BG_removal_1.smk"
-include: "rules/BG_removal_2.smk"
-include: "rules/BG_removal_3.smk"
+include: f"{rls}BG_removal_1.smk"
+include: f"{rls}BG_removal_2.smk"
+include: f"{rls}BG_removal_3.smk"
 
 
 ###########! nuttig om contig metrics rule ook toe te voegen?
@@ -210,367 +210,39 @@ include: "rules/BG_removal_3.smk"
 #>############################################################################
 #>#### Process the reference                                             #####
 #>############################################################################
-rule Illumina_index_reference:
-    input:
-        reference = reference
-    output:
-        reference_copy = outdir + refdir + reference_basename + ".fasta",
-        reference_index = outdir + refdir + reference_basename + ".fasta.1.bt2", # I've only specified ".fasta.1.bt2", but the "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2" and "rev.2.bt2" are implicitly generated. #TODO find a way to specify all output correctly (multiext snakemake syntax?)
-    conda:
-        conda_envs + "Illumina_ref_alignment.yaml"
-    benchmark:
-        logdir + bench + "Illumina_index_reference.txt"
-    threads: 4
-    log:
-        logdir + "Illumina_index_reference.log"
-    shell: # The reference is copied to the hardcoded subdir to make it standardized and easily logged. Convert it to a two-line fasta for easier downstream processing.
-        """
-cat {input.reference} | seqtk seq - > {output.reference_copy}
-bowtie2-build --threads {threads} {output.reference_copy} {output.reference_copy} >> {log} 2>&1
-        """
+include: f"{rls}ILM_Ref_index.smk"
 
 
 ##########################!
-# Nuttig voor IGVjs vis. Gejat uit Jovian core met minor changes, kunnen we waarschijlijk efficienter doen. Bijvoorbeeld door gewoon een goed gecureerde ORF annotatie toe te voegen bij starten van analyse.
-rule Illumina_reference_ORF_analysis:
-    input:
-        reference = rules.Illumina_index_reference.output.reference_copy
-    output: 
-        ORF_AA_fasta = outdir + refdir + reference_basename + "_ORF_AA.fa",
-        ORF_NT_fasta = outdir + refdir + reference_basename + "_ORF_NT.fa",
-        ORF_annotation_gff = outdir + refdir + reference_basename + "_annotation.gff",
-        zipped_gff3 = outdir + refdir + reference_basename + "_annotation.gff.gz",
-        index_zipped_gff3 = outdir + refdir + reference_basename + "_annotation.gff.gz.tbi",
-    conda:
-        conda_envs + "Sequence_analysis.yaml"
-    benchmark:
-        logdir + bench + "Illumina_reference_ORF_analysis.txt"
-    log:
-        logdir + "Illumina_reference_ORF_analysis.log"
-    threads: 1
-    params: #? Currently it's using the same prodigal settings as the main workflow, I see no problems with it since it's both foremost intended for viruses.
-        procedure = config["Global"]["ORF_procedure"],
-        output_format = config["Global"]["ORF_output_format"]
-    shell:
-        """
-prodigal -q -i {input.reference} \
--a {output.ORF_AA_fasta} \
--d {output.ORF_NT_fasta} \
--o {output.ORF_annotation_gff} \
--p {params.procedure} \
--f {params.output_format} > {log} 2>&1
-bgzip -c {output.ORF_annotation_gff} 2>> {log} 1> {output.zipped_gff3}
-tabix -p gff {output.zipped_gff3} >> {log} 2>&1
-        """
+include: f"{rls}ILM_Ref_ORF_analysis.smk"
 
 
-rule Illumina_determine_GC_content:
-    input:
-        fasta = rules.Illumina_index_reference.output.reference_copy,
-    output:
-        fasta_fai = outdir + refdir + reference_basename + ".fasta.fai",
-        fasta_sizes = outdir + refdir + reference_basename + ".fasta.sizes",
-        bed_windows = outdir + refdir + reference_basename + ".windows",
-        GC_bed = outdir + refdir + reference_basename + "_GC.bedgraph",
-    conda:
-        conda_envs + "Sequence_analysis.yaml"
-    benchmark:
-        logdir + bench + "Illumina_determine_GC_content.txt"
-    log:
-        logdir + "Illumina_determine_GC_content.log"
-    threads: 1
-    params:
-        window_size = config["Global"]["GC_window_size"]
-    shell:
-        """
-samtools faidx -o {output.fasta_fai} {input.fasta} > {log} 2>&1
-cut -f 1,2 {output.fasta_fai} 2> {log} 1> {output.fasta_sizes}
-bedtools makewindows \
--g {output.fasta_sizes} \
--w {params.window_size} 2>> {log} 1> {output.bed_windows}
-bedtools nuc \
--fi {input.fasta} \
--bed {output.bed_windows} 2>> {log} |\
-cut -f 1-3,5 2>> {log} 1> {output.GC_bed}
-        """
+include: f"{rls}ILM_Ref_GC_content.smk"
+
+include: f"{rls}ILM_Ref_align_to_ref.smk"
 
 
-#>##################################################################################################
-#>#### Align to ref, mark and optionally remove duplicates, call SNPs, generate new consensus  #####
-#>##################################################################################################
-rule Illumina_align_to_reference:
-    input:
-        pR1 = rules.HuGo_removal_pt2_extract_paired_unmapped_reads.output.fastq_R1,
-        pR2 = rules.HuGo_removal_pt2_extract_paired_unmapped_reads.output.fastq_R2,
-        unpaired = rules.HuGo_removal_pt3_extract_unpaired_unmapped_reads.output,
-        reference = rules.Illumina_index_reference.output.reference_copy
-    output:
-        sorted_bam = outdir + aln + "{sample}_sorted.bam",
-        sorted_bam_index = outdir + aln + "{sample}_sorted.bam.bai",
-        dup_metrics = outdir + aln + "{sample}_sorted.MarkDup_metrics" #TODO deze toevoegen aan MultiQC?
-    conda:
-        conda_envs + "Illumina_ref_alignment.yaml"
-    benchmark:
-        logdir + bench + "Illumina_align_to_reference_{sample}.txt"
-    threads: config["threads"]["Illumina_align_to_reference"]
-    log:
-        logdir + "Illumina_align_to_reference_{sample}.log"
-    params:
-        aln_type = config["Illumina_ref"]["Alignment"]["Alignment_type"],
-        remove_dups = config["Illumina_ref"]["Alignment"]["Duplicates"], #! Don't change this, see this gotcha with duplicate marked reads in bedtools genomecov (which is used downstream): https://groups.google.com/forum/#!msg/bedtools-discuss/wJNC2-icIb4/wflT6PnEHQAJ . bedtools genomecov is not able to filter them out and includes those dup-reads in it's coverage metrics. So the downstream BoC analysis and consensus at diff cov processes require dups to be HARD removed.
-        markdup_mode = config["Illumina_ref"]["Alignment"]["Duplicate_marking"],
-        max_read_length = config["Illumina_ref"]["Alignment"]["Max_read_length"], # This is the default value and also the max read length of Illumina in-house sequencing.
-    shell:
-        """
-bowtie2 --time --threads {threads} {params.aln_type} \
--x {input.reference} \
--1 {input.pR1} \
--2 {input.pR2} \
--U {input.unpaired} 2> {log} |\
-samtools view -@ {threads} -uS - 2>> {log} |\
-samtools collate -@ {threads} -O - 2>> {log} |\
-samtools fixmate -@ {threads} -m - - 2>> {log} |\
-samtools sort -@ {threads} - -o - 2>> {log} |\
-samtools markdup -@ {threads} -l {params.max_read_length} -m {params.markdup_mode} {params.remove_dups} -f {output.dup_metrics} - {output.sorted_bam} >> {log} 2>&1
-samtools index -@ {threads} {output.sorted_bam} >> {log} 2>&1
-        """
+include: f"{rls}ILM_Ref_extract_raw_cons.smk"
+
+include: f"{rls}ILM_Ref_extract_clean_cons.smk"
 
 
-rule Illumina_extract_raw_consensus:
-    input:
-        bam = rules.Illumina_align_to_reference.output.sorted_bam,
-        reference = rules.Illumina_index_reference.output.reference_copy,
-    output: #TODO check if it can use bcf output instead of vcf for downstream processing, saves diskspace, but not a huge differences for small viral genomes. Would require changes in the igvjs index
-        gzipped_vcf = outdir + cons + raw + "{sample}_calls.vcf.gz",
-        raw_consensus_fasta = outdir + cons + raw + "{sample}_raw_consensus.fa",
-    conda:
-        conda_envs + "Illumina_ref_alignment.yaml"
-    benchmark:
-        logdir + bench + "Illumina_extract_raw_consensus_{sample}.txt"
-    threads: 1 # Increasing this makes no differences for monopartite references/viruses. I think it splits different chromosomes to different threads #TODO check this in future version that is compatible with segmented viruses.
-    log:
-        logdir + "Illumina_extract_raw_consensus_{sample}.log"
-    params: #TODO move this param to pipeline_variables.yaml when we assess and optimize this value for different viral families.
-        calling_prior = "1.1e-3" # From manual: mutation rate (use bigger for greater sensitivity), use with -m [1.1e-3]. Also see https://samtools.github.io/bcftools/howtos/variant-calling.html --> higher value is less strict and vice versa #TODO this can be (has to be?) adapted to the different virus mutation rate. Assess later and optimize for different viral families
-    shell:
-        """
-bcftools mpileup --threads {threads} --ignore-RG -O u -d 10000 -f {input.reference} {input.bam} 2>> {log} |\
-bcftools call --threads {threads} -m --prior {params.calling_prior} --ploidy 1 -mv -O z 2>> {log} |\
-bcftools norm -m -both -O z -f {input.reference} -o {output.gzipped_vcf} >> {log} 2>&1
-tabix {output.gzipped_vcf} >> {log} 2>&1
-cat {input.reference} 2>> {log} |\
-bcftools consensus {output.gzipped_vcf} | seqtk seq - > {output.raw_consensus_fasta} 2>> {log}
-        """
+include: f"{rls}ILM_Ref_boc_covs.smk"
 
 
-#TODO kijken of dit multithreaded kan worden.
-rule Illumina_extract_clean_consensus:
-    input:
-        bam = rules.Illumina_align_to_reference.output.sorted_bam,
-        raw_consensus = rules.Illumina_extract_raw_consensus.output.raw_consensus_fasta, # Only needed for when there are no positions in the bed with a coverage of 0; in that case the IlluminaW fasta is actually suitable for downstream processes and it is simply copied.
-    output:
-        bedgraph = outdir + cons + "{sample}.bedgraph",
-        filt_consensus_N_filt_ge_1 = outdir + res + cons + "{sample}_N-filt_cov_ge_1.fa",
-        filt_consensus_N_filt_ge_5 = outdir + res + cons + "{sample}_N-filt_cov_ge_5.fa",
-        filt_consensus_N_filt_ge_10 = outdir + res + cons + "{sample}_N-filt_cov_ge_10.fa",
-        filt_consensus_N_filt_ge_30 = outdir + res + cons + "{sample}_N-filt_cov_ge_30.fa",
-        filt_consensus_N_filt_ge_100 = outdir + res + cons + "{sample}_N-filt_cov_ge_100.fa",
-        filt_consensus_minus_filt_ge_1 = outdir + res + cons + "{sample}_minus-filt_cov_ge_1.fa",
-        filt_consensus_minus_filt_ge_5 = outdir + res + cons + "{sample}_minus-filt_cov_ge_5.fa",
-        filt_consensus_minus_filt_ge_10 = outdir + res + cons + "{sample}_minus-filt_cov_ge_10.fa",
-        filt_consensus_minus_filt_ge_30 = outdir + res + cons + "{sample}_minus-filt_cov_ge_30.fa",
-        filt_consensus_minus_filt_ge_100 = outdir + res + cons + "{sample}_minus-filt_cov_ge_100.fa",
-    conda:
-        conda_envs + "Illumina_ref_alignment.yaml"
-    benchmark:
-        logdir + bench + "Illumina_extract_clean_consensus_{sample}.txt"
-    threads: 1
-    log:
-        logdir + "Illumina_extract_clean_consensus_{sample}.log"
-    params:
-        output_data_folder = outdir + cons,
-        output_results_folder = outdir + res + cons
-    shell:
-        """
-bash bin/scripts/Illumina_consensus_at_diff_coverages.sh {wildcards.sample} {input.bam} {input.raw_consensus} \
-{params.output_data_folder} {params.output_results_folder} {log} >> {log} 2>&1
-        """
+include: f"{rls}ILM_Ref_boc_mets.smk"
 
 
-#TODO make a python script or bash function/include to do this more efficiently, currently it's hacky, but it works
-rule Illumina_determine_BoC_at_diff_cov_thresholds:
-    input:
-        bedgraph = rules.Illumina_extract_clean_consensus.output.bedgraph,
-        reference = rules.Illumina_index_reference.output.reference_copy,
-    output:
-        percentage_BoC_tsv = outdir + boc + "{sample}_BoC_pct.tsv",
-        integer_BoC_tsv = outdir + boc + "{sample}_BoC_int.tsv",
-    conda:
-        conda_envs + "Illumina_ref_alignment.yaml"
-    benchmark:
-        logdir + bench + "Illumina_determine_BoC_at_diff_cov_thresholds_{sample}.txt"
-    threads: 1
-    log:
-        logdir + "Illumina_determine_BoC_at_diff_cov_thresholds_{sample}.log"
-    params:
-    shell:
-        """
-bash bin/scripts/Illumina_BoC_analysis.sh {wildcards.sample} {input.bedgraph} {input.reference} \
-{output.percentage_BoC_tsv} {output.integer_BoC_tsv} >> {log} 2>&1
-        """
-
-
-rule Illumina_concat_BoC_metrics:
-    input:
-        BoC_int_tsv = expand("{out}{sample}_BoC_int.tsv", 
-                            out = outdir + boc,
-                            sample = SAMPLES
-                            ),
-        BoC_pct_tsv = expand("{out}{sample}_BoC_pct.tsv",
-                            out = outdir + boc,
-                            sample = SAMPLES
-                            ),
-    output:
-        combined_BoC_int_tsv = outdir + res + "BoC_integer.tsv",
-        combined_BoC_pct_tsv = outdir + res + "BoC_percentage.tsv",
-    conda:
-        conda_envs + "Illumina_ref_alignment.yaml"
-    benchmark:
-        logdir + bench + "Illumina_concat_BoC_metrics.txt"
-    threads: 1
-    log:
-        logdir + "Illumina_concat_BoC_metrics.log"
-    params:
-    shell:
-        """
-echo -e "Sample_name\tTotal_ref_size\tBoC_at_coverage_threshold_1\tBoC_at_coverage_threshold_5\tBoC_at_coverage_threshold_10\tBoC_at_coverage_threshold_30\tBoC_at_coverage_threshold_100" > {output.combined_BoC_int_tsv}
-cat {input.BoC_int_tsv} >> {output.combined_BoC_int_tsv}
-
-echo -e "Sample_name\tTotal_ref_size\tBoC_at_coverage_threshold_1\tBoC_at_coverage_threshold_5\tBoC_at_coverage_threshold_10\tBoC_at_coverage_threshold_30\tBoC_at_coverage_threshold_100" > {output.combined_BoC_pct_tsv}
-cat {input.BoC_pct_tsv} >> {output.combined_BoC_pct_tsv}
-        """
-
-
-##########################!
-# Gejat uit Jovian core met minor changes, kunnen we waarschijlijk efficienter doen.
-# TODO the report is still a bit dirty since we include two bowtie2 metric files:
-#### TODO one for the hugo removal
-#### TODO another for the ref alignment
-#### TODOD hence the '-d' flag in the multiqc command based on https://multiqc.info/docs/#directory-names
-rule Illumina_MultiQC_report:
-    input:
-        expand("{out}{sample}_{read}_fastqc.zip",
-                out = datadir + qc_pre,
-                sample = SAMPLES,
-                read = "R1 R2".split()
-                ), # TODO dit moet nog verbetert worden qua smk syntax
-        expand("{out}{sample}_{read}_fastqc.zip",
-                out = datadir + qc_post,
-                sample = SAMPLES,
-                read = "pR1 pR2 uR1 uR2".split()
-                ), # TODO dit moet nog verbetert worden qua smk syntax
-        expand("{out}Clean_the_data_{sample}.log",
-                out = logdir,
-                sample = SAMPLES
-                ), # TODO dit moet nog verbetert worden qua smk syntax
-        expand("{out}HuGo_removal_pt1_alignment_{sample}.log",
-                out = logdir,
-                sample = SAMPLES
-                ), # TODO dit moet nog verbetert worden qua smk syntax
-        expand("{out}Illumina_align_to_reference_{sample}.log",
-                out = logdir,
-                sample = SAMPLES
-                ), # TODO dit moet nog verbetert worden qua smk syntax
-    output:
-        mqc_rep,
-        expand("{out}multiqc_{program}.txt",
-                out = outdir + res + mqc,
-                program = ['trimmomatic','bowtie2','fastqc']
-                ),
-    conda:
-        conda_envs + "MultiQC_report.yaml"
-    benchmark:
-        logdir + bench + "Illumina_MultiQC_report.txt"
-    threads: 1
-    params:
-        config_file = "files/multiqc_config.yaml",
-        output_dir = outdir + res,
-    log:
-        logdir + "Illumina_MultiQC_report.log"
-    shell:
-        """
-multiqc -d --force --config {params.config_file} \
--o {params.output_dir} -n multiqc.html {input} > {log} 2>&1
-        """
+include: f"{rls}ILM_Ref_multiqc.smk"
 
 
 #@################################################################################
 #@#### Make IGVjs html                                                       #####
 #@################################################################################
 
+include: f"{rls}ILM_Ref_igv_vars.smk"
 
-rule Illumina_HTML_IGVJs_variable_parts:
-    input:
-        fasta = rules.Illumina_index_reference.output.reference_copy,
-        ref_GC_bedgraph = rules.Illumina_determine_GC_content.output.GC_bed,
-        ref_zipped_ORF_gff = rules.Illumina_reference_ORF_analysis.output.zipped_gff3,
-        basepath_zipped_SNP_vcf = rules.Illumina_extract_raw_consensus.output.gzipped_vcf,
-        basepath_sorted_bam = rules.Illumina_align_to_reference.output.sorted_bam,
-    output:
-        tab_output = outdir + igv + "2_tab_{sample}",
-        div_output = outdir + igv + "4_html_divs_{sample}",
-        js_flex_output = outdir + igv + "6_js_flex_{sample}",
-    conda:
-        conda_envs + "data_wrangling.yaml"
-    benchmark:
-        logdir + bench + "Illumina_HTML_IGVJs_variable_parts_{sample}.txt"
-    threads: 1
-    log:
-        logdir + "Illumina_HTML_IGVJs_variable_parts_{sample}.log"
-    params:
-    shell:
-        """
-bash bin/html/igvjs_write_tabs.sh {wildcards.sample} {output.tab_output}
-
-bash bin/html/igvjs_write_divs.sh {wildcards.sample} {output.div_output}
-
-bash bin/html/Illumina_igvjs_write_flex_js_middle.sh {wildcards.sample} {output.js_flex_output} \
-{input.fasta} {input.ref_GC_bedgraph} {input.ref_zipped_ORF_gff} \
-{input.basepath_zipped_SNP_vcf} {input.basepath_sorted_bam}
-        """
-
-
-rule Illumina_HTML_IGVJs_generate_final:
-    input:
-        expand("{out}{chunk_name}_{sample}",
-                out = outdir + igv,
-                chunk_name = [ '2_tab', '4_html_divs', '6_js_flex' ],
-                sample = SAMPLES
-                )
-    output:
-        igv_rep
-    conda:
-        conda_envs + "data_wrangling.yaml"
-    benchmark:
-        logdir + bench + "Illumina_HTML_IGVJs_generate_final.txt"
-    threads: 1
-    log:
-        logdir + "Illumina_HTML_IGVJs_generate_final.log"
-    params:
-        chunkpath = files + chunks, 
-        tab_basename = outdir + igv + "2_tab_",
-        div_basename = outdir + igv + "4_html_divs_",
-        js_flex_output = outdir + igv + "6_js_flex_",
-    shell:
-        """
-cat {params.chunkpath}1_header.html > {output}
-cat {params.tab_basename}* >> {output}
-cat {params.chunkpath}3_tab_explanation_Illumina.html >> {output}
-cat {params.div_basename}* >> {output}
-cat {params.chunkpath}5_js_begin.html >> {output}
-cat {params.js_flex_output}* >> {output}
-cat {params.chunkpath}7_js_end.html >> {output}
-        """
+include: f"{rls}ILM_Ref_igv_combi.smk"
 
 
 #@################################################################################
@@ -584,7 +256,7 @@ onsuccess:
         
         echo -e "\tRemoving temporary files..."
         if [ "{config[remove_temp]}" != "0" ]; then
-            rm -rf {outdir + igv}   # Remove intermediate IGVjs html chunks.
+            rm -rf {datadir + igv}   # Remove intermediate IGVjs html chunks.
         else
             echo -e "\t\tYou chose not to remove temp files, skipping..."
         fi
@@ -594,7 +266,7 @@ onsuccess:
 
         echo -e "\tGenerating Snakemake report..."
         snakemake -s bin/Ref_alignment.smk --unlock --config config --config reference={reference}
-        snakemake -s bin/Ref_alignment.smk --report {outdir}{res}snakemake_report.html --config config --config reference={reference}
+        snakemake -s bin/Ref_alignment.smk --report {datadir}{res}snakemake_report.html --config config --config reference={reference}
 
         echo -e "Finished"
     """)
