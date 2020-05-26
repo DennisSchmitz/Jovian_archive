@@ -31,7 +31,7 @@ rule Illumina_MultiQC_report:
     output:
         f"{res}multiqc.html",
         expand( "{p}multiqc_{program}.txt",
-                p       =   f"{datadir + res + mqc_data}",
+                p       =   f"{res + mqc_data}",
                 program =   [   'trimmomatic',
                                 'bowtie2',
                                 'fastqc'
@@ -46,7 +46,7 @@ rule Illumina_MultiQC_report:
     threads: 1
     params:
         config_file =   f"{fls}multiqc_config.yaml",
-        output_dir  =   f"{datadir + res}",
+        output_dir  =   f"{res}",
     shell:
         """
 multiqc -d --force --config {params.config_file} \

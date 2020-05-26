@@ -173,7 +173,7 @@ onstart:
         
         echo -e "\tGenerating config file log..."
         rm -f {datadir}{res}/log_config.txt
-        for file in config/*.yaml
+        for file in {cnf}*.yaml
         do
             echo -e "\n==> Contents of file \"${{file}}\": <==" >> {datadir}{res}/log_config.txt
             cat ${{file}} >> {datadir}{res}/log_config.txt
@@ -256,17 +256,17 @@ onsuccess:
         
         echo -e "\tRemoving temporary files..."
         if [ "{config[remove_temp]}" != "0" ]; then
-            rm -rf {datadir + igv}   # Remove intermediate IGVjs html chunks.
+            rm -rf {datadir}{html}   # Remove intermediate IGVjs html chunks.
         else
             echo -e "\t\tYou chose not to remove temp files, skipping..."
         fi
 
         echo -e "\tCreating symlinks for the interactive genome viewer..."
-        bash bin/scripts/set_symlink.sh
+        bash {bindir}{scrdir}set_symlink.sh
 
         echo -e "\tGenerating Snakemake report..."
-        snakemake -s bin/Ref_alignment.smk --unlock --config config --config reference={reference}
-        snakemake -s bin/Ref_alignment.smk --report {datadir}{res}snakemake_report.html --config config --config reference={reference}
+        snakemake -s {bindir}Illumina_vir_Ref.smk --unlock --profile config --config reference={reference}
+        snakemake -s {bindir}Illumina_vir_Ref.smk --report {datadir}{res}snakemake_report.html --profile config --config reference={reference}
 
         echo -e "Finished"
     """)

@@ -69,7 +69,7 @@ rule all:
                                 ]
                 ), # Extract unmapped & paired reads AND unpaired from HuGo alignment; i.e. cleaned fastqs
         expand( "{p}{sample}/scaffolds.fasta",
-                p       =   f"{datadir + scf_filt}",
+                p       =   f"{datadir + scf_raw}",
                 sample  =   SAMPLES
                 ), # SPAdes assembly output
         expand( "{p}{sample}_scaffolds_ge{l}nt.{extension}",
@@ -290,10 +290,10 @@ onstart:
 
 onerror:
     shell("""
-        rm -f data/scaffolds_filtered/*.html
-        rm -rf data/html/
-        rm -f data/taxonomic_classification/*_lca_*
-        rm -f data/taxonomic_classification/*_nolca_*
+        rm -f {datadir}{scf_filt}*.html
+        rm -rf {datadir}{html}
+        rm -f {datadir}{taxclas}*_lca_*
+        rm -f {datadir}{taxclas}*_nolca_*
     """)
 
 
@@ -305,38 +305,38 @@ onsuccess:
 
         echo -e "\nCleaning up..."
         echo -e "\tRemoving empty folders..."
-        find data -depth -type d -not \( -path data/scaffolds_raw -prune \) -empty -delete
+        find data -depth -type d -not \( -path {datadir}{scf_raw} -prune \) -empty -delete
 
         echo -e "\tRemoving temporary files..."
         if [ "{config[remove_temp]}" != "0" ]
         then
-            rm -rf data/FastQC_pretrim/
-            rm -rf data/FastQC_posttrim/
-            rm -rf data/cleaned_fastq/fastq_without_HuGo_removal/
-            rm -f data/scaffolds_filtered/*_insert_size_histogram.pdf
-            rm -f data/scaffolds_filtered/*_insert_size_metrics.txt
-            rm -f data/scaffolds_filtered/*_MinLenFiltSummary.stats
-            rm -f data/scaffolds_filtered/*_perMinLenFiltScaffold.stats
-            rm -f data/scaffolds_filtered/*nt.fasta.sizes
-            rm -f data/scaffolds_filtered/*.windows
-            rm -f data/taxonomic_classification/*.taxtab
-            rm -f data/taxonomic_classification/*.taxMagtab
-            rm -f data/taxonomic_classification/*_lca_*
-            rm -f data/taxonomic_classification/*_nolca_*
-            rm -rf data/html/
+            rm -rf {datadir}{qc_pre}
+            rm -rf {datadir}{qc_post}
+            rm -rf {datadir}{cln}{hugo_no_rm}
+            rm -f {datadir}{scf_filt}*_insert_size_histogram.pdf
+            rm -f {datadir}{scf_filt}*_insert_size_metrics.txt
+            rm -f {datadir}{scf_filt}*_MinLenFiltSummary.stats
+            rm -f {datadir}{scf_filt}*_perMinLenFiltScaffold.stats
+            rm -f {datadir}{scf_filt}*nt.fasta.sizes
+            rm -f {datadir}{scf_filt}*.windows
+            rm -f {datadir}{taxclas}*.taxtab
+            rm -f {datadir}{taxclas}*.taxMagtab
+            rm -f {datadir}{taxclas}*_lca_*
+            rm -f {datadir}{taxclas}*_nolca_*
+            rm -rf {datadir}{html}
         else
             echo -e "\t\tYou chose to not remove temp files: the human genome alignment files are not removed."
         fi
 
         echo -e "\tCreating symlinks for the interactive genome viewer..."
-        bin/scripts/set_symlink.sh
+        {bindr}{scrdir}set_symlink.sh
 
         echo -e "\tGenerating HTML index of log files..."
-        tree -hD --dirsfirst -H "../logs" -L 2 -T "Logs overview" --noreport --charset utf-8 -P "*" -o results/logfiles_index.html logs/
+        tree -hD --dirsfirst -H "../logs" -L 2 -T "Logs overview" --noreport --charset utf-8 -P "*" -o {res}logfiles_index.html {logdir}
 
         echo -e "\tGenerating Snakemake report..."
-        snakemake -s bin/Snakefile --unlock --config sample_sheet=sample_sheet.yaml
-        snakemake -s bin/Snakefile --report results/snakemake_report.html --config sample_sheet=sample_sheet.yaml
+        snakemake -s {bindir}Illumina_Meta.smk --unlock --profile config --config sample_sheet=sample_sheet.yaml
+        snakemake -s {bindir}Illumina_Meta.smk --report {res}snakemake_report.html --profile config --config sample_sheet=sample_sheet.yaml
 
         echo -e "Finished"
     """)

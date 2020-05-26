@@ -18,4 +18,4 @@ max_table_rows: 1500             # Swap tables for a beeswarm plot above this
 extra_fn_clean_trim:             # MultiQC also imports the log of HuGo alignment, this log file has the rule name in it, this needs to be removed, this can be done as follows... Source: https://multiqc.info/docs/#sample-name-cleaning
     - 'HuGo_removal_pt1_alignment_'
     - '_sorted'
-    - 'RA_align_to_reference_'
+    - 'Illumina_align_to_reference_'

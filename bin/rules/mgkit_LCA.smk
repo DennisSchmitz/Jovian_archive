@@ -18,7 +18,7 @@ rule make_gff:
         filt_keywords       =   "/vector\|construct\|synthetic/Id" 
     shell:
         """
-sed -i "params.filt_keywords" {input}; 
+sed -i "{params.filt_keywords}" {input}; 
 blast2gff blastdb -b {params.bitscore_threshold} -n {input} {output} > {log} 2>&1
         """
 
