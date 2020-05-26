@@ -4,8 +4,8 @@ rule Index_ref:
     input:
         ref =   reference
     output:
-        refcopy         =  datadir + refdir + reference_basename + ".fasta",
-        refcopy_index   = datadir + refdir + reference_basename + ".fasta.1.bt2",
+        refcopy         =   f"{datadir + refdir + reference_basename}.fasta",
+        refcopy_index   =   f"{datadir + refdir + reference_basename}.fasta.1.bt2"
     conda:
         f"{conda_envs}Nano_ref_alignment.yaml"
     log:

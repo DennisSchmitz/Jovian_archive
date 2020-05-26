@@ -6,18 +6,18 @@ rule Cleanup:
     input:
         fastq   =   rules.Cut_primers.output.cleaneddata_pt1
     output:
-        qc_fastq    =   datadir + cln + datadir + "{sample}.fastq",
-        qc_html     =   datadir + cln + html + "{sample}.html",
-        qc_json     =   datadir + cln + json + "{sample}.fastp.json"
+        qc_fastq    =   f"{datadir + cln + datadir}" + "{sample}.fastq",
+        qc_html     =   f"{datadir + cln + html}" + "{sample}.html",
+        qc_json     =   f"{datadir + cln + json}" + "{sample}.fastp.json"
     conda:
         f"{conda_envs}QC_and_clean.yaml"
-    benchmark:
-        logdir + bench + "Data_Cleanup_{sample}.txt"
     log:
-        logdir + "Data_Cleanup_{sample}.log"
+        f"{logdir}" + "Data_Cleanup_{sample}.log"
+    benchmark:
+        f"{logdir + bench}" + "Data_Cleanup_{sample}.txt"
     threads: 26
     params:
-        QualityFilter = config["Nanopore_ref"]["Quality_score"]
+        QualityFilter   =   config["Nanopore_ref"]["Quality_score"]
     shell:
         """
 fastp \

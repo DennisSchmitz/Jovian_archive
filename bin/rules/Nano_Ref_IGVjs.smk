@@ -3,21 +3,21 @@
 
 rule HTML_IGVJs_variable_parts:
     input:
-        ref = rules.Index_ref.output.refcopy,
-        GC_bed = rules.determine_GC_content.output.GC_bed,
-        ORF_gff = rules.ORF_Analysis.output.gff_zip,
-        vcf = rules.Align_to_reference_pt2.output.vcf,
-        bam = rules.Align_to_reference_pt1.output.bam,
+        ref     =   rules.Index_ref.output.refcopy,
+        GC_bed  =   rules.determine_GC_content.output.GC_bed,
+        ORF_gff =   rules.ORF_Analysis.output.gff_zip,
+        vcf     =   rules.Align_to_reference_pt2.output.vcf,
+        bam     =   rules.Align_to_reference_pt1.output.bam
     output:
-        tab = datadir + chunks + "2_tab_{sample}",
-        div = datadir + chunks + "4_html_divs_{sample}",
-        js = datadir + chunks + "6_js_flex_{sample}",
+        tab =   f"{datadir + chunks}" + "2_tab_{sample}",
+        div =   f"{datadir + chunks}" + "4_html_divs_{sample}",
+        js  =   f"{datadir + chunks}" + "6_js_flex_{sample}"
     conda:
-        conda_envs + "data_wrangling.yaml"
+        f"{conda_envs}data_wrangling.yaml"
     log:
-        logdir + "HTML_IGVJs_variable_parts_{sample}.log"
+        f"{logdir}" + "HTML_IGVJs_variable_parts_{sample}.log"
     benchmark:
-        logdir + bench + "HTML_IGVJs_variable_parts_{sample}.txt"
+        f"{logdir + bench}" + "HTML_IGVJs_variable_parts_{sample}.txt"
     threads: 1
     shell:
         """
@@ -32,24 +32,27 @@ bash bin/html/igvjs_write_flex_js_middle.sh {wildcards.sample} {output.js} \
 
 rule HTML_IGVJs_generate_file:
     input:
-        expand("{path}{b}_{sample}",
-                path = datadir + chunks,
-                b = [ '2_tab', '4_html_divs', '6_js_flex' ],
-                sample = SAMPLES
+        expand( "{p}{b}_{sample}",
+                p       =   f"{datadir + chunks}",
+                b       =   [   '2_tab',
+                                '4_html_divs',
+                                '6_js_flex'
+                                ],
+                sample  =   SAMPLES
                 )
     output:
-        html = res + "IGVjs.html"
+        html    =   f"{res}IGVjs.html"
     conda:
-        conda_envs + "data_wrangling.yaml"
+        f"{conda_envs}data_wrangling.yaml"
     log:
-        logdir + "HTML_IGVJs_generate_file.log"
+        f"{logdir}HTML_IGVJs_generate_file.log"
     benchmark:
-        logdir + bench + "HTML_IGVJs_generate_file.txt"
+        f"{logdir + bench}HTML_IGVJs_generate_file.txt"
     threads: 1
     params:
-        tab_basename = datadir + chunks + "2_tab_",
-        div_basename = datadir + chunks + "4_html_divs_",
-        js_flex_output = datadir + chunks + "6_js_flex_",
+        tab_basename    =   f"{datadir + chunks}2_tab_",
+        div_basename    =   f"{datadir + chunks}4_html_divs_",
+        js_flex_output  =   f"{datadir + chunks}6_js_flex_",
     shell:
         """
 cat files/html_chunks/1_header.html > {output.html}

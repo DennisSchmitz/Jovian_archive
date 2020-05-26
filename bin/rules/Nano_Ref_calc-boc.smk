@@ -3,17 +3,17 @@
 
 rule calculate_BoC:
     input:
-        bedgraph = rules.extract_cleaned_consensus.output.bedgraph,
-        reference = rules.Index_ref.output.refcopy,
+        bedgraph    =   rules.extract_cleaned_consensus.output.bedgraph,
+        reference   =   rules.Index_ref.output.refcopy
     output:
-        pct_boc_tsv = datadir + cons + boc + "{sample}_BoC_pct.tsv",
-        int_boc_tsv = datadir + cons + boc + "{sample}_BoC_int.tsv",
+        pct_boc_tsv =   f"{datadir + cons + boc}" + "{sample}_BoC_pct.tsv",
+        int_boc_tsv =   f"{datadir + cons + boc}" + "{sample}_BoC_int.tsv"
     conda:
-        conda_envs + "Nano_ref_alignment.yaml"
-    benchmark:
-        logdir + bench + "Calculate_boc_{sample}.txt"
+        f"{conda_envs}Nano_ref_alignment.yaml"
     log:
-        logdir + "Calculate_boc_{sample}.log"
+        f"{logdir}" + "Calculate_boc_{sample}.log"
+    benchmark:
+        f"{logdir + bench}" + "Calculate_boc_{sample}.txt"
     threads: 1
     shell:
         """

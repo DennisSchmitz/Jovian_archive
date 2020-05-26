@@ -4,16 +4,16 @@ rule determine_GC_content:
     input:
         ref =   rules.Index_ref.output.refcopy,
     output:
-        fai         =   datadir + refdir + reference_basename + ".fasta.fai",
-        sizes       =   datadir + refdir + reference_basename + ".fasta.sizes",
-        bed_windows =   datadir + refdir + reference_basename + ".windows",
-        GC_bed      =   datadir + refdir + reference_basename + "_GC.bedgraph",
+        fai         =   f"{datadir + refdir + reference_basename}.fasta.fai",
+        sizes       =   f"{datadir + refdir + reference_basename}.fasta.sizes",
+        bed_windows =   f"{datadir + refdir + reference_basename}.windows",
+        GC_bed      =   f"{datadir + refdir + reference_basename}_GC.bedgraph",
     conda:
         f"{conda_envs}Sequence_analysis.yaml"
     log:
-        logdir + "Determine_GC_content.log"
+        f"{logdir}Determine_GC_content.log"
     benchmark:
-        logdir + bench + "Determine_GC_content.txt"
+        f"{logdir + bench}Determine_GC_content.txt"
     threads: 1
     params:
         window_size =   config["Global"]["GC_window_size"]

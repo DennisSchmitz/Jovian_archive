@@ -3,23 +3,23 @@
 
 rule concat_boc:
     input:
-        boc_int = expand("{path}{sample}_BoC_int.tsv",
-                            path = datadir + cons + boc,
+        boc_int =   expand( "{p}{sample}_BoC_int.tsv",
+                            p = f"{datadir + cons + boc}",
                             sample = SAMPLES
                             ),
-        boc_pct = expand("{path}{sample}_BoC_pct.tsv",
-                            path = datadir + cons + boc,
+        boc_pct =   expand( "{p}{sample}_BoC_pct.tsv",
+                            p = f"{datadir + cons + boc}",
                             sample = SAMPLES
-                            ),
+                            )
     output:
-        conc_boc_int = res + "BoC_int.tsv",
-        conc_boc_pct = res + "BoC_pct.tsv",
+        conc_boc_int    =   f"{res}BoC_int.tsv",
+        conc_boc_pct    =   f"{res}BoC_pct.tsv",
     conda:
-        conda_envs + "Nano_ref_alignment.yaml"
-    benchmark:
-        logdir + bench + "Concat_boc.txt"
+        f"{conda_envs}Nano_ref_alignment.yaml"
     log:
-        logdir + "Concat_boc.log"
+        f"{logdir}Concat_boc.log"
+    benchmark:
+        f"{logdir + bench}Concat_boc.txt"
     threads: 1
     shell:
         """

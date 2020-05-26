@@ -4,21 +4,21 @@ rule ORF_Analysis:
     input: 
         ref =   rules.Index_ref.output.refcopy
     output:
-        ORF_AA  = datadir + refdir + reference_basename + "_ORF_AA.fa",
-        ORF_NT  = datadir + refdir + reference_basename + "_ORF_NT.fa",
-        ORF_gff = datadir + refdir + reference_basename + "_annotation.gff",
-        gff_zip = datadir + refdir + reference_basename + "_annotation.gff.gz",
-        gff_ind = datadir + refdir + reference_basename + "_annotation.gff.gz.tbi",
+        ORF_AA  =   f"{datadir + refdir + reference_basename}_ORF_AA.fa",
+        ORF_NT  =   f"{datadir + refdir + reference_basename}_ORF_NT.fa",
+        ORF_gff =   f"{datadir + refdir + reference_basename}_annotation.gff",
+        gff_zip =   f"{datadir + refdir + reference_basename}_annotation.gff.gz",
+        gff_ind =   f"{datadir + refdir + reference_basename}_annotation.gff.gz.tbi",
     conda:
         f"{conda_envs}Sequence_analysis.yaml"
     log:
-        logdir + "ORF_Analysis.log"
+        f"{logdir}ORF_Analysis.log"
     benchmark:
-        logdir + bench + "ORF_Analysis.txt"
+        f"{logdir + bench}ORF_Analysis.txt"
     threads: 1
     params:
-        procedure       = config["Global"]["ORF_procedure"],
-        output_format   = config["Global"]["ORF_output_format"]
+        procedure       =   config["Global"]["ORF_procedure"],
+        output_format   =   config["Global"]["ORF_output_format"]
     shell:
         """
 prodigal -q -i {input.ref} \

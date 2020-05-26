@@ -6,14 +6,14 @@ rule Align_to_reference_pt1:
         ref     =   reference,
         fastq   =   rules.Hugo_removal_pt2.output.cleanedfastq
     output:
-        bam         =   datadir + aln + bf + "{sample}.bam",
-        indexed_bam =   datadir + aln + bf + "{sample}.bam.bai"
+        bam         =   f"{datadir + aln + bf}" + "{sample}.bam",
+        indexed_bam =   f"{datadir + aln + bf}" + "{sample}.bam.bai"
     conda:
         f"{conda_envs}Nano_ref_alignment.yaml"
-    benchmark:
-        logdir + bench + "Align_to_reference_pt1_{sample}.txt"
     log:
-        logdir + "Align_to_reference_pt1_{sample}.log"
+        f"{logdir}" + "Align_to_reference_pt1_{sample}.log"
+    benchmark:
+        f"{logdir + bench}" + "Align_to_reference_pt1_{sample}.txt"
     threads: 26
     shell:
         """

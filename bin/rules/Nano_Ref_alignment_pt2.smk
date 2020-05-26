@@ -4,17 +4,17 @@
 
 rule Align_to_reference_pt2:
     input:
-        ref = rules.Index_ref.output.refcopy,
-        bam = rules.Align_to_reference_pt1.output.bam,
+        ref =   rules.Index_ref.output.refcopy,
+        bam =   rules.Align_to_reference_pt1.output.bam
     output:
-        vcf = datadir + aln + vf + "{sample}.vcf.gz",
-        vcf_index = datadir + aln + vf + "{sample}.vcf.gz.csi",
+        vcf         =   f"{datadir + aln + vf}" + "{sample}.vcf.gz",
+        vcf_index   =   f"{datadir + aln + vf}" + "{sample}.vcf.gz.csi"
     conda:
-        conda_envs + "Nano_ref_alignment.yaml"
-    benchmark:
-        logdir + bench + "Align_to_reference_pt2_{sample}.txt"
+        f"{conda_envs}Nano_ref_alignment.yaml"
     log:
-        logdir + "Align_to_reference_pt2_{sample}.log"
+        f"{logdir}" + "Align_to_reference_pt2_{sample}.log"
+    benchmark:
+        f"{logdir + bench}" + "Align_to_reference_pt2_{sample}.txt"
     threads: 26
     shell:
         """
