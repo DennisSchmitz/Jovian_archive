@@ -1,0 +1,45 @@
+#!/bin/bash
+# shellcheck disable=SC1091
+
+if [ "${workflow}" == "ILM_META" ]; then
+    nicename="Illumina-metagenomics"
+elif [ "${workflow}" == "ILM_REF" ]; then
+    nicename="Illumina-reference"
+elif [ "${workflow}" == "NANO_REF" ]; then
+    nicename="Nanopore-reference"
+fi
+
+if [[ "${workflow}" =~ (ILM_META|ILM_REF) ]] && [ "${PRIMER_FASTA}" != "NONE" ]; then
+    echo -e "A file with primers was given but the chosen workflow: \"${nicename}\" does not support a custom primer file."
+    echo -e "For Illumina-data, we expect all input files to be processed with the \"Nextera\" library prep kit."
+    echo -e "Other official Illumina library prep kits are technically supported, such as the TruSeq kit, but this requires you to manually change the settings in \"config/pipeline_parameters.yaml\""
+    echo -e "This will probably change in a future release of Jovian (no ETA yet)"
+    echo -e "Please check the arguments you have given to Jovian and try again."
+    exit 1
+fi
+
+if [ "${workflow}" == "NANO_REF" ] && [ "${PRIMER_FASTA}" == "NONE" ]; then
+    echo -e "You have chosen the \"${nicename}\" workflow, but no fasta file with used primers was given."
+    echo -e "\n\tThe current Jovian \"${nicename}\" workflow only supports PCR-based sequencing runs."
+    echo -e "\tJovian expects that official Nanopore barcode/adapter kits were used during the library preparation phase of your sequencing experiment"
+    echo -e "\tIn addition to that, you must provide a single FASTA file with all primers that you used to amplify your sample."
+    echo -e "\tSee the documentation of the \"${nicename}\" workflow for more information @ #!<LINK TO DOCS HERE>.\n"
+    echo -e "Please check the arguments you have given to Jovian and try again"
+    exit 1
+fi
+
+
+if [ "${workflow}" == "NANO_REF" ] && [ "${PRIMER_FASTA}" != "NONE" ]; then
+    
+    if [ ! -s "${PRIMER_FASTA}" ]; then
+        echo -e "The given primer-fasta file, ${PRIMER_FASTA} does not exist. Please check your input."
+        echo -e "Exiting..."
+        exit 1
+    fi
+
+    if ! $( seqkit seq -v -t dna "${PRIMER_FASTA}" > /dev/null ); then
+        echo -e "The given primer-fasta file does not seem to be a valid fasta file. Please see the error message above."
+        echo -e "Exiting..."
+        exit 1
+    fi
+fi

@@ -11,7 +11,7 @@ rule De_novo_assembly:
         fastq_unpaired  =   rules.HuGo_removal_pt3_extract_unpaired_unmapped_reads.output
     output:
         all_scaffolds   =   f"{datadir + scf_raw}" + "{sample}/scaffolds.fasta",
-        filt_scaffolds  =   f"{datadir + scf_filt}" + "{sample}_scaffolds_ge%snt.fasta" % config["Illumina_meta"]["minlen"]
+        filt_scaffolds  =   f"{datadir + scf_filt}" + "{sample}" + f"_scaffolds_ge{minlensize}nt.fasta"
     conda:
         f"{conda_envs}de_novo_assembly.yaml"
     log:

@@ -21,7 +21,7 @@ done < <(find "${INPUT_DIR}" -maxdepth 1 -type f -regextype awk -regex '.*\.f(as
 
 n1=${#realfilearray[@]}
 
-#@ Determine wether or not to actually count the reads...
+#@ Determine whether or not to actually count the reads...
 if [ $params_WrapperSettings_ReadlengthDetection == "true" ]; then
     
     echo -e "\n\nCalculating average read length based on all input files ($n1) and configuring the Jovian settings accordingly" 
@@ -60,24 +60,54 @@ if [ $params_WrapperSettings_ReadlengthDetection == "true" ]; then
 
 
     ###> Change parameters of `config/pipeline_parameters.yaml` to best match settings
-        if [[ "${AVERAGE}" -gt "305" ]]
-        then
-        echo -e "\tAverage read lenght is >305, are you sure this is illumina data? Are you sure the input data is a proper 4 lines per fastq record format?"
-        echo -e "Exiting..."; exit 1
-        elif [[ "${AVERAGE}" -ge "250" ]]
-        then
-        echo -e "\tAverage read length is >=250 and <=305. \n\tSetting large kmer sizes."
-        sed -i "s/.*kmersizes:.*/        ${largereads}/g" "${params}"
-        ##! http://cab.spbu.ru/files/release3.11.0/manual.html#sec3.4 (we use version 3.11.0 in Jovian)
-        elif [[ "${AVERAGE}" -ge "50" ]]
-        then
-        echo -e "\tAverage read length is >=50 and <250. \n\tSetting small kmer sizes."
-        sed -i "s/.*kmersizes:.*/        ${shortreads}/g" "${params}"
-        ##! http://cab.spbu.ru/files/release3.11.0/manual.html#sec3.4 (we use version 3.11.0 in Jovian)
-        elif [[ "${AVERAGE}" -lt "50" ]]
-        then
-        echo -e "\tAverage read length is <50, the pipeline doesn't work properly with such short reads."
-        echo -e "Exiting..."; exit 1
+        if [[ "${AVERAGE}" -gt "305" ]]; then
+            if [[ "${workflow}" =~ (ILM_META|ILM_REF) ]]; then
+                echo -e "\tAverage read lenght is >305 bp, are you sure this is Illumina data?"
+                echo -e "\tIllumina data should not be larger than 300 bp on average."
+                echo -e "\tPlease make sure the input data is a correctly formatted fastq. If this is the case, please investigate if something has gone wrong during sequencing."
+                echo -e "Exiting..."
+                exit 1
+            
+            elif [ "${workflow}" == "NANO_REF" ]; then 
+                echo -e "\tAverage read length is above 305 bp."
+                echo -e "\tContinuing with the Nanopore workflow...\n"
+            
+            fi
+
+        elif [[ "${AVERAGE}" -ge "250" ]]; then
+            if [[ "${workflow}" =~ (ILM_META|ILM_REF) ]]; then
+                echo -e "\tAverage read length is >250 and <305 bp."
+                echo -e "\tSetting large kmer sizes.\n"
+                sed -i "s/.*kmersizes:.*/        ${largereads}/g" "${params}"
+                ##! http://cab.spbu.ru/files/release3.11.0/manual.html#sec3.4 (we use version 3.11.0 in Jovian)
+            
+            elif [ "${workflow}" == "NANO_REF" ]; then
+                echo -e "\tAverage read length is <305 bp."
+                echo -e "\tThis probably isn't Nanopore data. The average Nanopore read length should (really) not be any smaller than ~300 bp per read"
+                echo -e "\tPlease make sure the input data is correctly formatted. If this is the case, then please investigate if something has gone wrong during sequencing."
+                echo -e "Exiting..."
+                exit 1
+            fi
+
+        elif [[ "${AVERAGE}" -ge "50" ]]; then
+            if [[ "${workflow}" =~ (ILM_META|ILM_REF) ]]; then
+                echo -e "\tAverage read length is >50 and <250."
+                echo -e "\tSetting small kmer sizes.\n"
+                sed -i "s/.*kmersizes:.*/        ${shortreads}/g" "${params}"
+                ##! http://cab.spbu.ru/files/release3.11.0/manual.html#sec3.4 (we use version 3.11.0 in Jovian)
+            
+            elif [ "${workflow}" == "NANO_REF" ]; then
+                echo -e "\tAverage read length is <305 bp."
+                echo -e "\tThis probably isn't Nanopore data. The average Nanopore read length should (really) not be any smaller than ~300 bp per read"
+                echo -e "\tPlease make sure the input data is correctly formatted. If this is the case, then please investigate if something has gone wrong during sequencing."
+                echo -e "Exiting..."
+                exit 1
+            fi
+            
+
+        elif [[ "${AVERAGE}" -lt "50" ]]; then
+            echo -e "\tAverage read length is <50, the pipeline doesn't work properly with such short reads."
+            echo -e "Exiting..."; exit 1
         fi
 
 else
