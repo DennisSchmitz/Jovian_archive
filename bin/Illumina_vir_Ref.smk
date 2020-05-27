@@ -119,7 +119,7 @@ rule all:
                 sample  =   SAMPLES
                 ), # Lists the coverage of the alignment against the reference in a bedgraph format, is used to determine the coverage mask files below.
         expand( "{p}{sample}_{filt_character}-filt_cov_ge_{thresholds}.fa",
-                p               =   f"{datadir + res + cons}",
+                p               =   f"{res + cons}",
                 sample          =   SAMPLES,
                 filt_character  =   [   'N',
                                         'minus'
@@ -138,8 +138,8 @@ rule all:
                                     '_pct.tsv'
                                     ]
                 ), # Output of the BoC analysis #TODO can probably removed after the concat rule is added.
-        f"{datadir + res}BoC_integer.tsv", # Integer BoC overview in .tsv format
-        f"{datadir + res}BoC_percentage.tsv", # Percentage BoC overview in .tsv format
+        f"{res}BoC_integer.tsv", # Integer BoC overview in .tsv format
+        f"{res}BoC_percentage.tsv", # Percentage BoC overview in .tsv format
         expand( "{p}{ref}_{extension}",
                 p           =   f"{datadir + refdir}",
                 ref         =   reference_basename,

@@ -19,7 +19,7 @@ rule extract_cleaned_consensus:
         filt_consensus_minus_filt_ge_100    =   f"{res + seqs}" + "{sample}_minus-filt_cov_ge_100.fa"
     params:
         output_data_folder      =   f"{datadir + cons + filt}",
-        output_results_folder   =   f"{datadir + cons + seqs}"
+        output_results_folder   =   f"{res + seqs}"
     conda:
         f"{conda_envs}Nano_ref_alignment.yaml"
     log:
