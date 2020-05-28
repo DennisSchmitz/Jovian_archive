@@ -40,6 +40,8 @@ eval "$(parse_yaml config/pipeline_parameters.yaml "params_")"
 eval "$(parse_yaml config/config.yaml "configuration_")"
 set +o allexport
 
+supp_workflow=( "'Illumina-metagenomics'" "'Illumina-reference'" "'Nanopore-reference'" )
+
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #@ Parse the jovian commandline arguments.
 #@ If the given arguments are not part of Jovian, then Jovian will send them to Snakemake
@@ -406,10 +408,11 @@ if ! bash bin/includes/Mode; then
     exit 1
 fi
 
-echo $workflow
 
 if [ $workflow == "NONE" ]; then
-    echo rip
+    echo "No workflow was specified."
+    echo "The following workflows are supported: ${supp_workflow[*]}"
+    echo "Please see the documentation and try again"
     exit
 fi
 
@@ -497,7 +500,7 @@ fi
 if [ "${workflow}" == "ILM_META" ]; then
     echo -e "Starting the \"${nicename}\" workflow."
     set +ue #turn off bash strict mode because snakemake and conda don't work in strict mode
-    snakemake -s bin/Illumina_Meta.smk --debug-dag --verbose --profile "${PROFILE}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
+    snakemake -s bin/Illumina_Meta.smk --profile "${PROFILE}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
     set -ue #turn bash strict mode back on
     exit 0
 fi
@@ -506,7 +509,7 @@ fi
 if [ "${workflow}" == "ILM_REF" ]; then
     echo -e "Starting the \"${nicename}\" workflow."
     set +ue #turn off bash strict mode because snakemake and conda don't work in strict mode
-    snakemake -s bin/Illumina_vir_Ref.smk --debug-dag --verbose --profile "${PROFILE}" --config reference="${REFERENCE_FASTA}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
+    snakemake -s bin/Illumina_vir_Ref.smk --profile "${PROFILE}" --config reference="${REFERENCE_FASTA}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
     set -ue #turn bash strict mode back on
     exit 0
 fi
@@ -515,7 +518,7 @@ fi
 if [ "${workflow}" == "NANO_REF" ]; then
     echo -e "Starting the \"${nicename}\" workflow."
     set +ue
-    snakemake -s bin/Nano_vir_Ref.smk --debug-dag --verbose --profile "${PROFILE}" --config reference="${REFERENCE_FASTA}" primers="${PRIMER_FASTA}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
+    snakemake -s bin/Nano_vir_Ref.smk --profile "${PROFILE}" --config reference="${REFERENCE_FASTA}" primers="${PRIMER_FASTA}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
     set -ue
     exit 0
 fi

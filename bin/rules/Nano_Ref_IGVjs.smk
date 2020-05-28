@@ -25,7 +25,7 @@ bash bin/html/igvjs_write_tabs.sh {wildcards.sample} {output.tab}
 
 bash bin/html/igvjs_write_divs.sh {wildcards.sample} {output.div}
 
-bash bin/html/igvjs_write_flex_js_middle.sh {wildcards.sample} {output.js} \
+bash bin/html/nano_igvjs_write_flex_js_middle.sh {wildcards.sample} {output.js} \
 {input.ref} {input.GC_bed} {input.ORF_gff} \
 {input.vcf} {input.bam}
         """
@@ -57,7 +57,7 @@ rule HTML_IGVJs_generate_file:
         """
 cat files/html_chunks/1_header.html > {output.html}
 cat {params.tab_basename}* >> {output.html}
-cat files/html_chunks/3_tab_explanation_RA.html >> {output.html}
+cat files/html_chunks/3_tab_explanation_Nano.html >> {output.html}
 cat {params.div_basename}* >> {output.html}
 cat files/html_chunks/5_js_begin.html >> {output.html}
 cat {params.js_flex_output}* >> {output.html}

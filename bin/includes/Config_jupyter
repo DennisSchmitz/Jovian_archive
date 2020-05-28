@@ -7,7 +7,7 @@ sed -i '35,55d' ~/.jupyter/custom/custom.css
 cat files/Jupyter_notebook/overrides.css >> ~/.jupyter/custom/custom.css
 jupyter notebook --generate-config
 sed -i "s/#c.NotebookApp.allow_remote_access = False/c.NotebookApp.allow_remote_access = True/g" ~/.jupyter/jupyter_notebook_config.py
-sed -i "s/#c.NotebookApp.ip = 'localhost'/c.NotebookApp.ip = '${HOSTNAME}'/g" ~/.jupyter/jupyter_notebook_config.py
+sed -i "s/#c.NotebookApp.ip = 'localhost'/c.NotebookApp.ip = '0.0.0.0'/g" ~/.jupyter/jupyter_notebook_config.py
 sed -i "s/#c.NotebookApp.port = 8888/c.NotebookApp.port = 8888/g" ~/.jupyter/jupyter_notebook_config.py
 sed -i "s/#c.NotebookApp.open_browser = True/c.NotebookApp.open_browser = False/g" ~/.jupyter/jupyter_notebook_config.py
 sed -i "s/#c.NotebookApp.iopub_data_rate_limit = 1000000/c.NotebookApp.iopub_data_rate_limit = 100000000/g" ~/.jupyter/jupyter_notebook_config.py

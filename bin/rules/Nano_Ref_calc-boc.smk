@@ -17,6 +17,6 @@ rule calculate_BoC:
     threads: 1
     shell:
         """
-bash bin/scripts/RA_BoC_analysis.sh {wildcards.sample} {input.bedgraph} {input.reference} \
+bash bin/scripts/BoC_analysis.sh {wildcards.sample} {input.bedgraph} {input.reference} \
 {output.pct_boc_tsv} {output.int_boc_tsv} >> {log} 2>&1
         """

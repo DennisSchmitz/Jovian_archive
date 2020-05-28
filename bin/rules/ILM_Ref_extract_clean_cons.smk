@@ -27,6 +27,6 @@ rule Illumina_extract_clean_consensus:
         output_results_folder   =   f"{res + cons}"
     shell:
         """
-bash bin/scripts/Illumina_consensus_at_diff_coverages.sh {wildcards.sample} {input.bam} {input.raw_consensus} \
+bash bin/scripts/consensus_at_diff_coverages.sh {wildcards.sample} {input.bam} {input.raw_consensus} \
 {params.output_data_folder} {params.output_results_folder} {log} >> {log} 2>&1
         """

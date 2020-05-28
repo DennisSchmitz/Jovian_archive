@@ -305,7 +305,7 @@ onsuccess:
 
         echo -e "\nCleaning up..."
         echo -e "\tRemoving empty folders..."
-        find data -depth -type d -not \( -path {datadir}{scf_raw} -prune \) -empty -delete
+        find data -depth -type d -not \( -path data/scaffolds_raw -prune \) -empty -delete
 
         echo -e "\tRemoving temporary files..."
         if [ "{config[remove_temp]}" != "0" ]
@@ -329,7 +329,7 @@ onsuccess:
         fi
 
         echo -e "\tCreating symlinks for the interactive genome viewer..."
-        {bindr}{scrdir}set_symlink.sh
+        {bindir}{scrdir}set_symlink.sh
 
         echo -e "\tGenerating HTML index of log files..."
         tree -hD --dirsfirst -H "../logs" -L 2 -T "Logs overview" --noreport --charset utf-8 -P "*" -o {res}logfiles_index.html {logdir}

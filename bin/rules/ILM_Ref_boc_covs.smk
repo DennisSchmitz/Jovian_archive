@@ -15,6 +15,6 @@ rule Illumina_determine_BoC_at_diff_cov_thresholds:
     threads: 1
     shell:
         """
-bash bin/scripts/Illumina_BoC_analysis.sh {wildcards.sample} {input.bedgraph} {input.reference} \
+bash bin/scripts/BoC_analysis.sh {wildcards.sample} {input.bedgraph} {input.reference} \
 {output.percentage_BoC_tsv} {output.integer_BoC_tsv} >> {log} 2>&1
         """

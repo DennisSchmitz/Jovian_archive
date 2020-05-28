@@ -72,7 +72,7 @@ cat << EOF >> ${OUTPUT_HTML}
                             indexed: "true",
                             name: "Alignment",
                             showSoftClips: false,
-                            viewAsPairs: true,
+                            viewAsPairs: false,
                             order: 3
                         },
                         {
