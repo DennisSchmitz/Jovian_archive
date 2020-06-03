@@ -15,7 +15,7 @@ rule Align_to_reference_pt2:
         f"{logdir}" + "Align_to_reference_pt2_{sample}.log"
     benchmark:
         f"{logdir + bench}" + "Align_to_reference_pt2_{sample}.txt"
-    threads: 26
+    threads: 1
     shell:
         """
 bcftools mpileup --ignore-RG -Ou -d 10000 -f {input.ref} {input.bam} 2>> {log} |\

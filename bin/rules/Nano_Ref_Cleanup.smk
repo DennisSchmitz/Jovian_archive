@@ -15,7 +15,7 @@ rule Cleanup:
         f"{logdir}" + "Data_Cleanup_{sample}.log"
     benchmark:
         f"{logdir + bench}" + "Data_Cleanup_{sample}.txt"
-    threads: 26
+    threads: config["threads"]["Nanopore_cleanup"]
     params:
         QualityFilter   =   config["Nanopore_ref"]["Quality_score"]
     shell:

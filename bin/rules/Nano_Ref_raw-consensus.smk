@@ -12,7 +12,7 @@ rule Create_raw_consensus:
         f"{logdir}" + "Create_raw_consensus_{sample}.log"
     benchmark:
         f"{logdir + bench}" + "Create_raw_consensus_{sample}.txt"
-    threads: 26
+    threads: 1
     shell:
         """
 cat {input.ref} | bcftools consensus {input.vcf} 1> {output.consensus} 2> {log}
