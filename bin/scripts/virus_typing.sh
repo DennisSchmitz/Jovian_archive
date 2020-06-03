@@ -256,12 +256,12 @@ if [ "${WHICH_TT}" == "all" ]; then
     for TT in "nov" "ev" "hav" "hev" "rva" "pv" "flavi"; do
         if [ -n "$( find data/virus_typing_tables/ -maxdepth 1 -name "*_${TT}.csv" -print -quit )" ]; then
             # If any files were created in the first place; concat individual outputs into one combined output, the awk magic is to not repeat headers
-            gawk 'FNR==1 && NR!=1 { next; } { print }' data/virus_typing_tables/*_${TT}.csv > results/all_${TT}-TT.csv
+            gawk 'FNR==1 && NR!=1 { next; } { print }' data/virus_typing_tables/*_${TT}.csv > results/typingtools/all_${TT}-TT.csv
         fi
     done
 elif [ -n "$( find data/virus_typing_tables/ -maxdepth 1 -name "*_${WHICH_TT}.csv" -print -quit )" ]; then
     # If any files were created in the first place; concat individual outputs into one combined output, the awk magic is to not repeat headers
-    gawk 'FNR==1 && NR!=1 { next; } { print }' data/virus_typing_tables/*_${WHICH_TT}.csv > results/all_${WHICH_TT}-TT.csv
+    gawk 'FNR==1 && NR!=1 { next; } { print }' data/virus_typing_tables/*_${WHICH_TT}.csv > results/typingtools/all_${WHICH_TT}-TT.csv
 fi
 
 #################################################################################
