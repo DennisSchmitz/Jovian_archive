@@ -13,7 +13,7 @@ rule Cut_primers:
         f"{logdir}" + "Primer_removal_{sample}.log"
     benchmark:
         f"{logdir + bench}" + "Primer_removal_{sample}.txt"
-    threads: 26
+    threads: config["threads"]["Nanopore_primer_removal"]
     params:
         primer_cutoff_plus  =   config["Nanopore_ref"]["Primer_cutoff_plus"],
         primer_cutoff_minus =   config["Nanopore_ref"]["Primer_cutoff_minus"]

@@ -26,7 +26,7 @@ rule extract_cleaned_consensus:
         f"{logdir}" + "Extract_cleaned_consensus_{sample}.log"
     benchmark:
         f"{logdir + bench}" + "Extract_cleaned_consensus_{sample}.txt"
-    threads: 26
+    threads: 1
     shell:
         """
 bash bin/scripts/consensus_at_diff_coverages.sh {wildcards.sample} {input.bam} {input.raw_consensus} \

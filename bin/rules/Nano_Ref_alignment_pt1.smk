@@ -14,7 +14,7 @@ rule Align_to_reference_pt1:
         f"{logdir}" + "Align_to_reference_pt1_{sample}.log"
     benchmark:
         f"{logdir + bench}" + "Align_to_reference_pt1_{sample}.txt"
-    threads: 26
+    threads: config["threads"]["Nanopore_reference_alignment"]
     shell:
         """
 minimap2 -ax map-ont {input.ref} {input.fastq} 2>> {log} |\

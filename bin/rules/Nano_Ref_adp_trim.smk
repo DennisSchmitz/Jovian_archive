@@ -11,7 +11,7 @@ rule Adapter_trimming:
         f"{logdir}" + "Adapter_trimming_{sample}.log"
     benchmark:
         f"{logdir + bench}" + "Adapter_trimming_{sample}.txt"
-    threads: 26
+    threads: config["threads"]["Adapter_trimming_cpu"]
     shell:
         """
 porechop \
