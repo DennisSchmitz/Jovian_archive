@@ -27,7 +27,7 @@ threads:
     Adapter_trimming_cpu: 26
     Nanopore_reference_alignment: 26
     Nanopore_cleanup: 26
-    nanopore_primer_removal: 26
+    Nanopore_primer_removal: 26
 
 ######################################
 ### Pipeline parameters            ###
