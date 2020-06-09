@@ -135,54 +135,54 @@ if [ "${PATHING_SINGLE}" == "TRUE" ]; then
         mkdir -p ${DB_PATH_MGKIT}
         mkdir -p ${DB_PATH_VHOST}
         
-#        # ! Start downloading databases
-#            # ! download taxdb
-#            cd "${DB_PATH_TAX}" || exit
-#            printf "\nDownloading taxonomy database... \n"
-#            perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress taxdb
-#            
-#            # ! download mgkit db
-#            cd "${DB_PATH_MGKIT}" || exit
-#            printf "\nDownloading MGKit database... \n"
-#            bash "${CONDA_PREFIX}"/bin/download-taxonomy.sh
-#            curl -o nucl_gb.accession2taxid.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz
-#            curl -o nucl_gb.accession2taxid.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz.md5
-#            md5sum -c nucl_gb.accession2taxid.gz.md5
-#
-#            # ! download krona LCA db
-#            cd "${DB_PATH_KRONA}" || exit
-#            printf "\nDownloading Krona LCA database... \n"
-#            bash "${CONDA_PREFIX}"/opt/krona/updateTaxonomy.sh ./
-#            bash "${CONDA_PREFIX}"/opt/krona/updateAccessions.sh ./
-#
-#            # ! download VHOST-interaction db
-#            cd "${DB_PATH_VHOST}" || exit
-#            printf "\nDownloading Virus-Host interaction database... \n"
-#            curl -o virushostdb.tsv -L ftp://ftp.genome.jp/pub/db/virushostdb/virushostdb.tsv            
-#            
-#            # ! download new_taxdump db
-#            cd "${DB_PATH_NTAX}" || exit
-#            printf "\nDownloading NCBI New_taxdump database... \n"
-#            curl -o new_taxdump.tar.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
-#            curl -o new_taxdump.tar.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
-#            if md5sum -c new_taxdump.tar.gz.md5
-#            then
-#                #the md5 is correct:
-#                tar -xzf new_taxdump.tar.gz
-#                for file in *.dmp; do gawk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim; done
-#            else
-#                #the md5 does not match!
-#                echo "The md5sum does not match new_taxdump.tar.gz! Please try downloading again."
-#            fi
-#                
-#            # ! download BLAST NT db
-#            cd "${DB_PATH_NT}" || exit
-#            printf "\nDownloading NCBI BLAST NT database... \n"
-#            perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress nt
-#
-#            sleep 2
-#            printf "\nDone with downloading and installing the databases required for Jovian \n"
-#            printf "The databases have been placed in the %s folder\n" "${db_path_single_response}"
+        # ! Start downloading databases
+            # ! download taxdb
+            cd "${DB_PATH_TAX}" || exit
+            printf "\nDownloading taxonomy database... \n"
+            perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress taxdb
+            
+            # ! download mgkit db
+            cd "${DB_PATH_MGKIT}" || exit
+            printf "\nDownloading MGKit database... \n"
+            bash "${CONDA_PREFIX}"/bin/download-taxonomy.sh
+            curl -o nucl_gb.accession2taxid.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz
+            curl -o nucl_gb.accession2taxid.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz.md5
+            md5sum -c nucl_gb.accession2taxid.gz.md5
+
+            # ! download krona LCA db
+            cd "${DB_PATH_KRONA}" || exit
+            printf "\nDownloading Krona LCA database... \n"
+            bash "${CONDA_PREFIX}"/opt/krona/updateTaxonomy.sh ./
+            bash "${CONDA_PREFIX}"/opt/krona/updateAccessions.sh ./
+
+            # ! download VHOST-interaction db
+            cd "${DB_PATH_VHOST}" || exit
+            printf "\nDownloading Virus-Host interaction database... \n"
+            curl -o virushostdb.tsv -L ftp://ftp.genome.jp/pub/db/virushostdb/virushostdb.tsv            
+            
+            # ! download new_taxdump db
+            cd "${DB_PATH_NTAX}" || exit
+            printf "\nDownloading NCBI New_taxdump database... \n"
+            curl -o new_taxdump.tar.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
+            curl -o new_taxdump.tar.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
+            if md5sum -c new_taxdump.tar.gz.md5
+            then
+                #the md5 is correct:
+                tar -xzf new_taxdump.tar.gz
+                for file in *.dmp; do gawk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim; done
+            else
+                #the md5 does not match!
+                echo "The md5sum does not match new_taxdump.tar.gz! Please try downloading again."
+            fi
+                
+            # ! download BLAST NT db
+            cd "${DB_PATH_NT}" || exit
+            printf "\nDownloading NCBI BLAST NT database... \n"
+            perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress nt
+
+            sleep 2
+            printf "\nDone with downloading and installing the databases required for Jovian \n"
+            printf "The databases have been placed in the %s folder\n" "${db_path_single_response}"
 
             cat << EOF > ~/database-updater.sh
 #!/bin/bash
@@ -393,7 +393,7 @@ if md5sum -c new_taxdump.tar.gz.md5
 then
     #the md5 is correct:
     tar -xzf new_taxdump.tar.gz
-    for file in *.dmp; do awk '{gsub("\t",""); if(substr(\$0,length(\$0),length(\$0))=="|") print substr(\$0,0,length(\$0)-1); else print \$0}' < ${file} > ${file}.delim; done
+    for f in *.dmp; do awk '{gsub("\t",""); if(substr(\$0,length(\$0),length(\$0))=="|") print substr(\$0,0,length(\$0)-1); else print \$0}' < \${f} > \${f}.delim; done
 else
     #the md5 does not match!
     echo "The md5sum does not match new_taxdump.tar.gz! Please try downloading again."
