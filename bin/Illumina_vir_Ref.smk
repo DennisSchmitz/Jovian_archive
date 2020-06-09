@@ -61,7 +61,7 @@ with open(config["sample_sheet"]) as sample_sheet_file:
     SAMPLES =   yaml.load(sample_sheet_file) # SAMPLES is a dict with sample in the form sample > read number > file. E.g.: SAMPLES["sample_1"]["R1"] = "x_R1.gz"
 
 
-reference           =   config["reference"]
+reference           =   config["reference_file"]
 reference_basename  =   os.path.splitext(os.path.basename(reference))[0]
 
 
@@ -119,7 +119,7 @@ rule all:
                 sample  =   SAMPLES
                 ), # Lists the coverage of the alignment against the reference in a bedgraph format, is used to determine the coverage mask files below.
         expand( "{p}{sample}_{filt_character}-filt_cov_ge_{thresholds}.fa",
-                p               =   f"{res + cons}",
+                p               =   f"{res + seqs}",
                 sample          =   SAMPLES,
                 filt_character  =   [   'N',
                                         'minus'
@@ -138,8 +138,8 @@ rule all:
                                     '_pct.tsv'
                                     ]
                 ), # Output of the BoC analysis #TODO can probably removed after the concat rule is added.
-        f"{res}BoC_integer.tsv", # Integer BoC overview in .tsv format
-        f"{res}BoC_percentage.tsv", # Percentage BoC overview in .tsv format
+        f"{res}BoC_int.tsv", # Integer BoC overview in .tsv format
+        f"{res}BoC_pct.tsv", # Percentage BoC overview in .tsv format
         expand( "{p}{ref}_{extension}",
                 p           =   f"{datadir + refdir}",
                 ref         =   reference_basename,
@@ -151,7 +151,7 @@ rule all:
                                     'annotation.gff.gz.tbi'
                                     ]
                 ), # Prodigal ORF prediction output, required for the IGVjs visualisation
-        f"{res}igvjs.html", # IGVjs output html
+        f"{res}igv.html", # IGVjs output html
         f"{res}multiqc.html" # MultiQC report
 
 
@@ -161,23 +161,30 @@ rule all:
 
 onstart:
     shell("""
-        mkdir -p {datadir}{res} 
+        mkdir -p {res} 
         echo -e "\nLogging pipeline settings..."
 
         echo -e "\tGenerating methodological hash (fingerprint)..."
-        echo -e "This is the link to the code used for this analysis:\thttps://github.com/DennisSchmitz/Jovian/tree/$(git log -n 1 --pretty=format:"%H")" > {datadir}{res}/log_git.txt
-        echo -e "This code with unique fingerprint $(git log -n1 --pretty=format:"%H") was committed by $(git log -n1 --pretty=format:"%an <%ae>") at $(git log -n1 --pretty=format:"%ad")" >> {datadir}{res}/log_git.txt
+        echo -e "This is the link to the code used for this analysis:\thttps://github.com/DennisSchmitz/Jovian/tree/$(git log -n 1 --pretty=format:"%H")" > {res}/log_git.txt
+        echo -e "This code with unique fingerprint $(git log -n1 --pretty=format:"%H") was committed by $(git log -n1 --pretty=format:"%an <%ae>") at $(git log -n1 --pretty=format:"%ad")" >> {res}/log_git.txt
 
         echo -e "\tGenerating full software list of current Conda environment (\"Jovian_master\")..."
-        conda list > {datadir}{res}/log_conda.txt
+        conda list > {res}/log_conda.txt
+
+        echo -e "\tGenerating used databases log..."
+        echo -e "==> User-specified background reference (default: Homo Sapiens NCBI GRch38 NO DECOY genome): <==\n$(ls -lah $(grep "    background_ref:" config/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" > {res}log_db.txt
+        echo -e "\n==> Virus-Host Interaction Database: <==\n$(ls -lah $(grep "    virusHostDB:" config/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> {res}log_db.txt
+        echo -e "\n==> Krona Taxonomy Database: <==\n$(ls -lah $(grep "    Krona_taxonomy:" config/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> {res}log_db.txt
+        echo -e "\n==> NCBI new_taxdump Database: <==\n$(ls -lah $(grep "    NCBI_new_taxdump_rankedlineage:" config/pipeline_parameters.yaml | cut -f 2 -d ":") $(grep "    NCBI_new_taxdump_host:" config/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> {res}log_db.txt
+        echo -e "\n==> NCBI Databases as specified in .ncbirc: <==\n$(ls -lah $(grep "BLASTDB=" .ncbirc | cut -f 2 -d "=" | tr "::" " "))\n" >> {res}log_db.txt
         
         echo -e "\tGenerating config file log..."
-        rm -f {datadir}{res}/log_config.txt
+        rm -f {res}/log_config.txt
         for file in {cnf}*.yaml
         do
-            echo -e "\n==> Contents of file \"${{file}}\": <==" >> {datadir}{res}/log_config.txt
-            cat ${{file}} >> {datadir}{res}/log_config.txt
-            echo -e "\n\n" >> {datadir}{res}/log_config.txt
+            echo -e "\n==> Contents of file \"${{file}}\": <==" >> {res}/log_config.txt
+            cat ${{file}} >> {res}/log_config.txt
+            echo -e "\n\n" >> {res}/log_config.txt
         done
     """)
 
@@ -262,11 +269,14 @@ onsuccess:
         fi
 
         echo -e "\tCreating symlinks for the interactive genome viewer..."
-        bash {bindir}{scrdir}set_symlink.sh
+        {bindir}{scrdir}set_symlink.sh
+
+        echo -e "\tGenerating HTML index of log files..."
+        tree -hD --dirsfirst -H "../logs" -L 2 -T "Logs overview" --noreport --charset utf-8 -P "*" -o {res}logfiles_index.html {logdir}
 
         echo -e "\tGenerating Snakemake report..."
-        snakemake -s {bindir}Illumina_vir_Ref.smk --unlock --profile config --config reference={reference}
-        snakemake -s {bindir}Illumina_vir_Ref.smk --report {datadir}{res}snakemake_report.html --profile config --config reference={reference}
+        snakemake -s {bindir}Illumina_vir_Ref.smk --unlock --profile config
+        snakemake -s {bindir}Illumina_vir_Ref.smk --report {res}snakemake_report.html --profile config
 
         echo -e "Finished"
     """)

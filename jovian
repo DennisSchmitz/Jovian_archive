@@ -408,13 +408,21 @@ if ! bash bin/includes/Mode; then
     exit 1
 fi
 
-
+###> catch missing workflow statement
+######! Make a dedicated error catcher for this one. Also to actually capture more missing statements than just the workflow.
 if [ $workflow == "NONE" ]; then
     echo "No workflow was specified."
     echo "The following workflows are supported: ${supp_workflow[*]}"
     echo "Please see the documentation and try again"
     exit
 fi
+
+###> Set the variables in the pipeline_parameters.yaml file
+ref_parameter="reference_file: ${REFERENCE_FASTA}"
+prm_parameter="primer_file: ${PRIMER_FASTA}"
+sed -i "s~.*reference_file:.*~${ref_parameter}~g" "${PROFILE}"/pipeline_parameters.yaml
+sed -i "s~.*primer_file:.*~${prm_parameter}~g" "${PROFILE}"/pipeline_parameters.yaml
+
 
 ###> Build the sample_sheet.yaml
 if ! bash bin/includes/Make_samplesheet; then
@@ -509,7 +517,7 @@ fi
 if [ "${workflow}" == "ILM_REF" ]; then
     echo -e "Starting the \"${nicename}\" workflow."
     set +ue #turn off bash strict mode because snakemake and conda don't work in strict mode
-    snakemake -s bin/Illumina_vir_Ref.smk --profile "${PROFILE}" --config reference="${REFERENCE_FASTA}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
+    snakemake -s bin/Illumina_vir_Ref.smk --profile "${PROFILE}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
     set -ue #turn bash strict mode back on
     exit 0
 fi
@@ -518,7 +526,7 @@ fi
 if [ "${workflow}" == "NANO_REF" ]; then
     echo -e "Starting the \"${nicename}\" workflow."
     set +ue
-    snakemake -s bin/Nano_vir_Ref.smk --profile "${PROFILE}" --config reference="${REFERENCE_FASTA}" primers="${PRIMER_FASTA}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
+    snakemake -s bin/Nano_vir_Ref.smk --profile "${PROFILE}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
     set -ue
     exit 0
 fi
