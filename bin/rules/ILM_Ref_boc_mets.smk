@@ -9,8 +9,8 @@ rule Illumina_concat_BoC_metrics:
                                 sample  =   SAMPLES
                                 )
     output:
-        combined_BoC_int_tsv    =   f"{res}BoC_integer.tsv",
-        combined_BoC_pct_tsv    =   f"{res}BoC_percentage.tsv",
+        combined_BoC_int_tsv    =   f"{res}BoC_int.tsv",
+        combined_BoC_pct_tsv    =   f"{res}BoC_pct.tsv",
     conda:
         f"{conda_envs}Illumina_ref_alignment.yaml"
     log:

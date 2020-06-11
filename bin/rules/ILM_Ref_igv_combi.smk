@@ -9,7 +9,7 @@ rule Illumina_HTML_IGVJs_generate_final:
                 sample      = SAMPLES
                 )
     output:
-        f"{res}igvjs.html"
+        f"{res}igv.html"
     conda:
         f"{conda_envs}data_wrangling.yaml"
     log:
