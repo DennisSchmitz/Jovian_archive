@@ -67,6 +67,11 @@ do
         export JOVIAN_HELP
         shift # Next
         ;;
+        --db-reset)
+        RESET_DB="TRUE"
+        export RESET_DB
+        shift # Next
+        ;;
         -sh|--snakemake-help)
         SNAKEMAKE_HELP="TRUE"
         export SNAKEMAKE_HELP
@@ -263,6 +268,10 @@ fi
 if [ "${INSTALL_DB:-}" == "TRUE" ]; then
     bash bin/includes/Databases
     exit 0
+fi
+
+if [ "${RESET_DB}" == "TRUE" ]; then
+    rm ~/.jovian_installchoice_db
 fi
 
 ###> Fill in the global location of the databases.
