@@ -97,6 +97,7 @@ if [ "${PATHING_SINGLE}" == "TRUE" ]; then
         echo -e "\e[1m${db_path_single_response}/krona_taxonomy\e[0m"
         echo -e "\e[1m${db_path_single_response}/mgkit_taxonomy\e[0m"
         echo -e "\e[1m${db_path_single_response}/Virus-Host_interaction_db\e[0m"
+        echo -e "\e[1m${db_path_single_response}/Human_genome\e[0m"
         minispacer
         
         while read -r -p "Does this look correct? [yes/no] " db_path_single_confirmed
@@ -126,6 +127,7 @@ if [ "${PATHING_SINGLE}" == "TRUE" ]; then
         DB_PATH_KRONA="${db_path_single_response}/krona_taxonomy"
         DB_PATH_MGKIT="${db_path_single_response}/mgkit_taxonomy"
         DB_PATH_VHOST="${db_path_single_response}/Virus-Host_interaction_db"
+        DB_PATH_HUGO="${db_path_single_response}/Human_genome"
         
         # ! Make folders
         mkdir -p ${DB_PATH_NT}
@@ -134,6 +136,7 @@ if [ "${PATHING_SINGLE}" == "TRUE" ]; then
         mkdir -p ${DB_PATH_KRONA}
         mkdir -p ${DB_PATH_MGKIT}
         mkdir -p ${DB_PATH_VHOST}
+        mkdir -p ${DB_PATH_HUGO}
         
         # ! Start downloading databases
             # ! download taxdb
@@ -174,7 +177,17 @@ if [ "${PATHING_SINGLE}" == "TRUE" ]; then
                 #the md5 does not match!
                 echo "The md5sum does not match new_taxdump.tar.gz! Please try downloading again."
             fi
-                
+
+            # ! download the Human Genome background
+            cd "${DB_PATH_HUGO}" || exit
+            printf "\nDownloading the Human Genome (GRCh38) as a background reference... \n"
+            aws s3 --no-sign-request --region eu-west-1 sync s3://ngi-igenomes/igenomes/Homo_sapiens/NCBI/GRCh38/Sequence/WholeGenomeFasta/ ./
+            awk '{print >out}; />chrEBV/{out="EBV.fa"}' out=temp.fa genome.fa; head -n -1 temp.fa > nonEBV.fa
+            rm EBV.fa temp.fa
+            mv nonEBV.fa genome.fa
+            echo -e "building the human genome... Using bowtie2 with ${USE_CORES} cores."
+            bowtie2-build --threads "${USE_CORES}" genome.fa genome.fa
+
             # ! download BLAST NT db
             cd "${DB_PATH_NT}" || exit
             printf "\nDownloading NCBI BLAST NT database... \n"
@@ -183,6 +196,21 @@ if [ "${PATHING_SINGLE}" == "TRUE" ]; then
             sleep 2
             printf "\nDone with downloading and installing the databases required for Jovian \n"
             printf "The databases have been placed in the %s folder\n" "${db_path_single_response}"
+            
+            cat << DB > ~/.jovian_installchoice_db
+#!/bin/bash
+installeranswers:
+    databases: SET
+    BLASTNT: ${DB_PATH_NT}/
+    NCBITAXDB: ${DB_PATH_TAX}/
+    backgroundref: ${DB_PATH_HUGO}/genome.fa
+    kronataxonomy: ${DB_PATH_KRONA}/
+    virushostdb: ${DB_PATH_VHOST}/virushostdb.tsv
+    newtaxdumpranked: ${DB_PATH_NTAX}/rankedlineage.dmp.delim
+    newtaxdumphost: ${DB_PATH_NTAX}/host.dmp.delim
+    mgkittaxonomy: ${DB_PATH_MGKIT}/
+DB
+
 
             cat << EOF > ~/database-updater.sh
 #!/bin/bash
@@ -252,7 +280,7 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
     printf "\e[40;91m this/path/is/also/incorrect \e[0m\n"
     minispacer
 
-    while read -r -e -p "Please type out the path under which you want to install the BLAST NT database: " db_path_indiv_NT_response; read -r -e -p "Please type out the path under which you want to install the TaxDB: " db_path_indiv_taxdb_response; read -r -e -p "Please type out the path under which you want to install the NewTaxdump database: " db_path_indiv_ntax_response; read -r -e -p "Please type out the path under which you want to install the MGKit database: " db_path_indiv_mgkit_response; read -r -e -p "Please type out the path under which you want to install the Krona LCA database: " db_path_indiv_krona_response; read -r -e -p "please type out the path under which you want to install the VirusHost Interaction database: " db_path_indiv_vhost_response
+    while read -r -e -p "Please type out the path under which you want to install the BLAST NT database: " db_path_indiv_NT_response; read -r -e -p "Please type out the path under which you want to install the TaxDB: " db_path_indiv_taxdb_response; read -r -e -p "Please type out the path under which you want to install the NewTaxdump database: " db_path_indiv_ntax_response; read -r -e -p "Please type out the path under which you want to install the MGKit database: " db_path_indiv_mgkit_response; read -r -e -p "Please type out the path under which you want to install the Krona LCA database: " db_path_indiv_krona_response; read -r -e -p "please type out the path under which you want to install the VirusHost Interaction database: " db_path_indiv_vhost_response; read -r -e -p "please type out the path under which you want to install the Human Genome background reference: " db_path_indiv_hugo_response
     do
         db_path_indiv_NT_response=${db_path_indiv_NT_response}
         db_path_indiv_taxdb_response=${db_path_indiv_taxdb_response}
@@ -260,15 +288,17 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
         db_path_indiv_krona_response=${db_path_indiv_krona_response}
         db_path_indiv_mgkit_response=${db_path_indiv_mgkit_response}
         db_path_indiv_vhost_response=${db_path_indiv_vhost_response}
+        db_path_indiv_hugo_response=${db_path_indiv_hugo_response}
 
         minispacer
         printf "\nWith the paths you specified, the database locations will look like this:\n"
-        printf "\e[1m%s/NT_database\e[0m\n" "${db_path_indiv_NT_response}"
-        printf "\e[1m%s/taxdb\e[0m\n" "${db_path_indiv_taxdb_response}"
-        printf "\e[1m%s/new_taxdump\e[0m\n" "${db_path_indiv_ntax_response}"
-        printf "\e[1m%s/krona_taxonomy\e[0m\n" "${db_path_indiv_krona_response}"
-        printf "\e[1m%s/mgkit_taxonomy\e[0m\n" "${db_path_indiv_mgkit_response}"
-        printf "\e[1m%s/Virus-Host_interaction_db\e[0m\n" "${db_path_indiv_vhost_response}"
+        printf "\e[1m%s\e[0m\n" "${db_path_indiv_NT_response}"
+        printf "\e[1m%s\e[0m\n" "${db_path_indiv_taxdb_response}"
+        printf "\e[1m%s\e[0m\n" "${db_path_indiv_ntax_response}"
+        printf "\e[1m%s\e[0m\n" "${db_path_indiv_krona_response}"
+        printf "\e[1m%s\e[0m\n" "${db_path_indiv_mgkit_response}"
+        printf "\e[1m%s\e[0m\n" "${db_path_indiv_vhost_response}"
+        printf "\e[1m%s\e[0m\n" "${db_path_indiv_hugo_response}"
         minispacer
 
         while read -r -p "Does this look correct? [yes/no] " db_paths_indiv_confirmed
@@ -292,12 +322,13 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
         database_installer
             
         # ! Set paths
-        DB_PATH_NT="${db_path_indiv_NT_response}/NT_database"
-        DB_PATH_TAX="${db_path_indiv_taxdb_response}/taxdb"
-        DB_PATH_NTAX="${db_path_indiv_ntax_response}/new_taxdump"
-        DB_PATH_KRONA="${db_path_indiv_krona_response}/krona_taxonomy"
-        DB_PATH_MGKIT="${db_path_indiv_mgkit_response}/mgkit_taxonomy"
-        DB_PATH_VHOST="${db_path_indiv_vhost_response}/Virus-Host_interaction_db"
+        DB_PATH_NT="${db_path_indiv_NT_response}"
+        DB_PATH_TAX="${db_path_indiv_taxdb_response}"
+        DB_PATH_NTAX="${db_path_indiv_ntax_response}"
+        DB_PATH_KRONA="${db_path_indiv_krona_response}"
+        DB_PATH_MGKIT="${db_path_indiv_mgkit_response}"
+        DB_PATH_VHOST="${db_path_indiv_vhost_response}"
+        DB_PATH_HUGO="${db_path_indiv_hugo_response}"
 
 
         # ! Make folders
@@ -307,6 +338,7 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
         mkdir -p ${DB_PATH_KRONA}
         mkdir -p ${DB_PATH_MGKIT}
         mkdir -p ${DB_PATH_VHOST}
+        mkdir -p ${DB_PATH_HUGO}
 
         # ! Start downloading databases
             # ! Download taxdb
@@ -346,7 +378,17 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
                 #the md5 does not match!
                 echo "The md5sum does not match new_taxdump.tar.gz! Please try downloading again."
             fi
-                    
+
+            # ! download the Human Genome background
+            cd "${DB_PATH_HUGO}" || exit
+            printf "\nDownloading the Human Genome (GRCh38) as a background reference... \n"
+            aws s3 --no-sign-request --region eu-west-1 sync s3://ngi-igenomes/igenomes/Homo_sapiens/NCBI/GRCh38/Sequence/WholeGenomeFasta/ ./
+            awk '{print >out}; />chrEBV/{out="EBV.fa"}' out=temp.fa genome.fa; head -n -1 temp.fa > nonEBV.fa
+            rm EBV.fa temp.fa
+            mv nonEBV.fa genome.fa
+            echo -e "building the human genome... Using bowtie2 with ${USE_CORES} cores."
+            bowtie2-build --threads "${USE_CORES}" genome.fa genome.fa
+  
             # ! download BLAST NT db
             cd "${DB_PATH_NT}" || exit
             printf "\nDownloading NCBI BLAST NT database... \n"
@@ -360,6 +402,21 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
             printf "\e[1m%s/new_taxdump\e[0m\n" "${db_path_indiv_ntax_response}"
             printf "\e[1m%s/krona_taxonomy\e[0m\n" "${db_path_indiv_krona_response}"
             printf "\e[1m%s/Virus-Host_interaction_db\e[0m\n" "${db_path_indiv_vhost_response}"
+
+            cat << DB > ~/.jovian_installchoice_db
+#!/bin/bash
+installeranswers:
+    databases: SET
+    BLASTNT: ${DB_PATH_NT}/
+    NCBITAXDB: ${DB_PATH_TAX}/
+    backgroundref: ${DB_PATH_HUGO}/genome.fa
+    kronataxonomy: ${DB_PATH_KRONA}/
+    virushostdb: ${DB_PATH_VHOST}/virushostdb.tsv
+    newtaxdumpranked: ${DB_PATH_NTAX}/rankedlineage.dmp.delim
+    newtaxdumphost: ${DB_PATH_NTAX}/host.dmp.delim
+    mgkittaxonomy: ${DB_PATH_MGKIT}/
+DB
+
 
             cat << EOF > ~/database-updater.sh
 #!/bin/bash

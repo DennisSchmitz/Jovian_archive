@@ -31,3 +31,4 @@ reference_alignment/
 results/
 sample_sheet*
 undetermined_demultiplex_data/
+*.pyc
