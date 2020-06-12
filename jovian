@@ -230,6 +230,15 @@ if [ "${JOVIAN_HELP:-}" == "TRUE" ]; then
     exit 0
 fi
 
+if [ "${RESET_DB}" == "TRUE" ]; then
+    rm ~/.jovian_installchoice_db
+    if ! bash bin/includes/Pre_install_checker; then
+        exit 1
+    fi
+    bash bin/includes/Userconfig_DB
+    exit
+fi
+
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #@ 
 #@ Jovian Installation block
@@ -268,10 +277,6 @@ fi
 if [ "${INSTALL_DB:-}" == "TRUE" ]; then
     bash bin/includes/Databases
     exit 0
-fi
-
-if [ "${RESET_DB}" == "TRUE" ]; then
-    rm ~/.jovian_installchoice_db
 fi
 
 ###> Fill in the global location of the databases.
