@@ -198,7 +198,6 @@ if [ "${PATHING_SINGLE}" == "TRUE" ]; then
             printf "The databases have been placed in the %s folder\n" "${db_path_single_response}"
             
             cat << DB > ~/.jovian_installchoice_db
-#!/bin/bash
 installeranswers:
     databases: SET
     BLASTNT: ${DB_PATH_NT}/
@@ -404,7 +403,6 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
             printf "\e[1m%s/Virus-Host_interaction_db\e[0m\n" "${db_path_indiv_vhost_response}"
 
             cat << DB > ~/.jovian_installchoice_db
-#!/bin/bash
 installeranswers:
     databases: SET
     BLASTNT: ${DB_PATH_NT}/
