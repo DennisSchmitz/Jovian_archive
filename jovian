@@ -67,6 +67,11 @@ do
         export JOVIAN_HELP
         shift # Next
         ;;
+        --db-reset)
+        RESET_DB="TRUE"
+        export RESET_DB
+        shift # Next
+        ;;
         -sh|--snakemake-help)
         SNAKEMAKE_HELP="TRUE"
         export SNAKEMAKE_HELP
@@ -223,6 +228,15 @@ fi
 if [ "${JOVIAN_HELP:-}" == "TRUE" ]; then
     bash bin/includes/help
     exit 0
+fi
+
+if [ "${RESET_DB}" == "TRUE" ]; then
+    rm ~/.jovian_installchoice_db
+    if ! bash bin/includes/Pre_install_checker; then
+        exit 1
+    fi
+    bash bin/includes/Userconfig_DB
+    exit
 fi
 
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
