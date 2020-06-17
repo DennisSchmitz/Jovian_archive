@@ -33,3 +33,4 @@ sample_sheet*
 undetermined_demultiplex_data/
 *.png
 *_pycache_*
+*.pyc
