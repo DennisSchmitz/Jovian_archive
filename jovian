@@ -326,6 +326,15 @@ fi
 #@
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
+###> Check the snakemake version (should be larger or equal to 5.17)
+env_snakever=$(snakemake -v)
+
+ if [ !  "$(printf '%s\n' "$req_snakever" "$env_snakever" | sort -V | head -n1)" = "$req_snakever" ]; then 
+        echo -e "The snakemake version in your \"${MASTER_NAME}\" environment does not meet the required version of snakemake $req_snakever or higher"
+        echo -e "Please make sure the \"${MASTER_NAME}\" environment uses the correct dependencies by typing: \e[7m bash jovian --update \e[0m"
+        exit
+ fi
+
 ###> Archiving of relevant data in a single tar.gz file
 if [ "${ARCHIVE:-}" == "TRUE" ]; then
     bash bin/includes/Archive
