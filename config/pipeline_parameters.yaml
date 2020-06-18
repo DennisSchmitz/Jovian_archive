@@ -8,7 +8,7 @@ WrapperSettings:
 
  
 sample_sheet: sample_sheet.yaml
-reference_file: /data/references/sars-cov-2.fasta
+reference_file: NONE
 primer_file: NONE
 
 ######################################
