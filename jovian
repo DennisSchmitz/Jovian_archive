@@ -232,8 +232,6 @@ shopt -u nocasematch
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 
-
-
 ###> Show Jovian version
 if [ "${SHOW_VERSION}" == "TRUE" ]; then
     bash bin/includes/Version
@@ -259,6 +257,17 @@ if [ "${RESET_DB}" == "TRUE" ]; then
     fi
     bash bin/includes/Userconfig_DB
     exit
+fi
+
+###> Change the installed Jovian version to the latest release or to a specified verison
+if [ "${JOVIAN_UPDATE}" == "TRUE" ]; then
+    if [ -z "${CHANGE_VERSION}" ]; then
+        bash bin/includes/selfupdate master
+        exit 0
+    else
+        bash bin/includes/selfupdate "${CHANGE_VERSION}"
+        exit
+    fi
 fi
 
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -316,18 +325,6 @@ fi
 #@ The Jovian_master environment is activated for this shell session and all child-shells
 #@
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
-###> Change the installed Jovian version to the latest release or to a specified verison
-if [ "${JOVIAN_UPDATE}" == "TRUE" ]; then
-    if [ -z "${CHANGE_VERSION}" ]; then
-        bash bin/includes/selfupdate master
-        exit 0
-    else
-        bash bin/includes/selfupdate "${CHANGE_VERSION}"
-        exit
-    fi
-fi
-
 
 ###> Archiving of relevant data in a single tar.gz file
 if [ "${ARCHIVE:-}" == "TRUE" ]; then

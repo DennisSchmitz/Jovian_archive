@@ -252,6 +252,10 @@ done
 ### Concatenate all indivual files together into one big file               #####
 #################################################################################
 
+if [ "$(ls -A data/virus_typing_tables)" ]; then
+     mkdir -p results/typingtools
+fi
+
 if [ "${WHICH_TT}" == "all" ]; then
     for TT in "nov" "ev" "hav" "hev" "rva" "pv" "flavi"; do
         if [ -n "$( find data/virus_typing_tables/ -maxdepth 1 -name "*_${TT}.csv" -print -quit )" ]; then
