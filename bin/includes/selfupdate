@@ -1,6 +1,8 @@
 #!/bin/bash
 # shellcheck disable=SC1091
 
+conda deactivate
+
 if [ "${1}" == "master" ]; then
 	
 	echo -e "Updating Jovian will delete \e[1m all local changes\e[0m that you've made."
@@ -31,7 +33,12 @@ if [ "${1}" == "master" ]; then
 	git checkout master
 	git fetch origin --tags "${latestrelease}"
 	git reset --hard FETCH_HEAD
-	conda env update --file "${PATH_JOVIAN_MASTER_YAML}"
+	conda remove --name "${MASTER_NAME}" --all -y
+	conda remove --name "${HELPER_NAME}" --all -y
+	SKIP_CONFIRMATION="TRUE"
+	export SKIP_CONFIRMATION
+	bash bin/includes/Install_jovian-master
+	conda env create -f ${PATH_JOVIAN_HELPER_YAML}
 	
 	echo -e "DONE"
 
@@ -64,7 +71,12 @@ else
 	git checkout master	
 	git fetch origin --tags "${1}"
 	git reset --hard FETCH_HEAD
-	conda env update --file "${PATH_JOVIAN_MASTER_YAML}"
+	conda remove --name "${MASTER_NAME}" --all -y
+	conda remove --name "${HELPER_NAME}" --all -y
+	SKIP_CONFIRMATION="TRUE"
+	export SKIP_CONFIRMATION
+	bash bin/includes/Install_jovian-master
+	conda env create -f ${PATH_JOVIAN_HELPER_YAML}
 
 	echo -e "DONE"
 fi
