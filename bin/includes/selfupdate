@@ -33,7 +33,7 @@ if [ "${1}" == "master" ]; then
 	git reset --hard FETCH_HEAD
 	conda remove --name "${MASTER_NAME}" --all -y
 	conda remove --name "${HELPER_NAME}" --all -y
-	conda env create -f ${PATH_JOVIAN_MASTER_YAML}
+	bash bin/includes/Install_jovian-master -y
 	conda env create -f ${PATH_JOVIAN_HELPER_YAML}
 
 	
@@ -70,7 +70,7 @@ else
 	git reset --hard FETCH_HEAD
 	conda remove --name "${MASTER_NAME}" --all -y
 	conda remove --name "${HELPER_NAME}" --all -y
-	conda env create -f ${PATH_JOVIAN_MASTER_YAML}
+	bash bin/includes/Install_jovian-master -y
 	conda env create -f ${PATH_JOVIAN_HELPER_YAML}
 
 	echo -e "DONE"
