@@ -339,7 +339,7 @@ def sum_superkingdoms(classified_file, mapped_reads_file):
                 pass
     
     #Concatenate the missing data into the dataframe
-    new_df = pd.concat([superkingdom_sums, newdata])
+    new_df = pd.concat([superkingdom_sums, newdata], sort = False)
     new_df.reset_index(inplace=True)
     new_df = new_df.sort_values(by=['Sample_name', 'superkingdom'])
     new_df = new_df.dropna()
