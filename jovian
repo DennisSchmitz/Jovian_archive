@@ -437,6 +437,15 @@ if [ $workflow == "NONE" ]; then
     exit
 fi
 
+
+if [ "${workflow}" == "ILM_META" ]; then
+    nicename="Illumina-metagenomics"
+elif [ "${workflow}" == "ILM_REF" ]; then
+    nicename="Illumina-reference"
+elif [ "${workflow}" == "NANO_REF" ]; then
+    nicename="Nanopore-reference"
+fi
+
 ###> Set the variables in the pipeline_parameters.yaml file
 ref_parameter="reference_file: ${REFERENCE_FASTA}"
 prm_parameter="primer_file: ${PRIMER_FASTA}"
@@ -515,14 +524,6 @@ else
 fi
 
 ###> Core Jovian workflow snakemake command with checkers for required files.
-
-if [ "${workflow}" == "ILM_META" ]; then
-    nicename="Illumina-metagenomics"
-elif [ "${workflow}" == "ILM_REF" ]; then
-    nicename="Illumina-reference"
-elif [ "${workflow}" == "NANO_REF" ]; then
-    nicename="Nanopore-reference"
-fi
 
 #@ Illumina-meta workflow
 if [ "${workflow}" == "ILM_META" ]; then
