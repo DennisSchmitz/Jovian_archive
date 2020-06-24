@@ -27,5 +27,6 @@ dependencies:
   - seqkit==0.12.1
   - pv==1.6.6
   - pip==19.2.3
+  - bc
   - pip:
     - PyYAML==5.3.1
