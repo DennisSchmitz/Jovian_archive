@@ -479,11 +479,27 @@ elif [ "${MAKE_SAMPLE_SHEET}" == "TRUE" ] && [ -s config/variables.yaml ]; then
     exit 0
 fi
 
+###> Here the UNIQUE_ID and HOSTNAME variables are actually set
+if [ ! -s config/variables.yaml ]; then #? If config/variables.yaml does not exist or is empty...
+    echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > config/variables.yaml
+    echo -e "Server_host:\n    hostname: http://${HOSTNAME}" >> config/variables.yaml
+    eval $(parse_yaml config/variables.yaml "config_")
+else
+    eval $(parse_yaml config/variables.yaml "config_")
+fi
 
 ###> Unlock snakemake if, for some reason, snakemake was unable to unlock the working directory by itself
 if [ "${SNAKEMAKE_UNLOCK}" == "TRUE" ]; then
     printf "\nUnlocking working directory...\n"
-    snakemake -s bin/Snakefile --profile "${PROFILE}" --unlock
+    if [ "${workflow}" == "ILM_META" ]; then
+        snakemake -s bin/Illumina_Meta.smk --profile "${PROFILE}" --unlock
+    fi
+    if [ "${workflow}" == "ILM_REF" ]; then
+        snakemake -s bin/Illumina_vir_Ref.smk --profile "${PROFILE}" --unlock
+    fi
+    if [ "${workflow}" == "NANO_REF" ]; then
+        snakemake -s bin/Nano_vir_Ref.smk --profile "${PROFILE}" --unlock
+    fi
     printf "\nDone.\n"
     exit 0
 fi
@@ -512,16 +528,6 @@ fi
 
 ready_for_start
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
-
-###> Here the UNIQUE_ID and HOSTNAME variables are actually set
-if [ ! -s config/variables.yaml ]; then #? If config/variables.yaml does not exist or is empty...
-    echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > config/variables.yaml
-    echo -e "Server_host:\n    hostname: http://${HOSTNAME}" >> config/variables.yaml
-    eval $(parse_yaml config/variables.yaml "config_")
-else
-    eval $(parse_yaml config/variables.yaml "config_")
-fi
 
 ###> Core Jovian workflow snakemake command with checkers for required files.
 
