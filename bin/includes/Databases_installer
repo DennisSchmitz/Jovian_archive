@@ -366,7 +366,7 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
             # ! download new_taxdump db
             cd "${DB_PATH_NTAX}" || exit
             printf "\nDownloading NCBI New_taxdump database... \n"
-            wget -O new_taxdump.tar.gz -L ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
+            wget -O new_taxdump.tar.gz ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
             wget -O new_taxdump.tar.gz.md5 https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
             if md5sum -c new_taxdump.tar.gz.md5
             then
