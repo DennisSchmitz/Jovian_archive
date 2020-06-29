@@ -40,8 +40,6 @@ eval "$(parse_yaml config/pipeline_parameters.yaml "params_")"
 eval "$(parse_yaml config/config.yaml "configuration_")"
 set +o allexport
 
-supp_workflow=( "'Illumina-metagenomics'" "'Illumina-reference'" "'Nanopore-reference'" )
-
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #@ Parse the jovian commandline arguments.
 #@ If the given arguments are not part of Jovian, then Jovian will send them to Snakemake

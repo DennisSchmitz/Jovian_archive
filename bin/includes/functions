@@ -104,7 +104,7 @@ database_part() {
     local steps="7"
     local d="${split}
     Starting download and installation of the $a database${split}
-    The entire procedure of installing all required databases may require several hours, depending on (internet) performance of you computer and/or server.${split}
+    The entire procedure of installing all required databases may require several hours, depending onthe download speed and performance of your computer and/or server.${split}
     This is step $n of $steps${split}
     Please stand-by..."
     echo -e "\e[7m"
