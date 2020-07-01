@@ -6,8 +6,9 @@ minispacer
 line
 ARCHIVE_NAME=$(ls archive_*.tar.gz)
 echo -e "Unpacking ${ARCHIVE_NAME}"
-(tar -xzf archive_*.tar.gz) &
-spinner
+start_spinner "Unpacking ${ARCHIVE_NAME}"
+tar -xzf archive_*.tar.gz
+stop_spinner $?
 
 minispacer
 line
