@@ -315,7 +315,14 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
     printf "\e[40;91m this/path/is/also/incorrect \e[0m\n"
     minispacer
 
-    while read -r -e -p "Please type out the path under which you want to install the BLAST NT database: " db_path_indiv_NT_response; read -r -e -p "Please type out the path under which you want to install the TaxDB: " db_path_indiv_taxdb_response; read -r -e -p "Please type out the path under which you want to install the NewTaxdump database: " db_path_indiv_ntax_response; read -r -e -p "Please type out the path under which you want to install the MGKit database: " db_path_indiv_mgkit_response; read -r -e -p "Please type out the path under which you want to install the Krona LCA database: " db_path_indiv_krona_response; read -r -e -p "please type out the path under which you want to install the VirusHost Interaction database: " db_path_indiv_vhost_response; read -r -e -p "please type out the path under which you want to install the Human Genome background reference: " db_path_indiv_hugo_response
+    while
+    read -r -e -p "Please type out the path under which you want to install the BLAST NT database: " db_path_indiv_NT_response;
+    read -r -e -p "Please type out the path under which you want to install the TaxDB: " db_path_indiv_taxdb_response;
+    read -r -e -p "Please type out the path under which you want to install the NewTaxdump database: " db_path_indiv_ntax_response;
+    read -r -e -p "Please type out the path under which you want to install the MGKit database: " db_path_indiv_mgkit_response;
+    read -r -e -p "Please type out the path under which you want to install the Krona LCA database: " db_path_indiv_krona_response;
+    read -r -e -p "please type out the path under which you want to install the VirusHost Interaction database: " db_path_indiv_vhost_response;
+    read -r -e -p "please type out the path under which you want to install the Human Genome background reference: " db_path_indiv_hugo_response
     do
         db_path_indiv_NT_response=${db_path_indiv_NT_response}
         db_path_indiv_taxdb_response=${db_path_indiv_taxdb_response}
