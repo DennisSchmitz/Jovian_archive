@@ -91,20 +91,6 @@ function stop_spinner {
     unset _sp_pid
 }
 
-
-spinner() {
-    PID=$!
-    i=1
-    sp="/-\|"
-    echo -n ' '
-    while [ -d /proc/$PID ]
-    do
-        printf "\b${sp:i++%${#sp}:1}"
-        sleep 0.2
-    done
-    printf "\b"
-}
-
 installer_intro() {
     tput reset
     line
