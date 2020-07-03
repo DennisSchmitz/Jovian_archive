@@ -13,22 +13,22 @@ minispacer
 line
 minispacer
 
-eval $(parse_yaml profile/variables.yaml "vars_")
+eval $(parse_yaml config/variables.yaml "vars_")
 oldhostname="$vars_Server_host_hostname"
 newhostname="http://${HOSTNAME}"
 
 
 ###### Modifying the HTML index file for IGVjs
-if [ -e results/IGVjs_index.html ]; then
+if [ -e results/igv.html ]; then
     echo -e "Modifying IGVjs index file..."
-    sed -i -e "s@${oldhostname}@${newhostname}@g" "results/IGVjs_index.html"
+    sed -i -e "s@${oldhostname}@${newhostname}@g" "results/igv.html"
 fi
 
 
-if [ -e profile/variables.yaml ]; then
+if [ -e config/variables.yaml ]; then
     echo -e "Resetting some of the variables..."
-    sed '3,4d' -i profile/variables.yaml
-    echo -e "Server_host:\n    hostname: http://${HOSTNAME}" >> profile/variables.yaml
+    sed '3,4d' -i config/variables.yaml
+    echo -e "Server_host:\n    hostname: http://${HOSTNAME}" >> config/variables.yaml
 fi
 
 minispacer
@@ -39,7 +39,7 @@ minispacer
 
 if [ ! -h /tmp/etc/nginx/default-site/$vars_Jovian_run_identifier ]; then
     echo -e "Setting symlink..."
-    bin/set_symlink.sh
+    bin/scripts/set_symlink.sh
 else
     echo "Symlink has already been set"
 fi
