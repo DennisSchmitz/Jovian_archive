@@ -9,17 +9,37 @@ eval "$(parse_yaml config/config.yaml "configuration_")"
 #? ==> strict mode first as it is the primary usage mode
 #?############################################
 
+##@ vars
+cur_trim="${params_Illumina_Clean_quality_trimming_config}"
+cur_len="${params_Illumina_meta_minlen}"
+
+strict_trim="SLIDINGWINDOW:5:30"
+strict_len="500"
+
+relaxed_trim="SLIDINGWINDOW:5:20"
+relaxed_len="250"
+
+var_strict_trim="        quality_trimming_config: ${strict_trim}"
+var_strict_len="    minlen: ${strict_len}"
+
+var_rel_trim="        quality_trimming_config: ${relaxed_trim}"
+var_rel_len="    minlen: ${relaxed_len}"
+
 if [ "${JOVIAN_MODE}" == "strict" ]; then
+    
     #* Check the settings for the slidingwindow and change it when the setting does not match :5:30
-    if [ "$params_Trimmomatic_quality_trimming_config" != "SLIDINGWINDOW:5:30" ]; then
-        sed -i "s/    quality_trimming_config: $params_Trimmomatic_quality_trimming_config/    quality_trimming_config: SLIDINGWINDOW:5:30/g" config/pipeline_parameters.yaml
+    if [ "${cur_trim}" != "SLIDINGWINDOW:5:30" ]; then
+        sed -i "s~.*quality_trimming_config:.*~${var_strict_trim}~g" "${PROFILE}"/pipeline_parameters.yaml
     fi
+    
     #* Check the settings for the minlen filtering and change it when the setting does not match 500
-    if [ "$params_Illumina_meta_minlen" != "500" ]; then
-        sed -i "s/    minlen: $params_Illumina_meta_minlen/    minlen: 500/g" config/pipeline_parameters.yaml
+    if [ "${cur_len}" != "500" ]; then
+        sed -i "s~.*minlen:.*~${var_strict_len}~g" "${PROFILE}"/pipeline_parameters.yaml
     fi
+    
     echo -e "Strict mode set..."
-    exit 0
+    exit 1
+
 fi
 
 #?############################################
@@ -29,16 +49,20 @@ fi
 
 
 if [ "${JOVIAN_MODE}" == "relaxed" ]; then
+
     #* Check the settings for the slidingwindow and change it when the setting does not match :5:20
-    if [ "$params_Trimmomatic_quality_trimming_config" != "SLIDINGWINDOW:5:20" ]; then
-        sed -i "s/    quality_trimming_config: $params_Trimmomatic_quality_trimming_config/    quality_trimming_config: SLIDINGWINDOW:5:20/g" config/pipeline_parameters.yaml
+    if [ "${cur_trim}" != "SLIDINGWINDOW:5:20" ]; then
+        sed -i "s~.*quality_trimming_config:.*~${var_rel_trim}~g" "${PROFILE}"/pipeline_parameters.yaml
     fi
+
     #* Check the settings for the minlen filtering and change it when the setting does not match 250
-    if [ "$params_Illumina_meta_minlen" != "250" ]; then
-        sed -i "s/    minlen: $params_Illumina_meta_minlen/    minlen: 250/g" config/pipeline_parameters.yaml
+    if [ "${cur_len}" != "250" ]; then
+        sed -i "s~.*minlen:.*~${var_rel_len}~g" "${PROFILE}"/pipeline_parameters.yaml
     fi
+    
     echo -e "Relaxed mode set..."
-    exit 0
+    exit 1
+
 fi
 
 
@@ -48,20 +72,23 @@ fi
 #@############################################
 
 if [[ ! "${JOVIAN_MODE}" =~ ^(relaxed|strict)$ ]]; then
+    
     #* Check if parameters match with strict mode
-    if [ "$params_Trimmomatic_quality_trimming_config" == "SLIDINGWINDOW:5:30" ] && [ "$params_Illumina_meta_minlen" == "500" ]; then
+    if [ "$cur_trim" == "SLIDINGWINDOW:5:30" ] && [ "$cur_len" == "500" ]; then
         echo -e "Jovian is set to run in strict mode"
         exit 0
     fi
+    
     #* Check if parameters match with relaxed mode
-    if [ "$params_Trimmomatic_quality_trimming_config" == "SLIDINGWINDOW:5:20" ] && [ "$params_Illumina_meta_minlen" == "250" ]; then
+    if [ "$cur_trim" == "SLIDINGWINDOW:5:20" ] && [ "$cur_len" == "250" ]; then
         echo -e "Jovian is set to run in relaxed mode"
         exit 0
     fi
+    
     #* Check if parameters do not match with any of the predefined modes, exit if true
-    if [[ ! "$params_Trimmomatic_quality_trimming_config" =~ ^(SLIDINGWINDOW:5:20|SLIDINGWINDOW:5:30)$ ]]; then
+    if [[ ! "$cur_trim" =~ ^(SLIDINGWINDOW:5:20|SLIDINGWINDOW:5:30)$ ]]; then
         JOVIAN_MODE="CUSTOM"
-    elif [[ ! "$params_Illumina_meta_minlen" =~ ^(250|500)$ ]]; then
+    elif [[ ! "$cur_len" =~ ^(250|500)$ ]]; then
         JOVIAN_MODE="CUSTOM"
     fi
 fi
