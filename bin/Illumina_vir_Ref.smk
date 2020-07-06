@@ -138,6 +138,7 @@ rule all:
                                     '_pct.tsv'
                                     ]
                 ), # Output of the BoC analysis #TODO can probably removed after the concat rule is added.
+        f"{res}SNPs.tsv",
         f"{res}BoC_int.tsv", # Integer BoC overview in .tsv format
         f"{res}BoC_pct.tsv", # Percentage BoC overview in .tsv format
         expand( "{p}{ref}_{extension}",
@@ -233,6 +234,7 @@ include: f"{rls}ILM_Ref_extract_raw_cons.smk"
 
 include: f"{rls}ILM_Ref_extract_clean_cons.smk"
 
+include: f"{rls}ILM_Ref_concat-snips.smk"
 
 include: f"{rls}ILM_Ref_boc_covs.smk"
 
