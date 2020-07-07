@@ -59,14 +59,11 @@ rule all:
                                         '30',
                                         '100'
                                         ]),
-        expand( f"{res}BoC_int.tsv"
-                ),
-        expand( f"{res}BoC_pct.tsv"
-                ),
-        expand( f"{res}igv.html"
-                ),
-        expand( f"{res}multiqc.html"
-                )
+        f"{res}BoC_int.tsv",
+        f"{res}BoC_pct.tsv",
+        f"{res}igv.html",
+        f"{res}multiqc.html",
+        f"{res}SNPs.tsv"
 
     #>############################################################################
     #>#### Data quality control and cleaning                                 #####
@@ -93,6 +90,8 @@ include: f"{rls}Nano_Ref_alignment_pt2.smk"
 include: f"{rls}Nano_Ref_raw-consensus.smk"
 
 include: f"{rls}Nano_Ref_clean-consensus.smk"
+
+include: f"{rls}Nano_Ref_concat-snips.smk"
 
 include: f"{rls}Nano_Ref_calc-boc.smk"
 
