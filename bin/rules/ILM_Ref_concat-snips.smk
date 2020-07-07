@@ -1,8 +1,7 @@
 
 rule SNP_table:
     input:
-        expand( "{path}{sample}_calls.vcf.gz",
-                path = f"{datadir + cons + raw}",
+        expand( rules.Illumina_extract_raw_consensus.output.gzipped_vcf,
                 sample  =   SAMPLES
                 )
     output: f"{res}SNPs.tsv",

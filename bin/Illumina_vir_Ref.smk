@@ -107,11 +107,11 @@ rule all:
                                     'MarkDup_metrics'
                                     ]
                 ), # The reference alignment (bam format) files.
-        expand( "{p}{sample}_{extension}",
+        expand( "{p}{sample}{extension}",
                 p           =   f"{datadir + cons + raw}",
                 sample      =   SAMPLES,
-                extension   =   [   'calls.vcf.gz', 
-                                    'raw_consensus.fa'
+                extension   =   [   '.vcf.gz', 
+                                    '_raw_consensus.fa'
                                     ]
                 ), # A zipped vcf file contained SNPs versus the given reference and a IlluminaW consensus sequence, see explanation below for the meaning of IlluminaW.
         expand( "{p}{sample}.bedgraph",

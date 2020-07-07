@@ -3,7 +3,7 @@ rule Illumina_extract_raw_consensus:
         bam         =   rules.Illumina_align_to_reference.output.sorted_bam,
         reference   =   rules.Illumina_index_reference.output.reference_copy,
     output: #TODO check if it can use bcf output instead of vcf for downstream processing, saves diskspace, but not a huge differences for small viral genomes. Would require changes in the igvjs index
-        gzipped_vcf         = f"{datadir + cons + raw}" + "{sample}_calls.vcf.gz",
+        gzipped_vcf         = f"{datadir + cons + raw}" + "{sample}.vcf.gz",
         raw_consensus_fasta = f"{datadir + cons + raw}" + "{sample}_raw_consensus.fa",
     conda:
         f"{conda_envs}Illumina_ref_alignment.yaml"
