@@ -59,6 +59,14 @@ rule all:
                                         '30',
                                         '100'
                                         ]),
+        expand( "{p}{sample}_fastqc{ext}",
+                p       =   [   f"{datadir + qc_pre}",
+                                f"{datadir + qc_post}"
+                                ],
+                sample  =   SAMPLES,
+                ext     =   [   '.zip',
+                                '.html'
+                                ]),
         f"{res}BoC_int.tsv",
         f"{res}BoC_pct.tsv",
         f"{res}igv.html",
@@ -73,11 +81,15 @@ include: f"{rls}Nano_Ref_index.smk"
 include: f"{rls}Nano_Ref_ORF-analysis.smk"
 include: f"{rls}Nano_Ref_GC-content.smk"
 
+include: f"{rls}Nano_Ref_pre_qc.smk"
+
 include: f"{rls}Nano_Ref_adp_trim.smk"
 
 include: f"{rls}Nano_Ref_Cut-primers.smk"
 
 include: f"{rls}Nano_Ref_Cleanup.smk"
+
+include: f"{rls}Nano_Ref_post-qc.smk"
 
 include: f"{rls}Nano_Ref_HuGo_removal_pt1.smk"
 

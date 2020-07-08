@@ -3,13 +3,16 @@
 
 rule MultiQC_report:
     input: 
-        #expand("{l}Cleanup_{sample}.log", l = logdir, sample = SAMPLES),
-        expand( "{p}{sample}.fastp.json",
-                p       =   f"{datadir + cln + json}",
+        expand( rules.raw_quality_control.output.zip,
                 sample  =   SAMPLES
                 ),
-        expand( "{l}Primer_removal_{sample}.log",
-                l       =   logdir,
+        expand( rules.cleaned_quality_control.output.zip,
+                sample  =   SAMPLES
+                ),
+        expand( rules.Cleanup.output.qc_json,
+                sample  =   SAMPLES
+                ),
+        expand( rules.Cut_primers.log,
                 sample  =   SAMPLES
                 )
     output: 

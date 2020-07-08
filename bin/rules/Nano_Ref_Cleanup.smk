@@ -6,8 +6,8 @@ rule Cleanup:
     input:
         fastq   =   rules.Cut_primers.output.cleaneddata_pt1
     output:
-        qc_fastq    =   f"{datadir + cln + datadir}" + "{sample}.fastq",
-        qc_html     =   f"{datadir + cln + html}" + "{sample}.html",
+        qc_fastq    =   f"{datadir + cln + datadir}" + "{sample}.fastp.fastq",
+        qc_html     =   f"{datadir + cln + html}" + "{sample}.fastp.html",
         qc_json     =   f"{datadir + cln + json}" + "{sample}.fastp.json"
     conda:
         f"{conda_envs}QC_and_clean.yaml"
