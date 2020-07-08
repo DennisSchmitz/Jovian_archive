@@ -7,9 +7,9 @@ rule cleaned_quality_control:
     conda:
         f"{conda_envs}QC_and_clean.yaml"
     log:
-        f"{logdir}" + "FASTQC_PRECLEAN_{sample}.log"
+        f"{logdir}" + "cleaned_quality_control_{sample}.log"
     benchmark:
-        f"{logdir + bench}" + "FASTQC_PRECLEAN_{sample}.txt"
+        f"{logdir + bench}" + "cleaned_quality_control_{sample}.txt"
     threads: 1
     params:
         outdir  =   f"{datadir + qc_post}"
