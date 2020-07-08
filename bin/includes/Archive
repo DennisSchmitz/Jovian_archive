@@ -47,7 +47,6 @@ fi
 
 
 if [ "${should_i_archive}" == "yes" ]; then
-    ##> do the things my guy
 
     #@ array of "desired" archive contents
     a=(
