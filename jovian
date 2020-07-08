@@ -533,7 +533,7 @@ ready_for_start
 if [ "${workflow}" == "ILM_META" ]; then
     echo -e "Starting the \"${nicename}\" workflow."
     set +ue #turn off bash strict mode because snakemake and conda don't work in strict mode
-    snakemake -s bin/Illumina_Meta.smk --conda-frontend mamba --profile "${PROFILE}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
+    snakemake -s bin/Illumina_Meta.smk --conda-frontend conda --profile "${PROFILE}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
     set -ue #turn bash strict mode back on
     exit 0
 fi
@@ -542,7 +542,7 @@ fi
 if [ "${workflow}" == "ILM_REF" ]; then
     echo -e "Starting the \"${nicename}\" workflow."
     set +ue #turn off bash strict mode because snakemake and conda don't work in strict mode
-    snakemake -s bin/Illumina_vir_Ref.smk --conda-frontend mamba --profile "${PROFILE}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
+    snakemake -s bin/Illumina_vir_Ref.smk --conda-frontend conda --profile "${PROFILE}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
     set -ue #turn bash strict mode back on
     exit 0
 fi
@@ -551,7 +551,7 @@ fi
 if [ "${workflow}" == "NANO_REF" ]; then
     echo -e "Starting the \"${nicename}\" workflow."
     set +ue
-    snakemake -s bin/Nano_vir_Ref.smk --conda-frontend mamba --profile "${PROFILE}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
+    snakemake -s bin/Nano_vir_Ref.smk --conda-frontend conda --profile "${PROFILE}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
     set -ue
     exit 0
 fi
