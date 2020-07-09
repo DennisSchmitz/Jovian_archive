@@ -9,9 +9,6 @@ rule MultiQC_report:
         expand( rules.cleaned_quality_control.output.zip,
                 sample  =   SAMPLES
                 ),
-        expand( rules.Cleanup.output.qc_json,
-                sample  =   SAMPLES
-                ),
         expand( rules.Cut_primers.log,
                 sample  =   SAMPLES
                 )
