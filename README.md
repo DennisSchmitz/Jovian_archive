@@ -1,8 +1,9 @@
 # Jovian, user-friendly Public Health toolkit
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Snakemake](https://img.shields.io/badge/snakemake-≥5.17.0-brightgreen.svg?style=flat)](https://snakemake.readthedocs.io)
-[![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/DennisSchmitz/Jovian?include_prereleases)](https://github.com/DennisSchmitz/Jovian/releases)
+[![Snakemake](https://img.shields.io/badge/snakemake-≥5.20.1-brightgreen.svg?style=flat)](https://snakemake.readthedocs.io)
+[![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/DennisSchmitz/Jovian?include_prereleases)](https://github.com/DennisSchmitz/Jovian/releases)  
+[![Documentation](https://github.com/florianzwagemaker/jovian-docs/workflows/Documentation%20build/badge.svg?branch=master)](https://florianzwagemaker.github.io/jovian-docs/)
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/DennisSchmitz/Jovian_binder/master?filepath=Notebook_report.ipynb)
 
