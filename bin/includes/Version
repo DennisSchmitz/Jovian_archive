@@ -2,3 +2,14 @@
 # shellcheck disable=SC1091
 
 echo -e "Jovian: ${VERSION}"
+
+
+git_state="$(git symbolic-ref -q HEAD)"
+git_branch="${git_state##refs/heads/}"
+
+
+if [ "${git_branch}" == "dev" ]; then
+    minispacer
+    echo -e "You seem to be using the \"dev\" branch instead of a released version of Jovian"
+    echo -e "The URL for the code which you're currently using is: https://github.com/DennisSchmitz/Jovian/tree/$(git log -n 1 --pretty=format:"%H")"
+fi
