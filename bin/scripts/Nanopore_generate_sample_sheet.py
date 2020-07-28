@@ -22,26 +22,29 @@ import re
 import yaml
 
 
-fq_pattern = re.compile("(.*)\.f(ast)?q(\.gz)?") # Fix for issue 88, see https://github.com/DennisSchmitz/Jovian/issues/88
+fq_pattern = re.compile(
+    "(.*)\.f(ast)?q(\.gz)?"
+)  # Fix for issue 88, see https://github.com/DennisSchmitz/Jovian/issues/88
 
 
 def main(args):
     assert args.dir.is_dir(), "Argument must be a directory."
-    
+
     samples = {}
     for file_ in args.dir.iterdir():
         if file_.is_dir():
             continue
         match = fq_pattern.fullmatch(file_.name)
         if match:
-          file = str(file_)
-          sample = samples.setdefault(match.group(1), file)
+            file = str(file_)
+            sample = samples.setdefault(match.group(1), file)
 
     print(yaml.dump(samples, default_flow_style=False))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("dir", type=pathlib.Path, 
-                       help="Directory where input files are located")
+    parser.add_argument(
+        "dir", type=pathlib.Path, help="Directory where input files are located"
+    )
     main(parser.parse_args())
