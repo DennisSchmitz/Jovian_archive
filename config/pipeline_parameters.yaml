@@ -17,14 +17,14 @@ primer_file: NONE
 
 threads:
     Clean_the_data: 4
-    HuGo_removal: 14
-    De_novo_assembly: 14
+    HuGo_removal: 12
+    De_novo_assembly: 12
     Classification_of_scaffolds: 12
-    SNP_calling: 14
+    SNP_calling: 12
     Fragment_length_analysis: 4
     quantify_output: 4
     # Settings for the Illumina-reference workflow
-    Illumina_align_to_reference: 14
+    Illumina_align_to_reference: 12
     # Settings for the Nanopore-reference workflow
     Adapter_trimming_cpu: 26
     Nanopore_reference_alignment: 26
