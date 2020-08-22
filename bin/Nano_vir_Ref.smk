@@ -39,10 +39,6 @@ reference_basename  =   os.path.splitext(os.path.basename(reference))[0]
 
 rule all:
     input: 
-        expand( "{p}{sample}.fasta",
-                p       =   f"{datadir + cons + raw}", 
-                sample  =   SAMPLES
-                ),
         expand( "{p}{sample}_cov_ge_{thresholds}.fa",
                 p               =   f"{res + seqs}",
                 sample          =   SAMPLES,
@@ -60,8 +56,8 @@ rule all:
                 ext     =   [   '.zip',
                                 '.html'
                                 ]),
-        #f"{res}BoC_int.tsv",
-        #f"{res}BoC_pct.tsv",
+        f"{res}BoC_int.tsv",
+        f"{res}BoC_pct.tsv",
         f"{res}igv.html",
         f"{res}multiqc.html",
         f"{res}SNPs.tsv"
@@ -88,19 +84,27 @@ include: f"{rls}Nano_Ref_HuGo_removal_pt1.smk"
 
 include: f"{rls}Nano_Ref_HuGo_removal_pt2.smk"
 
+    #>############################################################################
+    #>#### Alignments and concensus
+    #>############################################################################
+
 include: f"{rls}Nano_Ref_alignment_pt1.smk"
 
 include: f"{rls}Nano_Ref_alignment_pt2.smk"
 
-include: f"{rls}Nano_Ref_raw-consensus.smk"
+include: f"{rls}Nano_Ref_consensus.smk"
 
-include: f"{rls}Nano_Ref_clean-consensus.smk"
+include: f"{rls}Nano_Ref_coverage.smk"
+
+    #>############################################################################
+    #>#### Statistics and insights
+    #>############################################################################
 
 include: f"{rls}Nano_Ref_concat-snips.smk"
 
-#include: f"{rls}Nano_Ref_calc-boc.smk"
+include: f"{rls}Nano_Ref_calc-boc.smk"
 
-#include: f"{rls}Nano_Ref_concat-boc.smk"
+include: f"{rls}Nano_Ref_concat-boc.smk"
 
 include: f"{rls}Nano_Ref_IGVjs.smk"
 
@@ -126,11 +130,11 @@ onsuccess:
 onstart:
     try:
         print("Checking if all specified files are accessible...")
-        for filename in [ config["databases"]["background_ref"],
-                         config["databases"]["Krona_taxonomy"],
-                         config["databases"]["virusHostDB"],
-                         config["databases"]["NCBI_new_taxdump_rankedlineage"],
-                         config["databases"]["NCBI_new_taxdump_host"] ]:
+        for filename in [   config["databases"]["background_ref"],
+                            config["databases"]["Krona_taxonomy"],
+                            config["databases"]["virusHostDB"],
+                            config["databases"]["NCBI_new_taxdump_rankedlineage"],
+                            config["databases"]["NCBI_new_taxdump_host"] ]:
             if not os.path.exists(filename):
                 raise FileNotFoundError(filename)
     except FileNotFoundError as e:
