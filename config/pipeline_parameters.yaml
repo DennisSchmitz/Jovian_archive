@@ -6,7 +6,7 @@
 WrapperSettings:
     ReadlengthDetection: true
 
- 
+
 sample_sheet: sample_sheet.yaml
 reference_file: NONE
 primer_file: NONE
@@ -26,10 +26,10 @@ threads:
     # Settings for the Illumina-reference workflow
     Illumina_align_to_reference: 12
     # Settings for the Nanopore-reference workflow
-    Adapter_trimming_cpu: 26
-    Nanopore_reference_alignment: 26
-    Nanopore_cleanup: 26
-    Nanopore_primer_removal: 26
+    Adapter_trimming_cpu: 6
+    Nanopore_reference_alignment: 6
+    Nanopore_cleanup: 12
+    Nanopore_primer_removal: 6
 
 ######################################
 ### Pipeline parameters            ###

@@ -44,9 +44,9 @@ if [ $params_WrapperSettings_ReadlengthDetection == "true" ]; then
         sum=0
         while [ $n -gt 0 ]
         do
-        	num=${avg_readlength[$((n -1))]}
-        	sum=$((sum + num))
-        	n=$((n - 1))
+            num=${avg_readlength[$((n -1))]}
+            sum=$((sum + num))
+            n=$((n - 1))
         done
         avg=$(echo "$sum / $m" | bc -l)
         AVERAGE=$(printf '%0.0f' "$avg")
