@@ -3,23 +3,17 @@
 
 rule extract_cleaned_consensus:
     input:
-        raw_consensus   =   rules.Create_raw_consensus.output.consensus,
         bam             =   rules.Align_to_reference_pt1.output.bam
     output:
-        bedgraph                            =   f"{datadir + cons + filt}" + "{sample}.bedgraph",
-        filt_consensus_N_filt_ge_1          =   f"{res + seqs}" + "{sample}_N-filt_cov_ge_1.fa",
-        filt_consensus_N_filt_ge_5          =   f"{res + seqs}" + "{sample}_N-filt_cov_ge_5.fa",
-        filt_consensus_N_filt_ge_10         =   f"{res + seqs}" + "{sample}_N-filt_cov_ge_10.fa",
-        filt_consensus_N_filt_ge_30         =   f"{res + seqs}" + "{sample}_N-filt_cov_ge_30.fa",
-        filt_consensus_N_filt_ge_100        =   f"{res + seqs}" + "{sample}_N-filt_cov_ge_100.fa",
-        filt_consensus_minus_filt_ge_1      =   f"{res + seqs}" + "{sample}_minus-filt_cov_ge_1.fa",
-        filt_consensus_minus_filt_ge_5      =   f"{res + seqs}" + "{sample}_minus-filt_cov_ge_5.fa",
-        filt_consensus_minus_filt_ge_10     =   f"{res + seqs}" + "{sample}_minus-filt_cov_ge_10.fa",
-        filt_consensus_minus_filt_ge_30     =   f"{res + seqs}" + "{sample}_minus-filt_cov_ge_30.fa",
-        filt_consensus_minus_filt_ge_100    =   f"{res + seqs}" + "{sample}_minus-filt_cov_ge_100.fa"
+        consensus_1     =   f"{res + seqs}" + "{sample}_cov_ge_1.fa",
+        consensus_5     =   f"{res + seqs}" + "{sample}_cov_ge_5.fa",
+        consensus_10    =   f"{res + seqs}" + "{sample}_cov_ge_10.fa",
+        consensus_30    =   f"{res + seqs}" + "{sample}_cov_ge_30.fa",
+        consensus_100   =   f"{res + seqs}" + "{sample}_cov_ge_100.fa"
     params:
-        output_data_folder      =   f"{datadir + cons + filt}",
-        output_results_folder   =   f"{res + seqs}"
+        output_results_folder   =   f"{res + seqs}",
+        coverages   =   [ '1', '5', '10', '30', '100' ],
+        filename    =   "{sample}_cov_ge_"
     conda:
         f"{conda_envs}Nano_ref_alignment.yaml"
     log:
@@ -29,6 +23,5 @@ rule extract_cleaned_consensus:
     threads: 1
     shell:
         """
-bash bin/scripts/consensus_at_diff_coverages.sh {wildcards.sample} {input.bam} {input.raw_consensus} \
-{params.output_data_folder} {params.output_results_folder} {log} >> {log} 2>&1
+python bin/scripts/ConsensusFromBam.py -input {input.bam} -output {params.output_results_folder}{params.filename}{params.coverages} -cov {params.coverages} -name consensus_{params.filename}{params.coverages}
         """

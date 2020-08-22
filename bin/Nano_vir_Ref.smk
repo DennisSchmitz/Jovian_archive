@@ -43,16 +43,9 @@ rule all:
                 p       =   f"{datadir + cons + raw}", 
                 sample  =   SAMPLES
                 ),
-        expand("{p}{sample}.bedgraph", 
-                p       =   f"{datadir + cons + filt}",
-                sample  =   SAMPLES
-                ),
-        expand( "{p}{sample}_{filt_character}-filt_cov_ge_{thresholds}.fa",
+        expand( "{p}{sample}_cov_ge_{thresholds}.fa",
                 p               =   f"{res + seqs}",
                 sample          =   SAMPLES,
-                filt_character  =   [   'N',
-                                        'minus'
-                                        ],
                 thresholds      =   [   '1',
                                         '5', 
                                         '10',
@@ -67,8 +60,8 @@ rule all:
                 ext     =   [   '.zip',
                                 '.html'
                                 ]),
-        f"{res}BoC_int.tsv",
-        f"{res}BoC_pct.tsv",
+        #f"{res}BoC_int.tsv",
+        #f"{res}BoC_pct.tsv",
         f"{res}igv.html",
         f"{res}multiqc.html",
         f"{res}SNPs.tsv"
@@ -105,9 +98,9 @@ include: f"{rls}Nano_Ref_clean-consensus.smk"
 
 include: f"{rls}Nano_Ref_concat-snips.smk"
 
-include: f"{rls}Nano_Ref_calc-boc.smk"
+#include: f"{rls}Nano_Ref_calc-boc.smk"
 
-include: f"{rls}Nano_Ref_concat-boc.smk"
+#include: f"{rls}Nano_Ref_concat-boc.smk"
 
 include: f"{rls}Nano_Ref_IGVjs.smk"
 
