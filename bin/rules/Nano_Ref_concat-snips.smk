@@ -16,6 +16,6 @@ rule SNP_table:
 echo -e "Sample\tReference AccessionID\tPosition\tType\tReference\tAlternative\tQuality" > {output}
 
 for x in {input}; do
-    bcftools query -f '[%SAMPLE]\t%CHROM\t%POS\t%TYPE\t%REF\t%ALT{{0}}\t%QUAL\n' $x >> {output}
+    bcftools query -f '{input}\t%CHROM\t%POS\t%TYPE\t%REF\t%ALT{{0}}\t%QUAL\n' $x >> {output}
 done
         """
