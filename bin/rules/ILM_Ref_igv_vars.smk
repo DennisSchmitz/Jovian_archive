@@ -3,7 +3,8 @@ rule Illumina_HTML_IGVJs_variable_parts:
         fasta                   =   rules.Illumina_index_reference.output.reference_copy,
         ref_GC_bedgraph         =   rules.Illumina_determine_GC_content.output.GC_bed,
         ref_zipped_ORF_gff      =   rules.Illumina_reference_ORF_analysis.output.zipped_gff3,
-        basepath_zipped_SNP_vcf =   rules.Illumina_extract_raw_consensus.output.gzipped_vcf,
+        basepath_majorSNP_vcf_gz=   rules.Illumina_extract_raw_consensus.output.majorSNP_vcf_gz,
+        basepath_minorSNP_vcf_gz=   rules.Illumina_extract_raw_consensus.output.minorSNP_vcf_gz,
         basepath_sorted_bam     =   rules.Illumina_align_to_reference.output.sorted_bam
     output:
         tab_output      =   f"{datadir + html}" + "2_tab_{sample}",
@@ -24,5 +25,5 @@ bash bin/html/igvjs_write_divs.sh {wildcards.sample} {output.div_output}
 
 bash bin/html/Illumina_igvjs_write_flex_js_middle.sh {wildcards.sample} {output.js_flex_output} \
 {input.fasta} {input.ref_GC_bedgraph} {input.ref_zipped_ORF_gff} \
-{input.basepath_zipped_SNP_vcf} {input.basepath_sorted_bam}
+{input.basepath_majorSNP_vcf_gz} {input.basepath_minorSNP_vcf_gz} {input.basepath_sorted_bam}
         """

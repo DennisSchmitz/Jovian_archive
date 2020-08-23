@@ -266,8 +266,9 @@ onsuccess:
         echo -e "\tRemoving temporary files..."
         if [ "{config[remove_temp]}" != "0" ]; then
             rm -rf {datadir}{html}   # Remove intermediate IGVjs html chunks.
+            rm -rf {datadir}{cln}{hugo_no_rm}    # Remove HuGo alignment files
         else
-            echo -e "\t\tYou chose not to remove temp files, skipping..."
+            echo -e "\t\tYou chose to not remove temp files: the human genome alignment files are not removed."
         fi
 
         echo -e "\tCreating symlinks for the interactive genome viewer..."

@@ -9,8 +9,9 @@ OUTPUT_HTML="$2"
 INPUT_REF_FASTA="$3"
 INPUT_REF_GC_BEDGRAPH="$4"
 INPUT_REF_ZIPPED_ORF_GFF="$5"
-INPUT_ZIPPED_SNP_VCF="$6"
-INPUT_SORTED_BAM="$7"
+INPUT_MAJOR_SNP_VCF_GZ="$6"
+INPUT_MINOR_SNP_VCF_GZ="$7"
+INPUT_SORTED_BAM="$8"
 
 
 SAMPLE="sample_${INPUT//-/_}"
@@ -49,19 +50,34 @@ cat << EOF >> ${OUTPUT_HTML}
                             type: "wig",
                             name: "GC contents",
                             format: "bedGraph",
+                            color: "#fdae61",
                             url: "${vars_Server_host_hostname}:${params_Global_server_port}/${vars_Jovian_run_identifier}/${INPUT_REF_GC_BEDGRAPH}",
                             min: "0",
                             max: "1",
+                            autoHeight: "true",
+                            minHeight: "75",
+                            maxHeight: "125",
                             order: Number.MAX_VALUE
                         },
                         {
-                            name:"SNPs",
-                            type:"variant",
-                            format:"vcf",
-                            url: "${vars_Server_host_hostname}:${params_Global_server_port}/${vars_Jovian_run_identifier}/${INPUT_ZIPPED_SNP_VCF}",
-                            indexURL: "${vars_Server_host_hostname}:${params_Global_server_port}/${vars_Jovian_run_identifier}/${INPUT_ZIPPED_SNP_VCF}.tbi",
-                            displayMode: "SQUISHED",
-                            order: 2
+                            name: "Majority SNPs",
+                            type: "variant",
+                            format: "vcf",
+                            color: "#4dac26",
+                            url: "${vars_Server_host_hostname}:${params_Global_server_port}/${vars_Jovian_run_identifier}/${INPUT_MAJOR_SNP_VCF_GZ}",
+                            indexURL: "${vars_Server_host_hostname}:${params_Global_server_port}/${vars_Jovian_run_identifier}/${INPUT_MAJOR_SNP_VCF_GZ}.tbi",
+                            displayMode: "EXPANDED",
+                            order: 1
+                        },
+                        {
+                            name: "Minority SNPs",
+                            type: "variant",
+                            format: "vcf",
+                            color: "#d01c8b",
+                            url: "${vars_Server_host_hostname}:${params_Global_server_port}/${vars_Jovian_run_identifier}/${INPUT_MINOR_SNP_VCF_GZ}",
+                            indexURL: "${vars_Server_host_hostname}:${params_Global_server_port}/${vars_Jovian_run_identifier}/${INPUT_MINOR_SNP_VCF_GZ}.tbi",
+                            displayMode: "EXPANDED",
+                            order: 3
                         },
                         {
                             type: "alignment",
@@ -73,16 +89,17 @@ cat << EOF >> ${OUTPUT_HTML}
                             name: "Alignment",
                             showSoftClips: false,
                             viewAsPairs: true,
-                            order: 3
+                            order: 4
                         },
                         {
                             type: "annotation",
                             name: "ORF predictions",
                             format: "gff3",
+                            color: "#2c7bb6",
                             url: "${vars_Server_host_hostname}:${params_Global_server_port}/${vars_Jovian_run_identifier}/${INPUT_REF_ZIPPED_ORF_GFF}",
                             indexURL: "${vars_Server_host_hostname}:${params_Global_server_port}/${vars_Jovian_run_identifier}/${INPUT_REF_ZIPPED_ORF_GFF}.tbi",
                             displayMode: "EXPANDED",
-                            order: 1
+                            order: 2
                         }
                     ]
                 },
