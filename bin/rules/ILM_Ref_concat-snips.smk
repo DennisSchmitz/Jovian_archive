@@ -1,7 +1,7 @@
 
 rule SNP_table:
     input:
-        expand( rules.Illumina_extract_raw_consensus.output.majorSNP_vcf_gz,
+        expand( rules.Illumina_extract_raw_consensus.output.majorSNP_vcf_table,
                 sample  =   SAMPLES
                 )
     output: f"{res}SNPs.tsv",
@@ -16,7 +16,5 @@ rule SNP_table:
         """
 echo -e "Sample\tReference AccessionID\tPosition\tType\tReference\tAlternative\tQuality" > {output}
 
-for x in {input}; do
-    bcftools query -f '[%SAMPLE]\t%CHROM\t%POS\t%TYPE\t%REF\t%ALT{{0}}\t%QUAL\n' $x >> {output}
-done
+cat {input} >> {output}
         """

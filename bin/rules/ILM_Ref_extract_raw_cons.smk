@@ -7,6 +7,7 @@ rule Illumina_extract_raw_consensus:
         unfiltered_vcf      = f"{datadir + cons + raw}" + "{sample}_unfiltered.vcf",
         majorSNP_vcf        = f"{datadir + cons + raw}" + "{sample}.vcf",
         majorSNP_vcf_gz     = f"{datadir + cons + raw}" + "{sample}.vcf.gz",
+        majorSNP_vcf_table  = f"{datadir + cons + raw}" + "{sample}.vcf.gz.tsv",
         raw_consensus_fasta = f"{datadir + cons + raw}" + "{sample}_raw_consensus.fa",
         minorSNP_vcf        = f"{datadir + cons + raw}" + "{sample}_minorSNPs.vcf",
         minorSNP_vcf_gz     = f"{datadir + cons + raw}" + "{sample}_minorSNPs.vcf.gz"
@@ -37,4 +38,6 @@ lofreq filter -a {params.min_AF} -A 0.50 -i {output.unfiltered_vcf} -o {output.m
 bgzip -c {output.minorSNP_vcf} 2>> {log} |\
 bcftools norm -m -both -O z -f {input.reference} -o {output.minorSNP_vcf_gz} - >> {log} 2>&1
 tabix {output.minorSNP_vcf_gz} >> {log} 2>&1
+
+bcftools query -f '{wildcards.sample}\t%CHROM\t%POS\t%TYPE\t%REF\t%ALT{{0}}\t%QUAL\n' {output.majorSNP_vcf_gz} > {output.majorSNP_vcf_table}
         """
