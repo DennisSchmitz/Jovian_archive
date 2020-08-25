@@ -46,54 +46,163 @@ import pandas as pd
 from sys import argv
 from Bio import SeqIO
 
-SCRIPT, SAMPLENAME, INPUTBBTOOLS, INPUTKRONA, INPUTSCAFFOLDS, CONTIG_ORF_COUNT_LIST, VIRUSHOSTDB, PATH_TAXDUMP_RANKEDLINEAGE, PATH_TAXDUMP_HOST, OUTPUTFILE_CLASSIFIED_SCAFFOLDS_TAX_TABLE, OUTPUTFILE_UNCLASSIFIED_SCAFFOLDS_TAX_TABLE, OUTPUTFILE_VIRAL_SCAFFOLDS_HOSTS_TABLE = argv
+(
+    SCRIPT,
+    SAMPLENAME,
+    INPUTBBTOOLS,
+    INPUTKRONA,
+    INPUTSCAFFOLDS,
+    CONTIG_ORF_COUNT_LIST,
+    VIRUSHOSTDB,
+    PATH_TAXDUMP_RANKEDLINEAGE,
+    PATH_TAXDUMP_HOST,
+    OUTPUTFILE_CLASSIFIED_SCAFFOLDS_TAX_TABLE,
+    OUTPUTFILE_UNCLASSIFIED_SCAFFOLDS_TAX_TABLE,
+    OUTPUTFILE_VIRAL_SCAFFOLDS_HOSTS_TABLE,
+) = argv
 
 # Import scaffold statistics to df
 perScaffoldStats = pd.read_csv(INPUTBBTOOLS, sep="\t", header=0)
 # Import Krona LCA results to df and replace spaces with underscores
 kronaTaxLCA = pd.read_csv(INPUTKRONA, sep="\t", header=0)
-kronaTaxLCA.columns = kronaTaxLCA.columns.str.replace('\s+','_')
+kronaTaxLCA.columns = kronaTaxLCA.columns.str.replace("\s+", "_")
 # Import virus-host DB and replace spaces with underscores
-virusHostDB = pd.read_csv(VIRUSHOSTDB, sep = "\t", header = 0)
-virusHostDB.columns = virusHostDB.columns.str.replace('\s+','_')
+virusHostDB = pd.read_csv(VIRUSHOSTDB, sep="\t", header=0)
+virusHostDB.columns = virusHostDB.columns.str.replace("\s+", "_")
 # Import assembled scaffold fasta
-scaffolds_dict = {"scaffold_name":[], "scaffold_seq":[]}
+scaffolds_dict = {"scaffold_name": [], "scaffold_seq": []}
 for seq_record in SeqIO.parse(INPUTSCAFFOLDS, "fasta"):
     scaffolds_dict["scaffold_name"].append(seq_record.id)
     scaffolds_dict["scaffold_seq"].append(str(seq_record.seq))
 scaffoldsFasta = pd.DataFrame.from_dict(scaffolds_dict)
 # Import new_taxdump rankedlineage
-colnames_rankedlineage=["tax_id","tax_name","species","genus","family","order","class","phylum","kingdom","superkingdom"]
-taxdump_rankedlineage = pd.read_csv(PATH_TAXDUMP_RANKEDLINEAGE, sep="|", header = None, names=colnames_rankedlineage, low_memory=False)
+colnames_rankedlineage = [
+    "tax_id",
+    "tax_name",
+    "species",
+    "genus",
+    "family",
+    "order",
+    "class",
+    "phylum",
+    "kingdom",
+    "superkingdom",
+]
+taxdump_rankedlineage = pd.read_csv(
+    PATH_TAXDUMP_RANKEDLINEAGE,
+    sep="|",
+    header=None,
+    names=colnames_rankedlineage,
+    low_memory=False,
+)
 # Import new_taxdump host
-colnames_host=["tax_id","potential_hosts"]
-taxdump_host = pd.read_csv(PATH_TAXDUMP_HOST, sep="|", header = None, names=colnames_host, low_memory=False)
+colnames_host = ["tax_id", "potential_hosts"]
+taxdump_host = pd.read_csv(
+    PATH_TAXDUMP_HOST, sep="|", header=None, names=colnames_host, low_memory=False
+)
 # Import per scaffold ORF counts
-colnames_scaffold_orf_count_list=["Nr_ORFs","scaffold_name"]
-contig_orf_count_list = pd.read_csv(CONTIG_ORF_COUNT_LIST, sep="\s+", header = None, names=colnames_scaffold_orf_count_list, low_memory=False)
+colnames_scaffold_orf_count_list = ["Nr_ORFs", "scaffold_name"]
+contig_orf_count_list = pd.read_csv(
+    CONTIG_ORF_COUNT_LIST,
+    sep="\s+",
+    header=None,
+    names=colnames_scaffold_orf_count_list,
+    low_memory=False,
+)
 
 
 # Merge Krona LCA with scaffold metrics
-df1 = pd.merge(perScaffoldStats,kronaTaxLCA, how = "left", left_on = "#ID", right_on = "#queryID").drop("#queryID", axis = 1)
+df1 = pd.merge(
+    perScaffoldStats, kronaTaxLCA, how="left", left_on="#ID", right_on="#queryID"
+).drop("#queryID", axis=1)
 # Merge above df with rankedlineage
-df2 = pd.merge(df1, taxdump_rankedlineage, how = "left", left_on = "taxID", right_on = "tax_id").drop("tax_id", axis = 1)
+df2 = pd.merge(
+    df1, taxdump_rankedlineage, how="left", left_on="taxID", right_on="tax_id"
+).drop("tax_id", axis=1)
 # Merge above df with ORF counts
-df3 = pd.merge(df2, contig_orf_count_list, how = "left", left_on = "#ID", right_on = "scaffold_name").drop("scaffold_name", axis = 1)
+df3 = pd.merge(
+    df2, contig_orf_count_list, how="left", left_on="#ID", right_on="scaffold_name"
+).drop("scaffold_name", axis=1)
 # Merge above df with fasta
-df4 = pd.merge(df3, scaffoldsFasta, how = "left", left_on = "#ID", right_on = "scaffold_name").drop("#ID", axis = 1)
+df4 = pd.merge(
+    df3, scaffoldsFasta, how="left", left_on="#ID", right_on="scaffold_name"
+).drop("#ID", axis=1)
 
 # Add sample name as first column, then reorder df as desired, then replace any spaces with underscores
-df4['Sample_name'] = SAMPLENAME
-colnames = ['Sample_name', 'scaffold_name', 'taxID', 'tax_name', 'Avg._log_e-value', 'species', 'genus', 'family', 'order', 'class', 'phylum', 'kingdom', 'superkingdom', 'Avg_fold', 'Length', 'Ref_GC', 'Nr_ORFs', 'Covered_percent', 'Covered_bases', 'Plus_reads', 'Minus_reads', 'Read_GC', 'Median_fold', 'Std_Dev', 'scaffold_seq']
+df4["Sample_name"] = SAMPLENAME
+colnames = [
+    "Sample_name",
+    "scaffold_name",
+    "taxID",
+    "tax_name",
+    "Avg._log_e-value",
+    "species",
+    "genus",
+    "family",
+    "order",
+    "class",
+    "phylum",
+    "kingdom",
+    "superkingdom",
+    "Avg_fold",
+    "Length",
+    "Ref_GC",
+    "Nr_ORFs",
+    "Covered_percent",
+    "Covered_bases",
+    "Plus_reads",
+    "Minus_reads",
+    "Read_GC",
+    "Median_fold",
+    "Std_Dev",
+    "scaffold_seq",
+]
 df4 = df4.reindex(columns=colnames)
 
 # Slice into classified scaffolds, print to file
-taxClassified=df4.loc[df4['taxID'].notnull()]
-taxClassified.to_csv(OUTPUTFILE_CLASSIFIED_SCAFFOLDS_TAX_TABLE, index = False, sep = "\t")
+taxClassified = df4.loc[df4["taxID"].notnull()]
+taxClassified.to_csv(OUTPUTFILE_CLASSIFIED_SCAFFOLDS_TAX_TABLE, index=False, sep="\t")
 # Slice into unclassified scaffolds, print to file
-taxUnclassified = df4.loc[df4['taxID'].isnull()].drop(["taxID","tax_name","Avg._log_e-value","species","genus","family","order","class","phylum","kingdom","superkingdom"], axis = 1)
-taxUnclassified.to_csv(OUTPUTFILE_UNCLASSIFIED_SCAFFOLDS_TAX_TABLE, index = False, sep = "\t")
+taxUnclassified = df4.loc[df4["taxID"].isnull()].drop(
+    [
+        "taxID",
+        "tax_name",
+        "Avg._log_e-value",
+        "species",
+        "genus",
+        "family",
+        "order",
+        "class",
+        "phylum",
+        "kingdom",
+        "superkingdom",
+    ],
+    axis=1,
+)
+taxUnclassified.to_csv(
+    OUTPUTFILE_UNCLASSIFIED_SCAFFOLDS_TAX_TABLE, index=False, sep="\t"
+)
 # Slice into virus scaffolds with added host/disease information, print to file
-virus_taxa_with_NCBIhosts = pd.merge(taxClassified.loc[taxClassified['superkingdom'] == "Viruses"].iloc[:,[0,1,2]], taxdump_host, how="left", left_on="taxID", right_on="tax_id").drop("tax_id", axis = 1).rename(columns={'potential_hosts':'NCBI_potential_hosts'})
-virusHost_table_raw = pd.merge(virus_taxa_with_NCBIhosts, virusHostDB, how="left", left_on="taxID", right_on="virus_tax_id").drop("virus_tax_id", axis = 1)
-virusHost_table_raw.to_csv(OUTPUTFILE_VIRAL_SCAFFOLDS_HOSTS_TABLE, index = False, sep = "\t")
+virus_taxa_with_NCBIhosts = (
+    pd.merge(
+        taxClassified.loc[taxClassified["superkingdom"] == "Viruses"].iloc[
+            :, [0, 1, 2]
+        ],
+        taxdump_host,
+        how="left",
+        left_on="taxID",
+        right_on="tax_id",
+    )
+    .drop("tax_id", axis=1)
+    .rename(columns={"potential_hosts": "NCBI_potential_hosts"})
+)
+virusHost_table_raw = pd.merge(
+    virus_taxa_with_NCBIhosts,
+    virusHostDB,
+    how="left",
+    left_on="taxID",
+    right_on="virus_tax_id",
+).drop("virus_tax_id", axis=1)
+virusHost_table_raw.to_csv(
+    OUTPUTFILE_VIRAL_SCAFFOLDS_HOSTS_TABLE, index=False, sep="\t"
+)
