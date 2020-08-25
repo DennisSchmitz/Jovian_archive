@@ -10,7 +10,6 @@ rule Illumina_extract_raw_consensus:
         raw_consensus_fasta = f"{datadir + cons + raw}" + "{sample}_raw_consensus.fa",
         minorSNP_vcf        = f"{datadir + cons + raw}" + "{sample}_minorSNPs.vcf",
         minorSNP_vcf_gz     = f"{datadir + cons + raw}" + "{sample}_minorSNPs.vcf.gz"
-
     conda:
         f"{conda_envs}Illumina_ref_alignment.yaml"
     log:
@@ -37,5 +36,5 @@ seqtk seq - > {output.raw_consensus_fasta} 2>> {log}
 lofreq filter -a {params.min_AF} -A 0.50 -i {output.unfiltered_vcf} -o {output.minorSNP_vcf} >> {log} 2>&1
 bgzip -c {output.minorSNP_vcf} 2>> {log} |\
 bcftools norm -m -both -O z -f {input.reference} -o {output.minorSNP_vcf_gz} - >> {log} 2>&1
-#!TODO add minority SNPs to IGVjs
+tabix {output.minorSNP_vcf_gz} >> {log} 2>&1
         """
