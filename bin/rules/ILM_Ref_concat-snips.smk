@@ -1,7 +1,7 @@
 
 rule SNP_table:
     input:
-        expand( rules.Illumina_extract_raw_consensus.output.gzipped_vcf,
+        expand( rules.Illumina_extract_raw_consensus.output.majorSNP_vcf_gz,
                 sample  =   SAMPLES
                 )
     output: f"{res}SNPs.tsv",

@@ -3,7 +3,7 @@ rule Illumina_HTML_IGVJs_variable_parts:
         fasta                   =   rules.Illumina_index_reference.output.reference_copy,
         ref_GC_bedgraph         =   rules.Illumina_determine_GC_content.output.GC_bed,
         ref_zipped_ORF_gff      =   rules.Illumina_reference_ORF_analysis.output.zipped_gff3,
-        basepath_zipped_SNP_vcf =   rules.Illumina_extract_raw_consensus.output.gzipped_vcf,
+        basepath_zipped_SNP_vcf =   rules.Illumina_extract_raw_consensus.output.majorSNP_vcf_gz,
         basepath_sorted_bam     =   rules.Illumina_align_to_reference.output.sorted_bam
     output:
         tab_output      =   f"{datadir + html}" + "2_tab_{sample}",

@@ -25,6 +25,7 @@ threads:
     quantify_output: 4
     # Settings for the Illumina-reference workflow
     Illumina_align_to_reference: 12
+    Illumina_extract_raw_consensus: 6
     # Settings for the Nanopore-reference workflow
     Adapter_trimming_cpu: 26
     Nanopore_reference_alignment: 26
@@ -107,3 +108,10 @@ PCR_dup_removal: true # For development and debug only. Set this to false to NOT
 ######################################
 ### Databases                      ###
 ######################################
+databases:
+    background_ref: /mnt/db/Jovian/Human_genome_without_EBV_no_decoy_GRCh38/genome.fa
+    Krona_taxonomy: /mnt/db/Jovian/krona_taxonomy/
+    virusHostDB: /mnt/db/Jovian/Virus-Host_interaction_db/virushostdb.tsv
+    NCBI_new_taxdump_rankedlineage: /mnt/db/Jovian/new_taxdump/rankedlineage.dmp.delim
+    NCBI_new_taxdump_host: /mnt/db/Jovian/new_taxdump/host.dmp.delim
+    MGKit_taxonomy: /mnt/db/Jovian/mgkit_taxonomy/
