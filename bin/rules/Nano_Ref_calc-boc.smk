@@ -3,7 +3,7 @@
 
 rule calculate_BoC:
     input:
-        bedgraph    =   rules.extract_cleaned_consensus.output.bedgraph,
+        bedgraph    =   rules.genomecoverage.output.bedgraph,
         reference   =   rules.Index_ref.output.refcopy
     output:
         pct_boc_tsv =   f"{datadir + cons + boc}" + "{sample}_BoC_pct.tsv",

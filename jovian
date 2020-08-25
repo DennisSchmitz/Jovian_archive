@@ -324,7 +324,7 @@ fi
 #@
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-###> Check the snakemake version (should be larger or equal to 5.17)
+###> Check the snakemake version
 env_snakever=$(snakemake -v)
 
  if [ !  "$(printf '%s\n' "$req_snakever" "$env_snakever" | sort -V | head -n1)" = "$req_snakever" ]; then 
