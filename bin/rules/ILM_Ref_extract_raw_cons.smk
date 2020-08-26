@@ -24,7 +24,7 @@ rule Illumina_extract_raw_consensus:
         """
 lofreq indelqual --dindel -f {input.reference} -o {output.indelqual_bam} {input.bam} >> {log} 2>&1
 samtools index -@ {threads} {output.indelqual_bam} >> {log} 2>&1
-lofreq call-parallel -d 20000 --no-default-filter --call-indels --pp-threads {threads} -f {input.reference} -o {output.unfiltered_vcf} {output.indelqual_bam} >> {log} 2>&1
+lofreq call-parallel -d 20000 --no-default-filter --call-indels --use-orphan --pp-threads {threads} -f {input.reference} -o {output.unfiltered_vcf} {output.indelqual_bam} >> {log} 2>&1
 
 lofreq filter -a 0.50 -i {output.unfiltered_vcf} -o {output.majorSNP_vcf} >> {log} 2>&1
 bgzip -c {output.majorSNP_vcf} 2>> {log} |\
