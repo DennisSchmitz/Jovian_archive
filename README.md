@@ -1,15 +1,23 @@
 # Jovian, user-friendly Public Health toolkit
 
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Snakemake](https://img.shields.io/badge/snakemake-≥5.20.1-brightgreen.svg?style=flat)](https://snakemake.readthedocs.io)
-[![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/DennisSchmitz/Jovian?include_prereleases)](https://github.com/DennisSchmitz/Jovian/releases)  
-[![Documentation](https://github.com/florianzwagemaker/jovian-docs/workflows/Documentation%20build/badge.svg?branch=master)](https://florianzwagemaker.github.io/jovian-docs/)
+**License:** [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)  
+**Built with:** [![Snakemake](https://img.shields.io/badge/snakemake-≥5.20.1-brightgreen.svg?style=flat)](https://snakemake.readthedocs.io)  
+**Version:** [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/DennisSchmitz/Jovian?include_prereleases)](https://github.com/DennisSchmitz/Jovian/releases)  
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/DennisSchmitz/Jovian_binder/master?filepath=Notebook_report.ipynb)
+<br>
+<br>
+
+**Documentation:** [https://jovian.rivm-bioinformatics.com](https://jovian.rivm-bioinformatics.com)  
+[![Documentation](https://github.com/florianzwagemaker/jovian-docs/workflows/Documentation%20build/badge.svg?branch=master)](https://jovian.rivm-bioinformatics.com)
 
 
+**View an example notebook:** [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/DennisSchmitz/Jovian_binder/master?filepath=Notebook_report.ipynb)
+
+
+**For citations, please use the following DOI:**  
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3666156.svg)](https://doi.org/10.5281/zenodo.3666156)
 
+<br><br>
 
 **IMPORTANT: manuscript is in preparation**
 
@@ -17,11 +25,12 @@ ___
 
 <img align="right" src="../assets/images/Jovian_logo.png">
 
-## Table of content
+## Table of contents
 
 - [Jovian, user-friendly Public Health toolkit](#jovian-user-friendly-public-health-toolkit)
-  - [Table of content](#table-of-content)
-  - [Jovian description](#jovian-description)
+  - [Table of contents](#table-of-contents)
+  - [About Jovian](#about-jovian)
+    - [Key features of Jovian:](#key-features-of-jovian)
   - [Commands](#commands)
     - [Features](#features)
       - [General features](#general-features)
@@ -42,115 +51,186 @@ ___
 
 ___
 
-## Jovian description  
+## About Jovian  
 
-Jovian is a Public Health toolkit to automatically process raw Illumina NGS data from human clinical matrices (faeces, serum, etc.) into clinically relevant information. It has two main components:  
+Jovian is a Public Health toolkit to automatically process raw NGS data from human clinical matrices (faeces, serum, etc.) into clinically relevant information. It has three main components:  
 
-- Metagenomic: This performs, amongst others, taxonomic classification, [virus typing](#Virus-typing) and minority variant identification (quasispecies). See details [below](#features).  
-- Reference-alignment: Given a user-provided fasta reference, all data is aligned against it, and a consensus genome is generated at different coverage cut-off thresholds. See details here [below](#features).  
+- **Illumina based Metagenomics**:  
+  Includes (amongst other features) data quality control, assembly, taxonomic classification, viral typing, and minority variant identification (quasispecies).  
+  :memo: Please refer to the [documentation page for the Illumina Metagenomics workflow][ILM_meta_wf] for more information.  
 
-Jovian has several features necessary for diagnostic usage:  
+- **Illumina based Reference-alignment**:  
+  Includes (amongst other features) data quality control, alignment, SNP identification, and consensus-sequence generation.  
+  :exclamation: A reference fasta is required.  
+  :memo: Please refer to the [documentation page for the Illumina Reference based workflow][ILM_ref_wf] for more information.  
 
-- User-friendliness: Wetlab personnel can start, configure and interpret results via an [interactive web-report](#example-jovian-report). This makes doing Public Health analyses much more accessible and user-friendly since minimal command-line skills are required.  
-- Audit trail: All pipeline parameters, software versions, database information and runtime statistics are logged. See details [below](#audit-trail).  
-- Portable: `jovian` is easily installed on off-site computer systems and at back-up sister institutes. Allowing results to be generated even when the internal grid-computer is down (speaking from experience).  
+- **Nanopore based Reference-alignment**:  
+  Includes (amongst other features) data quality control, alignment, SNP identification, and consensus-sequence generation.  
+  :exclamation: A reference fasta is required.  
+  :exclamation: A fasta with primer sequences is required.  
+  :memo: Please refer to the [documentation page for the Nanopore Reference based workflow][ONT_ref_wf] for more information.  
 
-## Commands
+### Key features of Jovian:  
+
+- **User-friendliness**:  
+  Wetlab personnel can start, configure and interpret results via an interactive web-report. [Click here for an example report][example_report].  
+  This makes doing Public Health analyses much more accessible and user-friendly since minimal command-line skills are required.
+
+
+- **Audit trail**:  
+  All pipeline parameters, software versions, database information and runtime statistics are logged. See details [below](#audit-trail).  
+
+- **Portable**:  
+  Jovian is easily installed on off-site computer systems and at back-up sister institutes. Allowing results to be generated even when the internal grid-computer is down (speaking from experience).  
+
+<br>
+
+---
+
+<br>
+
+## Commands  
+
+:memo: Please see the full [Command Line Reference on the documentation site][CLI_ref]. Example commands can be found there.
 
 ```
-Jovian, Public Health Toolkit version v0.9.6.1-154-gd431fe1, built with Snakemake
-  N.B. Current version only supports Illumina paired-end data, ONT compatibility is upcoming.
-__________________________________________________________________________________________________
-Use case 1, agnostic metagenomic analysis including virus typing (see below):
-      bash jovian -i <INPUT_DIR> <parameters>
-Use case 2, align against user-provided reference genome to generate a consensus genome:
-      bash jovian -i <INPUT_DIR> -ra <REFERENCE_FASTA> <parameters>
-__________________________________________________________________________________________________
+Jovian, user friendly genomics - version $VERSION, built with Snakemake
+
+Please refer to the documentation for more information: https://jovian.rivm-bioinformatics.com
+
+_________________________________________________________________________________________________________
+
+Use case 1; agnostic metagenomic analysis based on Illumina data:
+      bash jovian illumina-metagenomics -i <INPUT_DIR> <parameters>
+
+Use case 2; align Illumina data against a user-provided reference genome to generate a consensus 
+            genome:
+      bash jovian illumina-reference -i <INPUT_DIR> -ref <REF_FASTA> <parameters>
+
+Use case 3; align Nanopore multiplex PCR data to a user-provided reference genome, remove 
+            overrepresented primer sequences, and generate a consensus genome:
+      bash jovian nanopore-reference -i <INPUT_DIR> -ref <REF_FASTA> -pr <PRIMER_FASTA> <parameters>
+
+_________________________________________________________________________________________________________
+
+Workflow specification:
+  illumina-metagenomics, illumina-meta, ilm-meta, im
+                                    This specifies the "illumina metagenomics" workflow to be
+                                      executed. This has to be the first argument given and does not 
+                                      require a "-".
+                                      Incompatible with other workflow-specification arguments.
+
+  illumina-reference, illumina-ref, ilm-ref, ir
+                                    This specifies the "Illumina Reference Alignment" workflow
+                                      to be executed. This has to be the first argument given and 
+                                      does not require a "-".
+                                      Incompatible with other workflow-specification arguments.
+
+  nanopore-reference, nanopore-ref, nano-ref, ont-ref, nr
+                                    This specifies the "Nanopore Reference Alignment" workflow
+                                      to be executed. This has to be the first argument given and 
+                                      does not require a "-".
+                                      Incompatible with other workflow-specification arguments.
+
 Input:
   -i, --input [DIR]                 This is the folder containing your input fastq files.
-                                    Default is 'raw_data/' and only relative paths are accepted.
+                                      Default is 'raw_data/' and only relative paths are accepted.
+  -ref, --reference [FASTA FILE]    This is the FASTA used as a reference sequence for the 
+                                      reference-based workflows. Only a single reference is supported.
+                                      Only works with the "Illumina-reference" or "Nanopore-reference"
+                                      workflows.
+  -pr, --primers [FASTA FILE]       This is the FASTA containing the primer sequences used to produce
+                                      the sequenced amplicons. Only works with the "Nanopore-reference"
+                                      workflow.
+
 Output (automatically generated):
   data/                             Contains detailed intermediate files.
   logs/                             Contains all log files.
-  results/                          Metagenomics workflow only. Contains all final results and
-                                    audit-trail. Results are visualized via the Jovian report.
-  reference_alignment/              Reference alignment workflow only. Contains detailed
-                                    intermediate files. Results are found in the "results/"
-                                    sub-folder.
+  results/                          Contains all final results and audit-trail.
+                                      Results are visualized via the Jovian report.
+
 Virus typing:
-  -vt-help, --virus-typing-help     Print additional information about the virus-typing, i.e.
-                                    which family/genus is selected and which species are typed.
+  -vt-help, --virus-typing-help     Print additional information about the virus-typing, i.e. which 
+                                      family/genus is selected and which species are typed.
   -vt, --virus-typing [all|NoV|EV|RVA|HAV|HEV|PV|Flavi]
                                     After a Jovian analyses has completed, do viral typing for
-                                    Norovirus (NoV), Enterovirus (EV), Hepatitis A (HAV), 
-                                    Hepatitis E (HEV), Rotavirus A (RVA), Papillomaviruses (PV),
-                                    Flaviviruses (Flavi). Or use the 'all' keyword to perform
-                                    virus typing for all above listed viruses.
-                                    For additional explanation, --vt-help
+                                      Norovirus (NoV), Enterovirus (EV), Hepatitis A (HAV), 
+                                      Hepatitis E (HEV), Rotavirus A (RVA), Papillomaviruses (PV),
+                                      Flaviviruses (Flavi). Or use the 'all' keyword to perform
+                                      virus typing for all above listed viruses.
+                                      For additional explanation, --vt-help
   -vt-force, --virus-typing-force [NoV|EV|RVA|HAV|HEV|PV|Flavi]
-                                    Same as above, but overwrites existing output. 
+                                    Same as above, but overwrites existing output.
+
 Parameters:
   -m, --mode [strict|relaxed]       Automatically configures Jovian to be stringent or relaxed
-                                    in taxonomic classification of scaffolds. Please see the 
-                                    publication for details. In short, use 'strict' for high 
-                                    precision at the cost of sensitivity and use 'relaxed' for
-                                    high sensitivity at the cost of more spurious results
-                                    (contamination). Default: relaxed.
+                                      in taxonomic classification of scaffolds. Please see the 
+                                      publication for details. In short, use 'strict' for high 
+                                      precision at the cost of sensitivity and use 'relaxed' for
+                                      high sensitivity at the cost of more spurious results
+                                      (contamination). Default: relaxed.
   -cq, --cluster-queue [Queue name] One-time override of the default cluster-queue settings.
-                                    Use this command when you wish to use a different computing-
-                                    queue without manually going through the jovian settings.
-                                    This does not change your default settings.
+                                      Use this command when you wish to use a different computing-
+                                      queue without manually going through the jovian settings.
+                                      This does not change your default settings.
   -h, --help                        Print the Jovian help document.
   -sh, --snakemake-help             Print the Snakemake help document.
   --clean (-y)                      Removes all Jovian output, both the metagenomics output and
-                                    reference alignment output. (-y forces "Yes" on all prompts)
+                                      reference alignment output. (-y forces "Yes" on all prompts)
   -k, --keep-going                  Useful snakemake command: Go on with independent jobs if
-                                    a job fails.
+                                      a job fails.
   -n, --dry-run                     Useful snakemake command: Do not execute anything, and
-                                    display what would be done.
+                                      display what would be done.
   -u, --unlock                      Removes the lock on the working directory. This happens when
-                                    a run ends abruptly and prevents you from doing subsequent
-                                    analyses.
+                                      a run ends abruptly and prevents you from doing subsequent
+                                      analyses.
   -q, --quiet                       Useful snakemake command: Do not output any progress or
-                                    rule information.
+                                      rule information.
+
 Archiving Jovian results:
   --archive (-y)                    Archives the output of a Jovian analysis into single
-                                    compressed file. (-y forces "Yes" on all prompts)
+                                      compressed file. (-y forces "Yes" on all prompts)
   --rebuild-archive                 Rebuilds Jovian results and logs from a previously made 
-                                    archive. It is important to use the same version of Jovian
-                                    as was initially used to build the archive. N.B. databases
-                                    are not restored.
+                                      archive. It is important to use the same version of Jovian
+                                      as was initially used to build the archive. N.B. databases
+                                      are not restored.
+
 Jupyter Notebook (for data visualization):
   --configure-jupyter               Sets the proper Jupyter settings. You only need to do this
-                                    once per user.
+                                      once per user.
   --start-jupyter                   Starts a Jupyter Notebook process. You must always have this
-                                    running in a separate terminal (or in the background) if you
-                                    want to open the final report with the interactive graphs
-                                    and tables.
+                                      running in a separate terminal (or in the background) if you
+                                      want to open the final report with the interactive graphs
+                                      and tables.
+
 Installation:
   -ic, --install-dependencies       Install the required software dependencies for the
-                                    metagenomics and reference alignment workflows.
+                                      metagenomics and reference alignment workflows.
   -id, --install-databases          Install required databases.
+
 Debug only:
   --start-nginx                     Starts the nginx process.
   --stop-nginx                      Stops the nginx process.
   --make-sample-sheet               Only make the sample sheet.
+
 Other:
   -v, --version                     Print the current version of Jovian.
   --update                          Updates Jovian to the latest release. Some files might be
-                                    reset to their default contents as shown on Github.
+                                      reset to their default contents as shown on Github.
   --update [Version tag]            Changes Jovian to the specified release. Only accepts major
-                                    releases. Files can get deleted in significant version changes.
-‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+                                      releases. Files can get deleted in significant version changes.
+
 ```
 
 ### Features
 
+:memo: Please refer to our [documentation for the full list of features][featurelist]
+
 #### General features
 
-- Data quality control (QC) and cleaning.  
+- Data quality control and cleaning.  
   - Including library fragment length analysis, useful for sample preparation QC.  
-- Removal of human* data (patient privacy). _*<sup><sub>You can use [whichever reference you would like](../../wiki/Frequently-Asked-Questions#i-dont-care-about-removing-the-human-data-i-have-samples-that-are-from-other-species-can-i-also-automatically-remove-that). However, Jovian is intended for human clinical samples.</sup></sub>_  
+- Removal of human* data (patient privacy). _*<sup><sub>You can use [whichever reference you would like][faq]. However, Jovian is intended for human clinical samples.</sup></sub>_  
 - Removal of PCR-duplicates.  
 
 #### Metagenomics specific features
@@ -358,3 +438,11 @@ ___
 ____
 _This project/research has received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement No. 643476. and the Dutch working group on molecular diagnostics (WMDI)._
 ____
+
+[ILM_meta_wf]: https://jovian.rivm-bioinformatics.com/Workflows/Illumina/Metagenomics/
+[ILM_ref_wf]: https://jovian.rivm-bioinformatics.com/Workflows/Illumina/Reference/
+[ONT_ref_wf]: https://jovian.rivm-bioinformatics.com/Workflows/Nanopore/Reference/
+[example_report]: https://mybinder.org/v2/gh/DennisSchmitz/Jovian_binder/master?filepath=Notebook_report.
+[CLI_ref]: https://jovian.rivm-bioinformatics.com/CLI/
+[featurelist]: https://jovian.rivm-bioinformatics.com/#features
+[faq]: https://jovian.rivm-bioinformatics.com/FAQ/
