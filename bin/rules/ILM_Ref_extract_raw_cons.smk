@@ -26,7 +26,7 @@ lofreq indelqual --dindel -f {input.reference} -o {output.indelqual_bam} {input.
 samtools index -@ {threads} {output.indelqual_bam} >> {log} 2>&1
 lofreq call-parallel -d 20000 --no-default-filter --call-indels --use-orphan --pp-threads {threads} -f {input.reference} -o {output.unfiltered_vcf} {output.indelqual_bam} >> {log} 2>&1
 
-lofreq filter -a 0.50 -i {output.unfiltered_vcf} -o {output.majorSNP_vcf} >> {log} 2>&1
+lofreq filter -a 0.50 -v 0 -i {output.unfiltered_vcf} -o {output.majorSNP_vcf} >> {log} 2>&1
 bgzip -c {output.majorSNP_vcf} 2>> {log} |\
 bcftools norm -m -both -O z -f {input.reference} -o {output.majorSNP_vcf_gz} >> {log} 2>&1
 tabix {output.majorSNP_vcf_gz} >> {log} 2>&1
@@ -34,7 +34,7 @@ cat {input.reference} 2>> {log} |\
 bcftools consensus {output.majorSNP_vcf_gz} 2>> {log} |\
 seqtk seq - > {output.raw_consensus_fasta} 2>> {log}
 
-lofreq filter -a {params.min_AF} -A 0.50 -i {output.unfiltered_vcf} -o {output.minorSNP_vcf} >> {log} 2>&1
+lofreq filter -a {params.min_AF} -A 0.50  -v 0 -i {output.unfiltered_vcf} -o {output.minorSNP_vcf} >> {log} 2>&1
 bgzip -c {output.minorSNP_vcf} 2>> {log} |\
 bcftools norm -m -both -O z -f {input.reference} -o {output.minorSNP_vcf_gz} - >> {log} 2>&1
 tabix {output.minorSNP_vcf_gz} >> {log} 2>&1
