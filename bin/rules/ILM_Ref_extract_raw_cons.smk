@@ -39,6 +39,6 @@ bgzip -c {output.minorSNP_vcf} 2>> {log} |\
 bcftools norm -m -both -O z -f {input.reference} -o {output.minorSNP_vcf_gz} - >> {log} 2>&1
 tabix {output.minorSNP_vcf_gz} >> {log} 2>&1
 
-
+#test
 bcftools query -f '{wildcards.sample}\t%CHROM\t%POS\t%TYPE\t%REF\t%ALT{{0}}\t%QUAL\n' {output.majorSNP_vcf_gz} > {output.majorSNP_vcf_table}
         """
