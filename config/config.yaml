@@ -1,4 +1,4 @@
-cores: 14
+cores: 250
 latency-wait: 60
 use-conda: true
 jobname: Jovian_{name}.jobid{jobid}
