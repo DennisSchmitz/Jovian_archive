@@ -24,7 +24,7 @@ rule Illumina_MultiQC_report:
                 p       = f"{logdir}",
                 sample  = SAMPLES
                 ), # TODO dit moet nog verbetert worden qua smk syntax
-        expand( "{p}Illumina_align_to_reference_{sample}.log",
+        expand( "{p}Illumina_align_to_reference_it2_{sample}.log",
                 p       = f"{logdir}",
                 sample  = SAMPLES
                 ) # TODO dit moet nog verbetert worden qua smk syntax

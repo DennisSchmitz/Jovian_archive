@@ -1,10 +1,10 @@
 #TODO kijken of dit multithreaded kan worden.
 rule Illumina_extract_clean_consensus:
     input:
-        bam             =   rules.Illumina_align_to_reference.output.sorted_bam,
-        raw_consensus   =   rules.Illumina_extract_raw_consensus.output.raw_consensus_fasta, # Only needed for when there are no positions in the bed with a coverage of 0; in that case the IlluminaW fasta is actually suitable for downstream processes and it is simply copied.
+        bam             =   rules.Illumina_align_to_reference_it2.output.sorted_bam,
+        raw_consensus   =   rules.Illumina_extract_raw_consensus_it2.output.raw_consensus_fasta, # Only needed for when there are no positions in the bed with a coverage of 0; in that case the IlluminaW fasta is actually suitable for downstream processes and it is simply copied.
     output:
-        bedgraph                            =   f"{datadir + cons}" + "{sample}.bedgraph",
+        bedgraph                            =   f"{datadir + it2 + cons}" + "{sample}.bedgraph",
         filt_consensus_N_filt_ge_1          =   f"{res + seqs}" + "{sample}_N-filt_cov_ge_1.fa",
         filt_consensus_N_filt_ge_5          =   f"{res + seqs}" + "{sample}_N-filt_cov_ge_5.fa",
         filt_consensus_N_filt_ge_10         =   f"{res + seqs}" + "{sample}_N-filt_cov_ge_10.fa",
@@ -23,7 +23,7 @@ rule Illumina_extract_clean_consensus:
         f"{logdir + bench}" + "Illumina_extract_clean_consensus_{sample}.txt"
     threads: 1
     params:
-        output_data_folder      =   f"{datadir + cons}",
+        output_data_folder      =   f"{datadir + it2 + cons}",
         output_results_folder   =   f"{res + seqs}"
     shell:
         """

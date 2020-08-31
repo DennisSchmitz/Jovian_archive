@@ -1,22 +1,22 @@
-rule Illumina_extract_raw_consensus:
+rule Illumina_extract_raw_consensus_it2:
     input:
-        bam                 = rules.Illumina_align_to_reference.output.sorted_bam,
-        reference           = rules.Illumina_index_reference.output.reference_copy,
+        bam                 = rules.Illumina_align_to_reference_it2.output.sorted_bam,
+        reference           = rules.Illumina_extract_raw_consensus_it1.output.reference_copy_it2,
     output:
-        indelqual_bam       = f"{datadir + cons + raw}" + "{sample}_indelqual.bam",
-        unfiltered_vcf      = f"{datadir + cons + raw}" + "{sample}_unfiltered.vcf",
-        majorSNP_vcf        = f"{datadir + cons + raw}" + "{sample}.vcf",
-        majorSNP_vcf_gz     = f"{datadir + cons + raw}" + "{sample}.vcf.gz",
-        majorSNP_vcf_table  = f"{datadir + cons + raw}" + "{sample}.vcf.gz.tsv",
-        raw_consensus_fasta = f"{datadir + cons + raw}" + "{sample}_raw_consensus.fa",
-        minorSNP_vcf        = f"{datadir + cons + raw}" + "{sample}_minorSNPs.vcf",
-        minorSNP_vcf_gz     = f"{datadir + cons + raw}" + "{sample}_minorSNPs.vcf.gz"
+        indelqual_bam       = f"{datadir + it2 + cons + raw}" + "{sample}_indelqual.bam",
+        unfiltered_vcf      = f"{datadir + it2 + cons + raw}" + "{sample}_unfiltered.vcf",
+        majorSNP_vcf        = f"{datadir + it2 + cons + raw}" + "{sample}.vcf",
+        majorSNP_vcf_gz     = f"{datadir + it2 + cons + raw}" + "{sample}.vcf.gz",
+        majorSNP_vcf_table  = f"{datadir + it2 + cons + raw}" + "{sample}.vcf.gz.tsv",
+        raw_consensus_fasta = f"{datadir + it2 + cons + raw}" + "{sample}_raw_consensus.fa",
+        minorSNP_vcf        = f"{datadir + it2 + cons + raw}" + "{sample}_minorSNPs.vcf",
+        minorSNP_vcf_gz     = f"{datadir + it2 + cons + raw}" + "{sample}_minorSNPs.vcf.gz"
     conda:
         f"{conda_envs}Illumina_ref_alignment.yaml"
     log:
-        f"{logdir}" + "Illumina_extract_raw_consensus_{sample}.log"
+        f"{logdir}" + "Illumina_extract_raw_consensus_it2_{sample}.log"
     benchmark:
-        f"{logdir + bench}" + "Illumina_extract_raw_consensus_{sample}.txt"
+        f"{logdir + bench}" + "Illumina_extract_raw_consensus_it2_{sample}.txt"
     threads: config["threads"]["Illumina_extract_raw_consensus"]
     params:
         min_AF              = "0.05"
@@ -39,6 +39,5 @@ bgzip -c {output.minorSNP_vcf} 2>> {log} |\
 bcftools norm -m -both -O z -f {input.reference} -o {output.minorSNP_vcf_gz} - >> {log} 2>&1
 tabix {output.minorSNP_vcf_gz} >> {log} 2>&1
 
-#test
 bcftools query -f '{wildcards.sample}\t%CHROM\t%POS\t%TYPE\t%REF\t%ALT{{0}}\t%QUAL\n' {output.majorSNP_vcf_gz} > {output.majorSNP_vcf_table}
         """

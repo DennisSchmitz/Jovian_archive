@@ -1,22 +1,22 @@
 #>##################################################################################################
 #>#### Align to ref, mark and optionally remove duplicates, call SNPs, generate new consensus  #####
 #>##################################################################################################
-rule Illumina_align_to_reference:
+rule Illumina_align_to_reference_it1:
     input:
         pR1         =   rules.HuGo_removal_pt2_extract_paired_unmapped_reads.output.fastq_R1,
         pR2         =   rules.HuGo_removal_pt2_extract_paired_unmapped_reads.output.fastq_R2,
         unpaired    =   rules.HuGo_removal_pt3_extract_unpaired_unmapped_reads.output,
         reference   =   rules.Illumina_index_reference.output.reference_copy
     output:
-        sorted_bam          =   f"{datadir + aln}" + "{sample}_sorted.bam",
-        sorted_bam_index    =   f"{datadir + aln}" + "{sample}_sorted.bam.bai",
-        dup_metrics         =   f"{datadir + aln}" + "{sample}_sorted.MarkDup_metrics" #TODO deze toevoegen aan MultiQC?
+        sorted_bam          =   f"{datadir + it1 + aln}" + "{sample}_sorted.bam",
+        sorted_bam_index    =   f"{datadir + it1 + aln}" + "{sample}_sorted.bam.bai",
+        dup_metrics         =   f"{datadir + it1 + aln}" + "{sample}_sorted.MarkDup_metrics" #TODO deze toevoegen aan MultiQC?
     conda:
         f"{conda_envs}Illumina_ref_alignment.yaml"
     log:
-        f"{logdir}" + "Illumina_align_to_reference_{sample}.log"
+        f"{logdir}" + "Illumina_align_to_reference_it1_{sample}.log"
     benchmark:
-        f"{logdir + bench}" + "Illumina_align_to_reference_{sample}.txt"
+        f"{logdir + bench}" + "Illumina_align_to_reference_it1_{sample}.txt"
     threads: config["threads"]["Illumina_align_to_reference"]
     params:
         aln_type        =   config["Illumina_ref"]["Alignment"]["Alignment_type"],

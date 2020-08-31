@@ -89,8 +89,16 @@ rule all:
                                 ]
                 ), # Extract unmapped & paired reads AND unpaired from HuGo alignment; i.e. cleaned fastqs #TODO omschrijven naar betere smk syntax
         expand( "{p}{ref}{extension}",
-                p           =   f"{datadir + refdir}",
+                p           =   f"{datadir + it1 + refdir}",
                 ref         =   reference_basename,
+                extension   =   [   '.fasta',
+                                    '.fasta.1.bt2'
+                                    ]
+                ), # Copy of the reference file (for standardization and easy logging), bowtie2-indices (I've only specified one, but the "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2" and "rev.2.bt2" are implicitly generated) and the GC-content files.
+                        expand( "{p}{ref}_{sample}{extension}",
+                p           =   f"{datadir + it2 + refdir}",
+                ref         =   reference_basename,
+                sample      =   SAMPLES,
                 extension   =   [   '.fasta',
                                     '.fasta.1.bt2',
                                     '.fasta.fai',
@@ -100,7 +108,15 @@ rule all:
                                     ]
                 ), # Copy of the reference file (for standardization and easy logging), bowtie2-indices (I've only specified one, but the "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2" and "rev.2.bt2" are implicitly generated) and the GC-content files.
         expand( "{p}{sample}_sorted.{extension}",
-                p           =   f"{datadir + aln}",
+                p           =   f"{datadir + it1 + aln}",
+                sample      =   SAMPLES,
+                extension   =   [   'bam',
+                                    'bam.bai',
+                                    'MarkDup_metrics'
+                                    ]
+                ), # The reference alignment (bam format) files.
+        expand( "{p}{sample}_sorted.{extension}",
+                p           =   f"{datadir + it2 + aln}",
                 sample      =   SAMPLES,
                 extension   =   [   'bam',
                                     'bam.bai',
@@ -108,14 +124,21 @@ rule all:
                                     ]
                 ), # The reference alignment (bam format) files.
         expand( "{p}{sample}{extension}",
-                p           =   f"{datadir + cons + raw}",
+                p           =   f"{datadir + it1 + cons + raw}",
                 sample      =   SAMPLES,
                 extension   =   [   '.vcf.gz', 
                                     '_raw_consensus.fa'
                                     ]
-                ), # A zipped vcf file contained SNPs versus the given reference and a IlluminaW consensus sequence, see explanation below for the meaning of IlluminaW.
+                ), # A zipped vcf file contained SNPs versus the given reference and a IlluminaW consensus sequence, see explanation below for the meaning of Illumina.
+        expand( "{p}{sample}{extension}",
+                p           =   f"{datadir + it2 + cons + raw}",
+                sample      =   SAMPLES,
+                extension   =   [   '.vcf.gz', 
+                                    '_raw_consensus.fa'
+                                    ]
+                ), # A zipped vcf file contained SNPs versus the given reference and a IlluminaW consensus sequence, see explanation below for the meaning of Illumina.
         expand( "{p}{sample}.bedgraph",
-                p       =   f"{datadir + cons}",
+                p       =   f"{datadir + it2 + cons}",
                 sample  =   SAMPLES
                 ), # Lists the coverage of the alignment against the reference in a bedgraph format, is used to determine the coverage mask files below.
         expand( "{p}{sample}_{filt_character}-filt_cov_ge_{thresholds}.fa",
@@ -141,8 +164,8 @@ rule all:
         f"{res}SNPs.tsv",
         f"{res}BoC_int.tsv", # Integer BoC overview in .tsv format
         f"{res}BoC_pct.tsv", # Percentage BoC overview in .tsv format
-        expand( "{p}{ref}_{extension}",
-                p           =   f"{datadir + refdir}",
+        expand( "{p}{ref}_{sample}_{extension}",
+                p           =   f"{datadir + it2 + refdir}",
                 ref         =   reference_basename,
                 sample      =   SAMPLES,
                 extension   =   [   'ORF_AA.fa',
@@ -220,37 +243,28 @@ include: f"{rls}BG_removal_3.smk"
 #>############################################################################
 include: f"{rls}ILM_Ref_index.smk"
 
+# iteration 1
+include: f"{rls}ILM_Ref_align_to_ref_it1.smk"
+include: f"{rls}ILM_Ref_extract_raw_cons_it1.smk"
 
-##########################!
+# iteration 2
+include: f"{rls}ILM_Ref_align_to_ref_it2.smk"
+include: f"{rls}ILM_Ref_extract_raw_cons_it2.smk"
+
+# determine ORF and GC based on iteration 2
 include: f"{rls}ILM_Ref_ORF_analysis.smk"
-
-
 include: f"{rls}ILM_Ref_GC_content.smk"
-
-include: f"{rls}ILM_Ref_align_to_ref.smk"
-
-
-include: f"{rls}ILM_Ref_extract_raw_cons.smk"
 
 include: f"{rls}ILM_Ref_extract_clean_cons.smk"
 
 include: f"{rls}ILM_Ref_concat-snips.smk"
 
 include: f"{rls}ILM_Ref_boc_covs.smk"
-
-
 include: f"{rls}ILM_Ref_boc_mets.smk"
-
 
 include: f"{rls}ILM_Ref_multiqc.smk"
 
-
-#@################################################################################
-#@#### Make IGVjs html                                                       #####
-#@################################################################################
-
 include: f"{rls}ILM_Ref_igv_vars.smk"
-
 include: f"{rls}ILM_Ref_igv_combi.smk"
 
 
