@@ -6,7 +6,7 @@ rule Illumina_extract_raw_consensus_it1:
         unfiltered_vcf      = f"{datadir + it1 + cons}" + "{sample}_unfiltered.vcf",
         majorSNP_vcf        = f"{datadir + it1 + cons}" + "{sample}.vcf",
         majorSNP_vcf_gz     = f"{datadir + it1 + cons}" + "{sample}.vcf.gz",
-        majorSNP_vcf_table  = f"{datadir + it1 + cons}" + "{sample}.vcf.gz.tsv",
+        majorSNP_vcf_table  = f"{datadir + it1 + cons}" + "{sample}.vcf.tsv",
         raw_consensus_fasta = f"{datadir + it1 + cons}" + "{sample}_raw_consensus.fa",
         reference_copy_it2  = f"{datadir + it2 + refdir + reference_basename}" + "_{sample}.fasta",
     conda:
