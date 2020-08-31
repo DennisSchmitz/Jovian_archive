@@ -6,7 +6,8 @@ rule Illumina_extract_raw_consensus_it1:
         unfiltered_vcf      = f"{datadir + it1 + cons}" + "{sample}_unfiltered.vcf",
         majorSNP_vcf        = f"{datadir + it1 + cons}" + "{sample}.vcf",
         majorSNP_vcf_gz     = f"{datadir + it1 + cons}" + "{sample}.vcf.gz",
-        majorSNP_vcf_table  = f"{datadir + it1 + cons}" + "{sample}.vcf.tsv",
+        majorSNP_vcf_gz_tbi = f"{datadir + it1 + cons}" + "{sample}.vcf.gz.tbi", # Implicitly generated
+        majorSNP_vcf_table  = f"{datadir + it1 + cons}" + "{sample}.tsv",
         raw_consensus_fasta = f"{datadir + it1 + cons}" + "{sample}_raw_consensus.fa",
         reference_copy_it2  = f"{datadir + it2 + refdir + reference_basename}" + "_{sample}.fasta",
     conda:
@@ -17,7 +18,7 @@ rule Illumina_extract_raw_consensus_it1:
         f"{logdir + bench}" + "Illumina_extract_raw_consensus_it1_{sample}.txt"
     threads: config["threads"]["Illumina_extract_raw_consensus"]
     params:
-    shell: # First codeblock, SNP and indel calling. Second codeblock, filter majority SNPs from LoFreq output, zip/normalize/index it, call consensus based on these SNPs.
+    shell: # First codeblock, SNP and indel calling, filter majority SNPs from LoFreq output, zip/normalize/index it, call consensus based on these SNPs.
         """
 lofreq call-parallel -d 20000 --no-default-filter --call-indels --use-orphan --pp-threads {threads} -f {input.reference} -o {output.unfiltered_vcf} {input.bam} >> {log} 2>&1
 

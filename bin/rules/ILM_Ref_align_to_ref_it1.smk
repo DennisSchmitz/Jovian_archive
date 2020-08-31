@@ -23,7 +23,7 @@ rule Illumina_align_to_reference_it1:
         remove_dups     =   config["Illumina_ref"]["Alignment"]["Duplicates"], #! Don't change this, see this gotcha with duplicate marked reads in bedtools genomecov (which is used downstream): https://groups.google.com/forum/#!msg/bedtools-discuss/wJNC2-icIb4/wflT6PnEHQAJ . bedtools genomecov is not able to filter them out and includes those dup-reads in it's coverage metrics. So the downstream BoC analysis and consensus at diff cov processes require dups to be HARD removed.
         markdup_mode    =   config["Illumina_ref"]["Alignment"]["Duplicate_marking"],
         max_read_length =   config["Illumina_ref"]["Alignment"]["Max_read_length"] # This is the default value and also the max read length of Illumina in-house sequencing.
-    shell: # LoFreq dindel req for indel calling
+    shell: # LoFreq dindel is required for indel calling downstream
         """
 bowtie2 --time --threads {threads} {params.aln_type} \
 -x {input.reference} \

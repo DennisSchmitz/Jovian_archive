@@ -5,6 +5,11 @@ rule Illumina_extract_clean_consensus:
         raw_consensus   =   rules.Illumina_extract_raw_consensus_it2.output.raw_consensus_fasta, # Only needed for when there are no positions in the bed with a coverage of 0; in that case the IlluminaW fasta is actually suitable for downstream processes and it is simply copied.
     output:
         bedgraph                            =   f"{datadir + it2 + cons}" + "{sample}.bedgraph",
+        bed_mask_cov_ge_1                   =   f"{datadir + it2 + cons}" + "{sample}_cov_ge_1.bed",
+        bed_mask_cov_ge_5                   =   f"{datadir + it2 + cons}" + "{sample}_cov_ge_5.bed",
+        bed_mask_cov_ge_10                  =   f"{datadir + it2 + cons}" + "{sample}_cov_ge_10.bed",
+        bed_mask_cov_ge_30                  =   f"{datadir + it2 + cons}" + "{sample}_cov_ge_30.bed",
+        bed_mask_cov_ge_100                 =   f"{datadir + it2 + cons}" + "{sample}_cov_ge_100.bed",
         filt_consensus_N_filt_ge_1          =   f"{res + seqs}" + "{sample}_N-filt_cov_ge_1.fa",
         filt_consensus_N_filt_ge_5          =   f"{res + seqs}" + "{sample}_N-filt_cov_ge_5.fa",
         filt_consensus_N_filt_ge_10         =   f"{res + seqs}" + "{sample}_N-filt_cov_ge_10.fa",
