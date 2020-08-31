@@ -124,14 +124,14 @@ rule all:
                                     ]
                 ), # The reference alignment (bam format) files.
         expand( "{p}{sample}{extension}",
-                p           =   f"{datadir + it1 + cons + raw}",
+                p           =   f"{datadir + it1 + cons}",
                 sample      =   SAMPLES,
                 extension   =   [   '.vcf.gz', 
                                     '_raw_consensus.fa'
                                     ]
                 ), # A zipped vcf file contained SNPs versus the given reference and a IlluminaW consensus sequence, see explanation below for the meaning of Illumina.
         expand( "{p}{sample}{extension}",
-                p           =   f"{datadir + it2 + cons + raw}",
+                p           =   f"{datadir + it2 + cons}",
                 sample      =   SAMPLES,
                 extension   =   [   '.vcf.gz', 
                                     '_raw_consensus.fa'
@@ -294,6 +294,12 @@ onsuccess:
         echo -e "\tGenerating Snakemake report..."
         snakemake -s {bindir}Illumina_vir_Ref.smk --unlock --profile config
         snakemake -s {bindir}Illumina_vir_Ref.smk --report {res}snakemake_report.html --profile config
+
+        # Check if the majoritySNP files of it2 (exclude unfilt and minority vcf) are empty (excl headers, then count lines), if they are not, additional round(s) of ref-alignment may be required, throw warning.
+        if [[ $(grep -v "#" --exclude="*_unfiltered.vcf" --exclude="*minorSNPs.vcf" data/it2/consensus/*.vcf | wc -l) -ne 0 ]]
+        then
+            printf "\e[1;91m\nWARNING: Majority SNPs were found after the consensus genome was generated, assess the IGVjs alignment to determine if another round of alignment is required.\n\e[0m\n"
+        fi
 
         echo -e "Finished"
     """)

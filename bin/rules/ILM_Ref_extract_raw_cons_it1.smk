@@ -3,11 +3,11 @@ rule Illumina_extract_raw_consensus_it1:
         bam                 = rules.Illumina_align_to_reference_it1.output.sorted_bam,
         reference           = rules.Illumina_index_reference.output.reference_copy,
     output:
-        unfiltered_vcf      = f"{datadir + it1 + cons + raw}" + "{sample}_unfiltered.vcf",
-        majorSNP_vcf        = f"{datadir + it1 + cons + raw}" + "{sample}.vcf",
-        majorSNP_vcf_gz     = f"{datadir + it1 + cons + raw}" + "{sample}.vcf.gz",
-        majorSNP_vcf_table  = f"{datadir + it1 + cons + raw}" + "{sample}.vcf.gz.tsv",
-        raw_consensus_fasta = f"{datadir + it1 + cons + raw}" + "{sample}_raw_consensus.fa",
+        unfiltered_vcf      = f"{datadir + it1 + cons}" + "{sample}_unfiltered.vcf",
+        majorSNP_vcf        = f"{datadir + it1 + cons}" + "{sample}.vcf",
+        majorSNP_vcf_gz     = f"{datadir + it1 + cons}" + "{sample}.vcf.gz",
+        majorSNP_vcf_table  = f"{datadir + it1 + cons}" + "{sample}.vcf.gz.tsv",
+        raw_consensus_fasta = f"{datadir + it1 + cons}" + "{sample}_raw_consensus.fa",
         reference_copy_it2  = f"{datadir + it2 + refdir + reference_basename}" + "_{sample}.fasta",
     conda:
         f"{conda_envs}Illumina_ref_alignment.yaml"

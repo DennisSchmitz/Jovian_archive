@@ -3,13 +3,13 @@ rule Illumina_extract_raw_consensus_it2:
         bam                 = rules.Illumina_align_to_reference_it2.output.sorted_bam,
         reference           = rules.Illumina_extract_raw_consensus_it1.output.reference_copy_it2,
     output:
-        unfiltered_vcf      = f"{datadir + it2 + cons + raw}" + "{sample}_unfiltered.vcf",
-        majorSNP_vcf        = f"{datadir + it2 + cons + raw}" + "{sample}.vcf",
-        majorSNP_vcf_gz     = f"{datadir + it2 + cons + raw}" + "{sample}.vcf.gz",
-        majorSNP_vcf_table  = f"{datadir + it2 + cons + raw}" + "{sample}.vcf.gz.tsv",
-        raw_consensus_fasta = f"{datadir + it2 + cons + raw}" + "{sample}_raw_consensus.fa",
-        minorSNP_vcf        = f"{datadir + it2 + cons + raw}" + "{sample}_minorSNPs.vcf",
-        minorSNP_vcf_gz     = f"{datadir + it2 + cons + raw}" + "{sample}_minorSNPs.vcf.gz"
+        unfiltered_vcf      = f"{datadir + it2 + cons}" + "{sample}_unfiltered.vcf",
+        majorSNP_vcf        = f"{datadir + it2 + cons}" + "{sample}.vcf",
+        majorSNP_vcf_gz     = f"{datadir + it2 + cons}" + "{sample}.vcf.gz",
+        majorSNP_vcf_table  = f"{datadir + it2 + cons}" + "{sample}.vcf.gz.tsv",
+        raw_consensus_fasta = f"{datadir + it2 + cons}" + "{sample}_raw_consensus.fa",
+        minorSNP_vcf        = f"{datadir + it2 + cons}" + "{sample}_minorSNPs.vcf",
+        minorSNP_vcf_gz     = f"{datadir + it2 + cons}" + "{sample}_minorSNPs.vcf.gz"
     conda:
         f"{conda_envs}Illumina_ref_alignment.yaml"
     log:
