@@ -3,7 +3,6 @@ rule Illumina_extract_raw_consensus_it2:
         bam                 = rules.Illumina_align_to_reference_it2.output.sorted_bam,
         reference           = rules.Illumina_extract_raw_consensus_it1.output.reference_copy_it2,
     output:
-        indelqual_bam       = f"{datadir + it2 + cons + raw}" + "{sample}_indelqual.bam",
         unfiltered_vcf      = f"{datadir + it2 + cons + raw}" + "{sample}_unfiltered.vcf",
         majorSNP_vcf        = f"{datadir + it2 + cons + raw}" + "{sample}.vcf",
         majorSNP_vcf_gz     = f"{datadir + it2 + cons + raw}" + "{sample}.vcf.gz",
@@ -20,11 +19,9 @@ rule Illumina_extract_raw_consensus_it2:
     threads: config["threads"]["Illumina_extract_raw_consensus"]
     params:
         min_AF              = "0.05"
-    shell: # First codeblock, set indelqual (requirement for LoFreq indel calling of Ill-data), index updated bam, SNP and indels calling. Second codeblock, filter majority SNPs from LoFreq output, zip/normalize/index it, call consensus based on these SNPs. Third codeblock, filter minority SNPs, flag them in IGVjs for manual inspection and/or tabular output.
+    shell: # First codeblock, SNP and indels calling. Second codeblock, filter majority SNPs from LoFreq output, zip/normalize/index it, call consensus based on these SNPs. Third codeblock, filter minority SNPs, flag them in IGVjs for manual inspection and/or tabular output.
         """
-lofreq indelqual --dindel -f {input.reference} -o {output.indelqual_bam} {input.bam} >> {log} 2>&1
-samtools index -@ {threads} {output.indelqual_bam} >> {log} 2>&1
-lofreq call-parallel -d 20000 --no-default-filter --call-indels --use-orphan --pp-threads {threads} -f {input.reference} -o {output.unfiltered_vcf} {output.indelqual_bam} >> {log} 2>&1
+lofreq call-parallel -d 20000 --no-default-filter --call-indels --use-orphan --pp-threads {threads} -f {input.reference} -o {output.unfiltered_vcf} {input.bam} >> {log} 2>&1
 
 lofreq filter -a 0.50 -v 0 -i {output.unfiltered_vcf} -o {output.majorSNP_vcf} >> {log} 2>&1
 bgzip -c {output.majorSNP_vcf} 2>> {log} |\

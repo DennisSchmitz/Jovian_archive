@@ -4,6 +4,6 @@
     <ul>
         <li> Pick a sample to open the Interactive Genome Viewer </li>
         <li> The first "segment" within the given reference is automatically loaded, you can view a specific segment with the dropdown menu. Be aware that loading might take a very long time depending on the size of the segment and the sequencing depth. </li>
-        <li> N.B. the viewer shows two tracks of SNPs: the top track shows majority SNPs, these are overwritten and included in the consensus sequence. The track beneath the ORF annotation shows minority SNPs, these are not included in the consensus genome, might represent quasispecies, and are flagged for manual inspection. </li>
+        <li> N.B. the viewer shows two tracks of SNPs: the top track shows majority SNPs, there should ideally be no more majority SNPs. If you do see them, please assess the alignment and determine of another round of alignment against this consensus is required (e.g. when obvious artificial coverage drops are visible). The track beneath the ORF annotation shows minority SNPs, these are not included in the consensus genome, might represent quasispecies, and are flagged for manual inspection. Be careful though, having a large amount of minority SNPs in a small region is an indication for a mixed-infection and/or contamination, be careful to not overinterpret it. </li>
     </ul>
 </div>
