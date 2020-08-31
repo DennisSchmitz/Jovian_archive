@@ -75,8 +75,11 @@ localrules:
     Illumina_index_reference,
     Illumina_determine_BoC_at_diff_cov_thresholds,
     Illumina_concat_BoC_metrics,
+    Illumina_extract_clean_consensus,
+    SNP_table,
     Illumina_HTML_IGVJs_variable_parts,
-    Illumina_HTML_IGVJs_generate_final
+    Illumina_HTML_IGVJs_generate_final,
+    Illumina_MultiQC_report
 
 rule all:
     input:
