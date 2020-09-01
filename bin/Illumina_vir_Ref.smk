@@ -313,7 +313,8 @@ onsuccess:
         # Check if the majoritySNP files of it2 (exclude unfilt and minority vcf) are empty (excl headers, then count lines), if they are not, additional round(s) of ref-alignment may be required, throw warning.
         if [[ $(grep -v "#" --exclude="*_unfiltered.vcf" --exclude="*minorSNPs.vcf" data/it2/consensus/*.vcf | wc -l) -ne 0 ]]
         then
-            printf "\e[1;91m\nWARNING: Majority SNPs were found after the consensus genome was generated, assess the IGVjs alignment to determine if another round of alignment is required.\n\e[0m\n"
+            printf "\e[1;91m\nWARNING: Majority SNPs were found after the consensus genome was generated, assess the IGVjs alignment to determine if another round of alignment is required.\e[0m"
+            printf "\e[1;91m\n         These file(s) can be used as reference for another round of alignment:\tdata/it2/consensus/[sample_name]_raw_consensus.fa\n\e[0m\n"
         fi
 
         echo -e "Finished"
