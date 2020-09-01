@@ -2,7 +2,7 @@
 rule Illumina_extract_clean_consensus:
     input:
         bam             =   rules.Illumina_align_to_reference_it2.output.sorted_bam,
-        raw_consensus   =   rules.Illumina_extract_raw_consensus_it2.output.raw_consensus_fasta, # Only needed for when there are no positions in the bed with a coverage of 0; in that case the IlluminaW fasta is actually suitable for downstream processes and it is simply copied.
+        raw_consensus   =   rules.Illumina_extract_raw_consensus_it1.output.reference_copy_it2, # Only needed for when there are no positions in the bed with a coverage of 0; in that case the IlluminaW fasta is actually suitable for downstream processes and it is simply copied.
     output:
         bedgraph                            =   f"{datadir + it2 + cons}" + "{sample}.bedgraph",
         bed_mask_cov_ge_1                   =   f"{datadir + it2 + cons}" + "{sample}_cov_ge_1.bed",
