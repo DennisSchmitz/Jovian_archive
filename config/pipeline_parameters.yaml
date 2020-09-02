@@ -77,8 +77,8 @@ Illumina_meta:
         bitscore_threshold: 100
 
     SNP:
-        Max_coverage: 20000 # Maximum coverage that will be used for SNP calling. Dont change this value unless you know what youre doing.
-        Minimum_AF: 0.05 # This is the minimum At the end of the comment after "remove_temp" there were four Ss, probably accidentally typed in when saving the file (Ctrl + S, where Ctrl was not hit yet?).allelle frequency (=AF) for which you want a SNP to be reported. Default is 5%.
+        Max_coverage: 20000 # Maximum coverage that will be used for SNP calling. Dont change this value unless you know what you are doing.
+        Minimum_AF: 0.05 # This is the minimum allelle frequency (=AF) for which you want a SNP to be reported. Default is 5%.
 
     Alignment:
         Duplicates: -r
@@ -91,6 +91,9 @@ Illumina_ref:
         Duplicates: -r
         Duplicate_marking: t
         Max_read_length: 300
+    SNP:
+        Max_coverage: 20000 # Maximum coverage that will be used for SNP calling. Dont change this value unless you know what you are doing.
+        Minority_SNP_AF_lower_threshold: 0.05 # This is the minimum allelle frequency (=AF) for which you want a SNP to be reported. Default is 5%.
 
 Nanopore_ref:
     Primer_cutoff_plus: 30

@@ -21,10 +21,11 @@ rule Illumina_extract_raw_consensus_it2:
         f"{logdir + bench}" + "Illumina_extract_raw_consensus_it2_{sample}.txt"
     threads: config["threads"]["Illumina_extract_raw_consensus"]
     params:
-        min_AF              = "0.05"
+        max_cov             = config["Illumina_ref"]["SNP"]["Max_coverage"],
+        min_AF              = config["Illumina_ref"]["SNP"]["Minority_SNP_AF_lower_threshold"]
     shell: # First codeblock, SNP and indel calling, filter majority SNPs from LoFreq output, zip/normalize/index it, call consensus based on these SNPs. Third codeblock, filter minority SNPs, flag them in IGVjs for manual inspection and/or tabular output.
         """
-lofreq call-parallel -d 20000 --no-default-filter --call-indels --use-orphan --pp-threads {threads} -f {input.reference} -o {output.unfiltered_vcf} {input.bam} >> {log} 2>&1
+lofreq call-parallel -d {params.max_cov} --no-default-filter --call-indels --use-orphan --pp-threads {threads} -f {input.reference} -o {output.unfiltered_vcf} {input.bam} >> {log} 2>&1
 
 lofreq filter -a 0.50 -v 0 -i {output.unfiltered_vcf} -o {output.majorSNP_vcf} >> {log} 2>&1
 bgzip -c {output.majorSNP_vcf} 2>> {log} |\
