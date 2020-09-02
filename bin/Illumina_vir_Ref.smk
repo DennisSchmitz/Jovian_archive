@@ -75,8 +75,11 @@ localrules:
     Illumina_index_reference,
     Illumina_determine_BoC_at_diff_cov_thresholds,
     Illumina_concat_BoC_metrics,
+    Illumina_extract_clean_consensus,
+    SNP_table,
     Illumina_HTML_IGVJs_variable_parts,
-    Illumina_HTML_IGVJs_generate_final
+    Illumina_HTML_IGVJs_generate_final,
+    Illumina_MultiQC_report
 
 rule all:
     input:
@@ -89,35 +92,89 @@ rule all:
                                 ]
                 ), # Extract unmapped & paired reads AND unpaired from HuGo alignment; i.e. cleaned fastqs #TODO omschrijven naar betere smk syntax
         expand( "{p}{ref}{extension}",
-                p           =   f"{datadir + refdir}",
+                p           =   f"{datadir + it1 + refdir}",
                 ref         =   reference_basename,
+                extension   =   [   '.fasta',
+                                    '.fasta.1.bt2'
+                                    ]
+                ), # Copy of the reference file (for standardization and easy logging) of the first iteration alignment, bowtie2-indices (I've only specified one, but the "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2" and "rev.2.bt2" are implicitly generated).
+                        expand( "{p}{ref}_{sample}{extension}",
+                p           =   f"{datadir + it2 + refdir}",
+                ref         =   reference_basename,
+                sample      =   SAMPLES,
                 extension   =   [   '.fasta',
                                     '.fasta.1.bt2',
                                     '.fasta.fai',
                                     '.fasta.sizes', 
                                     '.windows',
-                                    '_GC.bedgraph'
+                                    '_GC.bedgraph',
+                                    '_ORF_AA.fa',
+                                    '_ORF_NT.fa',
+                                    '_annotation.gff',
+                                    '_annotation.gff.gz',
+                                    '_annotation.gff.gz.tbi'
                                     ]
-                ), # Copy of the reference file (for standardization and easy logging), bowtie2-indices (I've only specified one, but the "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2" and "rev.2.bt2" are implicitly generated) and the GC-content files.
+                ), # Consensus genome aquired after first alignment, required for second alignment and IGVjs vis: bowtie2-indices (I've only specified one, but the "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2" and "rev.2.bt2" are implicitly generated), GC-content files, ORF annotations, etc..
         expand( "{p}{sample}_sorted.{extension}",
-                p           =   f"{datadir + aln}",
+                p           =   f"{datadir + it1 + aln}",
                 sample      =   SAMPLES,
                 extension   =   [   'bam',
                                     'bam.bai',
                                     'MarkDup_metrics'
                                     ]
-                ), # The reference alignment (bam format) files.
-        expand( "{p}{sample}{extension}",
-                p           =   f"{datadir + cons + raw}",
+                ), # Alignment (bam) versus user-provided ref-fasta, incl markdup metrics file.
+        expand( "{p}{sample}_sorted.{extension}",
+                p           =   f"{datadir + it2 + aln}",
                 sample      =   SAMPLES,
-                extension   =   [   '.vcf.gz', 
+                extension   =   [   'bam',
+                                    'bam.bai',
+                                    'MarkDup_metrics'
+                                    ]
+                ), # Alignment (bam) versus the consensus genome of the first alignment iteration, incl markdup metrics file.
+        expand( "{p}{sample}{extension}",
+                p           =   f"{datadir + it1 + cons}",
+                sample      =   SAMPLES,
+                extension   =   [   '.vcf',
+                                    '.vcf.gz',
+                                    '.vcf.gz.tbi',
+                                    '.tsv',
+                                    '_unfiltered.vcf',
                                     '_raw_consensus.fa'
                                     ]
-                ), # A zipped vcf file contained SNPs versus the given reference and a IlluminaW consensus sequence, see explanation below for the meaning of IlluminaW.
-        expand( "{p}{sample}.bedgraph",
-                p       =   f"{datadir + cons}",
-                sample  =   SAMPLES
-                ), # Lists the coverage of the alignment against the reference in a bedgraph format, is used to determine the coverage mask files below.
+                ), # First iteration SNP/indel calling and consensus genome, incl human readable majority SNP table and indices.
+        expand( "{p}{sample}{extension}",
+                p           =   f"{datadir + it2 + cons}",
+                sample      =   SAMPLES,
+                extension   =   [   '.vcf',
+                                    '.vcf.gz',
+                                    '.vcf.gz.tbi',
+                                    '.tsv',
+                                    '_unfiltered.vcf',
+                                    '_minorSNPs.vcf',
+                                    '_minorSNPs.vcf.gz',
+                                    '_minorSNPs.vcf.gz.tbi',
+                                    '_minorSNPs.tsv',
+                                    '_raw_consensus.fa',
+                                    '.bedgraph'
+                                    ]
+                ), # Second iteration SNP/indel calling and consensus genome, incl human readable majority SNP table, minority SNPs and a bedgraph on which the coverage masking is performed, as shown in the next line.
+        expand( "{p}{sample}_cov_ge_{threshold}.bed",
+                p           =   f"{datadir + it2 + cons}",
+                sample      =   SAMPLES,
+                threshold   =   [   '1',
+                                    '5',
+                                    '10',
+                                    '30',
+                                    '100'
+                                    ]
+                ), # The coverage masking files for the different thresholds #TODO can probably be removed in later version
+        expand( "{p}{sample}_BoC{extension}",
+                p           =   f"{datadir + boc}",
+                sample      =   SAMPLES,
+                extension   =   [   '_int.tsv',
+                                    '_pct.tsv'
+                                    ]
+                ), # Output of the BoC analysis #TODO can probably removed after the concat rule is added.
         expand( "{p}{sample}_{filt_character}-filt_cov_ge_{thresholds}.fa",
                 p               =   f"{res + seqs}",
                 sample          =   SAMPLES,
@@ -131,27 +188,9 @@ rule all:
                                         '100'
                                         ]
                 ), # Consensus sequences filtered for different coverage thresholds (1, 5, 10, 30 and 100). For each threshold two files are generated, one where failed positioned are replaced with a N nucleotide and the other where its replaced with a minus character (gap).
-        expand( "{p}{sample}_BoC{extension}",
-                p           =   f"{datadir + boc}",
-                sample      =   SAMPLES,
-                extension   =   [   '_int.tsv',
-                                    '_pct.tsv'
-                                    ]
-                ), # Output of the BoC analysis #TODO can probably removed after the concat rule is added.
         f"{res}SNPs.tsv",
         f"{res}BoC_int.tsv", # Integer BoC overview in .tsv format
         f"{res}BoC_pct.tsv", # Percentage BoC overview in .tsv format
-        expand( "{p}{ref}_{extension}",
-                p           =   f"{datadir + refdir}",
-                ref         =   reference_basename,
-                sample      =   SAMPLES,
-                extension   =   [   'ORF_AA.fa',
-                                    'ORF_NT.fa',
-                                    'annotation.gff',
-                                    'annotation.gff.gz',
-                                    'annotation.gff.gz.tbi'
-                                    ]
-                ), # Prodigal ORF prediction output, required for the IGVjs visualisation
         f"{res}igv.html", # IGVjs output html
         f"{res}multiqc.html" # MultiQC report
 
@@ -220,37 +259,28 @@ include: f"{rls}BG_removal_3.smk"
 #>############################################################################
 include: f"{rls}ILM_Ref_index.smk"
 
+# iteration 1
+include: f"{rls}ILM_Ref_align_to_ref_it1.smk"
+include: f"{rls}ILM_Ref_extract_raw_cons_it1.smk"
 
-##########################!
+# iteration 2
+include: f"{rls}ILM_Ref_align_to_ref_it2.smk"
+include: f"{rls}ILM_Ref_extract_raw_cons_it2.smk"
+
+# determine ORF and GC based on iteration 2
 include: f"{rls}ILM_Ref_ORF_analysis.smk"
-
-
 include: f"{rls}ILM_Ref_GC_content.smk"
-
-include: f"{rls}ILM_Ref_align_to_ref.smk"
-
-
-include: f"{rls}ILM_Ref_extract_raw_cons.smk"
 
 include: f"{rls}ILM_Ref_extract_clean_cons.smk"
 
 include: f"{rls}ILM_Ref_concat-snips.smk"
 
 include: f"{rls}ILM_Ref_boc_covs.smk"
-
-
 include: f"{rls}ILM_Ref_boc_mets.smk"
-
 
 include: f"{rls}ILM_Ref_multiqc.smk"
 
-
-#@################################################################################
-#@#### Make IGVjs html                                                       #####
-#@################################################################################
-
 include: f"{rls}ILM_Ref_igv_vars.smk"
-
 include: f"{rls}ILM_Ref_igv_combi.smk"
 
 
@@ -280,6 +310,13 @@ onsuccess:
         echo -e "\tGenerating Snakemake report..."
         snakemake -s {bindir}Illumina_vir_Ref.smk --unlock --profile config
         snakemake -s {bindir}Illumina_vir_Ref.smk --report {res}snakemake_report.html --profile config
+
+        # Check if the majoritySNP files of it2 (exclude unfilt and minority vcf) are empty (excl headers, then count lines), if they are not, additional round(s) of ref-alignment may be required, throw warning.
+        if [[ $(grep -v "#" --exclude="*_unfiltered.vcf" --exclude="*minorSNPs.vcf" data/it2/consensus/*.vcf | wc -l) -ne 0 ]]
+        then
+            printf "\e[1;91m\nWARNING: Majority SNPs were found after the consensus genome was generated, assess the IGVjs alignment to determine if another round of alignment is required.\e[0m"
+            printf "\e[1;91m\n         These file(s) can be used as reference for another round of alignment:\tdata/it2/consensus/[sample_name]_raw_consensus.fa\n\e[0m\n"
+        fi
 
         echo -e "Finished"
     """)

@@ -2,7 +2,7 @@
 rule Illumina_determine_BoC_at_diff_cov_thresholds:
     input:
         bedgraph    =   rules.Illumina_extract_clean_consensus.output.bedgraph,
-        reference   =   rules.Illumina_index_reference.output.reference_copy
+        reference   =   rules.Illumina_extract_raw_consensus_it1.output.reference_copy_it2
     output:
         percentage_BoC_tsv  =   f"{datadir + boc}" + "{sample}_BoC_pct.tsv",
         integer_BoC_tsv     =   f"{datadir + boc}" + "{sample}_BoC_int.tsv",
