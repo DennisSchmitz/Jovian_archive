@@ -3,7 +3,7 @@
     <h1 align="center">
         Jovian
         <br>
-        A user-friendly genomics toolkit
+        A user-friendly viromics toolkit
     </h1>
 </p>
 
@@ -125,7 +125,7 @@ Align Nanopore (multiplex) PCR data against a user-provided reference, remove ov
 ```
 bash jovian nanopore-reference -i <INPUT DIRECTORY> -ref <REFERENCE FASTA> -pr <PRIMER FASTA>
 ```
-:exploding_head: use `bash jovian -h` to see a full list of commands applicable to the Jovian version that you're using.  
+use `bash jovian -h` to see a full list of commands applicable to the Jovian version that you're using.  
 <br>
 
 ---
@@ -251,12 +251,12 @@ ___
 
 ## Requirements
 
-:memo: Please refer to our [documentation][requirements] for a detailed overview of the Jovian requirements [:point_right: here][requirements]
+:memo: Please refer to our [documentation][requirements] for a detailed overview of the Jovian requirements [here][requirements]
 ___
 
 ## Installation
 
-:memo: Please refer to our [documentation][Install_instructions] for detailed instructions regarding the installation of Jovian [:point_right: here][Install_instructions]
+:memo: Please refer to our [documentation][Install_instructions] for detailed instructions regarding the installation of Jovian [here][Install_instructions]
 
 
 ## Usage instructions
@@ -272,12 +272,12 @@ ___
 
 ## FAQ
 
-Can be found [:point_right: here][faq].  
+Can be found [here][faq].  
 ___
 
 ## Example Jovian report
 
-Can be found [:point_right: here][example_report].  
+Can be found [here][example_report].  
 ___
 
 ## Acknowledgements
