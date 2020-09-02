@@ -132,7 +132,8 @@ Other:
                                       reset to their default contents as shown on Github.
   --update [Version tag]            Changes Jovian to the specified release. Only accepts major
                                       releases. Files can get deleted in significant version changes.
-
+  --reset-db                        Forgets the locations where the databases were installed.
+                                      Requires db-locations to be set again the next time Jovian runs.
 $full_line
 
 HELP_USAGE
