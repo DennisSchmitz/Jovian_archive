@@ -32,5 +32,5 @@ seqtk seq - > {output.raw_consensus_fasta} 2>> {log}
 
 cp {output.raw_consensus_fasta} {output.reference_copy_it2}
 
-bcftools query -f '{wildcards.sample}\t%CHROM\t%POS\t%TYPE\t%REF\t%ALT{{0}}\t%QUAL\n' {output.majorSNP_vcf_gz} > {output.majorSNP_vcf_table}
+bcftools query -f '{wildcards.sample}\t%CHROM\t%POS\t%TYPE\t%REF\t%ALT{{0}}\t%QUAL\n' {output.majorSNP_vcf_gz} > {output.majorSNP_vcf_table} 2>> {log}
         """

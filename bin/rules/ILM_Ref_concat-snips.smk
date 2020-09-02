@@ -14,7 +14,7 @@ rule SNP_table:
     threads: 1
     shell:
         """
-echo -e "# The events below are incorporated into the consensus genome\nSample\tReference AccessionID\tPosition\tType\tReference\tAlternative\tQuality" > {output}
+echo -e "# The events below are incorporated into the consensus genome, depending on the INDELS versus the user-supplied reference these coordinates are not comparable to the generated consensus genome in the \"results/sequences/\" folder\nSample\tReference AccessionID\tPosition\tType\tReference\tAlternative\tQuality" > {output}
 
 cat {input} >> {output}
         """

@@ -153,6 +153,7 @@ rule all:
                                     '_minorSNPs.vcf',
                                     '_minorSNPs.vcf.gz',
                                     '_minorSNPs.vcf.gz.tbi',
+                                    '_minorSNPs.tsv',
                                     '_raw_consensus.fa',
                                     '.bedgraph'
                                     ]

@@ -11,7 +11,8 @@ rule Illumina_extract_raw_consensus_it2:
         raw_consensus_fasta = f"{datadir + it2 + cons}" + "{sample}_raw_consensus.fa",
         minorSNP_vcf        = f"{datadir + it2 + cons}" + "{sample}_minorSNPs.vcf",
         minorSNP_vcf_gz     = f"{datadir + it2 + cons}" + "{sample}_minorSNPs.vcf.gz",
-        minorSNP_vcf_gz_tbi = f"{datadir + it2 + cons}" + "{sample}_minorSNPs.vcf.gz.tbi" # Implicitly generated
+        minorSNP_vcf_gz_tbi = f"{datadir + it2 + cons}" + "{sample}_minorSNPs.vcf.gz.tbi", # Implicitly generated
+        minorSNP_vcf_table  = f"{datadir + it2 + cons}" + "{sample}_minorSNPs.tsv",
     conda:
         f"{conda_envs}Illumina_ref_alignment.yaml"
     log:
@@ -38,5 +39,8 @@ bgzip -c {output.minorSNP_vcf} 2>> {log} |\
 bcftools norm -m -both -O z -f {input.reference} -o {output.minorSNP_vcf_gz} - >> {log} 2>&1
 tabix {output.minorSNP_vcf_gz} >> {log} 2>&1
 
-bcftools query -f '{wildcards.sample}\t%CHROM\t%POS\t%TYPE\t%REF\t%ALT{{0}}\t%QUAL\n' {output.majorSNP_vcf_gz} > {output.majorSNP_vcf_table}
+bcftools query -f '{wildcards.sample}\t%CHROM\t%POS\t%TYPE\t%REF\t%ALT{{0}}\t%QUAL\n' {output.majorSNP_vcf_gz} > {output.majorSNP_vcf_table} 2>> {log}
+
+echo -e "\nSample\tReference AccessionID\tPosition\tType\tReference\tAlternative\tQuality\tRaw Depth\tAllele Frequency\tPhred-scaled strand bias at this position\tCounts for ref-forward bases, ref-reverse, alt-forward and alt-reverse bases\tHomopolymer length to the right of report indel position" > {output.minorSNP_vcf_table} 2>> {log}
+bcftools query -f '{wildcards.sample}\t%CHROM\t%POS\t%TYPE\t%REF\t%ALT{{0}}\t%QUAL\t%DP\t%AF\t%SB\t%DP4\t%HRUN\n' {output.minorSNP_vcf_gz} >> {output.minorSNP_vcf_table} 2>> {log}
         """
