@@ -3,7 +3,7 @@
     <h1 align="center">
         Jovian
         <br>
-        A user-friendly viromics toolkit
+        A user-friendly Viromics toolkit
     </h1>
 </p>
 
@@ -329,17 +329,17 @@ ___
 
 ## Authors
 
-- Dennis Schmitz ([RIVM](https://www.rivm.nl/en) and [EMC](https://www6.erasmusmc.nl/viroscience/))  
-- Sam Nooij ([RIVM](https://www.rivm.nl/en) and [EMC](https://www6.erasmusmc.nl/viroscience/))  
-- Robert Verhagen ([RIVM](https://www.rivm.nl/en))  
-- Thierry Janssens ([RIVM](https://www.rivm.nl/en))  
-- Jeroen Cremer ([RIVM](https://www.rivm.nl/en))  
-- Florian Zwagemaker ([RIVM](https://www.rivm.nl/en))  
-- Mark Kroon ([RIVM](https://www.rivm.nl/en))  
-- Erwin van Wieringen ([RIVM](https://www.rivm.nl/en))  
-- Harry Vennema ([RIVM](https://www.rivm.nl/en))  
-- Annelies Kroneman ([RIVM](https://www.rivm.nl/en))  
-- Marion Koopmans ([EMC](https://www6.erasmusmc.nl/viroscience/))  
+- Dennis Schmitz ([RIVM][[RIVM]] and [EMC][EMC])  
+- Sam Nooij ([RIVM][RIVM] and [EMC][EMC])  
+- Robert Verhagen ([RIVM][RIVM])  
+- Thierry Janssens ([RIVM][RIVM])  
+- Jeroen Cremer ([RIVM][RIVM])  
+- Florian Zwagemaker ([RIVM][RIVM])  
+- Mark Kroon ([RIVM][RIVM])  
+- Erwin van Wieringen ([RIVM][RIVM])  
+- Harry Vennema ([RIVM][RIVM])  
+- Annelies Kroneman ([RIVM][RIVM])  
+- Marion Koopmans ([EMC][EMC])  
 
 ____
 _This project/research has received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement No. 643476. and the Dutch working group on molecular diagnostics (WMDI)._
@@ -349,7 +349,7 @@ ____
 [ILM_ref_wf]: https://jovian.rivm-bioinformatics.com/Workflows/Illumina/Reference/
 [ONT_ref_wf]: https://jovian.rivm-bioinformatics.com/Workflows/Nanopore/Reference/
 
-[example_report]: https://mybinder.org/v2/gh/DennisSchmitz/Jovian_binder/master?filepath=Notebook_report.
+[example_report]: https://mybinder.org/v2/gh/DennisSchmitz/Jovian_binder/master?filepath=Notebook_report.ipynb
 [CLI_ref]: https://jovian.rivm-bioinformatics.com/CLI/
 [CLI_examples_analysis]: https://jovian.rivm-bioinformatics.com/CLI/#examples
 [CLI_examples_cmd]: https://jovian.rivm-bioinformatics.com/CLI/#examples_1
@@ -362,6 +362,7 @@ ____
 [Install_instructions]: https://jovian.rivm-bioinformatics.com/Getting-started/Installation/
 
 [RIVM]: https://www.rivm.nl/en
+[EMC]: https://www6.erasmusmc.nl/viroscience/
 
 [irods]: https://irods.org
 [irods_ref]: https://www.ncbi.nlm.nih.gov/pubmed/30646845
