@@ -97,9 +97,6 @@ installer_intro() {
     echo -e "Welcome to the interactive installation process of Jovian"
     echo -e "You are seeing this because one or multiple dependencies of Jovian are missing on your system."
     echo -e "You are using Jovian $VERSION"
-    spacer
-    echo -e "Please keep in mind that this pipeline is still a work-in-progress"
-    echo -e "It is expected that several portions are unstable until release 1.0.0"
     line
     spacer
 }
@@ -131,8 +128,6 @@ ready_for_start() {
     line
     echo -e "All pre-flight checks of Jovian have been completed"
     echo -e "You are using Jovian version ${VERSION}"
-    echo -e "Please keep in mind that this pipeline is still a work-in-progress"
-    echo -e "It is expected that several portions are unstable until release 1.0.0"
     line
     spacer
 }
