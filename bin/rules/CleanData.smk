@@ -6,23 +6,25 @@
 
 rule Clean_the_data:
     input:
-        lambda wildcards: (SAMPLES[wildcards.sample][i] for i in ("R1", "R2"))
+        lambda wildcards: (SAMPLES[wildcards.sample][i]
+                            for i in ("R1", "R2")
+                            )
     output:
-        r1="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_pR1.fastq",
-        r2="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_pR2.fastq",
-        r1_unpaired="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_uR1.fastq",
-        r2_unpaired="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_uR2.fastq",
+        r1          =   f"{datadir + cln + hugo_no_rm}" + "{sample}_pR1.fastq",
+        r2          =   f"{datadir + cln + hugo_no_rm}" + "{sample}_pR2.fastq",
+        r1_unpaired =   f"{datadir + cln + hugo_no_rm}" + "{sample}_uR1.fastq",
+        r2_unpaired =   f"{datadir + cln + hugo_no_rm}" + "{sample}_uR2.fastq",
     conda:
-        "../envs/QC_and_clean.yaml"
-    benchmark:
-        "logs/benchmark/Clean_the_data_{sample}.txt"
-    threads: config["threads"]["Clean_the_data"]
+        f"{conda_envs}QC_and_clean.yaml"
     log:
-        "logs/Clean_the_data_{sample}.log"
+        f"{logdir}" + "Clean_the_data_{sample}.log"
+    benchmark:
+        f"{logdir + bench}" + "Clean_the_data_{sample}.txt"
+    threads: config["threads"]["Clean_the_data"]
     params:
-        adapter_removal_config=config["Trimmomatic"]["adapter_removal_config"],
-        quality_trimming_config=config["Trimmomatic"]["quality_trimming_config"],
-        minimum_length_config=config["Trimmomatic"]["minimum_length_config"],
+        adapter_removal_config  =   config["Illumina"]["Clean"]["adapter_removal_config"],
+        quality_trimming_config =   config["Illumina"]["Clean"]["quality_trimming_config"],
+        minimum_length_config   =   config["Illumina"]["Clean"]["minimum_length_config"],
     shell:
         """
 trimmomatic PE -threads {threads} \

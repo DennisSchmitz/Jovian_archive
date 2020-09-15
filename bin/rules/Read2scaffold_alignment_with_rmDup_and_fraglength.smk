@@ -6,26 +6,26 @@
 
 rule Read2scaffold_alignment_with_rmDup_and_fraglength:
     input:
-        fasta="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"],
-        pR1="data/cleaned_fastq/{sample}_pR1.fq",
-        pR2="data/cleaned_fastq/{sample}_pR2.fq",
+        fasta   =   rules.De_novo_assembly.output.filt_scaffolds,
+        pR1     =   rules.HuGo_removal_pt2_extract_paired_unmapped_reads.output.fastq_R1,
+        pR2     =   rules.HuGo_removal_pt2_extract_paired_unmapped_reads.output.fastq_R2
     output:
-        bam="data/scaffolds_filtered/{sample}_sorted.bam",
-        bam_bai="data/scaffolds_filtered/{sample}_sorted.bam.bai",
-        dup_metrics= "data/scaffolds_filtered/{sample}_sorted.MarkDup_metrics", #TODO deze toevoegen aan MultiQC?
-        txt="data/scaffolds_filtered/{sample}_insert_size_metrics.txt",
-        pdf="data/scaffolds_filtered/{sample}_insert_size_histogram.pdf"
+        bam         =   f"{datadir + scf_filt}" + "{sample}_sorted.bam",
+        bam_bai     =   f"{datadir + scf_filt}" + "{sample}_sorted.bam.bai",
+        dup_metrics =   f"{datadir + scf_filt}" + "{sample}_sorted.MarkDup_metrics", #TODO deze toevoegen aan MultiQC?
+        txt         =   f"{datadir + scf_filt}" + "{sample}_insert_size_metrics.txt",
+        pdf         =   f"{datadir + scf_filt}" + "{sample}_insert_size_histogram.pdf"
     conda:
-        "../envs/scaffold_analyses.yaml"
+        f"{conda_envs}Sequence_analysis.yaml"
     log:
-        "logs/Read2scaffold_alignment_with_rmDup_and_fraglength_{sample}.log"
+        f"{logdir}" + "Read2scaffold_alignment_with_rmDup_and_fraglength_{sample}.log"
     benchmark:
-        "logs/benchmark/Read2scaffold_alignment_with_rmDup_and_fraglength_{sample}.txt"
+        f"{logdir + bench}" + "Read2scaffold_alignment_with_rmDup_and_fraglength_{sample}.txt"
     threads: config["threads"]["Fragment_length_analysis"]
     params:
-        remove_dups="-r", #! This will HARD remove the duplicates instead of only marking them, N.B. this is REQUIRED for the downstream bbtools' pileup.sh to work --> it ignores the DUP marker and counts the reads in its coverage metrics. Thus giving a false sense of confidence.
-        markdup_mode="t",
-        max_read_length="300", # This is the default value and also the max read length of Illumina in-house sequencing.
+        remove_dups     =   "-r", #! This will HARD remove the duplicates instead of only marking them, N.B. this is REQUIRED for the downstream bbtools' pileup.sh to work --> it ignores the DUP marker and counts the reads in its coverage metrics. Thus giving a false sense of confidence.
+        markdup_mode    =   "t",
+        max_read_length =   "300" # This is the default value and also the max read length of Illumina in-house sequencing.
     shell:
         """
 bwa index {input.fasta} > {log} 2>&1

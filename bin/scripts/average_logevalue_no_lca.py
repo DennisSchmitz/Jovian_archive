@@ -18,27 +18,35 @@ from sys import argv
 
 SCRIPT, INPUTTAX, INPUTNOLCA, INPUTGFF, OUTPUTFILE = argv
 
-df_tax = pd.read_csv(INPUTTAX, sep = '\t')
+df_tax = pd.read_csv(INPUTTAX, sep="\t")
 
 if os.path.getsize(INPUTNOLCA) > 0:
-  df_nolca = pd.read_csv(INPUTNOLCA, sep = '\t', header = None)
-  series_nolca = df_nolca[df_nolca.columns[0]]
-  series_nolca = series_nolca.unique()
-  frame = {'#queryID': series_nolca, 'taxID': 1, 'Avg. log e-value': 1}
-  df_nolca = pd.DataFrame(frame)
+    df_nolca = pd.read_csv(INPUTNOLCA, sep="\t", header=None)
+    series_nolca = df_nolca[df_nolca.columns[0]]
+    series_nolca = series_nolca.unique()
+    frame = {"#queryID": series_nolca, "taxID": 1, "Avg. log e-value": 1}
+    df_nolca = pd.DataFrame(frame)
 else:
-  df_nolca = pd.DataFrame()
-df_gff = pd.read_csv(INPUTGFF, sep = '\t')
+    df_nolca = pd.DataFrame()
+df_gff = pd.read_csv(INPUTGFF, sep="\t")
 df_gff.drop(df_gff.columns[1:8], axis=1, inplace=True)
-df_gff.iloc[:, 1] = df_gff.iloc[:, 1].str.extract(r'((?<=evalue=\").*?(?=\";))', expand = True) 
-df_gff.columns = ['contig', 'evalue']
-df_gff.replace(to_replace = '0.0', value = '1.00e-450', inplace = True)
-df_gff['evalue'] =  pd.to_numeric(df_gff['evalue'])
-df_mean_evalues = df_gff.groupby(['contig']).mean()
+df_gff.iloc[:, 1] = df_gff.iloc[:, 1].str.extract(
+    r"((?<=evalue=\").*?(?=\";))", expand=True
+)
+df_gff.columns = ["contig", "evalue"]
+df_gff.replace(to_replace="0.0", value="1.00e-450", inplace=True)
+df_gff["evalue"] = pd.to_numeric(df_gff["evalue"])
+df_mean_evalues = df_gff.groupby(["contig"]).mean()
 df_log_mean_evalues = np.log10(df_mean_evalues)
-df_log_mean_evalues.columns = ['Avg. log e-value']
+df_log_mean_evalues.columns = ["Avg. log e-value"]
 df_log_mean_evalues = df_log_mean_evalues.replace(-np.inf, -450)
 df_log_mean_evalues = df_log_mean_evalues.round(decimals=1)
-df_tax_logevalues = pd.merge(left = df_tax, right = df_log_mean_evalues, how = 'left', left_on = '#queryID', right_index = True )
-df_tax_logevalues = df_tax_logevalues.append(df_nolca, sort = False)
-df_tax_logevalues.to_csv(OUTPUTFILE, index = False, sep = "\t")
+df_tax_logevalues = pd.merge(
+    left=df_tax,
+    right=df_log_mean_evalues,
+    how="left",
+    left_on="#queryID",
+    right_index=True,
+)
+df_tax_logevalues = df_tax_logevalues.append(df_nolca, sort=False)
+df_tax_logevalues.to_csv(OUTPUTFILE, index=False, sep="\t")

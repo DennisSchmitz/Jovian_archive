@@ -6,21 +6,21 @@
 
 rule Scaffold_classification:
     input:
-        "data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"]
+        rules.De_novo_assembly.output.filt_scaffolds
     output:
-        "data/taxonomic_classification/{sample}.blastn"
+        f"{datadir + taxclas}" + "{sample}.blastn"
     conda:
-        "../envs/scaffold_classification.yaml"
-    benchmark:
-        "logs/benchmark/Scaffold_classification_{sample}.txt"
-    threads: config["threads"]["Taxonomic_classification_of_scaffolds"]
+        f"{conda_envs}scaffold_classification.yaml"
     log:
-        "logs/Scaffold_classification_{sample}.log"
+        f"{logdir}" + "Scaffold_classification_{sample}.log"
+    benchmark:
+        f"{logdir + bench}" + "logs/benchmark/Scaffold_classification_{sample}.txt"
+    threads: config["threads"]["Classification_of_scaffolds"]
     params:
-        outfmt="6 std qseqid sseqid staxids sscinames stitle",
-        evalue=config["taxonomic_classification"]["evalue"],
-        max_target_seqs=config["taxonomic_classification"]["max_target_seqs"],
-        max_hsps=config["taxonomic_classification"]["max_hsps"]
+        outfmt          =   "6 std qseqid sseqid staxids sscinames stitle",
+        evalue          =   config["Illumina_meta"]["Classification"]["e_value"],
+        max_target_seqs =   config["Illumina_meta"]["Classification"]["max_target_seqs"],
+        max_hsps        =   config["Illumina_meta"]["Classification"]["max_hsps"]
     shell:
         """
 blastn -task megablast \

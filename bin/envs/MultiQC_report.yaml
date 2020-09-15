@@ -4,4 +4,4 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-    - multiqc==1.6
+    - multiqc==1.8

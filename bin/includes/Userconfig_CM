@@ -7,10 +7,14 @@ eval "$(parse_yaml "${HOME}"/.jovian_installchoice_compmode "cm_")"
 
 #@ vars for standalone mode
 standalone_cores="cores: ${USE_CORES}"
-standalone_hugo="HuGo_removal: ${USE_CORES}"
-standalone_assembly="De_novo_assembly: ${USE_CORES}"
-standalone_snp="SNP_calling: ${USE_CORES}"
-standalone_refal="RA_align_to_reference: ${USE_CORES}"
+standalone_hugo="    HuGo_removal: ${USE_CORES}"
+standalone_assembly="    De_novo_assembly: ${USE_CORES}"
+standalone_snp="    SNP_calling: ${USE_CORES}"
+standalone_refal="    RA_align_to_reference: ${USE_CORES}"
+standalone_adpt="    Adapter_trimming_cpu: ${USE_CORES}"
+standalone_nanoaln="    Nanopore_reference_alignment: ${USE_CORES}"
+standalone_cln="    Nanopore_cleanup: ${USE_CORES}"
+standalone_prm="    Nanopore_primer_removal: ${USE_CORES}"
 
 #@ vars for gridmode
 gridmode_localcores="local-cores: ${USE_CORES}"
@@ -78,13 +82,19 @@ if [ "${cm_installeranswers_compmode}" == "S" ]; then
 
     #> Change the rule-specific settings in pipeline-parameters.yaml
     #? Background removal
-        sed -i "s/.*HuGo_removal:.*/    ${standalone_hugo}/g" config/pipeline_parameters.yaml
+        sed -i "s/.*HuGo_removal:.*/${standalone_hugo}/g" config/pipeline_parameters.yaml
     #? Assembly
-        sed -i "s/.*De_novo_assembly:.*/    ${standalone_assembly}/g" config/pipeline_parameters.yaml
+        sed -i "s/.*De_novo_assembly:.*/${standalone_assembly}/g" config/pipeline_parameters.yaml
     #? SNP calling
-        sed -i "s/.*SNP_calling:.*/    ${standalone_snp}/g" config/pipeline_parameters.yaml
+        sed -i "s/.*SNP_calling:.*/${standalone_snp}/g" config/pipeline_parameters.yaml
     #? Reference alignment
-        sed -i "s/.*RA_align_to_reference:.*/    ${standalone_refal}/g" config/pipeline_parameters.yaml
+        sed -i "s/.*RA_align_to_reference:.*/${standalone_refal}/g" config/pipeline_parameters.yaml
+    #? nanopore vars
+        sed -i "s/.*Adapter_trimming_cpu:.*/${standalone_adpt}/g" config/pipeline_parameters.yaml
+        sed -i "s/.*Nanopore_reference_alignment:.*/${standalone_nanoaln}/g" config/pipeline_parameters.yaml
+        sed -i "s/.*Nanopore_cleanup:.*/${standalone_cln}/g" config/pipeline_parameters.yaml
+        sed -i "s/.*Nanopore_primer_removal:.*/${standalone_prm}/g" config/pipeline_parameters.yaml
+
 
 
 elif [ "${cm_installeranswers_compmode}" == "G" ]; then

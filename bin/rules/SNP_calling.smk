@@ -6,25 +6,25 @@
 
 rule SNP_calling:
     input:
-        fasta="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"],
-        bam="data/scaffolds_filtered/{sample}_sorted.bam",
-        bam_bai="data/scaffolds_filtered/{sample}_sorted.bam.bai"
+        fasta   =   rules.De_novo_assembly.output.filt_scaffolds,
+        bam     =   rules.Read2scaffold_alignment_with_rmDup_and_fraglength.output.bam,
+        bam_bai =   rules.Read2scaffold_alignment_with_rmDup_and_fraglength.output.bam_bai
     output:
-        fasta_fai="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta.fai" % config["scaffold_minLen_filter"]["minlen"],
-        unfilt_vcf="data/scaffolds_filtered/{sample}_unfiltered.vcf",
-        filt_vcf="data/scaffolds_filtered/{sample}_filtered.vcf",
-        zipped_vcf="data/scaffolds_filtered/{sample}_filtered.vcf.gz",
-        zipped_vcf_index="data/scaffolds_filtered/{sample}_filtered.vcf.gz.tbi"
+        fasta_fai           =   f"{datadir + scf_filt}" + "{sample}" + f"_scaffolds_ge{minlensize}nt.fasta.fai",
+        unfilt_vcf          =   f"{datadir + scf_filt}" + "{sample}_unfiltered.vcf",
+        filt_vcf            =   f"{datadir + scf_filt}" + "{sample}_filtered.vcf",
+        zipped_vcf          =   f"{datadir + scf_filt}" + "{sample}_filtered.vcf.gz",
+        zipped_vcf_index    =   f"{datadir + scf_filt}" + "{sample}_filtered.vcf.gz.tbi"
     conda:
-        "../envs/scaffold_analyses.yaml"
+        f"{conda_envs}Sequence_analysis.yaml"
     log:
-        "logs/SNP_calling_{sample}.log"
+        f"{logdir}" + "SNP_calling_{sample}.log"
     benchmark:
-        "logs/benchmark/SNP_calling_{sample}.txt"
+        f"{logdir + bench}" + "SNP_calling_{sample}.txt"
     threads: config["threads"]["SNP_calling"]
     params:
-        max_cov=config["SNP_calling_params"]["max_cov"],
-        minimum_AF=config["SNP_calling_params"]["minimum_AF"]
+        max_cov     =   config["Illumina_meta"]["SNP"]["Max_coverage"],
+        minimum_AF  =   config["Illumina_meta"]["SNP"]["Minimum_AF"]
     shell:
         """
 samtools faidx -o {output.fasta_fai} {input.fasta} > {log} 2>&1

@@ -1,158 +1,147 @@
-# Jovian, user-friendly Public Health toolkit
+<p align="center">
+    <img align="center" width="25%" src="https://raw.githubusercontent.com/DennisSchmitz/Jovian/assets/images/Jovian%20logo%20notext.svg">
+    <h1 align="center">
+        Jovian
+        <br>
+        A user-friendly Viromics toolkit
+    </h1>
+</p>
 
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Snakemake](https://img.shields.io/badge/snakemake-≥5.4.3-brightgreen.svg?style=flat)](https://snakemake.readthedocs.io)
-[![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/DennisSchmitz/Jovian?include_prereleases)](https://github.com/DennisSchmitz/Jovian/releases)
+<p align="center">
+    <a href="https://github.com/DennisSchmitz/Jovian/releases">
+        <img alt="Github release" src="https://img.shields.io/github/v/release/DennisSchmitz/Jovian?include_prereleases&style=flat-square">
+    </a>
+    <a href="https://www.gnu.org/licenses/agpl-3.0">
+        <img alt="licence" src="https://img.shields.io/badge/License-AGPL%20v3-blue.svg?style=flat-square">
+    </a>
+    <a href="https://snakemake.readthedocs.io">
+        <img alt="Snakemake Version" src="https://img.shields.io/badge/snakemake-≥5.20.1-brightgreen.svg?style=flat-square">
+    </a>
+</p>
+<p align="center">
+    <b>For Citations, please use the following DOI:</b><br>
+    <a href="https://doi.org/10.5281/zenodo.3666156">
+        <img alt="Zenodo DOI" src="https://zenodo.org/badge/DOI/10.5281/zenodo.3666156.svg">
+    </a>
+</p>
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/DennisSchmitz/Jovian_binder/master?filepath=Notebook_report.ipynb)
-
-
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3666156.svg)](https://doi.org/10.5281/zenodo.3666156)
+<p align="center">
+    <b>See the documentation:</b><br>
+    <a href="https://jovian.rivm-bioinformatics.com">
+        <img alt="Jovian Docs" src="https://github.com/florianzwagemaker/jovian-docs/workflows/Docs/badge.svg?branch=master&">
+    </a>
+    <br>
+    <b>Or view an example notebook:</b><br>
+    <a href="https://mybinder.org/v2/gh/DennisSchmitz/Jovian_binder/master?filepath=Notebook_report.ipynb">
+        <img alt="Launch an example notebook" src="https://mybinder.org/badge_logo.svg">
+    </a>
+</p>
 
 
 **IMPORTANT: manuscript is in preparation**
 
 ___
 
-<img align="right" src="../assets/images/Jovian_logo.png">
+<h2>Table of contents</h2>
 
-## Table of content
-
-- [Jovian, user-friendly Public Health toolkit](#jovian-user-friendly-public-health-toolkit)
-  - [Table of content](#table-of-content)
-  - [Jovian description](#jovian-description)
-  - [Commands](#commands)
-    - [Features](#features)
-      - [General features](#general-features)
-      - [Metagenomics specific features](#metagenomics-specific-features)
-      - [Reference-alignment specific features](#reference-alignment-specific-features)
-    - [Visualizations](#visualizations)
-    - [Virus typing](#virus-typing)
-    - [Audit trail](#audit-trail)
-  - [Requirements](#requirements)
-  - [Instructions](#instructions)
-    - [Installation](#installation)
-    - [How to start/configure a Jovian analysis](#how-to-startconfigure-a-jovian-analysis)
-    - [Explanation of output folders](#explanation-of-output-folders)
-  - [FAQ](#faq)
-  - [Example Jovian report](#example-jovian-report)
-  - [Acknowledgements](#acknowledgements)
-  - [Authors](#authors)
+- [About Jovian](#about-jovian)
+  - [Key features of Jovian:](#key-features-of-jovian)
+- [Commands](#commands)
+- [Features](#features)
+  - [General features](#general-features)
+  - [Metagenomics specific features](#metagenomics-specific-features)
+  - [Reference-alignment specific features](#reference-alignment-specific-features)
+  - [Visualizations](#visualizations)
+  - [Virus typing](#virus-typing)
+  - [Audit trail](#audit-trail)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Usage instructions](#usage-instructions)
+- [FAQ](#faq)
+- [Example Jovian report](#example-jovian-report)
+- [Acknowledgements](#acknowledgements)
+- [Authors](#authors)
 
 ___
 
-## Jovian description  
+## About Jovian  
 
-Jovian is a Public Health toolkit to automatically process raw Illumina NGS data from human clinical matrices (faeces, serum, etc.) into clinically relevant information. It has two main components:  
+Jovian is a Public Health toolkit to automatically process raw NGS data from human clinical matrices (faeces, serum, etc.) into clinically relevant information. It has three main components:  
 
-- Metagenomic: This performs, amongst others, taxonomic classification, [virus typing](#Virus-typing) and minority variant identification (quasispecies). See details [below](#features).  
-- Reference-alignment: Given a user-provided fasta reference, all data is aligned against it, and a consensus genome is generated at different coverage cut-off thresholds. See details here [below](#features).  
+- **Illumina based Metagenomics**:  
+  Includes (amongst other features) data quality control, assembly, taxonomic classification, viral typing, and minority variant identification (quasispecies).  
+  :memo: Please refer to the [documentation page for the Illumina Metagenomics workflow][ILM_meta_wf] for more information.  
 
-Jovian has several features necessary for diagnostic usage:  
+- **Illumina based Reference-alignment**:  
+  Includes (amongst other features) data quality control, alignment, SNP identification, and consensus-sequence generation.  
+  :exclamation: A reference fasta is required.  
+  :memo: Please refer to the [documentation page for the Illumina Reference based workflow][ILM_ref_wf] for more information.  
 
-- User-friendliness: Wetlab personnel can start, configure and interpret results via an [interactive web-report](#example-jovian-report). This makes doing Public Health analyses much more accessible and user-friendly since minimal command-line skills are required.  
-- Audit trail: All pipeline parameters, software versions, database information and runtime statistics are logged. See details [below](#audit-trail).  
-- Portable: `jovian` is easily installed on off-site computer systems and at back-up sister institutes. Allowing results to be generated even when the internal grid-computer is down (speaking from experience).  
+- **Nanopore based Reference-alignment**:  
+  Includes (amongst other features) data quality control, alignment, SNP identification, and consensus-sequence generation.  
+  :exclamation: A reference fasta is required.  
+  :exclamation: A fasta with primer sequences is required.  
+  :memo: Please refer to the [documentation page for the Nanopore Reference based workflow][ONT_ref_wf] for more information.  
 
-## Commands
+### Key features of Jovian:  
 
+- **User-friendliness**:  
+  Wetlab personnel can start, configure and interpret results via an interactive web-report. [Click here for an example report][example_report].  
+  This makes doing Public Health analyses much more accessible and user-friendly since minimal command-line skills are required.
+
+
+- **Audit trail**:  
+  All pipeline parameters, software versions, database information and runtime statistics are logged. See details [below](#audit-trail).  
+
+- **Portable**:  
+  Jovian is easily installed on off-site computer systems and at back-up sister institutes. Allowing results to be generated even when the internal grid-computer is down (speaking from experience).  
+
+<br>
+
+---
+
+<br>
+
+## Commands  
+
+:memo: Please see the full [Command Line Reference on the documentation site][CLI_ref] for a more detailed explanation of each command, including [example commands for starting an analysis][CLI_examples_analysis] or [common usage examples][CLI_examples_cmd].
+
+Here, we have a short list of commands and use cases that are used very frequently.
+
+**Use case 1:**   
+Metagenomic analylsis based on Illumina data:  
 ```
-Jovian, Public Health Toolkit version v0.9.6.1-154-gd431fe1, built with Snakemake
-  N.B. Current version only supports Illumina paired-end data, ONT compatibility is upcoming.
-__________________________________________________________________________________________________
-Use case 1, agnostic metagenomic analysis including virus typing (see below):
-      bash jovian -i <INPUT_DIR> <parameters>
-Use case 2, align against user-provided reference genome to generate a consensus genome:
-      bash jovian -i <INPUT_DIR> -ra <REFERENCE_FASTA> <parameters>
-__________________________________________________________________________________________________
-Input:
-  -i, --input [DIR]                 This is the folder containing your input fastq files.
-                                    Default is 'raw_data/' and only relative paths are accepted.
-Output (automatically generated):
-  data/                             Contains detailed intermediate files.
-  logs/                             Contains all log files.
-  results/                          Metagenomics workflow only. Contains all final results and
-                                    audit-trail. Results are visualized via the Jovian report.
-  reference_alignment/              Reference alignment workflow only. Contains detailed
-                                    intermediate files. Results are found in the "results/"
-                                    sub-folder.
-Virus typing:
-  -vt-help, --virus-typing-help     Print additional information about the virus-typing, i.e.
-                                    which family/genus is selected and which species are typed.
-  -vt, --virus-typing [all|NoV|EV|RVA|HAV|HEV|PV|Flavi]
-                                    After a Jovian analyses has completed, do viral typing for
-                                    Norovirus (NoV), Enterovirus (EV), Hepatitis A (HAV), 
-                                    Hepatitis E (HEV), Rotavirus A (RVA), Papillomaviruses (PV),
-                                    Flaviviruses (Flavi). Or use the 'all' keyword to perform
-                                    virus typing for all above listed viruses.
-                                    For additional explanation, --vt-help
-  -vt-force, --virus-typing-force [NoV|EV|RVA|HAV|HEV|PV|Flavi]
-                                    Same as above, but overwrites existing output. 
-Parameters:
-  -m, --mode [strict|relaxed]       Automatically configures Jovian to be stringent or relaxed
-                                    in taxonomic classification of scaffolds. Please see the 
-                                    publication for details. In short, use 'strict' for high 
-                                    precision at the cost of sensitivity and use 'relaxed' for
-                                    high sensitivity at the cost of more spurious results
-                                    (contamination). Default: relaxed.
-  -cq, --cluster-queue [Queue name] One-time override of the default cluster-queue settings.
-                                    Use this command when you wish to use a different computing-
-                                    queue without manually going through the jovian settings.
-                                    This does not change your default settings.
-  -h, --help                        Print the Jovian help document.
-  -sh, --snakemake-help             Print the Snakemake help document.
-  --clean (-y)                      Removes all Jovian output, both the metagenomics output and
-                                    reference alignment output. (-y forces "Yes" on all prompts)
-  -k, --keep-going                  Useful snakemake command: Go on with independent jobs if
-                                    a job fails.
-  -n, --dry-run                     Useful snakemake command: Do not execute anything, and
-                                    display what would be done.
-  -u, --unlock                      Removes the lock on the working directory. This happens when
-                                    a run ends abruptly and prevents you from doing subsequent
-                                    analyses.
-  -q, --quiet                       Useful snakemake command: Do not output any progress or
-                                    rule information.
-Archiving Jovian results:
-  --archive (-y)                    Archives the output of a Jovian analysis into single
-                                    compressed file. (-y forces "Yes" on all prompts)
-  --rebuild-archive                 Rebuilds Jovian results and logs from a previously made 
-                                    archive. It is important to use the same version of Jovian
-                                    as was initially used to build the archive. N.B. databases
-                                    are not restored.
-Jupyter Notebook (for data visualization):
-  --configure-jupyter               Sets the proper Jupyter settings. You only need to do this
-                                    once per user.
-  --start-jupyter                   Starts a Jupyter Notebook process. You must always have this
-                                    running in a separate terminal (or in the background) if you
-                                    want to open the final report with the interactive graphs
-                                    and tables.
-Installation:
-  -ic, --install-dependencies       Install the required software dependencies for the
-                                    metagenomics and reference alignment workflows.
-  -id, --install-databases          Install required databases.
-Debug only:
-  --start-nginx                     Starts the nginx process.
-  --stop-nginx                      Stops the nginx process.
-  --make-sample-sheet               Only make the sample sheet.
-Other:
-  -v, --version                     Print the current version of Jovian.
-  --update                          Updates Jovian to the latest release. Some files might be
-                                    reset to their default contents as shown on Github.
-  --update [Version tag]            Changes Jovian to the specified release. Only accepts major
-                                    releases. Files can get deleted in significant version changes.
-‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+bash jovian illumina-metagenomics -i <INPUT DIRECTORY>
 ```
 
-### Features
+**Use case 2:**  
+Align Illumina data against a user-provided reference to generate a consensus genome:  
+```
+bash jovian illumina-reference -i <INPUT DIRECTORY> -ref <REFERENCE FASTA>
+```
 
-#### General features
+**Use case 3:**  
+Align Nanopore (multiplex) PCR data against a user-provided reference, remove overrepresented primer sequences, and generate a consensus genome:
+```
+bash jovian nanopore-reference -i <INPUT DIRECTORY> -ref <REFERENCE FASTA> -pr <PRIMER FASTA>
+```
+use `bash jovian -h` to see a full list of commands applicable to the Jovian version that you're using.  
+<br>
 
-- Data quality control (QC) and cleaning.  
+---
+
+## Features
+
+:memo: Please refer to our [documentation for the full list of features][featurelist]
+
+### General features
+
+- Data quality control and cleaning.  
   - Including library fragment length analysis, useful for sample preparation QC.  
-- Removal of human* data (patient privacy). _*<sup><sub>You can use [whichever reference you would like](../../wiki/Frequently-Asked-Questions#i-dont-care-about-removing-the-human-data-i-have-samples-that-are-from-other-species-can-i-also-automatically-remove-that). However, Jovian is intended for human clinical samples.</sup></sub>_  
-- Removal of PCR-duplicates.  
+- Removal of human* data (patient privacy). _*<sup><sub>You can use [whichever reference you would like][faq]. However, Jovian is intended for human clinical samples.</sup></sub>_  
+- Removal of PCR-duplicates for Illumina data.  
 
-#### Metagenomics specific features
+### Metagenomics specific features
 
 - Assembly of short reads into bigger scaffolds (often full viral genomes).  
 - Taxonomic classification:  
@@ -166,11 +155,12 @@ Other:
   - GC content.  
   - Open reading frames (ORFs) are predicted.  
   - Minority variants (quasispecies) are identified.  
-- Importantly, results of all processes listed above are presented via an [interactive web-report](#visualizations) including an [audit trail](#audit-trail).  
+- Importantly, results of all processes listed above are presented via an [interactive web-report][example_report] including an [audit trail](#audit-trail).  
 
-#### Reference-alignment specific features
+### Reference-alignment specific features
 
 - All cleaned reads are aligned against the user-provided reference fasta.  
+- In the case of Nanopore (multiplex) PCR data, the overrepresented primer sequences are removed.  
 - SNPs are called and a consensus genome is generated.  
 - Consensus genomes are filtered at the following coverage cut-off thresholds: 1, 5, 10, 30 and 100x.  
 - A tabular overview of the breadth of coverage (BoC) at the different coverage cut-off thresholds is generated.  
@@ -178,7 +168,7 @@ Other:
 
 ### Visualizations
 
-All data are visualized via an interactive web-report, [as shown here](#example-jovian-report), which includes:  
+All data are visualized via an interactive web-report, [as shown here][example_report], which includes:  
 
 - A collation of interactive QC graphs via `MultiQC`.  
 - Taxonomic results are presented on three levels:  
@@ -223,74 +213,71 @@ An audit trail, used for clinical reproducibility and logging, is generated and 
 However, it has limitations since several things are out-of-scope for Jovian to control:
 
 - The `virus typing-tools` version  
-  - Currently we depend on a public web-tool hosted by the [RIVM](https://www.rivm.nl/en). These are developed in close collaboration with - *but independently of* - Jovian. A versioning system for the `virus typing-tools` is being worked on, however, this is not trivial and will take some time.  
+  - Currently we depend on a public web-tool hosted by the [RIVM][RIVM]. These are developed in close collaboration with - *but independently of* - Jovian. A versioning system for the `virus typing-tools` is being worked on, however, this is not trivial and will take some time.  
 - Input files and metadata
-  - We only save the names and location of input files at the time the analysis was performed. Long-term storage of the data, and documenting their location over time, is the responsibility of the end-user. Likewise, the end-user is responsible for storing datasets with their correct metadata (e.g. clinical information, database versions, etc.). We recommend using [iRODS](https://irods.org) for this as described by [Nieroda et al. 2019](https://www.ncbi.nlm.nih.gov/pubmed/30646845). While we acknowledge that database versions are vital to replicate results, the databases Jovian uses have no official versioning, hence why we include timestamps only.  
+  - We only save the names and location of input files at the time the analysis was performed. Long-term storage of the data, and documenting their location over time, is the responsibility of the end-user. Likewise, the end-user is responsible for storing datasets with their correct metadata (e.g. clinical information, database versions, etc.). We recommend using [iRODS][irods] for this as described by [Nieroda et al. 2019][irods_ref]. While we acknowledge that database versions are vital to replicate results, the databases Jovian uses have no official versioning, hence why we include timestamps only.  
 
 ___
 
-![Jovian_rulegraph.png](../assets/images/rulegraph_Jovian.png?raw=true)
+<details>
+  <summary>Jovian Illumina Metagenomics workflow visualization</summary>
+  Click the image for a full-sized version  
+  <a href="https://raw.githubusercontent.com/DennisSchmitz/Jovian/assets/images/Jovian_Workflow_Illumina_meta.svg">
+    <img  alt="Jovian Illumina Metagenomics workflow" src="https://raw.githubusercontent.com/DennisSchmitz/Jovian/assets/images/Jovian_Workflow_Illumina_meta.svg">
+  </a>
+</details>
+
+<br>
+
+<details>
+  <summary>Jovian Illumina Reference alignment workflow visualization</summary>
+  Click the image for a full-sized version  
+  <a href="https://raw.githubusercontent.com/DennisSchmitz/Jovian/assets/images/Jovian_Workflow_Illumina_ref.svg">
+    <img alt="Jovian Illumina Reference workflow" src="https://raw.githubusercontent.com/DennisSchmitz/Jovian/assets/images/Jovian_Workflow_Illumina_ref.svg">
+  </a>
+</details>
+
+<br>
+
+<details>
+  <summary>Jovian Nanopore Reference alignment workflow visualization</summary>
+  Click the image for a full-sized version  
+  <a href="https://raw.githubusercontent.com/DennisSchmitz/Jovian/assets/images/Jovian_Workflow_Nanopore_ref.svg">
+    <img alt="Jovian Nanopore reference workflow" src="https://raw.githubusercontent.com/DennisSchmitz/Jovian/assets/images/Jovian_Workflow_Nanopore_ref.svg">
+  </a>
+</details>
+
 ___
 
 ## Requirements
 
-Can be found on [this wiki page](../../wiki/Requirements).  
+:memo: Please refer to our [documentation][requirements] for a detailed overview of the Jovian requirements [here][requirements]
 ___
 
-## Instructions
+## Installation
 
-Below you'll find instructions on how to install and start/configure a Jovian analysis.
-
-### Installation
-
-Can be found on [this wiki page](../../wiki/Installation-Instructions).
-
-### How to start/configure a Jovian analysis
-
-There are two methods, the first is by using the "Jovian Portal" and the second is via the command-line interface. The former is an interactive website that is intended for non-bioinformaticians while the latter is intended for people familiar with the command-line interface.  
-
-<b>Jovian Portal:</b>  
-
-- First, start a Jupyter notebook background process as described [here](../../wiki/Installation-Instructions#Start-a-jupyter-Notebook-server-process). Or ask your system-admin to do this for you.  
-- Via the Jupyter Notebook connection established in the previous step, go to the `Jovian` folder [created during installation](../../wiki/Installation-Instructions). Then, open `Notebook_portal.ipynb`.  
-- Follow the instructions in this notebook to start a metagenomic analysis. N.B. use Mozilla Firefox or Google Chrome, do not use Internet Explorer.  
-  - N.B. in the current version you cannot perform the reference alignment via a notebook.  
-
-<b>Command-line interface:</b>  
-
-- Make sure that Jovian is completely [installed](../../wiki/Installation-Instructions).  
-- Go to the folder where `Jovian` was installed.  
-- Pipeline parameters can be configured by changing [profile/pipeline_parameters.yaml](profile/pipeline_parameters.yaml).  
-- Optional: We recommended doing a `dry-run` before each analysis to check if there are any typo's, missing files or other errors. This can be done via `bash jovian -i <input_directory> -n`
-- You can perform the metagenomic analysis via `bash jovian -i <input_directory>`  
-  - After the pipeline has finished, open `Notebook_report.ipynb` via your browser (Mozilla Firefox or Google Chrome). Click on `Cell` in the toolbar, then press `Run all` and wait for data to be imported.  
-    - N.B. You need to have a Jupyter notebook process running in the background, as described [here](../../wiki/Installation-Instructions#starting-the-jupyter-notebook-server-process).
-- You can perform the reference-alignment analysis via `bash jovian -i <input directory> -ra <user-provided reference fasta>`  
+:memo: Please refer to our [documentation][Install_instructions] for detailed instructions regarding the installation of Jovian [here][Install_instructions]
 
 
-### Explanation of output folders
+## Usage instructions
 
-|Folder|Contents|
-|:---|:---|
-|`bin/` |Contains the scripts and conda environment recipes required for Jovian to work |
-|`config/` | Contains the files with Snakemake and pipeline parameters |
-|`data/` | Contains intermediate and detailed data |
-|`files/` | Contains ancillary files for the pipeline |
-|`logs/` | Contains all Jovian log files, use these files to troubleshoot errors |
-|`reference_alignment/` | Contains the files generated by the reference-alignment component of `jovian`. See the `results/` subdirectory for logs and results. |
-|`results/` | This contains all files that are important for end-users and are imported by the Jupyter Report |
+General usage instructions vary for each workflow that we support.  
+Please refer to the link below corresponding to the workflow that you wish to use
 
-Also, a hidden folder named `.snakemake` is generated. Do not remove or edit this folder. Jovian was built via `Snakemake` and this folder contains all the software and file-metadata required for proper pipeline functionality.  
+- [Illumina Metagenomics workflow - Usage instructions and information][ILM_meta_wf]
+- [Illumina Reference alignment workflow - Usage instructions and information][ILM_ref_wf]
+- [Nanopore Reference alignment workflow - Usage instructions and information][ONT_ref_wf]
+
 ___
 
 ## FAQ
 
-Can be found on [this wiki page](../../wiki/Frequently-Asked-Questions).  
+Can be found [here][faq].  
 ___
 
 ## Example Jovian report
 
-Can be found on [this wiki page](../../wiki/Example-Jovian-report).  
+Can be found [here][example_report].  
 ___
 
 ## Acknowledgements
@@ -342,18 +329,40 @@ ___
 
 ## Authors
 
-- Dennis Schmitz ([RIVM](https://www.rivm.nl/en) and [EMC](https://www6.erasmusmc.nl/viroscience/))  
-- Sam Nooij ([RIVM](https://www.rivm.nl/en) and [EMC](https://www6.erasmusmc.nl/viroscience/))  
-- Robert Verhagen ([RIVM](https://www.rivm.nl/en))  
-- Thierry Janssens ([RIVM](https://www.rivm.nl/en))  
-- Jeroen Cremer ([RIVM](https://www.rivm.nl/en))  
-- Florian Zwagemaker ([RIVM](https://www.rivm.nl/en))  
-- Mark Kroon ([RIVM](https://www.rivm.nl/en))  
-- Erwin van Wieringen ([RIVM](https://www.rivm.nl/en))  
-- Harry Vennema ([RIVM](https://www.rivm.nl/en))  
-- Annelies Kroneman ([RIVM](https://www.rivm.nl/en))  
-- Marion Koopmans ([EMC](https://www6.erasmusmc.nl/viroscience/))  
+- Dennis Schmitz ([RIVM][[RIVM]] and [EMC][EMC])  
+- Sam Nooij ([RIVM][RIVM] and [EMC][EMC])  
+- Robert Verhagen ([RIVM][RIVM])  
+- Thierry Janssens ([RIVM][RIVM])  
+- Jeroen Cremer ([RIVM][RIVM])  
+- Florian Zwagemaker ([RIVM][RIVM])  
+- Mark Kroon ([RIVM][RIVM])  
+- Erwin van Wieringen ([RIVM][RIVM])  
+- Harry Vennema ([RIVM][RIVM])  
+- Annelies Kroneman ([RIVM][RIVM])  
+- Marion Koopmans ([EMC][EMC])  
 
 ____
 _This project/research has received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement No. 643476. and the Dutch working group on molecular diagnostics (WMDI)._
 ____
+
+[ILM_meta_wf]: https://jovian.rivm-bioinformatics.com/Workflows/Illumina/Metagenomics/
+[ILM_ref_wf]: https://jovian.rivm-bioinformatics.com/Workflows/Illumina/Reference/
+[ONT_ref_wf]: https://jovian.rivm-bioinformatics.com/Workflows/Nanopore/Reference/
+
+[example_report]: https://mybinder.org/v2/gh/DennisSchmitz/Jovian_binder/master?filepath=Notebook_report.ipynb
+[CLI_ref]: https://jovian.rivm-bioinformatics.com/CLI/
+[CLI_examples_analysis]: https://jovian.rivm-bioinformatics.com/CLI/#examples
+[CLI_examples_cmd]: https://jovian.rivm-bioinformatics.com/CLI/#examples_1
+
+
+[featurelist]: https://jovian.rivm-bioinformatics.com/#features
+[faq]: https://jovian.rivm-bioinformatics.com/FAQ/
+
+[requirements]: https://jovian.rivm-bioinformatics.com/Getting-started/Requirements/
+[Install_instructions]: https://jovian.rivm-bioinformatics.com/Getting-started/Installation/
+
+[RIVM]: https://www.rivm.nl/en
+[EMC]: https://www6.erasmusmc.nl/viroscience/
+
+[irods]: https://irods.org
+[irods_ref]: https://www.ncbi.nlm.nih.gov/pubmed/30646845

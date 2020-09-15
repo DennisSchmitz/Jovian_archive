@@ -6,21 +6,21 @@
 
 rule Determine_GC_content:
     input:
-        fasta="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta" % config["scaffold_minLen_filter"]["minlen"],
-        fasta_fai="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta.fai" % config["scaffold_minLen_filter"]["minlen"],
+        fasta       =   rules.De_novo_assembly.output.filt_scaffolds,
+        fasta_fai   =   rules.SNP_calling.output.fasta_fai
     output:
-        fasta_sizes="data/scaffolds_filtered/{sample}_scaffolds_ge%snt.fasta.sizes" % config["scaffold_minLen_filter"]["minlen"],
-        bed_windows="data/scaffolds_filtered/{sample}.windows",
-        GC_bed="data/scaffolds_filtered/{sample}_GC.bedgraph"
+        fasta_sizes =   f"{datadir + scf_filt}" + "{sample}_scaffolds_ge%snt.fasta.sizes" % config["Illumina_meta"]["minlen"],
+        bed_windows =   f"{datadir + scf_filt}" + "{sample}.windows",
+        GC_bed      =   f"{datadir + scf_filt}" + "{sample}_GC.bedgraph"
     conda:
-        "../envs/scaffold_analyses.yaml"
+        f"{conda_envs}Sequence_analysis.yaml"
     log:
-        "logs/Determine_GC_content_{sample}.log"
+        f"{logdir}" + "Determine_GC_content_{sample}.log"
     benchmark:
-        "logs/benchmark/Determine_GC_content_{sample}.txt"
+        f"{logdir + bench}" + "Determine_GC_content_{sample}.txt"
     threads: 1
     params:
-        window_size="50"
+        window_size =   config["Global"]["GC_window_size"]
     shell:
         """
 cut -f 1,2 {input.fasta_fai} 2> {log} 1> {output.fasta_sizes}

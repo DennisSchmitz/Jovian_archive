@@ -12,8 +12,8 @@ eval $(parse_yaml config/pipeline_parameters.yaml "config_")
 currentuser=$(whoami)
 
 
-echo "Selected port for NGINX is: $config_server_info_port "
-port=$config_server_info_port
+echo "Selected port for NGINX is: $config_Global_server_port "
+port=$config_Global_server_port
 
 #set -x
 

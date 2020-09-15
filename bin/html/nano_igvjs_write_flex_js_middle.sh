@@ -42,14 +42,14 @@ cat << EOF >> ${OUTPUT_HTML}
                 reference:
                 {
                     id: "${INPUT}",
-                    fastaURL: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/${INPUT_REF_FASTA}",
+                    fastaURL: "${vars_Server_host_hostname}:${params_Global_server_port}/${vars_Jovian_run_identifier}/${INPUT_REF_FASTA}",
                     wholeGenomeView: false,
                     tracks: [
                         {
                             type: "wig",
                             name: "GC contents",
                             format: "bedGraph",
-                            url: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/${INPUT_REF_GC_BEDGRAPH}",
+                            url: "${vars_Server_host_hostname}:${params_Global_server_port}/${vars_Jovian_run_identifier}/${INPUT_REF_GC_BEDGRAPH}",
                             min: "0",
                             max: "1",
                             order: Number.MAX_VALUE
@@ -58,8 +58,8 @@ cat << EOF >> ${OUTPUT_HTML}
                             name:"SNPs",
                             type:"variant",
                             format:"vcf",
-                            url: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/${INPUT_ZIPPED_SNP_VCF}",
-                            indexURL: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/${INPUT_ZIPPED_SNP_VCF}.tbi",
+                            url: "${vars_Server_host_hostname}:${params_Global_server_port}/${vars_Jovian_run_identifier}/${INPUT_ZIPPED_SNP_VCF}",
+                            indexURL: "${vars_Server_host_hostname}:${params_Global_server_port}/${vars_Jovian_run_identifier}/${INPUT_ZIPPED_SNP_VCF}.tbi",
                             displayMode: "SQUISHED",
                             order: 2
                         },
@@ -67,20 +67,20 @@ cat << EOF >> ${OUTPUT_HTML}
                             type: "alignment",
                             format: "bam",
                             colorBy: "strand",
-                            url: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/${INPUT_SORTED_BAM}",
-                            indexURL: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/${INPUT_SORTED_BAM}.bai",
+                            url: "${vars_Server_host_hostname}:${params_Global_server_port}/${vars_Jovian_run_identifier}/${INPUT_SORTED_BAM}",
+                            indexURL: "${vars_Server_host_hostname}:${params_Global_server_port}/${vars_Jovian_run_identifier}/${INPUT_SORTED_BAM}.bai",
                             indexed: "true",
                             name: "Alignment",
                             showSoftClips: false,
-                            viewAsPairs: true,
+                            viewAsPairs: false,
                             order: 3
                         },
                         {
                             type: "annotation",
                             name: "ORF predictions",
                             format: "gff3",
-                            url: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/${INPUT_REF_ZIPPED_ORF_GFF}",
-                            indexURL: "${vars_Server_host_hostname}:${params_server_info_port}/${vars_Jovian_run_identifier}/${INPUT_REF_ZIPPED_ORF_GFF}.tbi",
+                            url: "${vars_Server_host_hostname}:${params_Global_server_port}/${vars_Jovian_run_identifier}/${INPUT_REF_ZIPPED_ORF_GFF}",
+                            indexURL: "${vars_Server_host_hostname}:${params_Global_server_port}/${vars_Jovian_run_identifier}/${INPUT_REF_ZIPPED_ORF_GFF}.tbi",
                             displayMode: "EXPANDED",
                             order: 1
                         }

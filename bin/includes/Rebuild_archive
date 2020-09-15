@@ -4,16 +4,20 @@
 
 minispacer
 line
-ARCHIVE_NAME=$(ls archive_*.tar.gz)
-echo -e "Unpacking ${ARCHIVE_NAME}"
-(tar -xzf archive_*.tar.gz) &
-spinner
+ARCHIVE_NAME=$(ls archive_*.tar.gz | head -n 1)
+
+
+start_spinner "Unpacking ${ARCHIVE_NAME}"
+tar -xzf "${ARCHIVE_NAME}"
+stop_spinner $?
 
 minispacer
 line
 minispacer
 
-eval $(parse_yaml config/variables.yaml "vars_")
+eval $(parse_yaml ${PROFILE}/variables.yaml "vars_")
+
+
 oldhostname="$vars_Server_host_hostname"
 newhostname="http://${HOSTNAME}"
 
@@ -45,4 +49,3 @@ else
 fi
 
 echo -e "Done"
-echo -e ":)"

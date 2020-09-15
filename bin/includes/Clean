@@ -1,51 +1,20 @@
 #!/bin/bash
 # shellcheck disable=SC1091
 
-#TODO redundant code in here, collapse at a later time.
+should_i_clean="no"
 
 line
 spacer
 echo -e "The following files and folders will be deleted:\ndata/\nlogs/\nresults/\n${PROFILE}/variables.yaml\nsample_sheet.yaml\n\n"
+
 if [ "${SKIP_CONFIRMATION}" == "TRUE" ]; then
-    echo -e "Removing Jovian output: data/ logs/ results/ ${PROFILE}/variables.yaml sample_sheet.yaml"
-        rm -rf data/
-        rm -rf logs/
-        rm -rf results/
-        rm -f sample_sheet.yaml
-        rm -f "${PROFILE}"/variables.yaml
-        rm -rf reference_alignment/
-
-        ## clean the yaml files
-        sed -i '\|databases|d' "${PROFILE}"/pipeline_parameters.yaml
-        sed -i '\|background_ref|d' "${PROFILE}"/pipeline_parameters.yaml
-        sed -i '\|Krona_taxonomy|d' "${PROFILE}"/pipeline_parameters.yaml
-        sed -i '\|virusHostDB|d' "${PROFILE}"/pipeline_parameters.yaml
-        sed -i '\|NCBI_new_taxdump_rankedlineage|d' "${PROFILE}"/pipeline_parameters.yaml
-        sed -i '\|NCBI_new_taxdump_host|d' "${PROFILE}"/pipeline_parameters.yaml
-        sed -i '\|MGKit_taxonomy|d' "${PROFILE}"/pipeline_parameters.yaml
-        sed -i '\|drmaa|d' "${PROFILE}"/config.yaml
-
+    should_i_clean="yes"
 else
     while read -r -p "Are you sure you wish to permanently delete these files and folders? [y/N] " response
     do
         response=${response,,}
-        if [[ "${response}" =~ ^(yes|y)$ ]] || [ "${SKIP_CONFIRMATION}" == "TRUE" ]; then
-            echo -e "Removing Jovian output: data/ logs/ results/ ${PROFILE}/variables.yaml sample_sheet.yaml"
-            rm -rf data/
-            rm -rf logs/
-            rm -rf results/
-            rm -f sample_sheet.yaml
-            rm -f "${PROFILE}"/variables.yaml
-            rm -rf reference_alignment/
-
-            sed -i '\|databases|d' "${PROFILE}"/pipeline_parameters.yaml
-            sed -i '\|background_ref|d' "${PROFILE}"/pipeline_parameters.yaml
-            sed -i '\|Krona_taxonomy|d' "${PROFILE}"/pipeline_parameters.yaml
-            sed -i '\|virusHostDB|d' "${PROFILE}"/pipeline_parameters.yaml
-            sed -i '\|NCBI_new_taxdump_rankedlineage|d' "${PROFILE}"/pipeline_parameters.yaml
-            sed -i '\|NCBI_new_taxdump_host|d' "${PROFILE}"/pipeline_parameters.yaml
-            sed -i '\|MGKit_taxonomy|d' "${PROFILE}"/pipeline_parameters.yaml
-            sed -i '\|drmaa|d' "${PROFILE}"/config.yaml
+        if [[ "${response}" =~ ^(yes|y)$ ]]; then
+            should_i_clean="yes"
             break
         elif [[ "${response}" =~ ^(no|n)$ ]]; then
             echo -e "Aborting cleaning process on user request"
@@ -55,4 +24,45 @@ else
             minispacer
         fi
     done
+fi
+
+if [ "${should_i_clean}" == "no" ]; then
+    exit 0
+fi
+
+if [ "${should_i_clean}" == "yes" ]; then
+    echo -e "Removing Jovian output: data/ logs/ results/ ${PROFILE}/variables.yaml sample_sheet.yaml"
+
+    #@ remove the databases in pipeline_parameters first
+    sed -i '\|databases|d' "${PROFILE}"/pipeline_parameters.yaml
+    sed -i '\|background_ref|d' "${PROFILE}"/pipeline_parameters.yaml
+    sed -i '\|Krona_taxonomy|d' "${PROFILE}"/pipeline_parameters.yaml
+    sed -i '\|virusHostDB|d' "${PROFILE}"/pipeline_parameters.yaml
+    sed -i '\|NCBI_new_taxdump_rankedlineage|d' "${PROFILE}"/pipeline_parameters.yaml
+    sed -i '\|NCBI_new_taxdump_host|d' "${PROFILE}"/pipeline_parameters.yaml
+    sed -i '\|MGKit_taxonomy|d' "${PROFILE}"/pipeline_parameters.yaml
+
+
+    #@ reset the input vars (reference file + primer file) to defaults = NONE
+    ref_parameter="reference_file: NONE"
+    prm_parameter="primer_file: NONE"
+    sed -i "s~.*reference_file:.*~${ref_parameter}~g" "${PROFILE}"/pipeline_parameters.yaml
+    sed -i "s~.*primer_file:.*~${prm_parameter}~g" "${PROFILE}"/pipeline_parameters.yaml
+
+    #@ remove the folders through a forloop with spinner + finish signal
+    a=(
+    "data/"
+    "logs/"
+    "results/"
+    "sample_sheet.yaml"
+    "${PROFILE}/variables.yaml"
+    )
+
+    for i in "${a[@]}"; do
+        start_spinner "Removing \"${i}\""
+        sleep 0.2
+        rm -rf "${i}"
+        stop_spinner $?
+    done
+
 fi

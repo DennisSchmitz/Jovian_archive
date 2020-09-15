@@ -15,8 +15,13 @@ if [ -n "$(ls -A "${INPUT_DIR}")" ]; then
     minispacer
     echo -e "Files in input directory (${INPUT_DIR}) are present"
     echo -e "Generating sample sheet..."
-    python bin/scripts/generate_sample_sheet.py "${INPUT_DIR}" > sample_sheet.yaml
-	exit 0
+    if [[ "${workflow}" =~ (ILM_META|ILM_REF) ]]; then
+        python bin/scripts/Illumina_generate_sample_sheet.py "${INPUT_DIR}" > sample_sheet.yaml
+	    exit 0
+    elif [ "${workflow}" == "NANO_REF" ]; then
+        python bin/scripts/Nanopore_generate_sample_sheet.py "${INPUT_DIR}" > sample_sheet.yaml
+        exit 0
+    fi
 else
     minispacer
     echo -e "The input directory you specified (${INPUT_DIR}) exists but is empty...\nPlease specify a directory with input-data."

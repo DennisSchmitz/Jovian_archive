@@ -6,16 +6,16 @@
 
 rule HuGo_removal_pt3_extract_unpaired_unmapped_reads:
     input:
-        bam="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_sorted.bam",
-        bam_index="data/cleaned_fastq/fastq_without_HuGo_removal/{sample}_sorted.bam.bai"
+        bam         =   rules.HuGo_removal_pt1_alignment.output.sorted_bam,
+        bam_index   =   rules.HuGo_removal_pt1_alignment.output.sorted_bam_index
     output:
-        "data/cleaned_fastq/{sample}_unpaired.fq"
+        f"{datadir + cln}" + "{sample}_unpaired.fq"
     conda:
-        "../envs/HuGo_removal.yaml"
+        f"{conda_envs}HuGo_removal.yaml"
     log:
-        "logs/HuGo_removal_pt3_extract_unpaired_unmapped_reads_{sample}.log"
+        f"{logdir}" + "HuGo_removal_pt3_extract_unpaired_unmapped_reads_{sample}.log"
     benchmark:
-        "logs/benchmark/HuGo_removal_pt3_extract_unpaired_unmapped_reads_{sample}.txt"
+        f"{logdir + bench}" + "HuGo_removal_pt3_extract_unpaired_unmapped_reads_{sample}.txt"
     threads: config["threads"]["HuGo_removal"]
     shell:
         """

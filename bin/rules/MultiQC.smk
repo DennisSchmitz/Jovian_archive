@@ -6,23 +6,43 @@
 
 rule MultiQC_report:
     input:
-        expand("data/FastQC_pretrim/{sample}_{read}_fastqc.zip", sample = SAMPLES, read = "R1 R2".split()),
-        expand("data/FastQC_posttrim/{sample}_{read}_fastqc.zip", sample = SAMPLES, read = "pR1 pR2 uR1 uR2".split()),
-        expand("data/scaffolds_filtered/{sample}_insert_size_metrics.txt", sample = SAMPLES),
-        expand("logs/Clean_the_data_{sample}.log", sample = SAMPLES),
-        expand("logs/HuGo_removal_pt1_alignment_{sample}.log", sample = SAMPLES),
+        expand( rules.QC_raw_data.output.zip,
+                sample  =   SAMPLES,
+                read    =   "R1 R2".split()
+                ),
+        expand( rules.QC_clean_data.output.zip,
+                sample  =   SAMPLES,
+                read    =   "pR1 pR2 uR1 uR2".split()
+                ),
+        expand( rules.Read2scaffold_alignment_with_rmDup_and_fraglength.output.txt,
+                sample  =   SAMPLES
+                ),
+        expand( "{p}Clean_the_data_{sample}.log",
+                p       =   f"{logdir}",
+                sample  =   SAMPLES
+                ),
+        expand( "{p}HuGo_removal_pt1_alignment_{sample}.log",
+                p       =   f"{logdir}",
+                sample  =   SAMPLES
+                ),
     output:
-        "results/multiqc.html",
-        expand("results/multiqc_data/multiqc_{program}.txt", program = ['trimmomatic','bowtie2','fastqc']),
+        f"{res}multiqc.html",
+        expand( "{p}multiqc_{program}.txt",
+                p       =   f"{res + mqc_data}",
+                program =   [   'trimmomatic',
+                                'bowtie2',
+                                'fastqc'
+                            ]
+                ),
     conda:
-        "../envs/MultiQC_report.yaml"
+        f"{conda_envs}MultiQC_report.yaml"
+    log:
+        f"{logdir}MultiQC_report.log"
     benchmark:
-        "logs/benchmark/MultiQC_report.txt"
+        f"{logdir + bench}MultiQC_report.txt"
     threads: 1
     params:
-        config_file="files/multiqc_config.yaml"
-    log:
-        "logs/MultiQC_report.log"
+        config_file =   f"{fls}multiqc_config.yaml"
     shell:
         """
 multiqc --force --config {params.config_file} \

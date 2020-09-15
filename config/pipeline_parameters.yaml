@@ -5,98 +5,109 @@
 
 WrapperSettings:
     ReadlengthDetection: true
-    
-
-Trimmomatic:
-    # For the Nextera PE lib prep adapters
-    adapter_removal_config: ILLUMINACLIP:files/trimmomatic_0.36_adapters_lists/NexteraPE-PE.fa:2:30:10:8:true
-    # Default: 5 nucleotides window size, minimum average Phred score of 30
-    quality_trimming_config: SLIDINGWINDOW:5:20
-    # Default: Remove anything smaller than 50 nucleotides
-    minimum_length_config: MINLEN:50
-    
-HuGo_removal_type:
-    # Choose if you want to do "local" or "global" alignment. Keep this as "--local" unless you know what you're doing.
-    alignment_type: --local
-
-SPAdes:
-    kmersizes: 21,33,55,77
-    ## This defaults to short illumina reads. The wrapper changes the kmer sizes to fit the average read length of the given samples.
-    ## You can still use this manually by toggling off the read-length checker.
-    ## To disable the checker, type "bash jovian --disable-readchecker" or enable it with "bash jovian --enable-readchecker"
-    ## For reference the kmer sizes "21,33,55,77" are used for short Illumina reads (<250 nt in length)
-    ## The kmer sizes "21,33,55,77,99,127" are used for large Illumina reads (>250 nt in length)
 
 
-scaffold_minLen_filter:
-    # Minimum allowed scaffold size to be allowed for downstream processessing. Advice, use a minimum length that is atleast 1nt greater than your Illumina read length
-    minlen: 250
-
-taxonomic_classification: # NT database is hardcoded for now
-    evalue: 0.05 # E-value threshold for saving hits
-    max_target_seqs: 250 # Maximum number of target sequences to report
-    max_hsps: 1 # Maximum number of hits per targets sequence.
-
-taxonomic_classification_LCA:
-    Krona: False
-    Krona_LCA: 
-        bitscoreDeltaLCA: 5 # Every taxonomic hit within this bitscore distance will be used in the LCA analysis.
-    mgkit: true
-    mgkit_LCA:
-        quantile_threshold: .97
-        bitscore_threshold: 100
-        
-SNP_calling_params:
-    max_cov: 20000 # Maximum coverage that will be used for SNP calling. Dont change this value unless you know what youre doing.
-    minimum_AF: 0.05 # This is the minimum At the end of the comment after "remove_temp" there were four Ss, probably accidentally typed in when saving the file (Ctrl + S, where Ctrl was not hit yet?).allelle frequency (=AF) for which you want a SNP to be reported. Default is 5%.
-
-ORF_prediction:
-    procedure: meta # Set the prodigal procedure. Use "meta" for metagenomics data.
-    output_format: gff # Set the ORF prediction output format. The format that IGVjs (the alignment viewer program) accepts is "gff"
-
-HTML_index_titles:
-    IGVjs_title: "Interactive genome viewers for all samples in this run:"
-
-server_info: # This is used for IGVjs, discuss this with your IT department, depends on your local setup
-    # ? kan deze ook semi-flexibel? I.e. automatisch invullen naar de juiste poort als nginx al draait op een systeem?
-    # ? Kan gecheckt worden met netstat -tulpn | grep nginx
-    port: 8083
-
+sample_sheet: sample_sheet.yaml
+reference_file: NONE
+primer_file: NONE
 
 ######################################
 ### Technical parameters           ###
 ######################################
 
-sample_sheet: sample_sheet.yaml
-
 threads:
     Clean_the_data: 4
     HuGo_removal: 12
     De_novo_assembly: 12
-    Taxonomic_classification_of_scaffolds: 12
+    Classification_of_scaffolds: 12
     SNP_calling: 12
     Fragment_length_analysis: 4
     quantify_output: 4
-    # Settings for the optional reference alignment steps:
-    RA_align_to_reference: 12
+    # Settings for the Illumina-reference workflow
+    Illumina_align_to_reference: 12
+    Illumina_extract_raw_consensus: 6
+    # Settings for the Nanopore-reference workflow
+    Adapter_trimming_cpu: 6
+    Nanopore_reference_alignment: 6
+    Nanopore_cleanup: 12
+    Nanopore_primer_removal: 6
+
+######################################
+### Pipeline parameters            ###
+######################################
+
+Global:
+    HuGo_removal_method: --local
+    ORF_procedure: meta # Set the prodigal procedure. Use "meta" for metagenomics data.
+    ORF_output_format: gff # Set the ORF prediction output format. The format that IGVjs (the alignment viewer program) accepts is "gff"
+    GC_window_size: 50
+    IGVjs_title: "Interactive genome viewers for all samples in this run:"
+    server_port: 8083
+    
+
+Illumina:
+    Clean:
+        adapter_removal_config: ILLUMINACLIP:files/trimmomatic_0.36_adapters_lists/NexteraPE-PE.fa:2:30:10:8:true
+        quality_trimming_config: SLIDINGWINDOW:5:20
+        minimum_length_config: MINLEN:50
+
+Illumina_meta:
+    Spades:
+        kmersizes: 21,33,55,77
+        ## This defaults to short illumina reads. The wrapper changes the kmer sizes to fit the average read length of the given samples.
+        ## You can still use this manually by toggling off the read-length checker.
+        ## For reference the kmer sizes "21,33,55,77" are used for short Illumina reads (<250 nt in length)
+        ## The kmer sizes "21,33,55,77,99,127" are used for large Illumina reads (>250 nt in length)
+        Max_gb_ram: 100
+
+    minlen: 250
+    # Minimum allowed scaffold size to be allowed for downstream processessing. Advice, use a minimum length that is atleast 1nt greater than your Illumina read length
+
+    Classification: # NT database is hardcoded for now
+        e_value: 0.05 # E-value threshold for saving hits
+        max_target_seqs: 250 # Maximum number of target sequences to report
+        max_hsps: 1 # Maximum number of hits per targets sequence.
+
+    LCA:
+        Krona: False 
+        mgkit: true
+        
+        bitscoreDelta: 5 # Every taxonomic hit within this bitscore distance will be used in the LCA analysis.
+        quantile_threshold: .97
+        bitscore_threshold: 100
+
+    SNP:
+        Max_coverage: 20000 # Maximum coverage that will be used for SNP calling. Dont change this value unless you know what you are doing.
+        Minimum_AF: 0.05 # This is the minimum allelle frequency (=AF) for which you want a SNP to be reported. Default is 5%.
+
+    Alignment:
+        Duplicates: -r
+        Duplicate_marking: t
+        Max_read_length: 300
+
+Illumina_ref:
+    Alignment:
+        Alignment_type: --local
+        Duplicates: -r
+        Duplicate_marking: t
+        Max_read_length: 300
+    SNP:
+        Max_coverage: 20000 # Maximum coverage that will be used for SNP calling. Dont change this value unless you know what you are doing.
+        Minority_SNP_AF_lower_threshold: 0.05 # This is the minimum allelle frequency (=AF) for which you want a SNP to be reported. Default is 5%.
+
+Nanopore_ref:
+    Primer_cutoff_plus: 30
+    Primer_cutoff_minus: -30
+    
+    Quality_score: 13
+
 
 #! Options for the metagenomics workflow, for developers only
 #TODO hier nog aparte yaml parent voor maken, updaten verwijzingen in rest v/d code. Is duidelijker/leesbaarder.
 remove_temp: 1 # For development and debug only. If you set this to 0 you will keep the HuGo alignment data which can lead to patient privacy concerns.
 PCR_dup_removal: true # For development and debug only. Set this to false to NOT remove PCR duplicates in the metagenomic output. N.B. this is not advised and mainly in here for debugging purposes: depending on the dataset, not removing PCR-dups gives a false sense of confidence (inflated coverage metrics), false SNP-calls and increases turnaround time of downstream processes.
 
-#! Options for the RA extension, for developers only, do not change this as an end-user since this will break functionality of wrapper help-functions such as `clean` and `archive`
-reference_alignment:
-    # Specify the input directory (default: data/cleaned_fastq/). N.B. end the path with a "/" character
-    input_dir: data/cleaned_fastq/
-    # Specify where all the output of the ref alignment extension will go (default: reference_alignment/). N.B. end the path with a "/" character
-    output_dir: reference_alignment/
-    # Specify the log output directory (default: logs/). N.B. end the path with a "/" character
-    log_dir: logs/
-
 
 ######################################
 ### Databases                      ###
 ######################################
-
-

@@ -45,11 +45,28 @@ set +o allexport
 #@ If the given arguments are not part of Jovian, then Jovian will send them to Snakemake
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
+shopt -s nocasematch
+
 POSITIONAL=()
 while [[ $# -gt 0 ]]
 do
     key="$1"
     case $key in
+        im|illumina-metagenomics|illumina-meta|ilm-meta)
+        workflow="ILM_META"
+        export workflow
+        shift # Next
+        ;;
+        ir|illumina-reference|illumina-ref|ilm-ref)
+        workflow="ILM_REF"
+        export workflow
+        shift # Next
+        ;;
+        nr|nanopore-reference|nanopore-ref|nano-ref|ont-ref)
+        workflow="NANO_REF"
+        export workflow
+        shift # Next
+        ;;
         -i|--input)
         INPUT_DIR="$2"
         export INPUT_DIR
@@ -183,11 +200,15 @@ do
         shift # Next
         shift # Next
         ;;
-        -ra|--reference-alignment)
-        REFERENCE_ALIGNMENT="TRUE"
+        -ref|--reference)
         REFERENCE_FASTA="$2"
-        export REFERENCE_ALIGNMENT
         export REFERENCE_FASTA
+        shift # Next
+        shift # Next
+        ;;
+        -pr|--primers)
+        PRIMER_FASTA="$2"
+        export PRIMER_FASTA
         shift # Next
         shift # Next
         ;;
@@ -200,16 +221,13 @@ done
 set -- "${POSITIONAL[@]:-}" #> Restores the positional arguments 
                             #> (i.e. without the case arguments above) which then can be called via `$@` or `$[0-9]` etc.
                             #> These parameters are send to Snakemake.
-
-
+shopt -u nocasematch
 
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #@ 
 #@ First basic arguments that do not require Jovian to be installed
 #@
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-
-
 
 
 ###> Show Jovian version
@@ -237,6 +255,17 @@ if [ "${RESET_DB}" == "TRUE" ]; then
     fi
     bash bin/includes/Userconfig_DB
     exit
+fi
+
+###> Change the installed Jovian version to the latest release or to a specified verison
+if [ "${JOVIAN_UPDATE}" == "TRUE" ]; then
+    if [ -z "${CHANGE_VERSION}" ]; then
+        bash bin/includes/selfupdate master
+        exit 0
+    else
+        bash bin/includes/selfupdate "${CHANGE_VERSION}"
+        exit
+    fi
 fi
 
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -295,23 +324,42 @@ fi
 #@
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-###> Change the installed Jovian version to the latest release or to a specified verison
-if [ "${JOVIAN_UPDATE}" == "TRUE" ]; then
-    if [ -z "${CHANGE_VERSION}" ]; then
-        bash bin/includes/selfupdate master
-        exit 0
-    else
-        bash bin/includes/selfupdate "${CHANGE_VERSION}"
-        exit
-    fi
-fi
+###> Check the snakemake version
+env_snakever=$(snakemake -v)
 
+ if [ !  "$(printf '%s\n' "$req_snakever" "$env_snakever" | sort -V | head -n1)" = "$req_snakever" ]; then 
+        echo -e "The snakemake version in your \"${MASTER_NAME}\" environment does not meet the required version of snakemake $req_snakever or higher"
+        echo -e "Please make sure the \"${MASTER_NAME}\" environment uses the correct dependencies by typing: \e[7m bash jovian --update \e[0m"
+        exit
+ fi
 
 ###> Archiving of relevant data in a single tar.gz file
 if [ "${ARCHIVE:-}" == "TRUE" ]; then
     bash bin/includes/Archive
     exit 0
 fi
+
+###> Rebuild archived Jovian results in order to view results and data.
+#TODO the syntax below doesn't work if there are multiple archives. should really fix at some point.
+if [ "${REBUILD_ARCHIVE}" == "TRUE" ]; then
+    if [ -e archive_*.tar.gz ]; then
+        bin/includes/Rebuild_archive
+    exit 0
+    else
+        echo -e "There's no Jovian-archive present."
+        exit 0
+    fi
+fi
+
+###> Print Snakemake help
+if [ "${SNAKEMAKE_HELP:-}" == "TRUE" ]; then
+    line
+    snakemake --help
+    exit 0
+fi
+
+#@ # # # # # #
+#@ virus typing part
 
 ###> Main controller for the virus typing block, as specified via CLI argument '--virus-typing'
 if [ "${VIRUS_TYPING:-}" == "TRUE" ]; then
@@ -339,24 +387,7 @@ if [ "${VIRUS_TYPING:-}" == "TRUE" ]; then
     fi
 fi
 
-###> Rebuild archived Jovian results in order to view results and data.
-#TODO the syntax below doesn't work if there are multiple archives. should really fix at some point.
-if [ "${REBUILD_ARCHIVE}" == "TRUE" ]; then
-    if [ -e archive_*.tar.gz ]; then
-        bin/includes/Rebuild_archive
-    exit 0
-    else
-        echo -e "There's no Jovian-archive present."
-        exit 0
-    fi
-fi
 
-###> Print Snakemake help
-if [ "${SNAKEMAKE_HELP:-}" == "TRUE" ]; then
-    line
-    snakemake --help
-    exit 0
-fi
 
 ###> Make a .ncbirc file based on the database information in ~/.jovian_installchoice_db
 bash bin/includes/Make_ncbirc
@@ -395,26 +426,43 @@ if ! bash bin/includes/Mode; then
     exit 1
 fi
 
+###> catch missing workflow statement
+######! Make a dedicated error catcher for this one. Also to actually capture more missing statements than just the workflow.
+if [ $workflow == "NONE" ]; then
+    echo "No workflow was specified."
+    echo "The following workflows are supported: ${supp_workflow[*]}"
+    echo "Please see the documentation and try again"
+    exit
+fi
+
+
+if [ "${workflow}" == "ILM_META" ]; then
+    nicename="Illumina-metagenomics"
+elif [ "${workflow}" == "ILM_REF" ]; then
+    nicename="Illumina-reference"
+elif [ "${workflow}" == "NANO_REF" ]; then
+    nicename="Nanopore-reference"
+fi
+
+###> Set the variables in the pipeline_parameters.yaml file
+ref_parameter="reference_file: ${REFERENCE_FASTA}"
+prm_parameter="primer_file: ${PRIMER_FASTA}"
+sed -i "s~.*reference_file:.*~${ref_parameter}~g" "${PROFILE}"/pipeline_parameters.yaml
+sed -i "s~.*primer_file:.*~${prm_parameter}~g" "${PROFILE}"/pipeline_parameters.yaml
+
+
 ###> Build the sample_sheet.yaml
 if ! bash bin/includes/Make_samplesheet; then
     exit 1
 fi
 
-#TODO cleanup/remove these failsaves, it's too complicated and probably redundant.
-
 ###? Failsafe 1 for the sample sheet
 if [ -e sample_sheet.yaml ]; then
-    echo "sample sheet exists"
-    set -o allexport
-    SHEET_SUCCESS="TRUE"
-    set +o allexport
-fi
-
-###? Failsafe 2 for the sample sheet
-if [ "${SHEET_SUCCESS}" == "TRUE" ]; then
     echo -e "Succesfully generated the sample sheet"
 else
-    echo "Something went wrong with the sample sheet, aborting jovian process..."
+    echo -e "sample_sheet.yaml could not be found"
+    echo -e "This also means that Jovian was unable to generate a new sample sheet for you"
+    echo -e "Please inspect the input directory (${INPUT_DIR}) and make sure the right files are present"
     exit 1
 fi
 
@@ -429,11 +477,27 @@ elif [ "${MAKE_SAMPLE_SHEET}" == "TRUE" ] && [ -s config/variables.yaml ]; then
     exit 0
 fi
 
+###> Here the UNIQUE_ID and HOSTNAME variables are actually set
+if [ ! -s config/variables.yaml ]; then #? If config/variables.yaml does not exist or is empty...
+    echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > config/variables.yaml
+    echo -e "Server_host:\n    hostname: http://${HOSTNAME}" >> config/variables.yaml
+    eval $(parse_yaml config/variables.yaml "config_")
+else
+    eval $(parse_yaml config/variables.yaml "config_")
+fi
 
 ###> Unlock snakemake if, for some reason, snakemake was unable to unlock the working directory by itself
 if [ "${SNAKEMAKE_UNLOCK}" == "TRUE" ]; then
     printf "\nUnlocking working directory...\n"
-    snakemake -s bin/Snakefile --profile "${PROFILE}" --unlock
+    if [ "${workflow}" == "ILM_META" ]; then
+        snakemake -s bin/Illumina_Meta.smk --profile "${PROFILE}" --unlock
+    fi
+    if [ "${workflow}" == "ILM_REF" ]; then
+        snakemake -s bin/Illumina_vir_Ref.smk --profile "${PROFILE}" --unlock
+    fi
+    if [ "${workflow}" == "NANO_REF" ]; then
+        snakemake -s bin/Nano_vir_Ref.smk --profile "${PROFILE}" --unlock
+    fi
     printf "\nDone.\n"
     exit 0
 fi
@@ -450,49 +514,47 @@ if ! bash bin/includes/Preflight_readlength-counter; then
 exit 1
 fi
 
+###> Check the reference fasta file if given to see whether or not the file is actually valid
+if ! bash bin/includes/Reference_validation; then
+exit 1
+fi
+
+##> Check the primer fasta file and see whether or not the file is actually valid
+if ! bash bin/includes/Primer_validation; then
+exit 1
+fi
+
 ready_for_start
 #@ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-
-###> Here the UNIQUE_ID and HOSTNAME variables are actually set
-if [ ! -s config/variables.yaml ]; then #? If config/variables.yaml does not exist or is empty...
-    echo -e "Jovian_run:\n    identifier: ${UNIQUE_ID}" > config/variables.yaml
-    echo -e "Server_host:\n    hostname: http://${HOSTNAME}" >> config/variables.yaml
-    eval $(parse_yaml config/variables.yaml "config_")
-else
-    eval $(parse_yaml config/variables.yaml "config_")
-fi
-
 ###> Core Jovian workflow snakemake command with checkers for required files.
-if [ ! -s sample_sheet.yaml ]; then #? If sample_sheet.yaml does not exist or is empty...
-    echo -e "sample_sheet.yaml could not be found"
-    echo -e "This also means that Jovian was unable to generate a new sample sheet for you"
-    echo -e "Please inspect the input directory (${INPUT_DIR}) and make sure the right files are present"
-    exit 1
-elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" -a ! -s "${REFERENCE_FASTA}" ]; then #? If REFERENCE_ALIGNMENT is TRUE and the REFERENCE_ALIGNMENT file exists and is not empty...
-    echo -e "The given reference file, ${REFERENCE_FASTA}, does not exist. Please check your input. Exiting..."
-    exit 1
-elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" ] && ! $( seqkit seq -v -t dna "${REFERENCE_FASTA}" > /dev/null ); then
-    echo -e "The given input reference FASTA does not appear to be valid, see the error message above. Exiting..."
-    exit 1
-elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" ] && (( $( grep -c "^>" "${REFERENCE_FASTA}" ) > 1 )); then #TODO this is a failsafe until the next version, current version only allows single-record FASTA records since it's intended for nCoV first and foremost.
-    echo -e "This version of Jovian does not support multi-record FASTA references, only one sequence per FASTA allowed. This feature will come in the next version. Exiting..."
-    exit 1
-    #TODO remove/update this part in a future version of Jovian which is multi-record FASTA compatible (e.g. segmented viruses or multiple clades of the same species in one record)
-elif [ "${REFERENCE_ALIGNMENT}" == "TRUE" ]; then #? If REFERENCE_ALIGNMENT is TRUE, start RA.smk and exit with exit-code 0...
-    echo -e "Starting optional reference alignment extension"
-    # Starting nginx for IGVjs viz. In core pipeline this is started from report-jup. But since we don't have that for the extension, do it like this:
-    echo -e "\nChecking if nginx needs to be activated..."
-    (bin/includes/Start_nginx start)
+
+#@ Illumina-meta workflow
+if [ "${workflow}" == "ILM_META" ]; then
+    echo -e "Starting the \"${nicename}\" workflow."
     set +ue #turn off bash strict mode because snakemake and conda don't work in strict mode
-    snakemake -s bin/Ref_alignment.smk --profile "${PROFILE}" --config reference="${REFERENCE_FASTA}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
+    snakemake -s bin/Illumina_Meta.smk --conda-frontend conda --profile "${PROFILE}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
     set -ue #turn bash strict mode back on
     exit 0
-else #? Else, start jovian_core.smk and do virus typing for all keywords.
-    echo -e "Starting core metagenomics workflow"
-    set +ue #turn off bash strict mode because snakemake and conda don't work in strict mode
-    snakemake -s bin/Snakefile --profile "${PROFILE}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
-    set -ue #turn bash strict mode back on
 fi
+
+#@ Illumina-Ref workflow
+if [ "${workflow}" == "ILM_REF" ]; then
+    echo -e "Starting the \"${nicename}\" workflow."
+    set +ue #turn off bash strict mode because snakemake and conda don't work in strict mode
+    snakemake -s bin/Illumina_vir_Ref.smk --conda-frontend conda --profile "${PROFILE}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
+    set -ue #turn bash strict mode back on
+    exit 0
+fi
+
+#@ Nanopore-ref workflow
+if [ "${workflow}" == "NANO_REF" ]; then
+    echo -e "Starting the \"${nicename}\" workflow."
+    set +ue
+    snakemake -s bin/Nano_vir_Ref.smk --conda-frontend conda --profile "${PROFILE}" ${@} && echo -e "\nUnique identifier for this Jovian run is: $config_Jovian_run_identifier "
+    set -ue
+    exit 0
+fi
+
 
 exit 0 

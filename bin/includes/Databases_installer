@@ -140,47 +140,48 @@ if [ "${PATHING_SINGLE}" == "TRUE" ]; then
         
         # ! Start downloading databases
             # ! download taxdb
-            cd "${DB_PATH_TAX}" || exit
-            printf "\nDownloading taxonomy database... \n"
+            cd "${DB_PATH_TAX}" || exit 1
+            database_part "NCBI TaxDB" "1"
             perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress taxdb
             
             # ! download mgkit db
-            cd "${DB_PATH_MGKIT}" || exit
-            printf "\nDownloading MGKit database... \n"
+            cd "${DB_PATH_MGKIT}" || exit 1
+            database_part "MGKit-LCA" "2"
             bash "${CONDA_PREFIX}"/bin/download-taxonomy.sh
-            curl -o nucl_gb.accession2taxid.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz
-            curl -o nucl_gb.accession2taxid.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz.md5
+            rm taxdump.tar.gz
+            wget -O nucl_gb.accession2taxid.gz ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz
+            wget -O nucl_gb.accession2taxid.gz.md5 https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz.md5
             md5sum -c nucl_gb.accession2taxid.gz.md5
 
             # ! download krona LCA db
-            cd "${DB_PATH_KRONA}" || exit
-            printf "\nDownloading Krona LCA database... \n"
+            cd "${DB_PATH_KRONA}" || exit 1
+            database_part "Krona-LCA" "3"
             bash "${CONDA_PREFIX}"/opt/krona/updateTaxonomy.sh ./
             bash "${CONDA_PREFIX}"/opt/krona/updateAccessions.sh ./
 
             # ! download VHOST-interaction db
-            cd "${DB_PATH_VHOST}" || exit
-            printf "\nDownloading Virus-Host interaction database... \n"
-            curl -o virushostdb.tsv -L ftp://ftp.genome.jp/pub/db/virushostdb/virushostdb.tsv            
+            cd "${DB_PATH_VHOST}" || exit 1
+            database_part "Virus-Host Interaction" "4"
+            wget -O virushostdb.tsv ftp://ftp.genome.jp/pub/db/virushostdb/virushostdb.tsv            
             
             # ! download new_taxdump db
-            cd "${DB_PATH_NTAX}" || exit
-            printf "\nDownloading NCBI New_taxdump database... \n"
-            curl -o new_taxdump.tar.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
-            curl -o new_taxdump.tar.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
+            cd "${DB_PATH_NTAX}" || exit 1
+            database_part "NCBI New taxdump" "5"
+            wget -O new_taxdump.tar.gz ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
+            wget -O new_taxdump.tar.gz.md5 https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
             if md5sum -c new_taxdump.tar.gz.md5
             then
                 #the md5 is correct:
                 tar -xzf new_taxdump.tar.gz
-                for file in *.dmp; do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim; done
+                for file in *.dmp; do gawk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim; done
             else
                 #the md5 does not match!
                 echo "The md5sum does not match new_taxdump.tar.gz! Please try downloading again."
             fi
 
             # ! download the Human Genome background
-            cd "${DB_PATH_HUGO}" || exit
-            printf "\nDownloading the Human Genome (GRCh38) as a background reference... \n"
+            cd "${DB_PATH_HUGO}" || exit 1
+            database_part "Human Genome" "6"
             aws s3 --no-sign-request --region eu-west-1 sync s3://ngi-igenomes/igenomes/Homo_sapiens/NCBI/GRCh38/Sequence/WholeGenomeFasta/ ./
             awk '{print >out}; />chrEBV/{out="EBV.fa"}' out=temp.fa genome.fa; head -n -1 temp.fa > nonEBV.fa
             rm EBV.fa temp.fa
@@ -189,8 +190,8 @@ if [ "${PATHING_SINGLE}" == "TRUE" ]; then
             bowtie2-build --threads "${USE_CORES}" genome.fa genome.fa
 
             # ! download BLAST NT db
-            cd "${DB_PATH_NT}" || exit
-            printf "\nDownloading NCBI BLAST NT database... \n"
+            cd "${DB_PATH_NT}" || exit 1
+            database_part "NCBI BLAST NT" "7"
             perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress nt
 
             sleep 2
@@ -213,32 +214,66 @@ DB
 
             cat << EOF > ~/database-updater.sh
 #!/bin/bash
+
+thinline() {
+    printf "%-70s\n" "-" | sed 's/\s/-/g'
+}
+
+spacer() {
+    printf "\n\n"
+}
+
+database_part() {
+    local a=\$1
+    local n=\$2
+    local split="\n"
+    local b=\$(spacer)
+    local c=\$(thinline)
+    local steps="6"
+    local d="\${split}
+    Starting download and installation of the \$a database\${split}
+    The entire procedure of installing all required databases may require several hours, depending on the download speed and performance of your computer and/or server.\${split}
+    This is step \$n of \$steps\${split}
+    Please stand-by..."
+    echo -e "\e[7m"
+    echo \$b
+    echo \$c
+    echo -e \$d
+    echo -e "\e[0m"
+}
+
 conda activate Jovian_helper
 
 ### Updating BLAST taxdb
 cd "${DB_PATH_TAX}" || exit 1
+database_part "NCBI TaxDB" "1"
 perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress taxdb
 
 ### UPDATING MGKIT
 cd "${DB_PATH_MGKIT}" || exit 1
+database_part "MGKit-LCA" "2"
 bash "${CONDA_PREFIX}"/bin/download-taxonomy.sh
-curl -o nucl_gb.accession2taxid.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz
-curl -o nucl_gb.accession2taxid.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz.md5
+rm taxdump.tar.gz
+wget -O nucl_gb.accession2taxid.gz ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz
+wget -O nucl_gb.accession2taxid.gz.md5 https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz.md5
 md5sum -c nucl_gb.accession2taxid.gz.md5
 
 ### UPDATING KRONA
 cd "${DB_PATH_KRONA}" || exit 1
+database_part "Krona-LCA" "3"
 bash "${CONDA_PREFIX}"/opt/krona/updateTaxonomy.sh ./
 bash "${CONDA_PREFIX}"/opt/krona/updateAccessions.sh ./
 
 ### UPDATING VHOST INTERACTION DB
 cd "${DB_PATH_VHOST}" || exit 1
-curl -o virushostdb.tsv -L ftp://ftp.genome.jp/pub/db/virushostdb/virushostdb.tsv
+database_part "Virus-Host Interaction" "4"
+wget -O virushostdb.tsv ftp://ftp.genome.jp/pub/db/virushostdb/virushostdb.tsv
 
 ### UPDATING NEWTAXDUMP DB
 cd "${DB_PATH_NTAX}" || exit 1
-curl -o new_taxdump.tar.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
-curl -o new_taxdump.tar.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
+database_part "NCBI New taxdump" "5"
+wget -O new_taxdump.tar.gz ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
+wget -O new_taxdump.tar.gz.md5 https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
 if md5sum -c new_taxdump.tar.gz.md5
 then
     #the md5 is correct:
@@ -251,10 +286,11 @@ fi
 
 ### UPDATING BLAST NT
 cd "${DB_PATH_NT}" || exit 1
+database_part "NCBI BLAST NT" "6"
 perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress nt
 
 echo -e "Done with updating databases"
-exit
+exit 0
 
 EOF
         
@@ -279,7 +315,14 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
     printf "\e[40;91m this/path/is/also/incorrect \e[0m\n"
     minispacer
 
-    while read -r -e -p "Please type out the path under which you want to install the BLAST NT database: " db_path_indiv_NT_response; read -r -e -p "Please type out the path under which you want to install the TaxDB: " db_path_indiv_taxdb_response; read -r -e -p "Please type out the path under which you want to install the NewTaxdump database: " db_path_indiv_ntax_response; read -r -e -p "Please type out the path under which you want to install the MGKit database: " db_path_indiv_mgkit_response; read -r -e -p "Please type out the path under which you want to install the Krona LCA database: " db_path_indiv_krona_response; read -r -e -p "please type out the path under which you want to install the VirusHost Interaction database: " db_path_indiv_vhost_response; read -r -e -p "please type out the path under which you want to install the Human Genome background reference: " db_path_indiv_hugo_response
+    while
+    read -r -e -p "Please type out the path under which you want to install the BLAST NT database: " db_path_indiv_NT_response;
+    read -r -e -p "Please type out the path under which you want to install the TaxDB: " db_path_indiv_taxdb_response;
+    read -r -e -p "Please type out the path under which you want to install the NewTaxdump database: " db_path_indiv_ntax_response;
+    read -r -e -p "Please type out the path under which you want to install the MGKit database: " db_path_indiv_mgkit_response;
+    read -r -e -p "Please type out the path under which you want to install the Krona LCA database: " db_path_indiv_krona_response;
+    read -r -e -p "please type out the path under which you want to install the VirusHost Interaction database: " db_path_indiv_vhost_response;
+    read -r -e -p "please type out the path under which you want to install the Human Genome background reference: " db_path_indiv_hugo_response
     do
         db_path_indiv_NT_response=${db_path_indiv_NT_response}
         db_path_indiv_taxdb_response=${db_path_indiv_taxdb_response}
@@ -341,46 +384,47 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
 
         # ! Start downloading databases
             # ! Download taxdb
-            cd "${DB_PATH_TAX}" || exit
-            printf "\nDownloading taxonomy database... \n"
+            cd "${DB_PATH_TAX}" || exit 1
+            database_part "NCBI TaxDB" "1"
             perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress taxdb
 
-            cd "${DB_PATH_MGKIT}" || exit
-            printf "\nDownloading MGKit LCA database... \n"
+            cd "${DB_PATH_MGKIT}" || exit 1
+            database_part "MGKit-LCA" "2"
             bash "${CONDA_PREFIX}"/bin/download-taxonomy.sh
-            curl -o nucl_gb.accession2taxid.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz
-            curl -o nucl_gb.accession2taxid.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz.md5
+            rm taxdump.tar.gz
+            wget -O nucl_gb.accession2taxid.gz ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz
+            wget -O nucl_gb.accession2taxid.gz.md5 https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz.md5
             md5sum -c nucl_gb.accession2taxid.gz.md5
                 
             # ! download krona LCA db
-            cd "${DB_PATH_KRONA}" || exit
-            printf "\nDownloading Krona LCA database... \n"
+            cd "${DB_PATH_KRONA}" || exit 1
+            database_part "Krona-LCA" "3"
             bash "${CONDA_PREFIX}"/opt/krona/updateTaxonomy.sh ./
             bash "${CONDA_PREFIX}"/opt/krona/updateAccessions.sh ./
 
             # ! download VHOST-interaction db
-            cd "${DB_PATH_VHOST}" || exit
-            printf "\nDownloading Virus-Host interaction database... \n"
-            curl -o virushostdb.tsv -L ftp://ftp.genome.jp/pub/db/virushostdb/virushostdb.tsv            
+            cd "${DB_PATH_VHOST}" || exit 1
+            database_part "Virus-Host Interaction" "4"
+            wget -O virushostdb.tsv ftp://ftp.genome.jp/pub/db/virushostdb/virushostdb.tsv            
                 
             # ! download new_taxdump db
-            cd "${DB_PATH_NTAX}" || exit
-            printf "\nDownloading NCBI New_taxdump database... \n"
-            curl -o new_taxdump.tar.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
-            curl -o new_taxdump.tar.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
+            cd "${DB_PATH_NTAX}" || exit 1
+            database_part "NCBI New taxdump" "5"
+            wget -O new_taxdump.tar.gz ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
+            wget -O new_taxdump.tar.gz.md5 https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
             if md5sum -c new_taxdump.tar.gz.md5
             then
                 #the md5 is correct:
                 tar -xzf new_taxdump.tar.gz
-                for file in *.dmp; do awk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim; done
+                for file in *.dmp; do gawk '{gsub("\t",""); if(substr($0,length($0),length($0))=="|") print substr($0,0,length($0)-1); else print $0}' < ${file} > ${file}.delim; done
             else
                 #the md5 does not match!
                 echo "The md5sum does not match new_taxdump.tar.gz! Please try downloading again."
             fi
 
             # ! download the Human Genome background
-            cd "${DB_PATH_HUGO}" || exit
-            printf "\nDownloading the Human Genome (GRCh38) as a background reference... \n"
+            cd "${DB_PATH_HUGO}" || exit 1
+            database_part "Human Genome" "6"
             aws s3 --no-sign-request --region eu-west-1 sync s3://ngi-igenomes/igenomes/Homo_sapiens/NCBI/GRCh38/Sequence/WholeGenomeFasta/ ./
             awk '{print >out}; />chrEBV/{out="EBV.fa"}' out=temp.fa genome.fa; head -n -1 temp.fa > nonEBV.fa
             rm EBV.fa temp.fa
@@ -389,8 +433,8 @@ if [ "${PATHING_DIFFERENT}" == "TRUE" ]; then
             bowtie2-build --threads "${USE_CORES}" genome.fa genome.fa
   
             # ! download BLAST NT db
-            cd "${DB_PATH_NT}" || exit
-            printf "\nDownloading NCBI BLAST NT database... \n"
+            cd "${DB_PATH_NT}" || exit 1 
+            database_part "NCBI BLAST NT" "7"
             perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress nt
                 
             sleep 2
@@ -418,32 +462,66 @@ DB
 
             cat << EOF > ~/database-updater.sh
 #!/bin/bash
+
+thinline() {
+    printf "%-70s\n" "-" | sed 's/\s/-/g'
+}
+
+spacer() {
+    printf "\n\n"
+}
+
+database_part() {
+    local a=\$1
+    local n=\$2
+    local split="\n"
+    local b=\$(spacer)
+    local c=\$(thinline)
+    local steps="6"
+    local d="\${split}
+    Starting download and installation of the \$a database\${split}
+    The entire procedure of installing all required databases may require several hours, depending on the download speed and performance of your computer and/or server.\${split}
+    This is step \$n of \$steps\${split}
+    Please stand-by..."
+    echo -e "\e[7m"
+    echo \$b
+    echo \$c
+    echo -e \$d
+    echo -e "\e[0m"
+}
+
 conda activate Jovian_helper
 
 ### Updating BLAST taxdb
 cd "${DB_PATH_TAX}" || exit 1
+database_part "NCBI TaxDB" "1"
 perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress taxdb
 
 ### UPDATING MGKIT
 cd "${DB_PATH_MGKIT}" || exit 1
+database_part "MGKit-LCA" "2"
 bash "${CONDA_PREFIX}"/bin/download-taxonomy.sh
-curl -o nucl_gb.accession2taxid.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz
-curl -o nucl_gb.accession2taxid.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz.md5
+rm taxdump.tar.gz
+wget -O nucl_gb.accession2taxid.gz ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz
+wget -O nucl_gb.accession2taxid.gz.md5 https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/nucl_gb.accession2taxid.gz.md5
 md5sum -c nucl_gb.accession2taxid.gz.md5
 
 ### UPDATING KRONA
 cd "${DB_PATH_KRONA}" || exit 1
+database_part "Krona-LCA" "3"
 bash "${CONDA_PREFIX}"/opt/krona/updateTaxonomy.sh ./
 bash "${CONDA_PREFIX}"/opt/krona/updateAccessions.sh ./
 
 ### UPDATING VHOST INTERACTION DB
 cd "${DB_PATH_VHOST}" || exit 1
-curl -o virushostdb.tsv -L ftp://ftp.genome.jp/pub/db/virushostdb/virushostdb.tsv
+database_part "Virus-Host Interaction" "4"
+wget -O virushostdb.tsv ftp://ftp.genome.jp/pub/db/virushostdb/virushostdb.tsv
 
 ### UPDATING NEWTAXDUMP DB
 cd "${DB_PATH_NTAX}" || exit 1
-curl -o new_taxdump.tar.gz -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
-curl -o new_taxdump.tar.gz.md5 -L https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
+database_part "NCBI New taxdump" "5"
+wget -O new_taxdump.tar.gz ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz
+wget -O new_taxdump.tar.gz.md5 https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz.md5
 if md5sum -c new_taxdump.tar.gz.md5
 then
     #the md5 is correct:
@@ -456,10 +534,11 @@ fi
 
 ### UPDATING BLAST NT
 cd "${DB_PATH_NT}" || exit 1
+database_part "NCBI BLAST NT" "7"
 perl "${CONDA_PREFIX}"/bin/update_blastdb.pl --decompress nt
 
 echo -e "Done with updating databases"
-exit
+exit 0
 
 EOF
 
