@@ -84,6 +84,13 @@ do
         export JOVIAN_HELP
         shift # Next
         ;;
+        --find-amplicon-coverage)
+        inputfile="$2"
+        FIND_AMP_STATS="TRUE"
+        export FIND_AMP_STATS
+        shift
+        shift
+        ;;
         --db-reset)
         RESET_DB="TRUE"
         export RESET_DB
@@ -358,6 +365,11 @@ if [ "${SNAKEMAKE_HELP:-}" == "TRUE" ]; then
     exit 0
 fi
 
+###> find average depth of coverage for amplicons
+if [ "${FIND_AMP_STATS}" == "TRUE" ]; then
+    bash bin/includes/amplicon_cov_wrapper $inputfile
+    exit
+fi
 #@ # # # # # #
 #@ virus typing part
 

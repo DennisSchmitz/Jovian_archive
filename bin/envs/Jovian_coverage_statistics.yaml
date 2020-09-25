@@ -1,0 +1,10 @@
+name: Jovian_coverage_statistics
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - python==3.8.5
+  - samtools==1.10
+  - pandas
+  - pip

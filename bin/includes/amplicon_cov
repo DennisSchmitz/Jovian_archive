@@ -1,0 +1,11 @@
+#!/bin/bash
+
+
+primerfile=$1
+
+#start_spinner "Looking for average depth of coverage for each amplicon"
+#sleep 0.2
+
+python bin/scripts/amplicon_coverage.py "${primerfile}"
+
+#stop_spinner $?
