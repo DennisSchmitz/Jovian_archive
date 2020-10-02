@@ -88,7 +88,7 @@ Illumina_meta:
 Illumina_ref:
     Alignment:
         Alignment_type: --local
-        Duplicates: -r
+        Duplicates: -r # To turn this off, e.g. for amplicon experiments such as ARTIC, replace this with ""
         Duplicate_marking: t
         Max_read_length: 300
     SNP:
@@ -105,8 +105,6 @@ Nanopore_ref:
 #! Options for the metagenomics workflow, for developers only
 #TODO hier nog aparte yaml parent voor maken, updaten verwijzingen in rest v/d code. Is duidelijker/leesbaarder.
 remove_temp: 1 # For development and debug only. If you set this to 0 you will keep the HuGo alignment data which can lead to patient privacy concerns.
-PCR_dup_removal: true # For development and debug only. Set this to false to NOT remove PCR duplicates in the metagenomic output. N.B. this is not advised and mainly in here for debugging purposes: depending on the dataset, not removing PCR-dups gives a false sense of confidence (inflated coverage metrics), false SNP-calls and increases turnaround time of downstream processes.
-
 
 ######################################
 ### Databases                      ###
