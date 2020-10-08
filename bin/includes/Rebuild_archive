@@ -23,11 +23,20 @@ newhostname="http://${HOSTNAME}"
 
 
 ###### Modifying the HTML index file for IGVjs
-if [ -e results/igv.html ]; then
+if [ -e results/igv_meta.html ]; then
     echo -e "Modifying IGVjs index file..."
-    sed -i -e "s@${oldhostname}@${newhostname}@g" "results/igv.html"
+    sed -i -e "s@${oldhostname}@${newhostname}@g" "results/igv_meta.html"
 fi
 
+if [ -e results/igv_nano.html ]; then
+    echo -e "Modifying IGVjs index file..."
+    sed -i -e "s@${oldhostname}@${newhostname}@g" "results/igv_nano.html"
+fi
+
+if [ -e results/igv_ilr.html ]; then
+    echo -e "Modifying IGVjs index file..."
+    sed -i -e "s@${oldhostname}@${newhostname}@g" "results/igv_ilr.html"
+fi
 
 if [ -e config/variables.yaml ]; then
     echo -e "Resetting some of the variables..."

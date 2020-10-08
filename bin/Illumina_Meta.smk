@@ -151,7 +151,7 @@ rule all:
                                 'krona'
                                 ]
                 ), # HTML Reports
-        expand( "{p}igv.html",
+        expand( "{p}igv_meta.html",
                 p   =   f"{res}"
                 ) # IGVjs index
 

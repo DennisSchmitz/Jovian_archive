@@ -58,7 +58,7 @@ rule all:
                                 ]),
         f"{res}BoC_int.tsv",
         f"{res}BoC_pct.tsv",
-        f"{res}igv.html",
+        f"{res}igv_nano.html",
         f"{res}multiqc.html",
         f"{res}SNPs.tsv"
 
