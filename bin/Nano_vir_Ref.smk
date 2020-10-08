@@ -56,6 +56,14 @@ rule all:
                 ext     =   [   '.zip',
                                 '.html'
                                 ]),
+        expand( "{p}concat_cov_ge_{thr}.fasta",
+                p   =   f"{res + seqs}",
+                thr =   [   '1',
+                            '5',
+                            '10',
+                            '30',
+                            '100'
+                            ]),
         f"{res}BoC_int.tsv",
         f"{res}BoC_pct.tsv",
         f"{res}igv_nano.html",
@@ -93,6 +101,8 @@ include: f"{rls}Nano_Ref_alignment_pt1.smk"
 include: f"{rls}Nano_Ref_alignment_pt2.smk"
 
 include: f"{rls}Nano_Ref_consensus.smk"
+
+include: f"{rls}Nano_Ref_concat_seqs.smk"
 
 include: f"{rls}Nano_Ref_coverage.smk"
 
