@@ -99,7 +99,7 @@ Nanopore_ref:
     Primer_cutoff_plus: 30
     Primer_cutoff_minus: -30
     
-    Quality_score: 13
+    Quality_score: 7
 
 
 #! Options for the metagenomics workflow, for developers only
