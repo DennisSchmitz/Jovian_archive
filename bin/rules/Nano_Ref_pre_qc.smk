@@ -10,7 +10,7 @@ rule raw_quality_control:
         f"{logdir}" + "raw_quality_control_{sample}.log"
     benchmark:
         f"{logdir + bench}" + "raw_quality_control_{sample}.txt"
-    threads: 1
+    threads: 6
     params:
         output_dir  =   f"{datadir + qc_pre}"
     shell:

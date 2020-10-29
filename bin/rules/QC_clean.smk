@@ -16,12 +16,12 @@ rule QC_clean_data:
         f"{logdir}" + "QC_clean_data_{sample}_{read}.log"
     benchmark:
         f"{logdir + bench}" + "QC_clean_data_{sample}_{read}.txt"
-    threads: 1
+    threads: 6
     shell:
         """
 if [ -s "{input}" ] # If file exists and is NOT empty (i.e. filesize > 0) do...
 then
-    fastqc --quiet --outdir data/FastQC_posttrim/ {input} > {log} 2>&1
+    fastqc -t 6 --quiet --outdir data/FastQC_posttrim/ {input} > {log} 2>&1
 else
     touch {output.html}
     touch {output.zip}

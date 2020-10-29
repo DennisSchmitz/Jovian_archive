@@ -33,7 +33,7 @@ REAL_OUTPUT_HTML="${OUTPUT_DIR}${SAMPLE_NAME}_fastqc.html"
 REAL_OUTPUT_ZIP="${OUTPUT_DIR}${SAMPLE_NAME}_fastqc.zip"
 
 # Run fastqc
-fastqc --quiet --outdir ${OUTPUT_DIR} ${INPUT_FILE} > ${LOG} 2>&1
+fastqc -t 6 --quiet --outdir ${OUTPUT_DIR} ${INPUT_FILE} > ${LOG} 2>&1
 
 # If the implicit output file are not equal to the explicitly defined output in the Snakefile, rename them to the explicitly defined output name.
 if [ "$DESIRED_OUTPUT_HTML" != "$REAL_OUTPUT_HTML" ]
