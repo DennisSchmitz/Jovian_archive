@@ -1,10 +1,6 @@
-
-
-
-
 rule Cleanup:
     input:
-        fastq   =   rules.Cut_primers.output.cleaneddata_pt1
+        fastq   =   rules.Hugo_removal_pt2.output.cleanedfastq
     output:
         qc_fastq    =   f"{datadir + cln + datadir}" + "{sample}.fastq",
         qc_html     =   f"{datadir + cln + html}" + "{sample}.fastp.html",
