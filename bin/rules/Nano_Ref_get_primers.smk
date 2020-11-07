@@ -1,9 +1,9 @@
 rule Prepare_primers:
     input: primerfile
     output: 
-        primers     = f"{datadir + prdir}" + "primers.fasta",
-        primers_5   = f"{datadir + prdir}" + "primers_5.fasta",
-        primers_3   = f"{datadir + prdir}" + "primers_3.fasta"
+        primers     = f"{datadir + prim}" + "primers.fasta",
+        primers_5   = f"{datadir + prim}" + "primers_5.fasta",
+        primers_3   = f"{datadir + prim}" + "primers_3.fasta"
     shell:
         """
 cp {input} {output.primers}
