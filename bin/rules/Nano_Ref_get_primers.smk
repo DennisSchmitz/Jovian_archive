@@ -8,5 +8,5 @@ rule Prepare_primers:
         """
 cp {input} {output.primers}
 sed '2~2s/^/X/' {output.primers} > {output.primers_5}
-sed -i '2~2s/$/X/' {output.primers} > {output.primers_3}
+sed '2~2s/$/X/' {output.primers} > {output.primers_3}
         """ 

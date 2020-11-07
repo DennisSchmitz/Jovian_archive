@@ -31,5 +31,5 @@ cutadapt \
 --no-indels \
 --times {params.repeat_search} \
 -o {output} \
-{input.fastq}
+{input.fastq} > {log}
         """
