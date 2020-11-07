@@ -1,16 +1,12 @@
-
-
-
-
 rule Hugo_removal_pt1:
     input:
         bg              =   config["databases"]["background_ref"],
-        unmapped_fastq  =   rules.Cleanup.output.qc_fastq
+        unmapped_fastq  =   lambda wildcards: SAMPLES[wildcards.sample]
     output: 
         sorted_bam          =   f"{datadir + cln + hugo_no_rm + raw}" + "{sample}.bam",
         sorted_bam_index    =   f"{datadir + cln + hugo_no_rm + raw}" + "{sample}.bam.bai"
     conda:
-        f"{conda_envs}HuGo_removal.yaml"
+        f"{conda_envs}Nano_clean.yaml"
     log:
         f"{logdir}" + "Hugo_removal_pt1_{sample}.log"
     benchmark:
