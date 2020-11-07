@@ -6,7 +6,7 @@ rule Cleanup:
         qc_html     =   f"{datadir + cln + html}" + "{sample}.fastp.html",
         qc_json     =   f"{datadir + cln + json}" + "{sample}.fastp.json"
     conda:
-        f"{conda_envs}QC_and_clean.yaml"
+        f"{conda_envs}Nano_clean.yaml"
     log:
         f"{logdir}" + "Data_Cleanup_{sample}.log"
     benchmark:
