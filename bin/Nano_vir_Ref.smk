@@ -77,20 +77,21 @@ rule all:
 include: f"{rls}Nano_Ref_index.smk"
 include: f"{rls}Nano_Ref_ORF-analysis.smk"
 include: f"{rls}Nano_Ref_GC-content.smk"
+include: f"{rls}Nano_Ref_get_primers.smk"
 
 include: f"{rls}Nano_Ref_pre_qc.smk"
-
-include: f"{rls}Nano_Ref_adp_trim.smk"
-
-include: f"{rls}Nano_Ref_Cut-primers.smk"
-
-include: f"{rls}Nano_Ref_Cleanup.smk"
-
-include: f"{rls}Nano_Ref_post-qc.smk"
 
 include: f"{rls}Nano_Ref_HuGo_removal_pt1.smk"
 
 include: f"{rls}Nano_Ref_HuGo_removal_pt2.smk"
+
+include: f"{rls}Nano_Ref_Cleanup.smk"
+
+include: f"{rls}Nano_Ref_RemoveAdapters.smk"
+
+include: f"{rls}Nano_Ref_Cut-primers.smk"
+
+include: f"{rls}Nano_Ref_post-qc.smk"
 
     #>############################################################################
     #>#### Alignments and concensus
