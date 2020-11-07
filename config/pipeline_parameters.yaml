@@ -98,6 +98,9 @@ Illumina_ref:
 Nanopore_ref:
     Primer_cutoff_plus: 30
     Primer_cutoff_minus: -30
+    Primer_min_overlap: 4
+    Primer_error_rate: 0.3
+    Primer_repeat_search: 2
     
     Quality_score: 7
 
