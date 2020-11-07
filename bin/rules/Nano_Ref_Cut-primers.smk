@@ -3,7 +3,7 @@ rule Cut_primers:
         fastq       =   rules.Remove_Adapters_pt2.output,
         primers_5   =   rules.Prepare_primers.output.primers_5,
         primers_3   =   rules.Prepare_primers.output.primers_3
-    output: f"{datadir + cln + prdir}" + "{sample}.fastq"
+    output: f"{datadir + cln + prim}" + "{sample}.fastq"
     conda:
         f"{conda_envs}Nano_clean.yaml"
     log:
