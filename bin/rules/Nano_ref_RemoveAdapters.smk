@@ -11,6 +11,7 @@ rule Remove_Adapters_pt1:
         f"{logdir}" + "Remove_Adapters_pt1_{sample}.log"
     benchmark:
         f"{logdir + bench}" + "Remove_Adapters_pt1_{sample}.txt"
+    threads: config["threads"]["Nanopore_reference_alignment"]
     shell: 
         """
 minimap2 -ax map-ont {input.ref} {input.fq} 2>> {log} |\
@@ -28,7 +29,7 @@ rule Remove_Adapters_pt2:
         f"{logdir}" + "Remove_Adapters_pt2_{sample}.log"
     benchmark:
         f"{logdir + bench}" + "Remove_Adapters_pt2_{sample}.txt"
-    threads: 2
+    threads: config["threads"]["Nanopore_reference_alignment"]
     shell: 
         """
 python bin/scripts/SoftClipper.py --input {input} --output {output} --threads {threads}
