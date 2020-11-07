@@ -1,9 +1,9 @@
 rule Remove_Adapters_pt1:
     input:
-        ref =   rules.Index_ref.output.refcopy 
+        ref =   rules.Index_ref.output.refcopy, 
         fq  =   rules.Cleanup.output.qc_fastq
     output: 
-        bam = f"{datadir + cln + trims}" + "{sample}.bam"
+        bam = f"{datadir + cln + trims}" + "{sample}.bam",
         index = f"{datadir + cln + trims}" + "{sample}.bam.bai"
     conda:
         f"{conda_envs}Nano_clean.yaml"
