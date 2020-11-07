@@ -27,10 +27,9 @@ threads:
     Illumina_align_to_reference: 12
     Illumina_extract_raw_consensus: 6
     # Settings for the Nanopore-reference workflow
-    Adapter_trimming_cpu: 6
     Nanopore_reference_alignment: 6
     Nanopore_cleanup: 12
-    Nanopore_primer_removal: 6
+    Nanopore_primer_removal: 12
 
 ######################################
 ### Pipeline parameters            ###
