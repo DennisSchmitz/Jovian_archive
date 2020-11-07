@@ -5,9 +5,9 @@ rule Hugo_removal_pt2:
         bam         =   rules.Hugo_removal_pt1.output.sorted_bam,
         bam_index   =   rules.Hugo_removal_pt1.output.sorted_bam_index
     output:
-        cleanedfastq    =   f"{datadir + cln}" + "{sample}.fq"
+        cleanedfastq    =   f"{datadir + cln + nohugo}" + "{sample}.fq"
     conda:
-        f"{conda_envs}HuGo_removal.yaml"
+        f"{conda_envs}Nano_clean.yaml"
     log:
         f"{logdir}" + "Hugo_removal_pt2_{sample}.log"
     benchmark:
