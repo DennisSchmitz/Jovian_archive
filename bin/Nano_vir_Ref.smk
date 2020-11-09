@@ -39,7 +39,16 @@ reference_basename  =   os.path.splitext(os.path.basename(reference))[0]
 
 rule all:
     input: 
-        expand( "{p}{sample}_cov_ge_{thresholds}.fa",
+        expand( "{p}{sample}_standard_cov_ge_{thresholds}.fa",
+                p               =   f"{res + seqs}",
+                sample          =   SAMPLES,
+                thresholds      =   [   '1',
+                                        '5', 
+                                        '10',
+                                        '30',
+                                        '100'
+                                        ]),
+        expand( "{p}{sample}_gap_corrected_cov_ge_{thresholds}.fa",
                 p               =   f"{res + seqs}",
                 sample          =   SAMPLES,
                 thresholds      =   [   '1',
@@ -56,7 +65,15 @@ rule all:
                 ext     =   [   '.zip',
                                 '.html'
                                 ]),
-        expand( "{p}concat_cov_ge_{thr}.fasta",
+        expand( "{p}concat_standard_cov_ge_{thr}.fasta",
+                p   =   f"{res + seqs}",
+                thr =   [   '1',
+                            '5',
+                            '10',
+                            '30',
+                            '100'
+                            ]),
+        expand( "{p}concat_gap_corrected_cov_ge_{thr}.fasta",
                 p   =   f"{res + seqs}",
                 thr =   [   '1',
                             '5',
