@@ -302,6 +302,7 @@ if __name__ == "__main__":
             + str(flags.mincov)
             + "\n"
             + standard_seq
+            + "\n"
         )
     with flags.gapcorrected as corrected_consensus_seq:
         corrected_consensus_seq.write(
@@ -311,4 +312,5 @@ if __name__ == "__main__":
             + str(flags.mincov)
             + "\n"
             + corrected_seq
+            + "\n"
         )
