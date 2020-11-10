@@ -4,9 +4,10 @@ rule Prepare_primers:
         primers     = f"{datadir + prim}" + "primers.fasta",
         primers_5   = f"{datadir + prim}" + "primers_5.fasta",
         primers_3   = f"{datadir + prim}" + "primers_3.fasta"
+    conda:
+        f"{conda_envs}Nano_clean.yaml"
     shell:
         """
 cp {input} {output.primers}
-sed '2~2s/^/X/' {output.primers} > {output.primers_5}
-sed '2~2s/$/X/' {output.primers} > {output.primers_3}
+python bin/scripts/prepare_primers.py --primers {output.primers} --three {output.primers_3} --five {output.primers_5}
         """ 

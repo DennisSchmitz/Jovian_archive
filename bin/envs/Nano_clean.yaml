@@ -13,6 +13,7 @@ dependencies:
   - pysam
   - pysamstats
   - pandas
+  - biopython==1.78
   - openjdk==11.0.8
   - fastqc==0.11.8
   - fastp==0.20.1
