@@ -6,6 +6,7 @@ rule Prepare_primers:
         primers_3   = f"{datadir + prim}" + "primers_3.fasta"
     conda:
         f"{conda_envs}Nano_clean.yaml"
+    threads: 1
     shell:
         """
 cp {input} {output.primers}
