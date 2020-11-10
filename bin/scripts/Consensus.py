@@ -259,28 +259,35 @@ def BuildCons(pileupindex, IndexedGFF, mincov):
                     corrected_cons.append("-")
                 elif ORFPosition == True:
 
+                    is_del = False
+
                     # In het geval er een deletie is gerapporteerd als meerderheid op de "currentposition"
                     # en zowel nucleotide positie "-1" en "+1" (t.o.v. de "currentposition", dit is positie 0) beide géén deletie hebben
                     # vul dan de positie met de tweede meest voorkomende gerapporteerde nucleotide (A/C/T/G/D)
                     if nxt_primary_nuc != "D" and prv_primary_nuc != "D":
-                        corrected_cons.append(cur_second_nuc)
+                        is_del = False
 
                     # In het geval er een deletie is gerapporteerd als meerderheid op de "currentposition"
                     # en zowel nucleotide positie "-1" en "+1" hebben beide wél een deletie gerapporteerd
                     # keur dan de gerapporteerde deletie goed
                     if nxt_primary_nuc == "D" and prv_primary_nuc == "D":
-                        corrected_cons.append("-")
+                        is_del = True
 
                     # In het geval er een deletie is gerapporteerd als meerderheid op de "currentposition"
                     # en zowel nucleotide positie "+1" en "+2" hebben beide wél een deletie gerapporteerd
                     # keur dan de gerapporteerde deletie goed
                     if nxt_primary_nuc == "D" and nxt2_primary_nuc == "D":
-                        corrected_cons.append("-")
+                        is_del = True
 
                     # In het geval er een deletie is gerapporteerd als meerderheid op de "currentposition"
                     # en zowel nucleotide positie "-1" en "-2" hebben beide wél een deletie gerapporteerd
                     # keur dan de gerapporteerde deletie goed
                     if prv_primary_nuc == "D" and prv2_primary_nuc == "D":
+                        is_del = True
+
+                    if is_del == False:
+                        corrected_cons.append(cur_second_nuc)
+                    elif is_del == True:
                         corrected_cons.append("-")
 
     sequences = "".join(standard_cons) + "," + "".join(corrected_cons)
