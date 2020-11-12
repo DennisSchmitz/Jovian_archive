@@ -55,6 +55,14 @@ with flags.output as fileout:
         trim_qual_right = trim_qual_left[: -int(s_clipped_right)]
 
         trimmed_qual = trim_qual_right
+        
+        if read.is_reverse == True:
+            complement = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'}
+            bases = list(trimmed_seq)
+            bases = [complement[base] for base in bases]
+            trimmed_seq = ''.join(bases)
+            trimmed_seq = trimmed_seq[::-1]
+            trimmed_qual = trimmed_qual[::-1]
 
         fileout.write(
             "@"
