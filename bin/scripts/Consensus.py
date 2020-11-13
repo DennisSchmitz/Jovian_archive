@@ -215,7 +215,13 @@ def BuildCons(pileupindex, IndexedGFF, mincov):
         # > current pos
         cur_sorted_dist = sorted(((value, key) for key, value in cur_nuc_dist.items()))
         cur_primary_nuc = cur_sorted_dist[-1][1]
-        cur_second_nuc = cur_sorted_dist[-2][1]
+        # Only set cur_second_nuc (2nd most abundant nuc) if it has a non-zero value (i.e. in region's with DoC > 0), else the DoC = 0 and an "N" is set.
+        cur_second_nuc = cur_sorted_dist[-2][1] if cur_sorted_dist[-2][0] != 0 else "N"
+        # Used later to check ambigious gap-filling in situations where the 2nd and 3rd most abundant nucs are tied in counts
+        cur_third_nuc = cur_sorted_dist[-3][1] if cur_sorted_dist[-3][0] != 0 else "N"
+        #TODO hier later nog een optie van maken om abiguity nuc-code te outputten op user request
+        #! hier nog warning voor als bij primaire calling er een ambigious call is, dus waarbij first and second nuc beide evenveel counts hebben, throw error
+        #! check if cov < 3, then, make lowercase?
 
         # > next pos
         nxt_sorted_dist = sorted(((value, key) for key, value in nxt_nuc_dist.items()))
@@ -286,6 +292,10 @@ def BuildCons(pileupindex, IndexedGFF, mincov):
                         is_del = True
 
                     if is_del == False:
+                        # if cur_second_nuc and cur_third_nuc are not "N" (see above, i.e. its non-zero) and 2nd and 3rd most abundant nucs are tied in counts,
+                        # its an ambigious call and throw a warning to std. out.
+                        if ( cur_second_nuc and cur_third_nuc != "N" ) and ( cur_sorted_dist[-2][0] == cur_sorted_dist[-3][0] ):
+                            print("Ambigious call at ", currentloc, ". A \"", cur_second_nuc , "\" was called with count ", cur_sorted_dist[-2][0] , " but could also be an \"", cur_third_nuc ,"\" with equal count ", cur_sorted_dist[-3][0] , ".")
                         corrected_cons.append(cur_second_nuc)
                     elif is_del == True:
                         corrected_cons.append("-")
