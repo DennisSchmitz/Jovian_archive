@@ -1,3 +1,4 @@
+from os import system
 import pysam
 import pysamstats
 import pandas as pd
@@ -109,6 +110,68 @@ def BuildIndex(aln, fasta):
     return pileup_index
 
 
+def ORFfinder(location, GFFindex):
+    exists_in_orf = []
+    for index, orf in GFFindex.iterrows():
+        in_orf = location in range(orf.start, orf.end)
+        exists_in_orf.append(in_orf)
+
+    if any(exists_in_orf) == True:
+        in_orf = True
+    elif any(exists_in_orf) == False:
+        in_orf = False
+    else:
+        in_orf = False
+        system.exit(
+            """
+                    Something went wrong during the processing of this GFF.
+                    Please check or re-generate the GFF file and try again.
+                    """
+        )
+
+    return in_orf
+
+
+def slices(mintwo, minone, zero, plusone, plustwo):
+    dist_mintwo = {
+        "A": mintwo[1],
+        "T": mintwo[2],
+        "C": mintwo[3],
+        "G": mintwo[4],
+        "D": mintwo[5],
+    }
+    dist_minone = {
+        "A": minone[1],
+        "T": minone[2],
+        "C": minone[3],
+        "G": minone[4],
+        "D": minone[5],
+    }
+    dist_zero = {
+        "A": zero[1],
+        "T": zero[2],
+        "C": zero[3],
+        "G": zero[4],
+        "D": zero[5],
+    }
+    dist_plusone = {
+        "A": plusone[1],
+        "T": plusone[2],
+        "C": plusone[3],
+        "G": plusone[4],
+        "D": plusone[5],
+    }
+    distplustwo = {
+        "A": plustwo[1],
+        "T": plustwo[2],
+        "C": plustwo[3],
+        "G": plustwo[4],
+        "D": plustwo[5],
+    }
+
+    return dist_mintwo, dist_minone, dist_zero, dist_plusone, distplustwo
+
+
 def BuildCons(pileupindex, IndexedGFF, mincov):
     standard_cons = []
     corrected_cons = []
@@ -129,15 +192,7 @@ def BuildCons(pileupindex, IndexedGFF, mincov):
         if currentloc == 2:
             secondback = 1
 
-        exists_in_orf = []
-        for index, orf in IndexedGFF.iterrows():
-            in_orf = currentloc in range(orf.start, orf.end)
-            exists_in_orf.append(in_orf)
-
-        if any(exists_in_orf) == True:
-            ORFPosition = True
-        elif any(exists_in_orf) == False:
-            ORFPosition = False
+        ORFPosition = ORFfinder(currentloc, IndexedGFF)
 
         # currentloc = slice_c
         # firstnext = slice_n1
@@ -174,41 +229,10 @@ def BuildCons(pileupindex, IndexedGFF, mincov):
             slice_p2.append(items)
 
         ## get the actual nucleotide distributions for every position
-        cur_nuc_dist = {
-            "A": slice_c[1],
-            "T": slice_c[2],
-            "C": slice_c[3],
-            "G": slice_c[4],
-            "D": slice_c[5],
-        }
-        prv_nuc_dist = {
-            "A": slice_p1[1],
-            "T": slice_p1[2],
-            "C": slice_p1[3],
-            "G": slice_p1[4],
-            "D": slice_p1[5],
-        }
-        prv2_nuc_dist = {
-            "A": slice_p2[1],
-            "T": slice_p2[2],
-            "C": slice_p2[3],
-            "G": slice_p2[4],
-            "D": slice_p2[5],
-        }
-        nxt_nuc_dist = {
-            "A": slice_n1[1],
-            "T": slice_n1[2],
-            "C": slice_n1[3],
-            "G": slice_n1[4],
-            "D": slice_n1[5],
-        }
-        nxt2_nuc_dist = {
-            "A": slice_n2[1],
-            "T": slice_n2[2],
-            "C": slice_n2[3],
-            "G": slice_n2[4],
-            "D": slice_n2[5],
-        }
+
+        prv2_nuc_dist, prv_nuc_dist, cur_nuc_dist, nxt_nuc_dist, nxt2_nuc_dist = slices(
+            slice_p2, slice_p2, slice_c, slice_n1, slice_n2
+        )
 
         # get the most primary nucleotide and secondary nucleotide for every position
         ## >> sort the distribution of the earlier made dict based on the values, return the keys with the highest and secondary highest values
@@ -218,9 +242,26 @@ def BuildCons(pileupindex, IndexedGFF, mincov):
         # Only set cur_second_nuc (2nd most abundant nuc) if it has a non-zero value (i.e. in region's with DoC > 0), else the DoC = 0 and an "N" is set. Otherwise it inserts random nucs at if 2nd most abundant nuc has DoC=0.
         cur_second_nuc = cur_sorted_dist[-2][1] if cur_sorted_dist[-2][0] != 0 else "N"
         # if is not "N" (see above, i.e. its non-zero) and most and 2nd most abundant nucs are tied in counts, then its an ambigious call and warning is thrown to stdout.
-        if ( cur_second_nuc != "N" ) and ( cur_sorted_dist[-1][0] == cur_sorted_dist[-2][0] ):
-            #TODO hier later nog een optie van maken om abiguity nuc-code te outputten op user request
-            print("File: ", flags.input ,". Ambigious call during consensus-calling at position ", currentloc, ", a \"", cur_primary_nuc , "\" was called (N=", cur_sorted_dist[-1][0] , ") but could also be an \"", cur_second_nuc ,"\" with (N=", cur_sorted_dist[-2][0] , ").", sep = "")
+        if (cur_second_nuc != "N") and (
+            cur_sorted_dist[-1][0] == cur_sorted_dist[-2][0]
+        ):
+            # TODO hier later nog een optie van maken om abiguity nuc-code te outputten op user request
+            print(
+                "File: ",
+                flags.input,
+                ". Ambigious call during consensus-calling at position ",
+                currentloc,
+                ', a "',
+                cur_primary_nuc,
+                '" was called (N=',
+                cur_sorted_dist[-1][0],
+                ') but could also be an "',
+                cur_second_nuc,
+                '" with (N=',
+                cur_sorted_dist[-2][0],
+                ").",
+                sep="",
+            )
         # Used later to check ambigious gap-filling in situations where the 2nd and 3rd most abundant nucs are tied in counts when trying to correct frameshift-causing gaps.
         cur_third_nuc = cur_sorted_dist[-3][1] if cur_sorted_dist[-3][0] != 0 else "N"
         #! check if cov < 3, then, make lowercase?
@@ -296,8 +337,25 @@ def BuildCons(pileupindex, IndexedGFF, mincov):
                     if is_del == False:
                         # if cur_second_nuc and cur_third_nuc are not "N" (see above, i.e. its non-zero) and 2nd and 3rd most abundant nucs are tied in counts,
                         # its an ambigious call and throw a warning to std. out.
-                        if ( cur_second_nuc and cur_third_nuc != "N" ) and ( cur_sorted_dist[-2][0] == cur_sorted_dist[-3][0] ):
-                            print("File: ", flags.input ,". Ambigious call during gap-filling at position ", currentloc, ", a \"", cur_second_nuc , "\" was called (N=", cur_sorted_dist[-2][0] , ") but could also be an \"", cur_third_nuc ,"\" with (N=", cur_sorted_dist[-3][0] , ").", sep = "")
+                        if (cur_second_nuc and cur_third_nuc != "N") and (
+                            cur_sorted_dist[-2][0] == cur_sorted_dist[-3][0]
+                        ):
+                            print(
+                                "File: ",
+                                flags.input,
+                                ". Ambigious call during gap-filling at position ",
+                                currentloc,
+                                ', a "',
+                                cur_second_nuc,
+                                '" was called (N=',
+                                cur_sorted_dist[-2][0],
+                                ') but could also be an "',
+                                cur_third_nuc,
+                                '" with (N=',
+                                cur_sorted_dist[-3][0],
+                                ").",
+                                sep="",
+                            )
                         corrected_cons.append(cur_second_nuc)
                     elif is_del == True:
                         corrected_cons.append("-")
