@@ -238,33 +238,19 @@ def BuildCons(pileupindex, IndexedGFF, mincov):
         ## >> sort the distribution of the earlier made dict based on the values, return the keys with the highest and secondary highest values
         # > current pos
         cur_sorted_dist = sorted(((value, key) for key, value in cur_nuc_dist.items()))
-        cur_primary_nuc = cur_sorted_dist[-1][1]
-        # Only set cur_second_nuc (2nd most abundant nuc) if it has a non-zero value (i.e. in region's with DoC > 0), else the DoC = 0 and an "N" is set. Otherwise it inserts random nucs at if 2nd most abundant nuc has DoC=0.
-        cur_second_nuc = cur_sorted_dist[-2][1] if cur_sorted_dist[-2][0] != 0 else "N"
-        # if is not "N" (see above, i.e. its non-zero) and most and 2nd most abundant nucs are tied in counts, then its an ambigious call and warning is thrown to stdout.
-        if (cur_second_nuc != "N") and (
-            cur_sorted_dist[-1][0] == cur_sorted_dist[-2][0]
-        ):
-            # TODO hier later nog een optie van maken om abiguity nuc-code te outputten op user request
-            print(
-                "File: ",
-                flags.input,
-                ". Ambigious call during consensus-calling at position ",
-                currentloc,
-                ', a "',
-                cur_primary_nuc,
-                '" was called (N=',
-                cur_sorted_dist[-1][0],
-                ') but could also be an "',
-                cur_second_nuc,
-                '" with (N=',
-                cur_sorted_dist[-2][0],
-                ").",
-                sep="",
-            )
-        # Used later to check ambigious gap-filling in situations where the 2nd and 3rd most abundant nucs are tied in counts when trying to correct frameshift-causing gaps.
-        cur_third_nuc = cur_sorted_dist[-3][1] if cur_sorted_dist[-3][0] != 0 else "N"
-        #! check if cov < 3, then, make lowercase?
+        # Most abundant nuc at current pos: set it to lower case when that nuc is < mincov, else, uppercase.
+        # (locations are filtered based on cur_cov (i.e. sum count of all nucs, incl dels), however, when the most
+        # abundant nuc is < mincov (but sum total count of all nucs still >= mincov) it makes it a lowercase letter to
+        # signify uncertainty.
+        cur_primary_nuc = cur_sorted_dist[-1][1].lower() if cur_sorted_dist[-1][0] < mincov else cur_sorted_dist[-1][1].upper()
+        # 2nd most abundant nuc at current pos, used later for gap-filling when del is inframe:
+        # set it to N if count of that nuc == 0, this to assure that random nucs aren't inserted when count is zero.
+        # Set to lower case when that nuc is < mincov, see explanation above, else set uppercase.
+        cur_second_nuc = "N" if cur_sorted_dist[-2][0] == 0 else cur_sorted_dist[-2][1].lower() if cur_sorted_dist[-2][0] < mincov else cur_sorted_dist[-2][1].upper()
+        # 3rd most abundant nuc at current pos, used later for gap-filling when del is inframe:
+        # set it to N if count of that nuc == 0, this to assure that random nucs aren't inserted when count is zero.
+        # Set to lower case when that nuc is < mincov, see explanation above, else set uppercase.
+        cur_third_nuc = "N" if cur_sorted_dist[-3][0] == 0 else cur_sorted_dist[-3][1].lower() if cur_sorted_dist[-3][0] < mincov else cur_sorted_dist[-3][1].upper()
 
         # > next pos
         nxt_sorted_dist = sorted(((value, key) for key, value in nxt_nuc_dist.items()))
@@ -289,6 +275,26 @@ def BuildCons(pileupindex, IndexedGFF, mincov):
         # Get the current coverage
         cur_cov = slice_c[0]
 
+        # if 2nd most abundant nuc is not "N" (see above, i.e. its non-zero) and most and 2nd most abundant nucs are tied in counts, and DoC at cur-pos is >= mincov, then its an ambigious call and warning is thrown to stdout.
+        #TODO exclude the "D"-nuc from the comparison, not informative and almost always artefacts IMHO, but we can discuss it later. Currently, warnings are thrown that an equal "D" count is ambigious
+        if ( cur_second_nuc != "N" ) and ( cur_sorted_dist[-1][0] == cur_sorted_dist[-2][0] ) and ( cur_cov >= mincov ):
+            #TODO hier later nog een optie van maken om abiguity nuc-code te outputten op user request
+            print(
+                "File: ",
+                flags.input,
+                ". Ambigious call during consensus-calling at position ",
+                currentloc,
+                ", a \"",
+                cur_primary_nuc,
+                "\" was called (N=",
+                cur_sorted_dist[-1][0],
+                ") but could also be a \"",
+                cur_second_nuc,
+                "\" with (N=",
+                cur_sorted_dist[-2][0],
+                ").",
+                sep = "")
+
         # als de coverage op de "currentposition" lager is dan de minimale coverage, plak dan een "N"
         # Zoniet, ga door met de daadwerkelijke nucleotides checken
         if cur_cov < mincov:
@@ -296,11 +302,11 @@ def BuildCons(pileupindex, IndexedGFF, mincov):
             corrected_cons.append("N")
         else:
             # als de "currentposition" géén deletie is, plak dan de meerderheid (A/T/C/G/D) in de index van deze positie (komt uit alignment)
-            if cur_primary_nuc != "D":
+            if cur_primary_nuc.upper() != "D":
                 standard_cons.append(cur_primary_nuc)
                 corrected_cons.append(cur_primary_nuc)
             # als de "currentposition" wél een deletie is, ga dan kijken naar de status van omliggende nucleotides
-            elif cur_primary_nuc == "D":
+            elif cur_primary_nuc.upper() == "D":
                 standard_cons.append(
                     "-"
                 )  ## <-- deze is hier om beide een "standaard consensus" te maken naast de "gap-corrected consensus"
@@ -313,25 +319,25 @@ def BuildCons(pileupindex, IndexedGFF, mincov):
                     # In het geval er een deletie is gerapporteerd als meerderheid op de "currentposition"
                     # en zowel nucleotide positie "-1" en "+1" (t.o.v. de "currentposition", dit is positie 0) beide géén deletie hebben
                     # vul dan de positie met de tweede meest voorkomende gerapporteerde nucleotide (A/C/T/G/D)
-                    if nxt_primary_nuc != "D" and prv_primary_nuc != "D":
+                    if nxt_primary_nuc.upper() != "D" and prv_primary_nuc.upper() != "D":
                         is_del = False
 
                     # In het geval er een deletie is gerapporteerd als meerderheid op de "currentposition"
                     # en zowel nucleotide positie "-1" en "+1" hebben beide wél een deletie gerapporteerd
                     # keur dan de gerapporteerde deletie goed
-                    if nxt_primary_nuc == "D" and prv_primary_nuc == "D":
+                    if nxt_primary_nuc.upper() == "D" and prv_primary_nuc.upper() == "D":
                         is_del = True
 
                     # In het geval er een deletie is gerapporteerd als meerderheid op de "currentposition"
                     # en zowel nucleotide positie "+1" en "+2" hebben beide wél een deletie gerapporteerd
                     # keur dan de gerapporteerde deletie goed
-                    if nxt_primary_nuc == "D" and nxt2_primary_nuc == "D":
+                    if nxt_primary_nuc.upper() == "D" and nxt2_primary_nuc.upper() == "D":
                         is_del = True
 
                     # In het geval er een deletie is gerapporteerd als meerderheid op de "currentposition"
                     # en zowel nucleotide positie "-1" en "-2" hebben beide wél een deletie gerapporteerd
                     # keur dan de gerapporteerde deletie goed
-                    if prv_primary_nuc == "D" and prv2_primary_nuc == "D":
+                    if prv_primary_nuc.upper() == "D" and prv2_primary_nuc.upper() == "D":
                         is_del = True
 
                     if is_del == False:
@@ -349,7 +355,7 @@ def BuildCons(pileupindex, IndexedGFF, mincov):
                                 cur_second_nuc,
                                 '" was called (N=',
                                 cur_sorted_dist[-2][0],
-                                ') but could also be an "',
+                                ') but could also be a "',
                                 cur_third_nuc,
                                 '" with (N=',
                                 cur_sorted_dist[-3][0],
