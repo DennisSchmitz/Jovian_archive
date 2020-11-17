@@ -1,5 +1,4 @@
 import pysam
-import re
 import argparse
 
 arg = argparse.ArgumentParser()
@@ -34,33 +33,18 @@ flags = arg.parse_args()
 with flags.output as fileout:
     bamfile = pysam.AlignmentFile(flags.input, "rb", threads=flags.threads)
     for read in bamfile:
-        try:
-            s_clipped_left = re.match("^(\d*S)", read.cigarstring).group().split("S")[0]
-        except:
-            s_clipped_left = "0"
 
-        try:
-            s_clipped_right = (
-                re.search("(\d*S)$", read.cigarstring).group().split("S")[0]
-            )
-        except:
-            s_clipped_right = "0"
+        read_start = read.query_alignment_start
+        read_end = read.query_alignment_end
 
-        trim_seq_left = read.seq[int(s_clipped_left) :]
-        trim_seq_right = trim_seq_left[: -int(s_clipped_right)]
+        trimmed_seq = read.query_alignment_sequence
+        trimmed_qual = read.qual[read_start:read_end]
 
-        trimmed_seq = trim_seq_right
-
-        trim_qual_left = read.qual[int(s_clipped_left) :]
-        trim_qual_right = trim_qual_left[: -int(s_clipped_right)]
-
-        trimmed_qual = trim_qual_right
-        
         if read.is_reverse == True:
-            complement = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'}
+            complement = {"A": "T", "C": "G", "G": "C", "T": "A"}
             bases = list(trimmed_seq)
             bases = [complement[base] for base in bases]
-            trimmed_seq = ''.join(bases)
+            trimmed_seq = "".join(bases)
             trimmed_seq = trimmed_seq[::-1]
             trimmed_qual = trimmed_qual[::-1]
 
