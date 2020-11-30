@@ -11,8 +11,8 @@
 # @ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 from argparse import FileType
+from collections import defaultdict
 import argparse
-from typing import Counter
 import pysam
 
 
@@ -56,7 +56,7 @@ def buildCons(BamAln, mincov):
                     cons.append("N")
                     continue
 
-                pos = Counter()
+                pos = defaultdict(int)
                 for read in pileupcolumn.pileups:
                     if read.is_del:
                         pos["*"] += 1

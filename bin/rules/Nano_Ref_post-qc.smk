@@ -1,11 +1,11 @@
 rule cleaned_quality_control:
     input: 
-        rules.Cleanup.output.qc_fastq
+        rules.Cut_primers.output
     output:
         html    =   f"{datadir + qc_post}" + "{sample}_fastqc.html",
         zip     =   f"{datadir + qc_post}" + "{sample}_fastqc.zip"
     conda:
-        f"{conda_envs}QC_and_clean.yaml"
+        f"{conda_envs}Nano_clean.yaml"
     log:
         f"{logdir}" + "cleaned_quality_control_{sample}.log"
     benchmark:
@@ -17,7 +17,7 @@ rule cleaned_quality_control:
         """
 if [ -s "{input}" ] # If file exists and is NOT empty (i.e. filesize > 0) do...
 then
-    fastqc -t 6 --quiet --outdir {params.outdir} {input} > {log} 2>&1
+    fastqc -t {threads} --quiet --outdir {params.outdir} {input} > {log} 2>&1
 else
     touch {output.html}
     touch {output.zip}

@@ -4,7 +4,7 @@
 rule Align_to_reference_pt1:
     input:
         ref     =   reference,
-        fastq   =   rules.Hugo_removal_pt2.output.cleanedfastq
+        fastq   =   rules.Cut_primers.output
     output:
         bam         =   f"{datadir + aln + bf}" + "{sample}.bam",
         indexed_bam =   f"{datadir + aln + bf}" + "{sample}.bam.bai"

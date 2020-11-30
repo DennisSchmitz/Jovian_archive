@@ -5,7 +5,7 @@ rule raw_quality_control:
         html    =   f"{datadir + qc_pre}" + "{sample}_fastqc.html",
         zip     =   f"{datadir + qc_pre}" + "{sample}_fastqc.zip",
     conda:
-        f"{conda_envs}QC_and_clean.yaml"
+        f"{conda_envs}Nano_clean.yaml"
     log:
         f"{logdir}" + "raw_quality_control_{sample}.log"
     benchmark:
