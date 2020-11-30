@@ -1,6 +1,6 @@
 rule Cleanup:
     input:
-        fastq   =   rules.Hugo_removal_pt2.output.cleanedfastq
+        fastq   =   rules.Remove_Adapters_pt2.output
     output:
         qc_fastq    =   f"{datadir + cln + datadir}" + "{sample}.fastq",
         qc_html     =   f"{datadir + cln + html}" + "{sample}.fastp.html",

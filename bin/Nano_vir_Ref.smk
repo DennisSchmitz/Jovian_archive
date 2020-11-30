@@ -39,7 +39,16 @@ reference_basename  =   os.path.splitext(os.path.basename(reference))[0]
 
 rule all:
     input: 
-        expand( "{p}{sample}_cov_ge_{thresholds}.fa",
+        expand( "{p}{sample}_standard_cov_ge_{thresholds}.fa",
+                p               =   f"{res + seqs}",
+                sample          =   SAMPLES,
+                thresholds      =   [   '1',
+                                        '5', 
+                                        '10',
+                                        '30',
+                                        '100'
+                                        ]),
+        expand( "{p}{sample}_gap_corrected_cov_ge_{thresholds}.fa",
                 p               =   f"{res + seqs}",
                 sample          =   SAMPLES,
                 thresholds      =   [   '1',
@@ -56,7 +65,15 @@ rule all:
                 ext     =   [   '.zip',
                                 '.html'
                                 ]),
-        expand( "{p}concat_cov_ge_{thr}.fasta",
+        expand( "{p}concat_standard_cov_ge_{thr}.fasta",
+                p   =   f"{res + seqs}",
+                thr =   [   '1',
+                            '5',
+                            '10',
+                            '30',
+                            '100'
+                            ]),
+        expand( "{p}concat_gap_corrected_cov_ge_{thr}.fasta",
                 p   =   f"{res + seqs}",
                 thr =   [   '1',
                             '5',
@@ -81,13 +98,9 @@ include: f"{rls}Nano_Ref_get_primers.smk"
 
 include: f"{rls}Nano_Ref_pre_qc.smk"
 
-include: f"{rls}Nano_Ref_HuGo_removal_pt1.smk"
-
-include: f"{rls}Nano_Ref_HuGo_removal_pt2.smk"
+include: f"{rls}Nano_Ref_RemoveAdapters.smk"
 
 include: f"{rls}Nano_Ref_Cleanup.smk"
-
-include: f"{rls}Nano_Ref_RemoveAdapters.smk"
 
 include: f"{rls}Nano_Ref_Cut-primers.smk"
 
