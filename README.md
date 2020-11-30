@@ -329,7 +329,7 @@ ___
 
 ## Authors
 
-- Dennis Schmitz ([RIVM][[RIVM]] and [EMC][EMC])  
+- Dennis Schmitz ([RIVM][RIVM] and [EMC][EMC])  
 - Sam Nooij ([RIVM][RIVM] and [EMC][EMC])  
 - Robert Verhagen ([RIVM][RIVM])  
 - Thierry Janssens ([RIVM][RIVM])  
