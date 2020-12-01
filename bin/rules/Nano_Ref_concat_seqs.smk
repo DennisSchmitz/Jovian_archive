@@ -26,13 +26,19 @@ rule concat_seqs_standard:
         conc_10     =   f"{res + seqs}" + "concat_standard_cov_ge_10.fasta",
         conc_30     =   f"{res + seqs}" + "concat_standard_cov_ge_30.fasta",
         conc_100    =   f"{res + seqs}" + "concat_standard_cov_ge_100.fasta"
+    params:
+        wildcard_1      =   f"{res + seqs}" + "*_standard_cov_ge_1.fa",
+        wildcard_5      =   f"{res + seqs}" + "*_standard_cov_ge_5.fa",
+        wildcard_10     =   f"{res + seqs}" + "*_standard_cov_ge_10.fa",
+        wildcard_30     =   f"{res + seqs}" + "*_standard_cov_ge_30.fa",
+        wildcard_100    =   f"{res + seqs}" + "*_standard_cov_ge_100.fa"
     shell:
         """
-cat {input.cov_1} >> {output.conc_1}
-cat {input.cov_5} >> {output.conc_5}
-cat {input.cov_10} >> {output.conc_10}
-cat {input.cov_30} >> {output.conc_30}
-cat {input.cov_100} >> {output.conc_100}
+cat {params.wildcard_1} >> {output.conc_1}
+cat {params.wildcard_5} >> {output.conc_5}
+cat {params.wildcard_10} >> {output.conc_10}
+cat {params.wildcard_30} >> {output.conc_30}
+cat {params.wildcard_100} >> {output.conc_100}
         """
 
 
@@ -64,11 +70,17 @@ rule concat_seqs_gapcorrected:
         conc_10     =   f"{res + seqs}" + "concat_gap_corrected_cov_ge_10.fasta",
         conc_30     =   f"{res + seqs}" + "concat_gap_corrected_cov_ge_30.fasta",
         conc_100    =   f"{res + seqs}" + "concat_gap_corrected_cov_ge_100.fasta"
+    params:
+        wildcard_1      =   f"{res + seqs}" + "*_gap_corrected_cov_ge_1.fa",
+        wildcard_5      =   f"{res + seqs}" + "*_gap_corrected_cov_ge_5.fa",
+        wildcard_10     =   f"{res + seqs}" + "*_gap_corrected_cov_ge_10.fa",
+        wildcard_30     =   f"{res + seqs}" + "*_gap_corrected_cov_ge_30.fa",
+        wildcard_100    =   f"{res + seqs}" + "*_gap_corrected_cov_ge_100.fa"
     shell:
         """
-cat {input.cov_1} >> {output.conc_1}
-cat {input.cov_5} >> {output.conc_5}
-cat {input.cov_10} >> {output.conc_10}
-cat {input.cov_30} >> {output.conc_30}
-cat {input.cov_100} >> {output.conc_100}
+cat {params.wildcard_1} >> {output.conc_1}
+cat {params.wildcard_5} >> {output.conc_5}
+cat {params.wildcard_10} >> {output.conc_10}
+cat {params.wildcard_30} >> {output.conc_30}
+cat {params.wildcard_100} >> {output.conc_100}
         """
