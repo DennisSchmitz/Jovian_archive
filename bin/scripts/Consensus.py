@@ -75,6 +75,15 @@ arg.add_argument(
     required=False,
 )
 
+arg.add_argument(
+    "--coverage",
+    "-cov",
+    metavar="File",
+    help="Output file listing the coverage per position",
+    type=argparse.FileType("w"),
+    required=True,
+)
+
 flags = arg.parse_args()
 
 
@@ -171,6 +180,20 @@ def slices(mintwo, minone, zero, plusone, plustwo):
 
     return dist_mintwo, dist_minone, dist_zero, dist_plusone, distplustwo
 
+
+def BuildCoverage(pileupindex):
+    with flags.coverage as coverage_output:
+        for index, rows in pileupindex.iterrows():
+            slice_c = []
+            for items in pileupindex.loc[index]:
+                slice_c.append(items)
+            coverage = slice_c[0]
+            coverage_output.write(
+                str(index)
+                + "\t"
+                + str(coverage)
+                + "\n"
+            )
 
 def BuildCons(pileupindex, IndexedGFF, mincov):
     standard_cons = []
@@ -406,6 +429,7 @@ def BuildCons(pileupindex, IndexedGFF, mincov):
 if __name__ == "__main__":
     GFF_index = MakeGFFindex(flags.gff)
     pileindex = BuildIndex(flags.input, flags.reference)
+    BuildCoverage(pileindex)
     sequences = BuildCons(pileindex, GFF_index, flags.mincov)
 
     standard_seq = sequences.split(",")[0]
