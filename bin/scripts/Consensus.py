@@ -257,11 +257,6 @@ def BuildCons(pileupindex, IndexedGFF, mincov):
             if cur_sorted_dist[-2][0] < mincov
             else cur_sorted_dist[-2][1].upper()
         )
-        
-        if cur_sorted_dist[-2][0] == 0:
-            cur_second_nuc = "N"
-        else:
-            bladibla
         # 3rd most abundant nuc at current pos, used later for gap-filling when del is inframe:
         # set it to N if count of that nuc == 0, this to assure that random nucs aren't inserted when count is zero.
         # Set to lower case when that nuc is < mincov, see explanation above, else set uppercase.
