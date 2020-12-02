@@ -235,11 +235,6 @@ def BuildCons(pileupindex, IndexedGFF, mincov):
         )
 
 
-        print(secondback, prv2_nuc_dist)
-        print(firstback, prv_nuc_dist)
-        print(currentloc, cur_nuc_dist)
-        print(firstnext, nxt_nuc_dist)
-        print(secondnext, nxt2_nuc_dist)
         # get the most primary nucleotide and secondary nucleotide for every position
         ## >> sort the distribution of the earlier made dict based on the values, return the keys with the highest and secondary highest values
         # > current pos
