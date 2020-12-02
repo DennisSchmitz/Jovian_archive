@@ -242,31 +242,30 @@ def BuildCons(pileupindex, IndexedGFF, mincov):
         # (locations are filtered based on cur_cov (i.e. sum count of all nucs, incl dels), however, when the most
         # abundant nuc is < mincov (but sum total count of all nucs still >= mincov) it makes it a lowercase letter to
         # signify uncertainty.
-        cur_primary_nuc = (
-            cur_sorted_dist[-1][1].lower()
-            if cur_sorted_dist[-1][0] < mincov
-            else cur_sorted_dist[-1][1].upper()
-        )
+        if cur_sorted_dist[-1][0] < mincov:
+            cur_primary_nuc = cur_sorted_dist[-1][1].lower()
+        else:
+            cur_primary_nuc = cur_sorted_dist[-1][1].upper()
+
         # 2nd most abundant nuc at current pos, used later for gap-filling when del is inframe:
         # set it to N if count of that nuc == 0, this to assure that random nucs aren't inserted when count is zero.
         # Set to lower case when that nuc is < mincov, see explanation above, else set uppercase.
-        cur_second_nuc = (
-            "N"
-            if cur_sorted_dist[-2][0] == 0
-            else cur_sorted_dist[-2][1].lower()
-            if cur_sorted_dist[-2][0] < mincov
-            else cur_sorted_dist[-2][1].upper()
-        )
+        if cur_sorted_dist[-2][0] == 0:
+            cur_second_nuc = "N"
+        elif cur_sorted_dist[-2][0] < mincov:
+            cur_second_nuc = cur_sorted_dist[-2][1].lower()
+        else:
+            cur_second_nuc = cur_sorted_dist[-2][1].upper()
+        
         # 3rd most abundant nuc at current pos, used later for gap-filling when del is inframe:
         # set it to N if count of that nuc == 0, this to assure that random nucs aren't inserted when count is zero.
         # Set to lower case when that nuc is < mincov, see explanation above, else set uppercase.
-        cur_third_nuc = (
-            "N"
-            if cur_sorted_dist[-3][0] == 0
-            else cur_sorted_dist[-3][1].lower()
-            if cur_sorted_dist[-3][0] < mincov
-            else cur_sorted_dist[-3][1].upper()
-        )
+        if cur_sorted_dist[-3][0] == 0:
+            cur_third_nuc = "N"
+        elif cur_sorted_dist[-3][0] < mincov:
+            cur_third_nuc = cur_sorted_dist[-3][1].lower()
+        else:
+            cur_third_nuc = cur_sorted_dist[-3][1].upper()
 
         # > next pos
         nxt_sorted_dist = sorted(((value, key) for key, value in nxt_nuc_dist.items()))
