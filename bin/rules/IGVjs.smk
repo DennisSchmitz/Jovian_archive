@@ -46,7 +46,7 @@ rule HTML_IGVJs_generate_final:
                 sample      =   SAMPLES
                 )
     output:
-        f"{res}igv.html"
+        f"{res}igv_meta.html"
     conda:
         f"{conda_envs}data_wrangling.yaml"
     log:

@@ -1,14 +1,11 @@
-
-
-
 rule Cut_primers:
     input:
-        fastq   =   rules.Adapter_trimming.output.trimmeddata,
-        primers =   primerfile
-    output:
-        cleaneddata_pt1 =   f"{datadir + cln + prdir}" + "{sample}.fastq"
+        fastq       =   rules.Remove_Adapters_pt2.output,
+        primers_5   =   rules.Prepare_primers.output.primers_5,
+        primers_3   =   rules.Prepare_primers.output.primers_3
+    output: f"{datadir + cln + prdir}" + "{sample}.fastq"
     conda:
-        f"{conda_envs}QC_and_clean.yaml"
+        f"{conda_envs}Nano_clean.yaml"
     log:
         f"{logdir}" + "Primer_removal_{sample}.log"
     benchmark:
@@ -16,13 +13,23 @@ rule Cut_primers:
     threads: config["threads"]["Nanopore_primer_removal"]
     params:
         primer_cutoff_plus  =   config["Nanopore_ref"]["Primer_cutoff_plus"],
-        primer_cutoff_minus =   config["Nanopore_ref"]["Primer_cutoff_minus"]
+        primer_cutoff_minus =   config["Nanopore_ref"]["Primer_cutoff_minus"],
+        overlap             =   config["Nanopore_ref"]["Primer_min_overlap"],
+        error_rate          =   config["Nanopore_ref"]["Primer_error_rate"],
+        repeat_search       =   config["Nanopore_ref"]["Primer_repeat_search"]
     shell:
         """
 cutadapt \
 --cores={threads} \
 --cut {params.primer_cutoff_plus} \
 --cut {params.primer_cutoff_minus} \
---revcomp -b file:{input.primers} \
--o {output.cleaneddata_pt1} {input.fastq} > {log} 2>&1
+-g file:{input.primers_5} \
+-a file:{input.primers_3} \
+--revcomp \
+-O {params.overlap} \
+-e {params.error_rate} \
+--no-indels \
+--times {params.repeat_search} \
+-o {output} \
+{input.fastq} > {log}
         """

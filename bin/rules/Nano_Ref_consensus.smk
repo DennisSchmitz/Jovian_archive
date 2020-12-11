@@ -1,106 +1,162 @@
+#! the {output.cov} is redundant, only need one rule to make it. Don't have time to fix it now. But it's stupid and redundant, apologies.
 rule consensus_cov_1:
     input:
-        bam     =   rules.Align_to_reference_pt1.output.bam
+        bam     =   rules.Align_to_reference_pt1.output.bam,
+        ref     =   rules.Index_ref.output.refcopy,
+        gff     =   rules.ORF_Analysis.output.ORF_gff
     output:
-        cons    =   f"{res + seqs}" + "{sample}_cov_ge_1.fa",
+        cons    =   f"{res + seqs}" + "{sample}_standard_cov_ge_1.fa",
+        gapcor  =   f"{res + seqs}" + "{sample}_gap_corrected_cov_ge_1.fa",
+        cov     =   f"{res + covs}" + "{sample}_coverage1.tsv"
     params:
-        output_results_folder   =   f"{res + seqs}",
-        coverage    =   "1",
-        filename    =   "{sample}_cov_ge_"
+        coverage    =   "1"
     conda:
-        f"{conda_envs}Nano_ref_alignment.yaml"
+        f"{conda_envs}Nano_ref_consensus.yaml"
     log:
-        f"{logdir}" + "Extract_cleaned_consensus_{sample}.log"
+        f"{logdir}" + "Generate_consensus_{sample}.log"
     benchmark:
-        f"{logdir + bench}" + "Extract_cleaned_consensus_{sample}.txt"
-    threads: 1
+        f"{logdir + bench}" + "Generate_consensus_{sample}.txt"
+    threads: 2
     shell:
         """
-python bin/scripts/ConsensusFromBam.py -input {input.bam} -output {output.cons} -cov {params.coverage} -name consensus_{params.filename}{params.coverage}
+python bin/scripts/Consensus.py \
+--input {input.bam} \
+--reference {input.ref} \
+--gff {input.gff} \
+--name {wildcards.sample} \
+--mincov {params.coverage} \
+--consensus {output.cons} \
+--gapcorrected {output.gapcor} \
+--coverage {output.cov} \
+--threads {threads}
         """
 
 
 rule consensus_cov_5:
     input:
-        bam     =   rules.Align_to_reference_pt1.output.bam
+        bam     =   rules.Align_to_reference_pt1.output.bam,
+        ref     =   rules.Index_ref.output.refcopy,
+        gff     =   rules.ORF_Analysis.output.ORF_gff
     output:
-        cons    =   f"{res + seqs}" + "{sample}_cov_ge_5.fa",
+        cons    =   f"{res + seqs}" + "{sample}_standard_cov_ge_5.fa",
+        gapcor  =   f"{res + seqs}" + "{sample}_gap_corrected_cov_ge_5.fa",
+        cov     =   f"{res + covs}" + "{sample}_coverage5.tsv"
     params:
-        output_results_folder   =   f"{res + seqs}",
-        coverage    =   "5",
-        filename    =   "{sample}_cov_ge_"
+        coverage    =   "5"
     conda:
-        f"{conda_envs}Nano_ref_alignment.yaml"
+        f"{conda_envs}Nano_ref_consensus.yaml"
     log:
-        f"{logdir}" + "Extract_cleaned_consensus_{sample}.log"
+        f"{logdir}" + "Generate_consensus_{sample}.log"
     benchmark:
-        f"{logdir + bench}" + "Extract_cleaned_consensus_{sample}.txt"
-    threads: 1
+        f"{logdir + bench}" + "Generate_consensus_{sample}.txt"
+    threads: 2
     shell:
         """
-python bin/scripts/ConsensusFromBam.py -input {input.bam} -output {output.cons} -cov {params.coverage} -name consensus_{params.filename}{params.coverage}
+python bin/scripts/Consensus.py \
+--input {input.bam} \
+--reference {input.ref} \
+--gff {input.gff} \
+--name {wildcards.sample} \
+--mincov {params.coverage} \
+--consensus {output.cons} \
+--gapcorrected {output.gapcor} \
+--coverage {output.cov} \
+--threads {threads}
         """
 
 rule consensus_cov_10:
     input:
-        bam     =   rules.Align_to_reference_pt1.output.bam
+        bam     =   rules.Align_to_reference_pt1.output.bam,
+        ref     =   rules.Index_ref.output.refcopy,
+        gff     =   rules.ORF_Analysis.output.ORF_gff
     output:
-        cons    =   f"{res + seqs}" + "{sample}_cov_ge_10.fa",
+        cons    =   f"{res + seqs}" + "{sample}_standard_cov_ge_10.fa",
+        gapcor  =   f"{res + seqs}" + "{sample}_gap_corrected_cov_ge_10.fa",
+        cov     =   f"{res + covs}" + "{sample}_coverage10.tsv"
     params:
-        output_results_folder   =   f"{res + seqs}",
-        coverage    =   "10",
-        filename    =   "{sample}_cov_ge_"
+        coverage    =   "10"
     conda:
-        f"{conda_envs}Nano_ref_alignment.yaml"
+        f"{conda_envs}Nano_ref_consensus.yaml"
     log:
-        f"{logdir}" + "Extract_cleaned_consensus_{sample}.log"
+        f"{logdir}" + "Generate_consensus_{sample}.log"
     benchmark:
-        f"{logdir + bench}" + "Extract_cleaned_consensus_{sample}.txt"
-    threads: 1
+        f"{logdir + bench}" + "Generate_consensus_{sample}.txt"
+    threads: 2
     shell:
         """
-python bin/scripts/ConsensusFromBam.py -input {input.bam} -output {output.cons} -cov {params.coverage} -name consensus_{params.filename}{params.coverage}
+python bin/scripts/Consensus.py \
+--input {input.bam} \
+--reference {input.ref} \
+--gff {input.gff} \
+--name {wildcards.sample} \
+--mincov {params.coverage} \
+--consensus {output.cons} \
+--gapcorrected {output.gapcor} \
+--coverage {output.cov} \
+--threads {threads}
         """
 
 
 rule consensus_cov_30:
     input:
-        bam     =   rules.Align_to_reference_pt1.output.bam
+        bam     =   rules.Align_to_reference_pt1.output.bam,
+        ref     =   rules.Index_ref.output.refcopy,
+        gff     =   rules.ORF_Analysis.output.ORF_gff
     output:
-        cons    =   f"{res + seqs}" + "{sample}_cov_ge_30.fa",
+        cons    =   f"{res + seqs}" + "{sample}_standard_cov_ge_30.fa",
+        gapcor  =   f"{res + seqs}" + "{sample}_gap_corrected_cov_ge_30.fa",
+        cov     =   f"{res + covs}" + "{sample}_coverage30.tsv"
     params:
-        output_results_folder   =   f"{res + seqs}",
-        coverage    =   "30",
-        filename    =   "{sample}_cov_ge_"
+        coverage    =   30
     conda:
-        f"{conda_envs}Nano_ref_alignment.yaml"
+        f"{conda_envs}Nano_ref_consensus.yaml"
     log:
-        f"{logdir}" + "Extract_cleaned_consensus_{sample}.log"
+        f"{logdir}" + "Generate_consensus_{sample}.log"
     benchmark:
-        f"{logdir + bench}" + "Extract_cleaned_consensus_{sample}.txt"
-    threads: 1
+        f"{logdir + bench}" + "Generate_consensus_{sample}.txt"
+    threads: 2
     shell:
         """
-python bin/scripts/ConsensusFromBam.py -input {input.bam} -output {output.cons} -cov {params.coverage} -name consensus_{params.filename}{params.coverage}
+python bin/scripts/Consensus.py \
+--input {input.bam} \
+--reference {input.ref} \
+--gff {input.gff} \
+--name {wildcards.sample} \
+--mincov {params.coverage} \
+--consensus {output.cons} \
+--gapcorrected {output.gapcor} \
+--coverage {output.cov} \
+--threads {threads}
         """
 
 rule consensus_cov_100:
     input:
-        bam     =   rules.Align_to_reference_pt1.output.bam
+        bam     =   rules.Align_to_reference_pt1.output.bam,
+        ref     =   rules.Index_ref.output.refcopy,
+        gff     =   rules.ORF_Analysis.output.ORF_gff
     output:
-        cons    =   f"{res + seqs}" + "{sample}_cov_ge_100.fa",
+        cons    =   f"{res + seqs}" + "{sample}_standard_cov_ge_100.fa",
+        gapcor  =   f"{res + seqs}" + "{sample}_gap_corrected_cov_ge_100.fa",
+        cov     =   f"{res + covs}" + "{sample}_coverage100.tsv"
     params:
-        output_results_folder   =   f"{res + seqs}",
-        coverage    =   "100",
-        filename    =   "{sample}_cov_ge_"
+        coverage    =   "100"
     conda:
-        f"{conda_envs}Nano_ref_alignment.yaml"
+        f"{conda_envs}Nano_ref_consensus.yaml"
     log:
-        f"{logdir}" + "Extract_cleaned_consensus_{sample}.log"
+        f"{logdir}" + "Generate_consensus_{sample}.log"
     benchmark:
-        f"{logdir + bench}" + "Extract_cleaned_consensus_{sample}.txt"
-    threads: 1
+        f"{logdir + bench}" + "Generate_consensus_{sample}.txt"
+    threads: 2
     shell:
         """
-python bin/scripts/ConsensusFromBam.py -input {input.bam} -output {output.cons} -cov {params.coverage} -name consensus_{params.filename}{params.coverage}
+python bin/scripts/Consensus.py \
+--input {input.bam} \
+--reference {input.ref} \
+--gff {input.gff} \
+--name {wildcards.sample} \
+--mincov {params.coverage} \
+--consensus {output.cons} \
+--gapcorrected {output.gapcor} \
+--coverage {output.cov} \
+--threads {threads}
         """

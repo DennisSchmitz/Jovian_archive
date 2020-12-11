@@ -1,0 +1,21 @@
+#!/bin/bash
+
+conda deactivate
+
+if [[ $PATH != *${STATS_NAME}* ]]; then # If helper env is not in your path (i.e. it is not currently active), do...
+    set +ue # Turn bash strict mode off because that breaks conda
+
+    if ! conda activate "${STATS_NAME}"; then # If exit statement is not 0, i.e. helper conda env hasn't been installed yet, do...
+        echo -e "\tInstalling Jovian coverage-statistics environment..."
+        conda env create -f ${PATH_JOVIAN_STATS_yaml} # Create the env from the specified yaml file
+        set -o allexport
+		conda activate "${STATS_NAME}"
+		set +o allexport
+	fi
+
+    set -ue # Turn bash strict mode on again
+fi
+
+bash bin/includes/amplicon_cov $1
+
+conda deactivate

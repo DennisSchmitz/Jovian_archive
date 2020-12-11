@@ -16,7 +16,7 @@ rule QC_raw_data:
         f"{logdir}" + "QC_raw_data_{sample}_{read}.log"
     benchmark:
         f"{logdir + bench}" + "QC_raw_data_{sample}_{read}.txt"
-    threads: 1
+    threads: 6
     params:
         output_dir  =   f"{datadir + qc_pre}"
     shell:

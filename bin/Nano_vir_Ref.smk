@@ -39,7 +39,16 @@ reference_basename  =   os.path.splitext(os.path.basename(reference))[0]
 
 rule all:
     input: 
-        expand( "{p}{sample}_cov_ge_{thresholds}.fa",
+        expand( "{p}{sample}_standard_cov_ge_{thresholds}.fa",
+                p               =   f"{res + seqs}",
+                sample          =   SAMPLES,
+                thresholds      =   [   '1',
+                                        '5', 
+                                        '10',
+                                        '30',
+                                        '100'
+                                        ]),
+        expand( "{p}{sample}_gap_corrected_cov_ge_{thresholds}.fa",
                 p               =   f"{res + seqs}",
                 sample          =   SAMPLES,
                 thresholds      =   [   '1',
@@ -56,9 +65,25 @@ rule all:
                 ext     =   [   '.zip',
                                 '.html'
                                 ]),
+        expand( "{p}concat_standard_cov_ge_{thr}.fasta",
+                p   =   f"{res + seqs}",
+                thr =   [   '1',
+                            '5',
+                            '10',
+                            '30',
+                            '100'
+                            ]),
+        expand( "{p}concat_gap_corrected_cov_ge_{thr}.fasta",
+                p   =   f"{res + seqs}",
+                thr =   [   '1',
+                            '5',
+                            '10',
+                            '30',
+                            '100'
+                            ]),
         f"{res}BoC_int.tsv",
         f"{res}BoC_pct.tsv",
-        f"{res}igv.html",
+        f"{res}igv_nano.html",
         f"{res}multiqc.html",
         f"{res}SNPs.tsv"
 
@@ -69,20 +94,17 @@ rule all:
 include: f"{rls}Nano_Ref_index.smk"
 include: f"{rls}Nano_Ref_ORF-analysis.smk"
 include: f"{rls}Nano_Ref_GC-content.smk"
+include: f"{rls}Nano_Ref_get_primers.smk"
 
 include: f"{rls}Nano_Ref_pre_qc.smk"
 
-include: f"{rls}Nano_Ref_adp_trim.smk"
-
-include: f"{rls}Nano_Ref_Cut-primers.smk"
+include: f"{rls}Nano_Ref_RemoveAdapters.smk"
 
 include: f"{rls}Nano_Ref_Cleanup.smk"
 
+include: f"{rls}Nano_Ref_Cut-primers.smk"
+
 include: f"{rls}Nano_Ref_post-qc.smk"
-
-include: f"{rls}Nano_Ref_HuGo_removal_pt1.smk"
-
-include: f"{rls}Nano_Ref_HuGo_removal_pt2.smk"
 
     #>############################################################################
     #>#### Alignments and concensus
@@ -93,6 +115,8 @@ include: f"{rls}Nano_Ref_alignment_pt1.smk"
 include: f"{rls}Nano_Ref_alignment_pt2.smk"
 
 include: f"{rls}Nano_Ref_consensus.smk"
+
+include: f"{rls}Nano_Ref_concat_seqs.smk"
 
 include: f"{rls}Nano_Ref_coverage.smk"
 

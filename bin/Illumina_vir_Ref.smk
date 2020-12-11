@@ -191,7 +191,7 @@ rule all:
         f"{res}SNPs.tsv",
         f"{res}BoC_int.tsv", # Integer BoC overview in .tsv format
         f"{res}BoC_pct.tsv", # Percentage BoC overview in .tsv format
-        f"{res}igv.html", # IGVjs output html
+        f"{res}igv_ilr.html", # IGVjs output html
         f"{res}multiqc.html" # MultiQC report
 
 
