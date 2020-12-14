@@ -24,8 +24,9 @@ if [[ $PATH != *${MASTER_NAME}* ]]; then
         if [ "${SKIP_CONFIRMATION}" = "TRUE" ]; then
     
             echo -e "\tInstalling Jovian master environment..." | tee -a ${INSTALL_LOG}   
-            conda env create -f ${PATH_JOVIAN_MASTER_YAML} | tee -a ${INSTALL_LOG} # Create the env from the specified yaml file
-            conda activate "${MASTER_NAME}"
+            conda create --name ${MASTER_NAME} -c conda-forge mamba python=3.7 -y | tee -a ${INSTALL_LOG}
+            conda activate ${MASTER_NAME}
+            mamba env update -f ${PATH_JOVIAN_MASTER_YAML} | tee -a ${INSTALL_LOG}
             
             #> Fix things for Jupyter
             ${CONDA_PREFIX}/bin/python -m ipykernel install --user --name Jovian_master --display-name "Jovian"
@@ -58,10 +59,10 @@ if [[ $PATH != *${MASTER_NAME}* ]]; then
                     echo -e "\tInstalling Jovian master environment..." | tee -a ${INSTALL_LOG}   
                     
                     #> make the env
-                    conda env create -f ${PATH_JOVIAN_MASTER_YAML} | tee -a ${INSTALL_LOG} # Create the env from the specified yaml file
+                    conda create --name ${MASTER_NAME} -c conda-forge mamba python=3.7 -y | tee -a ${INSTALL_LOG}
+                    conda activate ${MASTER_NAME}
+                    mamba env update -f ${PATH_JOVIAN_MASTER_YAML} | tee -a ${INSTALL_LOG}                    
                     
-                    #> Activate the env
-                    conda activate "${MASTER_NAME}"
 
                     #> Fix things for Jupyter
                     ${CONDA_PREFIX}/bin/python -m ipykernel install --user --name Jovian_master --display-name "Jovian"
