@@ -84,6 +84,15 @@ arg.add_argument(
     required=True,
 )
 
+arg.add_argument(
+    "--insertions",
+    "-ins",
+    metavar="File",
+    help="Output file displaying if there's a significant insertion at a position",
+    type=argparse.FileType("w"),
+    required=True
+)
+
 flags = arg.parse_args()
 
 
@@ -96,7 +105,7 @@ def MakeGFFindex(gff3file):
 def BuildIndex(aln, fasta):
     bam = pysam.AlignmentFile(aln, "rb", threads=flags.threads)
 
-    columns = ["coverage", "A", "T", "C", "G", "D"]
+    columns = ["coverage", "A", "T", "C", "G", "D", "I"]
     pileup_index = pd.DataFrame(columns=columns)
 
     for rec in pysamstats.stat_pileup(
@@ -114,10 +123,31 @@ def BuildIndex(aln, fasta):
             + [rec["C"]]
             + [rec["G"]]
             + [rec["deletions"]]
+            + [rec["insertions"]]
         )
 
     return pileup_index
 
+def ListIns(pileupindex):
+    insertpositions = []
+    insertpercentage = []
+    for index, rows in pileupindex.iterrows():
+        values = []
+        for items in pileupindex.loc[index]:
+            values.append(items)
+        position = index
+        coverage = values[0]
+        inserts = values[6]
+        if coverage == 0 and inserts == 0:
+            continue
+        number = (inserts/coverage)*100
+        if number > 55:
+            insertpositions.append(position)
+            insertpercentage.append(number)
+    if not insertpositions:
+        return False, insertpositions, insertpercentage
+    if insertpositions:
+        return True, insertpositions, insertpercentage
 
 def ORFfinder(location, GFFindex):
     exists_in_orf = []
@@ -444,6 +474,7 @@ if __name__ == "__main__":
             + standard_seq
             + "\n"
         )
+        raw_consensus_seq.close()
     with flags.gapcorrected as corrected_consensus_seq:
         corrected_consensus_seq.write(
             ">"
@@ -454,3 +485,19 @@ if __name__ == "__main__":
             + corrected_seq
             + "\n"
         )
+        corrected_consensus_seq.close()
+    hasinserts, inspositions, insprominence = ListIns(pileindex)
+    ins = ", ".join('%02d'%x for x in inspositions)
+    prc = ", ".join('%02d'%x for x in insprominence)
+    if hasinserts is True:
+        with flags.insertions as insertfile:
+            insertfile.write(
+                flags.name + "\t" + "Yes" + "\t" + ins + "\t" + prc + "\n"
+            )
+            insertfile.close()
+    if hasinserts is False:
+        with flags.insertions as insertfile:
+            insertfile.write(
+                flags.name + "\t" + "No" + "\t" + ins + "\t" + prc + "\n"
+            )
+            insertfile.close()
