@@ -20,7 +20,7 @@ cat {input} >> {output}
 
 rule concat_ins:
     input:
-        expand( rules.consensus_cov_1.output.ins,
+        expand( rules.consensus_cov_5.output.ins,
                 sample = SAMPLES
             )
     output: f"{res}INS.tsv"

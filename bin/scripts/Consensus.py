@@ -138,6 +138,8 @@ def ListIns(pileupindex):
         position = index
         coverage = values[0]
         inserts = values[6]
+        if coverage < flags.mincov:
+            continue
         if coverage == 0 and inserts == 0:
             continue
         number = (inserts/coverage)*100
