@@ -104,9 +104,7 @@ def MakeGFFindex(gff3file):
     return GFFindex.df
 
 
-def BuildIndex(aln, fasta):
-    bam = pysam.AlignmentFile(aln, "rb", threads=flags.threads)
-
+def BuildIndex(bam, fasta):
     columns = ["coverage", "A", "T", "C", "G", "D", "I"]
     pileup_index = pd.DataFrame(columns=columns)
 
