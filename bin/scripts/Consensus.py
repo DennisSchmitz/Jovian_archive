@@ -212,6 +212,24 @@ def slices(mintwo, minone, zero, plusone, plustwo):
 
     return dist_mintwo, dist_minone, dist_zero, dist_plusone, distplustwo
 
+def ExtractInserts(bam, position):
+    refname = bam.references[0]
+    startpos = position-1
+    endpos = position
+    for pileupcolumn in bam.pileup(refname, startpos, endpos, truncate=True):
+        items = pileupcolumn.get_query_sequences(add_indels=True)
+        founditems = []
+        for i in items:
+            founditems.append(i.upper())
+        sorteddistribution = dict(Counter(founditems).most_common())
+        pileupresult = next(iter(sorteddistribution))
+        match = re.search("(\d)([a-zA-Z]+)", pileupresult)
+        
+        if match:
+            nucleotides = match.group(2)
+            return nucleotides
+        else:
+            return None
 
 def BuildCoverage(pileupindex):
     with flags.coverage as coverage_output:
@@ -454,6 +472,12 @@ def BuildCons(pileupindex, IndexedGFF, mincov, bam):
                         corrected_cons.append(cur_second_nuc)
                     elif is_del == True:
                         corrected_cons.append("-")
+            if hasinsertions is True:
+                for listedposition in insertlocations:
+                    if currentloc == listedposition:
+                        nuc_to_insert = ExtractInserts(bam, currentloc)
+                        standard_cons.append(nuc_to_insert)
+                        corrected_cons.append(nuc_to_insert)
 
     sequences = "".join(standard_cons) + "," + "".join(corrected_cons)
     return sequences
