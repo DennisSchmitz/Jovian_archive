@@ -1,9 +1,11 @@
 from os import system
+from collections import Counter
 import pysam
 import pysamstats
 import pandas as pd
 import argparse
 import gffpandas.gffpandas as gffpd
+import re
 
 arg = argparse.ArgumentParser()
 
