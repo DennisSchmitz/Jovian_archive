@@ -227,10 +227,11 @@ def BuildCoverage(pileupindex):
                 + "\n"
             )
 
-def BuildCons(pileupindex, IndexedGFF, mincov):
+def BuildCons(pileupindex, IndexedGFF, mincov, bam):
     standard_cons = []
     corrected_cons = []
 
+    hasinsertions, insertlocations, insertpercentages = ListIns(pileupindex)
     for index, rows in pileupindex.iterrows():
 
         currentloc = index
@@ -459,10 +460,11 @@ def BuildCons(pileupindex, IndexedGFF, mincov):
 
 
 if __name__ == "__main__":
+    bam = pysam.AlignmentFile(flags.input, "rb", threads=flags.threads)
     GFF_index = MakeGFFindex(flags.gff)
-    pileindex = BuildIndex(flags.input, flags.reference)
+    pileindex = BuildIndex(bam, flags.reference)
     BuildCoverage(pileindex)
-    sequences = BuildCons(pileindex, GFF_index, flags.mincov)
+    sequences = BuildCons(pileindex, GFF_index, flags.mincov, bam)
 
     standard_seq = sequences.split(",")[0]
     corrected_seq = sequences.split(",")[1]
