@@ -472,12 +472,20 @@ def BuildCons(pileupindex, IndexedGFF, mincov, bam):
                         corrected_cons.append(cur_second_nuc)
                     elif is_del == True:
                         corrected_cons.append("-")
-            if hasinsertions is True:
-                for listedposition in insertlocations:
-                    if currentloc == listedposition:
-                        nuc_to_insert = ExtractInserts(bam, currentloc)
-                        standard_cons.append(nuc_to_insert)
-                        corrected_cons.append(nuc_to_insert)
+            if cur_cov > mincov:
+                if hasinsertions is True:
+                    for listedposition in insertlocations:
+                        if currentloc == listedposition:
+                            try:
+                                nuc_to_insert = ExtractInserts(bam, currentloc)
+                                if nuc_to_insert is not None:
+                                    standard_cons.append(nuc_to_insert)
+                                    corrected_cons.append(nuc_to_insert)
+                                else:
+                                    continue
+                            except:
+                                print(f"Unable to add an insertion at {listedposition}. Skipping...")
+                                continue
 
     sequences = "".join(standard_cons) + "," + "".join(corrected_cons)
     return sequences
