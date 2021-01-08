@@ -92,7 +92,7 @@ arg.add_argument(
     metavar="File",
     help="Output file displaying if there's a significant insertion at a position",
     type=argparse.FileType("w"),
-    required=True
+    required=True,
 )
 
 flags = arg.parse_args()
@@ -128,6 +128,7 @@ def BuildIndex(bam, fasta):
 
     return pileup_index
 
+
 def ListIns(pileupindex):
     insertpositions = []
     insertpercentage = []
@@ -142,7 +143,7 @@ def ListIns(pileupindex):
             continue
         if coverage == 0 and inserts == 0:
             continue
-        number = (inserts/coverage)*100
+        number = (inserts / coverage) * 100
         if number > 55:
             insertpositions.append(position)
             insertpercentage.append(number)
@@ -150,6 +151,7 @@ def ListIns(pileupindex):
         return False, insertpositions, insertpercentage
     if insertpositions:
         return True, insertpositions, insertpercentage
+
 
 def ORFfinder(location, GFFindex):
     exists_in_orf = []
@@ -212,9 +214,10 @@ def slices(mintwo, minone, zero, plusone, plustwo):
 
     return dist_mintwo, dist_minone, dist_zero, dist_plusone, distplustwo
 
+
 def ExtractInserts(bam, position):
     refname = bam.references[0]
-    startpos = position-1
+    startpos = position - 1
     endpos = position
     for pileupcolumn in bam.pileup(refname, startpos, endpos, truncate=True):
         items = pileupcolumn.get_query_sequences(add_indels=True)
@@ -224,12 +227,13 @@ def ExtractInserts(bam, position):
         sorteddistribution = dict(Counter(founditems).most_common())
         pileupresult = next(iter(sorteddistribution))
         match = re.search("(\d)([a-zA-Z]+)", pileupresult)
-        
+
         if match:
             nucleotides = match.group(2)
             return nucleotides
         else:
             return None
+
 
 def BuildCoverage(pileupindex):
     with flags.coverage as coverage_output:
@@ -238,12 +242,8 @@ def BuildCoverage(pileupindex):
             for items in pileupindex.loc[index]:
                 slice_c.append(items)
             coverage = slice_c[0]
-            coverage_output.write(
-                str(index)
-                + "\t"
-                + str(coverage)
-                + "\n"
-            )
+            coverage_output.write(str(index) + "\t" + str(coverage) + "\n")
+
 
 def BuildCons(pileupindex, IndexedGFF, mincov, bam):
     standard_cons = []
@@ -308,7 +308,6 @@ def BuildCons(pileupindex, IndexedGFF, mincov, bam):
             slice_p2, slice_p1, slice_c, slice_n1, slice_n2
         )
 
-
         # get the most primary nucleotide and secondary nucleotide for every position
         ## >> sort the distribution of the earlier made dict based on the values, return the keys with the highest and secondary highest values
         # > current pos
@@ -331,7 +330,7 @@ def BuildCons(pileupindex, IndexedGFF, mincov, bam):
             cur_second_nuc = cur_sorted_dist[-2][1].lower()
         else:
             cur_second_nuc = cur_sorted_dist[-2][1].upper()
-        
+
         # 3rd most abundant nuc at current pos, used later for gap-filling when del is inframe:
         # set it to N if count of that nuc == 0, this to assure that random nucs aren't inserted when count is zero.
         # Set to lower case when that nuc is < mincov, see explanation above, else set uppercase.
@@ -484,7 +483,9 @@ def BuildCons(pileupindex, IndexedGFF, mincov, bam):
                                 else:
                                     continue
                             except:
-                                print(f"Unable to add an insertion at {listedposition}. Skipping...")
+                                print(
+                                    f"Unable to add an insertion at {listedposition}. Skipping..."
+                                )
                                 continue
 
     sequences = "".join(standard_cons) + "," + "".join(corrected_cons)
@@ -527,13 +528,9 @@ if __name__ == "__main__":
     prc = ", ".join('%02d'%x for x in insprominence)
     if hasinserts is True:
         with flags.insertions as insertfile:
-            insertfile.write(
-                flags.name + "\t" + "Yes" + "\t" + ins + "\t" + prc + "\n"
-            )
+            insertfile.write(flags.name + "\t" + "Yes" + "\t" + ins + "\t" + prc + "\n")
             insertfile.close()
     if hasinserts is False:
         with flags.insertions as insertfile:
-            insertfile.write(
-                flags.name + "\t" + "No" + "\t" + ins + "\t" + prc + "\n"
-            )
+            insertfile.write(flags.name + "\t" + "No" + "\t" + ins + "\t" + prc + "\n")
             insertfile.close()
