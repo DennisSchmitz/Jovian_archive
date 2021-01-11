@@ -1,6 +1,6 @@
 rule Cut_primers:
     input:
-        fastq       =   rules.Remove_Adapters_pt2.output,
+        fastq       =   rules.Cleanup.output.qc_fastq,
         primers_5   =   rules.Prepare_primers.output.primers_5,
         primers_3   =   rules.Prepare_primers.output.primers_3
     output: f"{datadir + cln + prdir}" + "{sample}.fastq"
