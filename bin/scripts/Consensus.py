@@ -1,9 +1,11 @@
 from os import system
+from collections import Counter
 import pysam
 import pysamstats
 import pandas as pd
 import argparse
 import gffpandas.gffpandas as gffpd
+import re
 
 arg = argparse.ArgumentParser()
 
@@ -84,6 +86,15 @@ arg.add_argument(
     required=True,
 )
 
+arg.add_argument(
+    "--insertions",
+    "-ins",
+    metavar="File",
+    help="Output file displaying if there's a significant insertion at a position",
+    type=argparse.FileType("w"),
+    required=True,
+)
+
 flags = arg.parse_args()
 
 
@@ -93,10 +104,8 @@ def MakeGFFindex(gff3file):
     return GFFindex.df
 
 
-def BuildIndex(aln, fasta):
-    bam = pysam.AlignmentFile(aln, "rb", threads=flags.threads)
-
-    columns = ["coverage", "A", "T", "C", "G", "D"]
+def BuildIndex(bam, fasta):
+    columns = ["coverage", "A", "T", "C", "G", "D", "I"]
     pileup_index = pd.DataFrame(columns=columns)
 
     for rec in pysamstats.stat_pileup(
@@ -114,9 +123,34 @@ def BuildIndex(aln, fasta):
             + [rec["C"]]
             + [rec["G"]]
             + [rec["deletions"]]
+            + [rec["insertions"]]
         )
 
     return pileup_index
+
+
+def ListIns(pileupindex):
+    insertpositions = []
+    insertpercentage = []
+    for index, rows in pileupindex.iterrows():
+        values = []
+        for items in pileupindex.loc[index]:
+            values.append(items)
+        position = index
+        coverage = values[0]
+        inserts = values[6]
+        if coverage < flags.mincov:
+            continue
+        if coverage == 0 and inserts == 0:
+            continue
+        number = (inserts / coverage) * 100
+        if number > 55:
+            insertpositions.append(position)
+            insertpercentage.append(number)
+    if not insertpositions:
+        return False, insertpositions, insertpercentage
+    if insertpositions:
+        return True, insertpositions, insertpercentage
 
 
 def ORFfinder(location, GFFindex):
@@ -181,6 +215,26 @@ def slices(mintwo, minone, zero, plusone, plustwo):
     return dist_mintwo, dist_minone, dist_zero, dist_plusone, distplustwo
 
 
+def ExtractInserts(bam, position):
+    refname = bam.references[0]
+    startpos = position - 1
+    endpos = position
+    for pileupcolumn in bam.pileup(refname, startpos, endpos, truncate=True):
+        items = pileupcolumn.get_query_sequences(add_indels=True)
+        founditems = []
+        for i in items:
+            founditems.append(i.upper())
+        sorteddistribution = dict(Counter(founditems).most_common())
+        pileupresult = next(iter(sorteddistribution))
+        match = re.search("(\d)([a-zA-Z]+)", pileupresult)
+
+        if match:
+            nucleotides = match.group(2)
+            return nucleotides
+        else:
+            return None
+
+
 def BuildCoverage(pileupindex):
     with flags.coverage as coverage_output:
         for index, rows in pileupindex.iterrows():
@@ -188,17 +242,14 @@ def BuildCoverage(pileupindex):
             for items in pileupindex.loc[index]:
                 slice_c.append(items)
             coverage = slice_c[0]
-            coverage_output.write(
-                str(index)
-                + "\t"
-                + str(coverage)
-                + "\n"
-            )
+            coverage_output.write(str(index) + "\t" + str(coverage) + "\n")
 
-def BuildCons(pileupindex, IndexedGFF, mincov):
+
+def BuildCons(pileupindex, IndexedGFF, mincov, bam):
     standard_cons = []
     corrected_cons = []
 
+    hasinsertions, insertlocations, insertpercentages = ListIns(pileupindex)
     for index, rows in pileupindex.iterrows():
 
         currentloc = index
@@ -257,7 +308,6 @@ def BuildCons(pileupindex, IndexedGFF, mincov):
             slice_p2, slice_p1, slice_c, slice_n1, slice_n2
         )
 
-
         # get the most primary nucleotide and secondary nucleotide for every position
         ## >> sort the distribution of the earlier made dict based on the values, return the keys with the highest and secondary highest values
         # > current pos
@@ -280,7 +330,7 @@ def BuildCons(pileupindex, IndexedGFF, mincov):
             cur_second_nuc = cur_sorted_dist[-2][1].lower()
         else:
             cur_second_nuc = cur_sorted_dist[-2][1].upper()
-        
+
         # 3rd most abundant nuc at current pos, used later for gap-filling when del is inframe:
         # set it to N if count of that nuc == 0, this to assure that random nucs aren't inserted when count is zero.
         # Set to lower case when that nuc is < mincov, see explanation above, else set uppercase.
@@ -421,16 +471,33 @@ def BuildCons(pileupindex, IndexedGFF, mincov):
                         corrected_cons.append(cur_second_nuc)
                     elif is_del == True:
                         corrected_cons.append("-")
+            if cur_cov > mincov:
+                if hasinsertions is True:
+                    for listedposition in insertlocations:
+                        if currentloc == listedposition:
+                            try:
+                                nuc_to_insert = ExtractInserts(bam, currentloc)
+                                if nuc_to_insert is not None:
+                                    standard_cons.append(nuc_to_insert)
+                                    corrected_cons.append(nuc_to_insert)
+                                else:
+                                    continue
+                            except:
+                                print(
+                                    f"Unable to add an insertion at {listedposition}. Skipping..."
+                                )
+                                continue
 
     sequences = "".join(standard_cons) + "," + "".join(corrected_cons)
     return sequences
 
 
 if __name__ == "__main__":
+    bam = pysam.AlignmentFile(flags.input, "rb", threads=flags.threads)
     GFF_index = MakeGFFindex(flags.gff)
-    pileindex = BuildIndex(flags.input, flags.reference)
+    pileindex = BuildIndex(bam, flags.reference)
     BuildCoverage(pileindex)
-    sequences = BuildCons(pileindex, GFF_index, flags.mincov)
+    sequences = BuildCons(pileindex, GFF_index, flags.mincov, bam)
 
     standard_seq = sequences.split(",")[0]
     corrected_seq = sequences.split(",")[1]
@@ -444,6 +511,7 @@ if __name__ == "__main__":
             + standard_seq
             + "\n"
         )
+        raw_consensus_seq.close()
     with flags.gapcorrected as corrected_consensus_seq:
         corrected_consensus_seq.write(
             ">"
@@ -454,3 +522,15 @@ if __name__ == "__main__":
             + corrected_seq
             + "\n"
         )
+        corrected_consensus_seq.close()
+    hasinserts, inspositions, insprominence = ListIns(pileindex)
+    ins = ", ".join('%02d'%x for x in inspositions)
+    prc = ", ".join('%02d'%x for x in insprominence)
+    if hasinserts is True:
+        with flags.insertions as insertfile:
+            insertfile.write(flags.name + "\t" + "Yes" + "\t" + ins + "\t" + prc + "\n")
+            insertfile.close()
+    if hasinserts is False:
+        with flags.insertions as insertfile:
+            insertfile.write(flags.name + "\t" + "No" + "\t" + ins + "\t" + prc + "\n")
+            insertfile.close()

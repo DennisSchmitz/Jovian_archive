@@ -85,7 +85,8 @@ rule all:
         f"{res}BoC_pct.tsv",
         f"{res}igv_nano.html",
         f"{res}multiqc.html",
-        f"{res}SNPs.tsv"
+        f"{res}SNPs.tsv",
+        f"{res}INS.tsv"
 
     #>############################################################################
     #>#### Data quality control and cleaning                                 #####

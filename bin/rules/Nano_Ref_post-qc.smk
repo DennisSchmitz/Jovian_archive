@@ -10,7 +10,7 @@ rule cleaned_quality_control:
         f"{logdir}" + "cleaned_quality_control_{sample}.log"
     benchmark:
         f"{logdir + bench}" + "cleaned_quality_control_{sample}.txt"
-    threads: 6
+    threads: config["threads"]["Nanopore_QC"]
     params:
         outdir  =   f"{datadir + qc_post}"
     shell:
