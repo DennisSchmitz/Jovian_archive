@@ -28,7 +28,6 @@ cutadapt \
 --revcomp \
 -O {params.overlap} \
 -e {params.error_rate} \
---no-indels \
 --times {params.repeat_search} \
 -o {output} \
 {input.fastq} > {log}

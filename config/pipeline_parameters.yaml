@@ -97,11 +97,11 @@ Illumina_ref:
         Minority_SNP_AF_lower_threshold: 0.05 # This is the minimum allelle frequency (=AF) for which you want a SNP to be reported. Default is 5%.
 
 Nanopore_ref:
-    Primer_cutoff_plus: 30
-    Primer_cutoff_minus: -30
+    Primer_cutoff_plus: 5
+    Primer_cutoff_minus: -5
     Primer_min_overlap: 4
     Primer_error_rate: 0.3
-    Primer_repeat_search: 2
+    Primer_repeat_search: 3
     
     Quality_score: 7
 
