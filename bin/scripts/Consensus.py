@@ -190,7 +190,7 @@ def BeyondStopCodon(location, gffindex, currentseq):
                 return orf.start
 
     def ORFsequence(startloc, seqstring):
-        orfseq = seqstring[startloc:-1].upper()
+        orfseq = seqstring[startloc-1:].upper()
         orfseq = orfseq[orfseq.find("ATG") :]
         return orfseq
 
