@@ -20,10 +20,10 @@ rule Illumina_MultiQC_report:
                 p       = f"{logdir}",
                 sample  = SAMPLES
                 ), # TODO dit moet nog verbetert worden qua smk syntax
-        expand( "{p}HuGo_removal_pt1_alignment_{sample}.log",
-                p       = f"{logdir}",
-                sample  = SAMPLES
-                ), # TODO dit moet nog verbetert worden qua smk syntax
+        #expand( "{p}HuGo_removal_pt1_alignment_{sample}.log",
+        #        p       = f"{logdir}",
+        #        sample  = SAMPLES
+        #        ), # TODO dit moet nog verbetert worden qua smk syntax
         expand( "{p}Illumina_align_to_reference_it2_{sample}.log",
                 p       = f"{logdir}",
                 sample  = SAMPLES

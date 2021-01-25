@@ -83,12 +83,13 @@ localrules:
 
 rule all:
     input:
-        expand( "{p}{sample}_{read}.fq",
-                p       =   f"{datadir + cln}",
+        expand( "{p}{sample}_{read}.fastq",
+                p       =   f"{datadir + cln + hugo_no_rm}",
                 sample  =   SAMPLES,
                 read    =   [   'pR1',
                                 'pR2',
-                                'unpaired'
+                                'uR1',
+                                'uR2'
                                 ]
                 ), # Extract unmapped & paired reads AND unpaired from HuGo alignment; i.e. cleaned fastqs #TODO omschrijven naar betere smk syntax
         expand( "{p}{ref}{extension}",
@@ -246,9 +247,9 @@ include: f"{rls}QC_clean.smk"
 #>#### Removal of background host data                                   #####
 #>############################################################################
 
-include: f"{rls}BG_removal_1.smk"
-include: f"{rls}BG_removal_2.smk"
-include: f"{rls}BG_removal_3.smk"
+#include: f"{rls}BG_removal_1.smk"
+#include: f"{rls}BG_removal_2.smk"
+#include: f"{rls}BG_removal_3.smk"
 
 
 ###########! nuttig om contig metrics rule ook toe te voegen?

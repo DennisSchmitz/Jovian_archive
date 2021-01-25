@@ -3,9 +3,10 @@
 #>##################################################################################################
 rule Illumina_align_to_reference_it1:
     input:
-        pR1         =   rules.HuGo_removal_pt2_extract_paired_unmapped_reads.output.fastq_R1,
-        pR2         =   rules.HuGo_removal_pt2_extract_paired_unmapped_reads.output.fastq_R2,
-        unpaired    =   rules.HuGo_removal_pt3_extract_unpaired_unmapped_reads.output,
+        pR1         =   rules.Clean_the_data.output.r1,
+        pR2         =   rules.Clean_the_data.output.r2,
+        unpaired1   =   rules.Clean_the_data.output.r1_unpaired,
+        unpaired2   =   rules.Clean_the_data.output.r2_unpaired,
         reference   =   rules.Illumina_index_reference.output.reference_copy
     output:
         sorted_bam          =   f"{datadir + it1 + aln}" + "{sample}_sorted.bam",
@@ -29,7 +30,7 @@ bowtie2 --time --threads {threads} {params.aln_type} \
 -x {input.reference} \
 -1 {input.pR1} \
 -2 {input.pR2} \
--U {input.unpaired} 2> {log} |\
+-U {input.unpaired1},{input.unpaired2} 2> {log} |\
 samtools view -@ {threads} -uS - 2>> {log} |\
 samtools collate -@ {threads} -O - 2>> {log} |\
 samtools fixmate -@ {threads} -m - - 2>> {log} |\
