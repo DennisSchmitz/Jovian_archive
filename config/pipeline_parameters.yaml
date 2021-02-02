@@ -89,7 +89,7 @@ Illumina_meta:
 Illumina_ref:
     Alignment:
         Alignment_type: --local
-        Duplicates: -r # To turn this off, e.g. for amplicon experiments such as ARTIC, replace this with ""
+        Duplicates: "" # To turn this on, e.g. for metagenomics data replace it with a "-r" [NB, without quotes]. To turn this off, e.g. for amplicon experiments such as ARTIC, replace this with ""
         Duplicate_marking: t
         Max_read_length: 300
     SNP:
