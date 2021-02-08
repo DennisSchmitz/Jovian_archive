@@ -41,7 +41,7 @@ with flags.output as fileout:
         trimmed_qual = read.qual[read_start:read_end]
 
         if read.is_reverse == True:
-            complement = {"A": "T", "C": "G", "G": "C", "T": "A"}
+            complement = {"A": "T", "C": "G", "G": "C", "T": "A", "N": "N"}
             bases = list(trimmed_seq)
             bases = [complement[base] for base in bases]
             trimmed_seq = "".join(bases)
