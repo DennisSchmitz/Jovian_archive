@@ -30,7 +30,7 @@ threads:
     Nanopore_reference_alignment: 6
     Nanopore_SoftClipper: 2
     Nanopore_cleanup: 4
-    Nanopore_primer_removal: 12
+    Nanopore_primer_removal: 26
     Nanopore_QC: 6
 
 ######################################
