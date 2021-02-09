@@ -243,7 +243,7 @@ def Cut_FastQ(input, bed, reference, slimlist, revlist, widelist):
 
             if readend > end_of_last_primer:
 
-                to_cut = readend = end_of_last_primer
+                to_cut = readend - end_of_last_primer
                 readend = readend - to_cut
                 readseq = readseq[:-to_cut]
                 readqual = readqual[:-to_cut]
