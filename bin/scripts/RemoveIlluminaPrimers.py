@@ -138,7 +138,7 @@ def IndexReads(bamfile):
         ReadStart = read.reference_start + 1
         ReadEnd = read.reference_end + 1
         ReadSeq = read.query_sequence
-        ReadQual = quality = ''.join(map(lambda x: chr( x+33 ), read.query_qualities))
+        ReadQual = ''.join(map(lambda x: chr( x+33 ), read.query_qualities))
         
         ReadDict[i] = {
             "Readname": str(readname), 
