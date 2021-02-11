@@ -48,8 +48,9 @@ rule RemovePrimers_pt2:
         primer_status = prstatus
     shell:
         """
-if [ {params.primer_status} == "SET" ]:
+if [ {params.primer_status} == "SET" ]; then
     python bin/scripts/RemoveIlluminaPrimers.py --input {input.bam} --reference {input.ref} --primers {input.primers} --threads {threads} --output {output}
-elif [ {params.primer_status} == "NONE" ]:
+else
     bedtools bamtofastq -i {input} -fq {output}
+fi
         """
