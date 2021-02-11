@@ -3,10 +3,7 @@
 #>##################################################################################################
 rule Illumina_align_to_reference_it1:
     input:
-        pR1         =   rules.Clean_the_data.output.r1,
-        pR2         =   rules.Clean_the_data.output.r2,
-        unpaired1   =   rules.Clean_the_data.output.r1_unpaired,
-        unpaired2   =   rules.Clean_the_data.output.r2_unpaired,
+        reads       =   rules.RemovePrimers_pt2.output,
         reference   =   rules.Illumina_index_reference.output.reference_copy
     output:
         sorted_bam          =   f"{datadir + it1 + aln}" + "{sample}_sorted.bam",
@@ -26,11 +23,9 @@ rule Illumina_align_to_reference_it1:
         max_read_length =   config["Illumina_ref"]["Alignment"]["Max_read_length"] # This is the default value and also the max read length of Illumina in-house sequencing.
     shell: # LoFreq dindel is required for indel calling downstream
         """
-bowtie2 --time --threads {threads} {params.aln_type} \
+bowtie2 --time --quiet --threads {threads} {params.aln_type} \
 -x {input.reference} \
--1 {input.pR1} \
--2 {input.pR2} \
--U {input.unpaired1},{input.unpaired2} 2> {log} |\
+-U {input.reads} 2> {log} |\
 samtools view -@ {threads} -uS - 2>> {log} |\
 samtools collate -@ {threads} -O - 2>> {log} |\
 samtools fixmate -@ {threads} -m - - 2>> {log} |\

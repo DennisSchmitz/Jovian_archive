@@ -3,10 +3,7 @@
 #>##################################################################################################
 rule Illumina_align_to_reference_it2:
     input:
-        pR1         =   rules.Clean_the_data.output.r1,
-        pR2         =   rules.Clean_the_data.output.r2,
-        unpaired1   =   rules.Clean_the_data.output.r1_unpaired,
-        unpaired2   =   rules.Clean_the_data.output.r2_unpaired,
+        reads       =   rules.RemovePrimers_pt2.output,
         reference   =   rules.Illumina_extract_raw_consensus_it1.output.reference_copy_it2
     output:
         reference_index     =   f"{datadir + it2 + refdir + reference_basename}" + "_{sample}.fasta.1.bt2", # I've only specified ".fasta.1.bt2", but the "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2" and "rev.2.bt2" are implicitly generated. #TODO find a way to specify all output correctly (multiext snakemake syntax?)
@@ -30,9 +27,7 @@ rule Illumina_align_to_reference_it2:
 bowtie2-build --threads {threads} {input.reference} {input.reference} >> {log} 2>&1
 bowtie2 --time --threads {threads} {params.aln_type} \
 -x {input.reference} \
--1 {input.pR1} \
--2 {input.pR2} \
--U {input.unpaired1},{input.unpaired2} 2> {log} |\
+-U {input.reads} 2> {log} |\
 samtools view -@ {threads} -uS - 2>> {log} |\
 samtools collate -@ {threads} -O - 2>> {log} |\
 samtools fixmate -@ {threads} -m - - 2>> {log} |\
