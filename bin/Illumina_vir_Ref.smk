@@ -64,6 +64,17 @@ with open(config["sample_sheet"]) as sample_sheet_file:
 reference           =   config["reference_file"]
 reference_basename  =   os.path.splitext(os.path.basename(reference))[0]
 
+primervalue = config["primer_file"]
+
+if primervalue.upper() == "NONE":
+    with open("placeholder_primers.fasta", "w") as fileout:
+        fileout.write(""">Placeholder
+EXAMPLE""")
+    primerfile = "placeholder_primers.fasta"
+    prstatus = "NONE"
+else:
+    prstatus = "SET"
+    primerfile = primervalue
 
 #@################################################################################
 #@#### Specify Jovian's final output:                                        #####
@@ -241,7 +252,6 @@ onstart:
 
 include: f"{rls}QC_raw.smk"
 include: f"{rls}CleanData.smk"
-include: f"{rls}QC_clean.smk"
 
 #>############################################################################
 #>#### Removal of background host data                                   #####
@@ -260,6 +270,12 @@ include: f"{rls}QC_clean.smk"
 #>############################################################################
 include: f"{rls}ILM_Ref_index.smk"
 
+
+## remove primers
+include: f"{rls}ILM_Ref_RemovePrimers.smk"
+
+
+include: f"{rls}ILM_Ref_QC_clean.smk"
 # iteration 1
 include: f"{rls}ILM_Ref_align_to_ref_it1.smk"
 include: f"{rls}ILM_Ref_extract_raw_cons_it1.smk"
@@ -293,6 +309,11 @@ include: f"{rls}ILM_Ref_igv_combi.smk"
 onsuccess:
     shell("""
         echo -e "\nCleaning up..."
+
+        if test -f "placeholder_primers.fasta"; then
+            rm placeholder_primers.fasta
+        fi
+
         
         echo -e "\tRemoving temporary files..."
         if [ "{config[remove_temp]}" != "0" ]; then
