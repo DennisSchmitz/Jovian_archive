@@ -25,6 +25,7 @@ threads:
     quantify_output: 4
     # Settings for the Illumina-reference workflow
     Illumina_align_to_reference: 12
+    Illumina_RemovePrimers: 12
     Illumina_extract_raw_consensus: 6
     # Settings for the Nanopore-reference workflow
     Nanopore_reference_alignment: 6
