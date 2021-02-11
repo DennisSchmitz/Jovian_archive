@@ -9,7 +9,7 @@ elif [ "${workflow}" == "NANO_REF" ]; then
     nicename="Nanopore-reference"
 fi
 
-if [[ "${workflow}" =~ (ILM_META|ILM_REF) ]] && [ "${PRIMER_FASTA}" != "NONE" ]; then
+if [ "${workflow}" == "ILM_META" ] && [ "${PRIMER_FASTA}" != "NONE" ]; then
     echo -e "A file with primers was given but the chosen workflow: \"${nicename}\" does not support a custom primer file."
     echo -e "For Illumina-data, we expect all input files to be processed with the \"Nextera\" library prep kit."
     echo -e "Other official Illumina library prep kits are technically supported, such as the TruSeq kit, but this requires you to manually change the settings in \"config/pipeline_parameters.yaml\""
