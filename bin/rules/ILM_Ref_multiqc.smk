@@ -11,10 +11,9 @@ rule Illumina_MultiQC_report:
                 sample  =   SAMPLES,
                 read    =   "R1 R2".split()
                 ), # TODO dit moet nog verbetert worden qua smk syntax
-        expand( "{p}{sample}_{read}_fastqc.zip",
+        expand( "{p}{sample}_fastqc.zip",
                 p       =   f"{datadir + qc_post}",
-                sample  =   SAMPLES,
-                read    =   "pR1 pR2 uR1 uR2".split()
+                sample  =   SAMPLES
                 ), # TODO dit moet nog verbetert worden qua smk syntax
         expand( "{p}Clean_the_data_{sample}.log",
                 p       = f"{logdir}",

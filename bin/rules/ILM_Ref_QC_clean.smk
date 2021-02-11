@@ -2,14 +2,14 @@ rule ILM_Ref_QC_clean_data:
     input:
         rules.RemovePrimers_pt2.output
     output:
-        html    =   f"{datadir + qc_post}" + "{sample}_{read}_fastqc.html",
-        zip     =   f"{datadir + qc_post}" + "{sample}_{read}_fastqc.zip"
+        html    =   f"{datadir + qc_post}" + "{sample}_fastqc.html",
+        zip     =   f"{datadir + qc_post}" + "{sample}_fastqc.zip"
     conda:
         f"{conda_envs}QC_and_clean.yaml"
     log:
-        f"{logdir}" + "QC_clean_data_{sample}_{read}.log"
+        f"{logdir}" + "QC_clean_data_{sample}.log"
     benchmark:
-        f"{logdir + bench}" + "QC_clean_data_{sample}_{read}.txt"
+        f"{logdir + bench}" + "QC_clean_data_{sample}.txt"
     threads: 6
     shell:
         """
