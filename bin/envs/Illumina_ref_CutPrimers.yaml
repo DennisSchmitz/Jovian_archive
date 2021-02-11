@@ -1,0 +1,12 @@
+name: Illumina_ref_CutPrimers
+channels:
+  - bioconda
+  - conda-forge
+  - intel
+  - defaults
+dependencies:
+  - pysam
+  - modin
+  - samtools
+  - biopython
+  - bedtools
