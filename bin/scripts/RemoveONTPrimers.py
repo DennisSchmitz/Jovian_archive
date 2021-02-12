@@ -61,10 +61,6 @@ def search_primers(pattern, reference, id):
 
             return chrom, start_pos, end_pos, id
 
-        else:
-
-            return None, None, None, None
-
 
 """
 Maak een "BED" dataframe van de primercoordinaten
@@ -79,27 +75,101 @@ Aan de hand van de orientatie opgegeven in de primernaam kunnen we terugvinden w
 """
 
 
-def MakeBedFrame(primers, reference):
+def PrimerCoordinates(primers, ref):
     left = ["LEFT", "PLUS", "POSITIVE"]
     right = ["RIGHT", "MINUS", "NEGATIVE"]
 
-    bed = pd.DataFrame([])
+    BedLeft = pd.DataFrame([])
+    BedRight = pd.DataFrame([])
+
     for record in SeqIO.parse(primers, "fasta"):
         if any(orient in record.id for orient in left) is True:
-            ref, start, end, id = search_primers(record.seq, reference, record.id)
+            try:
+                ref, start, end, id = search_primers(record.seq, reference, record.id)
+                BedLeft = BedLeft.append(
+                    pd.DataFrame(
+                        {"chrom": ref, "start": start, "stop": end, "name": id},
+                        index=[0],
+                    ),
+                    ignore_index=True,
+                )
+            except:
+                ref, start, end, id = search_primers(
+                    record.seq.reverse_complement(), reference, record.id
+                )
+                BedLeft = BedLeft.append(
+                    pd.DataFrame(
+                        {"chrom": ref, "start": start, "stop": end, "name": id},
+                        index=[0],
+                    ),
+                    ignore_index=True,
+                )
         if any(orient in record.id for orient in right) is True:
-            ref, start, end, id = search_primers(
-                record.seq.reverse_complement(), reference, record.id
-            )
+            try:
+                ref, start, end, id = search_primers(record.seq, reference, record.id)
+                BedRight = BedRight.append(
+                    pd.DataFrame(
+                        {"chrom": ref, "start": start, "stop": end, "name": id},
+                        index=[0],
+                    ),
+                    ignore_index=True,
+                )
+            except:
+                ref, start, end, id = search_primers(
+                    record.seq.reverse_complement(), reference, record.id
+                )
+                BedRight = BedRight.append(
+                    pd.DataFrame(
+                        {"chrom": ref, "start": start, "stop": end, "name": id},
+                        index=[0],
+                    ),
+                    ignore_index=True,
+                )
 
-        bed = bed.append(
-            pd.DataFrame(
-                {"chrom": ref, "start": start, "stop": end, "name": id}, index=[0]
-            ),
-            ignore_index=True,
-        )
+    BedAll = pd.concat([BedLeft, BedRight])
 
-    return bed
+    ForwardList = PrimerCoordinates_forward(BedLeft)
+    ReverseList = PrimerCoordinates_reverse(BedRight)
+    AllList = PrimerCoordinates_all(BedAll)
+
+    ForwardList.sort()
+    ReverseList.sort()
+    AllList.sort()
+
+    return ForwardList, ReverseList, AllList, BedLeft, BedRight
+
+
+### Itereren over een dataframe per operatie duurt te lang.
+## Maken dus een lijst van de coordinaten per primer-range en gebruiken dat
+## nodig om de verschillende coordinaten binnen een range van de primers terug te vinden.
+def PrimerCoordinates_forward(bed):
+    coordlist = []
+    for index, chrom in bed.iterrows():
+        list = [*range(chrom.start, chrom.stop, 1)]
+        for i in list:
+            coordlist.append(i)
+
+    return coordlist
+
+
+def PrimerCoordinates_reverse(bed):
+    coordlist = []
+    for index, chrom in bed.iterrows():
+        list = [*range(chrom.start, chrom.stop, 1)]
+        for i in list:
+            coordlist.append(i)
+
+    return coordlist
+
+
+def PrimerCoordinates_all(bed):
+    coordlist = []
+    for index, chrom in bed.iterrows():
+        list = [*range(chrom.start, chrom.stop, 1)]
+        for i in list:
+            coordlist.append(i)
+
+    return coordlist
 
 
 def IndexReads(fastqfile):
@@ -114,7 +184,7 @@ def IndexReads(fastqfile):
     ReadDict = {}
     i = 0
 
-    ## Biopython wil enkel en alleen handelen op filehandles (beetje raar) dus is het nodig om via StringIO een filehandle na te maken vanuit een memory-stream
+    ## Biopython wil enkel en alleen handelen op filehandles (raar) dus is het nodig om via StringIO een filehandle te maken vanuit een memory-stream
     fastq_io = StringIO(line)
     for record in SeqIO.parse(fastq_io, "fastq"):
 
@@ -134,39 +204,6 @@ def IndexReads(fastqfile):
     ReadIndex = pd.DataFrame.from_dict(ReadDict, "index")
 
     return ReadIndex
-
-
-### Itereren over een dataframe per operatie duurt te lang.
-## Maken dus een lijst van de coordinaten per primer-range en gebruiken dat
-## nodig om de verschillende coordinaten binnen een range van de primers terug te vinden.
-def PrimerCoordinates_slim(bed):
-    coordlist = []
-    for index, chrom in bed.iterrows():
-        list = [*range(chrom.start - 1, chrom.stop, 1)]
-        for i in list:
-            coordlist.append(i)
-
-    return coordlist
-
-
-def PrimerCoordinates_rev_slim(bed):
-    coordlist = []
-    for index, chrom in bed.iterrows():
-        list = [*range(chrom.start - 1, chrom.stop + 1, 1)]
-        for i in list:
-            coordlist.append(i)
-
-    return coordlist
-
-
-def PrimerCoordinates_wide(bed):
-    coordlist = []
-    for index, chrom in bed.iterrows():
-        list = [*range(chrom.start, chrom.stop + 2, 1)]
-        for i in list:
-            coordlist.append(i)
-
-    return coordlist
 
 
 ### de verschillende cutting-functies om de sequenties en bijbehorende qualities weg te halen
@@ -209,7 +246,47 @@ def InitAligner(reference):
     return AlignObject
 
 
-def Cut_FastQ(input, bed, reference, slimlist, revlist, widelist):
+def ReadBeforePrimer_FW(readstart, coordlist):
+    diff = lambda val: abs(val - readstart)
+    nearest_int = min(coordlist, key=diff)
+
+    if readstart < nearest_int:
+        return True
+    else:
+        return False
+
+
+def ReadAfterPrimer_FW(readend, coordlist):
+    diff = lambda val: abs(val - readend)
+    nearest_int = min(coordlist, key=diff)
+
+    if readend > nearest_int:
+        return True
+    else:
+        return False
+
+
+def ReadBeforePrimer_RV(readstart, coordlist):
+    diff = lambda val: abs(val - readstart)
+    nearest_int = min(coordlist, key=diff)
+
+    if readstart < nearest_int:
+        return True
+    else:
+        return False
+
+
+def ReadAfterPrimer_RV(readend, coordlist):
+    diff = lambda val: abs(val - readend)
+    nearest_int = min(coordlist, key=diff)
+
+    if readend > nearest_int:
+        return True
+    else:
+        return False
+
+
+def Cut_FastQ(input, reference, ForwardList, ReverseList, AllList):
 
     seq = input[1]
     qual = input[2]
@@ -228,73 +305,65 @@ def Cut_FastQ(input, bed, reference, slimlist, revlist, widelist):
         readstart = hit.r_st
         readend = hit.r_en
 
-        start_of_first_primer = bed.stop.iloc[0] + 1
-        end_of_last_primer = bed.stop.iloc[-1] + 1
-
         if is_reverse is False:
-            if readstart < start_of_first_primer:
-                to_cut = start_of_first_primer - readstart
-                readstart = readstart + to_cut
-                readseq = readseq[to_cut:]
-                readqual = readqual[to_cut:]
 
-                for hit2 in Aln.map(readseq):
-                    readstart = hit2.r_st
-
-            if readend > end_of_last_primer:
-
-                to_cut = readend - end_of_last_primer
-                readend = readend - to_cut
-                readseq = readseq[:-to_cut]
-                readqual = readqual[:-to_cut]
-
-                for hit2 in Aln.map(readseq):
-                    readend = hit2.r_en
-
-            while (readstart in slimlist) is True:
-
+            while ReadBeforePrimer_FW(readstart, ForwardList) is True:
                 readseq, readqual, readstart = slice_forward_left(
                     readstart, readseq, readqual
                 )
-
-            while (readend in widelist) is True:
-
-                readseq, readqual, readend = slice_forward_right(
-                    readend, readseq, readqual
-                )
-
-        if is_reverse is True:
-
-            if readstart < start_of_first_primer:
-                to_cut = start_of_first_primer - readstart
-                readstart = readstart + to_cut
-                readseq = readseq[:-to_cut]
-                readqual = readqual[:-to_cut]
-
                 for hit2 in Aln.map(readseq):
                     readstart = hit2.r_st
 
-            if readend > end_of_last_primer:
-
-                to_cut = readend - end_of_last_primer
-                readend = readend - to_cut
-                readseq = readseq[to_cut:]
-                readqual = readqual[to_cut:]
-
+            while ReadAfterPrimer_FW(readend, ReverseList) is True:
+                readseq, readqual, readend = slice_forward_right(
+                    readend, readseq, readqual
+                )
                 for hit2 in Aln.map(readseq):
                     readend = hit2.r_en
 
-            while (readstart in revlist) is True:
+            while (readstart in AllList) is True:
+                readseq, readqual, readstart = slice_forward_left(
+                    readstart, readseq, readqual
+                )
+                for hit2 in Aln.map(readseq):
+                    readstart = hit2.r_st
 
+            while (readend in AllList) is True:
+                readseq, readqual, readend = slice_forward_right(
+                    readend, readseq, readqual
+                )
+                for hit2 in Aln.map(readseq):
+                    readend = hit2.r_en
+
+        if is_reverse is True:
+
+            while ReadBeforePrimer_RV(readstart, ForwardList) is True:
                 readseq, readqual, readstart = slice_reverse_left(
                     readstart, readseq, readqual
                 )
+                for hit2 in Aln.map(readseq):
+                    readstart = hit2.r_st
 
-            while (readend in widelist) is True:
-
+            while ReadAfterPrimer_RV(readend, ReverseList) is True:
                 readseq, readqual, readend = slice_reverse_right(
                     readend, readseq, readqual
                 )
+                for hit2 in Aln.map(readseq):
+                    readend = hit2.r_en
+
+            while (readstart in AllList) is True:
+                readseq, readqual, readstart = slice_reverse_left(
+                    readstart, readseq, readqual
+                )
+                for hit2 in Aln.map(readseq):
+                    readstart = hit2.r_st
+
+            while (readend in AllList) is True:
+                readseq, readqual, readend = slice_reverse_right(
+                    readend, readseq, readqual
+                )
+                for hit2 in Aln.map(readseq):
+                    readend = hit2.r_en
 
         return readseq, readqual
 
@@ -305,16 +374,14 @@ if __name__ == "__main__":
     fastqfile = flags.input
     output = flags.output
 
-    bed = MakeBedFrame(primerfasta, reference)
-
-    slimlist = PrimerCoordinates_slim(bed)
-    revlist = PrimerCoordinates_rev_slim(bed)
-    widelist = PrimerCoordinates_wide(bed)
+    ForwardList, ReverseList, AllList, BedLeft, BedRight = PrimerCoordinates(
+        primerfasta, reference
+    )
 
     ReadFrame = IndexReads(fastqfile)
 
     ReadFrame["ProcessedReads"] = ReadFrame.apply(
-        Cut_FastQ, args=(bed, reference, slimlist, revlist, widelist), axis=1
+        Cut_FastQ, args=(reference, ForwardList, ReverseList, AllList), axis=1
     )
 
     ReadFrame[["ProcessedSeq", "ProcessedQual"]] = pd.DataFrame(
