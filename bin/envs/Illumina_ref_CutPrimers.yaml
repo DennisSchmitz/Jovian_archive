@@ -5,8 +5,9 @@ channels:
   - intel
   - defaults
 dependencies:
-  - pysam
-  - modin
-  - samtools
-  - biopython
-  - bedtools
+  - python=3.7
+  - pysam==0.16.0.1
+  - modin==0.8.3
+  - samtools==1.11
+  - biopython==1.78
+  - bedtools==2.29.2
