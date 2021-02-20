@@ -153,7 +153,7 @@ def ListIns(pileupindex):
         return True, insertpositions, insertpercentage
 
 
-def ORFfinder(location, GFFindex):
+def Inside_an_ORF(location, GFFindex):
     exists_in_orf = []
     for index, orf in GFFindex.iterrows():
         in_orf = location in range(orf.start, orf.end)
@@ -174,6 +174,39 @@ def ORFfinder(location, GFFindex):
 
     return in_orf
 
+
+def BeyondStopCodon(location, gffindex, currentseq):
+
+    seqstring = "".join(currentseq)
+    
+    stopcodons = ["TAG", "TAA", "TGA"]
+    stopcounter = []
+    def GFF_start_end(location, GFFindex):
+        for index, orf in GFFindex.iterrows():
+            in_orf = location in range(orf.start, orf.end)
+            if in_orf == False:
+                continue
+            if in_orf == True:
+                return orf.start
+
+    def ORFsequence(startloc, seqstring):
+        orfseq = seqstring[startloc-1:].upper()
+        orfseq = orfseq[orfseq.find("ATG") :]
+        return orfseq
+
+    def split_to_codons(seq, num):
+        return [seq[start : start + num] for start in range(0, len(seq), 3)]
+
+    codons = split_to_codons(
+        ORFsequence(GFF_start_end(location, gffindex), seqstring), 3
+    )
+    for i in stopcodons:
+        stopcounter.append(codons.count(i))
+        
+    if any(stopcounter) > 0:
+        return True
+    else:
+        return False
 
 def slices(mintwo, minone, zero, plusone, plustwo):
     dist_mintwo = {
@@ -266,7 +299,7 @@ def BuildCons(pileupindex, IndexedGFF, mincov, bam):
         if currentloc == 2:
             secondback = 1
 
-        ORFPosition = ORFfinder(currentloc, IndexedGFF)
+        Within_ORF = Inside_an_ORF(currentloc, IndexedGFF)
 
         # currentloc = slice_c
         # firstnext = slice_n1
@@ -404,73 +437,78 @@ def BuildCons(pileupindex, IndexedGFF, mincov, bam):
                 standard_cons.append(
                     "-"
                 )  ## <-- deze is hier om beide een "standaard consensus" te maken naast de "gap-corrected consensus"
-                if ORFPosition == False:
+                if Within_ORF == False:
                     corrected_cons.append("-")
-                elif ORFPosition == True:
-
-                    is_del = False
-
-                    # In het geval er een deletie is gerapporteerd als meerderheid op de "currentposition"
-                    # en zowel nucleotide positie "-1" en "+1" (t.o.v. de "currentposition", dit is positie 0) beide géén deletie hebben
-                    # vul dan de positie met de tweede meest voorkomende gerapporteerde nucleotide (A/C/T/G/D)
-                    if (
-                        nxt_primary_nuc.upper() != "D"
-                        and prv_primary_nuc.upper() != "D"
-                    ):
+                elif Within_ORF == True:
+                    
+                    if BeyondStopCodon(currentloc, IndexedGFF, corrected_cons) is True:
+                        corrected_cons.append("-")
+                    
+                    if BeyondStopCodon(currentloc, IndexedGFF, corrected_cons) is False:
+                    
                         is_del = False
 
-                    # In het geval er een deletie is gerapporteerd als meerderheid op de "currentposition"
-                    # en zowel nucleotide positie "-1" en "+1" hebben beide wél een deletie gerapporteerd
-                    # keur dan de gerapporteerde deletie goed
-                    if (
-                        nxt_primary_nuc.upper() == "D"
-                        and prv_primary_nuc.upper() == "D"
-                    ):
-                        is_del = True
-
-                    # In het geval er een deletie is gerapporteerd als meerderheid op de "currentposition"
-                    # en zowel nucleotide positie "+1" en "+2" hebben beide wél een deletie gerapporteerd
-                    # keur dan de gerapporteerde deletie goed
-                    if (
-                        nxt_primary_nuc.upper() == "D"
-                        and nxt2_primary_nuc.upper() == "D"
-                    ):
-                        is_del = True
-
-                    # In het geval er een deletie is gerapporteerd als meerderheid op de "currentposition"
-                    # en zowel nucleotide positie "-1" en "-2" hebben beide wél een deletie gerapporteerd
-                    # keur dan de gerapporteerde deletie goed
-                    if (
-                        prv_primary_nuc.upper() == "D"
-                        and prv2_primary_nuc.upper() == "D"
-                    ):
-                        is_del = True
-
-                    if is_del == False:
-                        # if cur_second_nuc and cur_third_nuc are not "N" (see above, i.e. its non-zero) and 2nd and 3rd most abundant nucs are tied in counts,
-                        # its an ambigious call and throw a warning to std. out.
-                        if (cur_second_nuc and cur_third_nuc != "N") and (
-                            cur_sorted_dist[-2][0] == cur_sorted_dist[-3][0]
+                        # In het geval er een deletie is gerapporteerd als meerderheid op de "currentposition"
+                        # en zowel nucleotide positie "-1" en "+1" (t.o.v. de "currentposition", dit is positie 0) beide géén deletie hebben
+                        # vul dan de positie met de tweede meest voorkomende gerapporteerde nucleotide (A/C/T/G/D)
+                        if (
+                            nxt_primary_nuc.upper() != "D"
+                            and prv_primary_nuc.upper() != "D"
                         ):
-                            print(
-                                "File: ",
-                                flags.input,
-                                ". Ambigious call during gap-filling at position ",
-                                currentloc,
-                                ', a "',
-                                cur_second_nuc,
-                                '" was called (N=',
-                                cur_sorted_dist[-2][0],
-                                ') but could also be a "',
-                                cur_third_nuc,
-                                '" with (N=',
-                                cur_sorted_dist[-3][0],
-                                ").",
-                                sep="",
-                            )
-                        corrected_cons.append(cur_second_nuc)
-                    elif is_del == True:
-                        corrected_cons.append("-")
+                            is_del = False
+
+                        # In het geval er een deletie is gerapporteerd als meerderheid op de "currentposition"
+                        # en zowel nucleotide positie "-1" en "+1" hebben beide wél een deletie gerapporteerd
+                        # keur dan de gerapporteerde deletie goed
+                        if (
+                            nxt_primary_nuc.upper() == "D"
+                            and prv_primary_nuc.upper() == "D"
+                        ):
+                            is_del = True
+
+                        # In het geval er een deletie is gerapporteerd als meerderheid op de "currentposition"
+                        # en zowel nucleotide positie "+1" en "+2" hebben beide wél een deletie gerapporteerd
+                        # keur dan de gerapporteerde deletie goed
+                        if (
+                            nxt_primary_nuc.upper() == "D"
+                            and nxt2_primary_nuc.upper() == "D"
+                        ):
+                            is_del = True
+
+                        # In het geval er een deletie is gerapporteerd als meerderheid op de "currentposition"
+                        # en zowel nucleotide positie "-1" en "-2" hebben beide wél een deletie gerapporteerd
+                        # keur dan de gerapporteerde deletie goed
+                        if (
+                            prv_primary_nuc.upper() == "D"
+                            and prv2_primary_nuc.upper() == "D"
+                        ):
+                            is_del = True
+
+                        if is_del == False:
+                            # if cur_second_nuc and cur_third_nuc are not "N" (see above, i.e. its non-zero) and 2nd and 3rd most abundant nucs are tied in counts,
+                            # its an ambigious call and throw a warning to std. out.
+                            if (cur_second_nuc and cur_third_nuc != "N") and (
+                                cur_sorted_dist[-2][0] == cur_sorted_dist[-3][0]
+                            ):
+                                print(
+                                    "File: ",
+                                    flags.input,
+                                    ". Ambigious call during gap-filling at position ",
+                                    currentloc,
+                                    ', a "',
+                                    cur_second_nuc,
+                                    '" was called (N=',
+                                    cur_sorted_dist[-2][0],
+                                    ') but could also be a "',
+                                    cur_third_nuc,
+                                    '" with (N=',
+                                    cur_sorted_dist[-3][0],
+                                    ").",
+                                    sep="",
+                                )
+                            corrected_cons.append(cur_second_nuc)
+                        elif is_del == True:
+                            corrected_cons.append("-")
             if cur_cov > mincov:
                 if hasinsertions is True:
                     for listedposition in insertlocations:
@@ -524,8 +562,8 @@ if __name__ == "__main__":
         )
         corrected_consensus_seq.close()
     hasinserts, inspositions, insprominence = ListIns(pileindex)
-    ins = ", ".join('%02d'%x for x in inspositions)
-    prc = ", ".join('%02d'%x for x in insprominence)
+    ins = ", ".join("%02d" % x for x in inspositions)
+    prc = ", ".join("%02d" % x for x in insprominence)
     if hasinserts is True:
         with flags.insertions as insertfile:
             insertfile.write(flags.name + "\t" + "Yes" + "\t" + ins + "\t" + prc + "\n")
