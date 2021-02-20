@@ -250,7 +250,7 @@ def ReadBeforePrimer_FW(readstart, coordlist):
     diff = lambda val: abs(val - readstart)
     nearest_int = min(coordlist, key=diff)
 
-    if readstart < nearest_int:
+    if readstart <= nearest_int:
         return True
     else:
         return False
@@ -260,7 +260,7 @@ def ReadAfterPrimer_FW(readend, coordlist):
     diff = lambda val: abs(val - readend)
     nearest_int = min(coordlist, key=diff)
 
-    if readend > nearest_int:
+    if readend >= nearest_int:
         return True
     else:
         return False
@@ -270,7 +270,7 @@ def ReadBeforePrimer_RV(readstart, coordlist):
     diff = lambda val: abs(val - readstart)
     nearest_int = min(coordlist, key=diff)
 
-    if readstart < nearest_int:
+    if readstart <= nearest_int:
         return True
     else:
         return False
@@ -280,7 +280,7 @@ def ReadAfterPrimer_RV(readend, coordlist):
     diff = lambda val: abs(val - readend)
     nearest_int = min(coordlist, key=diff)
 
-    if readend > nearest_int:
+    if readend >= nearest_int:
         return True
     else:
         return False
