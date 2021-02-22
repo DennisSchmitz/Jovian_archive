@@ -1,4 +1,4 @@
-from Bio import SeqIO
+from Bio import SeqIO #, Seq
 import re
 import pysam
 import argparse
@@ -138,6 +138,10 @@ def IndexReads(bamfile):
         ReadStart = read.reference_start + 1
         ReadEnd = read.reference_end + 1
         ReadSeq = read.query_sequence
+
+        if any(e is None for e in [readname, IsReverse, ReadStart, ReadEnd, ReadSeq]):
+            continue
+
         ReadQual = ''.join(map(lambda x: chr( x+33 ), read.query_qualities))
         
         ReadDict[i] = {
@@ -195,7 +199,7 @@ def Cut_reads(input, bedLeft, bedRight, fwlist, rvlist):
         while (end in rvlist) is True:
             seq, qual, end = slice_reverse(end, seq, qual)
         
-        seq, qual = FlipStrand(seq, qual)
+        seq, qual = FlipStrand(seq, qual) # or Seq.reverse_complement
         
     return seq, qual
 

@@ -107,7 +107,6 @@ rule all:
                 p           =   f"{datadir + it1 + refdir}",
                 ref         =   reference_basename,
                 extension   =   [   '.fasta',
-                                    '.fasta.1.bt2'
                                     ]
                 ), # Copy of the reference file (for standardization and easy logging) of the first iteration alignment, bowtie2-indices (I've only specified one, but the "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2" and "rev.2.bt2" are implicitly generated).
                         expand( "{p}{ref}_{sample}{extension}",
@@ -115,7 +114,6 @@ rule all:
                 ref         =   reference_basename,
                 sample      =   SAMPLES,
                 extension   =   [   '.fasta',
-                                    '.fasta.1.bt2',
                                     '.fasta.fai',
                                     '.fasta.sizes', 
                                     '.windows',

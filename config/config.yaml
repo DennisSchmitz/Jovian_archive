@@ -2,3 +2,5 @@ cores: 250
 latency-wait: 60
 use-conda: true
 jobname: Jovian_{name}.jobid{jobid}
+drmaa: " -q bio -n {threads} -R \"span[hosts=1]\""
+drmaa-log-dir: logs/drmaa

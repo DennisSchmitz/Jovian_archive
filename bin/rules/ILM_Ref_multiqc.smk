@@ -32,7 +32,6 @@ rule Illumina_MultiQC_report:
         expand( "{p}multiqc_{program}.txt",
                 p       =   f"{res + mqc_data}",
                 program =   [   'trimmomatic',
-                                'bowtie2',
                                 'fastqc'
                                 ]
                 )

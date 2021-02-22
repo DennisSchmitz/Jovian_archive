@@ -6,7 +6,6 @@ rule Illumina_align_to_reference_it2:
         reads       =   rules.RemovePrimers_pt2.output,
         reference   =   rules.Illumina_extract_raw_consensus_it1.output.reference_copy_it2
     output:
-        reference_index     =   f"{datadir + it2 + refdir + reference_basename}" + "_{sample}.fasta.1.bt2", # I've only specified ".fasta.1.bt2", but the "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2" and "rev.2.bt2" are implicitly generated. #TODO find a way to specify all output correctly (multiext snakemake syntax?)
         sorted_bam          =   f"{datadir + it2 + aln}" + "{sample}_sorted.bam",
         sorted_bam_index    =   f"{datadir + it2 + aln}" + "{sample}_sorted.bam.bai",
         dup_metrics         =   f"{datadir + it2 + aln}" + "{sample}_sorted.MarkDup_metrics", #TODO deze toevoegen aan MultiQC?
@@ -24,10 +23,7 @@ rule Illumina_align_to_reference_it2:
         max_read_length =   config["Illumina_ref"]["Alignment"]["Max_read_length"] # This is the default value and also the max read length of Illumina in-house sequencing.
     shell: # LoFreq dindel req for indel calling
         """
-bowtie2-build --threads {threads} {input.reference} {input.reference} >> {log} 2>&1
-bowtie2 --time --threads {threads} {params.aln_type} \
--x {input.reference} \
--U {input.reads} 2> {log} |\
+minimap2 -ax sr -t {threads} {input.reference} {input.reads} 2>> {log} |\
 samtools view -@ {threads} -uS - 2>> {log} |\
 samtools collate -@ {threads} -O - 2>> {log} |\
 samtools fixmate -@ {threads} -m - - 2>> {log} |\

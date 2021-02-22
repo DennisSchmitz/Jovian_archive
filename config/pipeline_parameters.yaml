@@ -8,8 +8,8 @@ WrapperSettings:
 
 
 sample_sheet: sample_sheet.yaml
-reference_file: NONE
-primer_file: NONE
+reference_file: /mnt/db/Reference_genomes/SARS-CoV-2/nCoV_refseq_NC045512.fasta
+primer_file: ../nimagen_primers.fasta
 
 ######################################
 ### Technical parameters           ###
@@ -114,3 +114,10 @@ remove_temp: 1 # For development and debug only. If you set this to 0 you will k
 ######################################
 ### Databases                      ###
 ######################################
+databases:
+    background_ref: /mnt/db/Jovian/Human_genome_without_EBV_no_decoy_GRCh38/genome.fa
+    Krona_taxonomy: /mnt/db/Jovian/krona_taxonomy/
+    virusHostDB: /mnt/db/Jovian/Virus-Host_interaction_db/virushostdb.tsv
+    NCBI_new_taxdump_rankedlineage: /mnt/db/Jovian/new_taxdump/rankedlineage.dmp.delim
+    NCBI_new_taxdump_host: /mnt/db/Jovian/new_taxdump/host.dmp.delim
+    MGKit_taxonomy: /mnt/db/Jovian/mgkit_taxonomy/
