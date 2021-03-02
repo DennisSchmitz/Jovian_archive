@@ -4,6 +4,7 @@ import mappy as mp
 from io import StringIO
 import argparse
 import os
+import numpy as np
 
 ##* import van modin is later (na argparse sectie) zodat het aantal bruikbare threads ingesteld kan worden
 
@@ -364,7 +365,10 @@ def Cut_FastQ(input, reference, ForwardList, ReverseList, AllList):
                 )
                 for hit2 in Aln.map(readseq):
                     readend = hit2.r_en
-
+        
+        if len(readseq) == 0:
+            return np.nan
+        
         return readseq, readqual
 
 
@@ -384,6 +388,8 @@ if __name__ == "__main__":
         Cut_FastQ, args=(reference, ForwardList, ReverseList, AllList), axis=1
     )
 
+    ReadFrame.dropna(subset=['ProcessedReads'], inplace=True)
+    
     ReadFrame[["ProcessedSeq", "ProcessedQual"]] = pd.DataFrame(
         ReadFrame["ProcessedReads"].tolist(), index=ReadFrame.index
     )

@@ -14,4 +14,5 @@ rule Cut_primers:
     shell:
         """
 python bin/scripts/RemoveONTPrimers.py --input {input.fastq} --reference {input.ref} --primers {input.primers} --threads {threads} --output {output}
+sed -i "N;N;N;/\\n\\n/d" {output}
         """
