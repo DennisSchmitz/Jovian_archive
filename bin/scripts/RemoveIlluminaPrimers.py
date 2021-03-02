@@ -302,6 +302,7 @@ if __name__ == "__main__":
     ReadFrame = IndexReads(fastqfile)
     
     ReadFrame.dropna(subset=['Sequence'], inplace=True)
+    ReadFrame = ReadFrame.sample(frac=1).reset_index(drop=True)
     
     ProcessedReads = parallel(ReadFrame, Cut_reads, flags.threads)
     
