@@ -20,10 +20,10 @@ cat {input} > {output}
 
 rule RemovePrimers_pt2:
     input: 
-        fastq = rules.RemovePrimers_pt1.output.fastq,
-        ref = rules.Illumina_index_reference.output.reference_copy,
+        fastq   = rules.RemovePrimers_pt1.output.fastq,
+        ref     = rules.Illumina_index_reference.output.reference_copy,
         primers = primerfile
-    output: f"{datadir + cln + prdir}" + "{sample}_trimmed.fastq"
+    output: f"{datadir + cln + prdir}" + "{sample}.fastq"
     conda:
         f"{conda_envs}Illumina_ref_CutPrimers.yaml"
     log:

@@ -1,6 +1,5 @@
 rule ILM_Ref_QC_clean_data:
-    input:
-        rules.RemovePrimers_pt2.output
+    input: rules.RemovePrimers_pt2.output
     output:
         html    =   f"{datadir + qc_post}" + "{sample}_fastqc.html",
         zip     =   f"{datadir + qc_post}" + "{sample}_fastqc.zip"
