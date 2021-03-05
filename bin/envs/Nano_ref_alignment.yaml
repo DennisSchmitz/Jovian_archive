@@ -7,6 +7,7 @@ dependencies:
     - minimap2==2.17
     - samtools==1.10
     - bowtie2==2.3.5
+    - tbb==2020.3
     - gawk==4.2.1
     - bcftools==1.10
     - bedtools==2.29.2
