@@ -1,17 +1,19 @@
 from Bio import SeqIO
 import re
-import pysam
 import argparse
-import os
+import mappy as mp
+from io import StringIO
+import pandas as pd
+import numpy as np
+import multiprocessing
 
-##* import van modin is later (na argparse sectie) zodat het aantal bruikbare threads ingesteld kan worden
 
 arg = argparse.ArgumentParser()
 
 arg.add_argument(
     '--input','-i',
     metavar="File",
-    help="Input BAM file",
+    help="Input Fastq file",
     type=str,
     required=True
 )
@@ -51,9 +53,35 @@ arg.add_argument(
 
 flags = arg.parse_args()
 
-os.environ["MODIN_CPUS"] = str(flags.threads)
-import modin.pandas as pd
+def IndexReads(fastqfile):
+    #### Big thanks to this guy who suggested using a giant dict instead of df.append for speed improvements
+    #### https://stackoverflow.com/a/50105723
+    
+    ## Laad het FastQ bestand in memory zodat we geen operaties hoeven te doen op een filehandle
+    ## vermijden van filesystem-latency
+    with open(fastqfile, "r") as f:
+        line = f.read()
+    
+    ReadDict = {}
+    i = 0
+    
+    ## Biopython wil enkel en alleen handelen op filehandles (beetje raar) dus is het nodig om via StringIO een filehandle te maken vanuit een memory-stream
+    fastq_io = StringIO(line)
+    for record in SeqIO.parse(fastq_io, "fastq"):
 
+        RecordQualities = ''.join(map(lambda x: chr( x+33 ), record.letter_annotations["phred_quality"]))
+        seq = record.seq
+        if len(seq) == 0:
+            seq = np.nan
+        ReadDict[i] = {"Readname": str(record.id), "Sequence": str(seq), 'Qualities': str(RecordQualities)}
+        i = i + 1
+
+    fastq_io.close()
+
+    ## Maak van de dict een dataframe
+    ReadIndex = pd.DataFrame.from_dict(ReadDict, "index")
+    
+    return ReadIndex
 
 ### zoek de coordinaten van primersequenties
 def search_primers(pattern, reference, id):
@@ -95,7 +123,7 @@ def PrimerCoordinates(primers, ref):
 def PrimerCoordinates_forward(bed):
     coordlist = []
     for index, chrom in bed.iterrows():
-        list = [*range(chrom.start-1, chrom.stop+1, 1)]
+        list = [*range(chrom.start-1, chrom.stop, 1)]
         for i in list:
             coordlist.append(i)
             
@@ -104,7 +132,7 @@ def PrimerCoordinates_forward(bed):
 def PrimerCoordinates_reverse(bed):
     coordlist = []
     for index, chrom in bed.iterrows():
-        list = [*range(chrom.start, chrom.stop+2, 1)]
+        list = [*range(chrom.start+1, chrom.stop+1, 1)]
         for i in list:
             coordlist.append(i)
             
@@ -119,106 +147,168 @@ def slice_forward(readstart, seq, qual):
 
 def slice_reverse(readend, seq, qual):
     readend = readend - 1
-    trimmedseq = seq[:-1]
-    trimmedqual = qual[:-1]
+    trimmedseq = seq[1:]
+    trimmedqual = qual[1:]
 
     return trimmedseq, trimmedqual, readend
 
-def IndexReads(bamfile):
-    ReadDict = {}
-    i = 0
-    
-    for read in bamfile:
-        
-        if read.is_unmapped is True:
-            continue
-        
-        readname = read.query_name
-        IsReverse = read.is_reverse
-        ReadStart = read.reference_start + 1
-        ReadEnd = read.reference_end + 1
-        ReadSeq = read.query_sequence
-        ReadQual = ''.join(map(lambda x: chr( x+33 ), read.query_qualities))
-        
-        ReadDict[i] = {
-            "Readname": str(readname), 
-            "Sequence": str(ReadSeq), 
-            "Qualities": str(ReadQual), 
-            "StartPos": int(ReadStart), 
-            "EndPos": int(ReadEnd), 
-            "Reverse": bool(IsReverse)
-            }
-        
-        i = i + 1
-        
-    ReadIndex = pd.DataFrame.from_dict(ReadDict, "index")
-    
-    return ReadIndex
+def ReadBeforePrimer_FW(readstart, coordlist):
+    if readstart in coordlist:
+        return False
+    diff = lambda val: abs(val - readstart)
+    nearest_int = min(coordlist, key=diff)
 
-def FlipStrand(seq, qual):
-    complement = {"A": "T", "C": "G", "G": "C", "T": "A", "N": "N"}
-    bases = list(seq)
-    bases = [complement[base] for base in bases]
-    seq = "".join(bases)
-    seq = seq[::-1]
-    qual = qual[::-1]
+    if readstart <= nearest_int:
+        return True
+    else:
+        return False
+
+
+def ReadAfterPrimer_RV(readend, coordlist):
+    if readend in coordlist:
+        return False
+    diff = lambda val: abs(val - readend)
+    nearest_int = min(coordlist, key=diff)
+
+    if readend >= nearest_int:
+        return True
+    else:
+        return False
     
-    return seq, qual
-
-def Cut_reads(input, bedLeft, bedRight, fwlist, rvlist):
-    seq = input[1]
-    qual = input[2]
-    start = input[3]
-    end = input[4]
-    reverse = input[5]
     
-    start_of_first_primer = bedLeft.start.iloc[0] - 2
-    end_of_last_primer = bedRight.stop.iloc[-1] + 2
+def Cut_reads(Frame):
 
-    if reverse is False:
-        if start < start_of_first_primer:
-            to_cut = start_of_first_primer - start
-            start = start + to_cut
-            seq = seq[to_cut:]
-            qual = qual[to_cut:]
-        
-        while (start in fwlist) is True:
-            seq, qual, start = slice_forward(start, seq, qual)
+    reference = flags.reference
+    primerfasta = flags.primers
+    fwlist, rvlist, BedLeft, BedRight = PrimerCoordinates(primerfasta, reference)
+    
+    # init the aligner on a "per block" basis to reduce overhead.
+    Aln = mp.Aligner(reference, preset="sr", best_n=1)
+    
+    readnames = Frame['Readname'].tolist()
+    sequences = Frame['Sequence'].tolist()
+    qualities = Frame['Qualities'].tolist()
+    
+    processed_readnames = []
+    processed_sequences = []
+    processed_qualities = []
 
-    if reverse is True:
-        if end > end_of_last_primer:
-            to_cut = end + end_of_last_primer
-            end = end - to_cut
-            seq = seq[:-to_cut]
-            qual = qual[:-to_cut]
+    for i in range(len(readnames)):
+        name = readnames[i]
+        seq = sequences[i]
+        qual = qualities[i]
+
+        looplimiter = 0
+        for hit in Aln.map(seq):
+            if looplimiter != 0:
+                continue
+            looplimiter +=1
+
+            if hit.strand == 1:
+                reverse = False
+            if hit.strand == -1:
+                reverse = True
+
+            start = hit.r_st
+            end = hit.r_en
             
-        while (end in rvlist) is True:
-            seq, qual, end = slice_reverse(end, seq, qual)
+            qstart = hit.q_st
+
+            if reverse is False:
+                
+                if qstart != 0:
+                    seq = seq[qstart:]
+                    qual = qual[qstart:]
+                    
+                
+                while ReadBeforePrimer_FW(start, fwlist) is True:
+                    seq, qual, start = slice_forward(start, seq, qual)
+                    hitlimiter = 0
+                    for hit2 in Aln.map(seq):
+                        if hitlimiter != 0:
+                            continue
+                        hitlimiter +=1
+                        start = hit2.r_st
+
+                stepper = 0
+                while (start in fwlist) is True:
+                    seq, qual, start = slice_forward(start, seq, qual)
+                    if stepper == 3:
+                        hitlimiter = 0
+                        for hit2 in Aln.map(seq):
+                            if hitlimiter != 0:
+                                continue
+                            hitlimiter +=1
+                            start = hit2.r_st
+                        stepper = 0
+                        continue
+                    stepper +=1
+
+            if reverse is True:
+                
+                while ReadAfterPrimer_RV(end, rvlist) is True:
+                    seq, qual, end = slice_reverse(end, seq, qual)
+                    hitlimiter = 0
+                    for hit2 in Aln.map(seq):
+                        if hitlimiter != 0:
+                            continue
+                        hitlimiter +=1
+                        end = hit2.r_en
+
+                stepper = 0
+                while (end in rvlist) is True:
+                    seq, qual, end = slice_reverse(end, seq, qual)
+                    if stepper == 3:
+                        hitlimiter = 0
+                        for hit2 in Aln.map(seq):
+                            if hitlimiter != 0:
+                                continue
+                            hitlimiter +=1
+                            end = hit2.r_en
+                        stepper = 0
+                        continue
+                    stepper +=1
+
+        if len(seq) == 0:
+            seq = np.nan
+        if len(qual) == 0:
+            qual = np.nan
+
+        processed_readnames.append(name)
+        processed_sequences.append(seq)
+        processed_qualities.append(qual)
         
-        seq, qual = FlipStrand(seq, qual)
-        
-    return seq, qual
+    ProcessedReads = pd.DataFrame({
+        "Readname": processed_readnames,
+        "Sequence": processed_sequences,
+        "Qualities": processed_qualities})
+    return ProcessedReads
+
+def parallel(df, func, workers=min(multiprocessing.cpu_count(), 128)):
+    df_split = np.array_split(df, workers)
+    pool = multiprocessing.Pool(workers)
+    df = pd.concat(pool.map(func, df_split))
+    pool.close()
+    pool.join()
+    return df
 
 if __name__ == "__main__":
     reference = flags.reference
     primerfasta = flags.primers
-    bamfile = flags.input
+    fastqfile = flags.input
     output = flags.output
     
     
-    ForwardList, ReverseList, BedLeft, BedRight = PrimerCoordinates(primerfasta, reference)
+    ReadFrame = IndexReads(fastqfile)
     
+    ReadFrame.dropna(subset=['Sequence'], inplace=True)
+    ReadFrame = ReadFrame.sample(frac=1).reset_index(drop=True)
     
-    bam = pysam.AlignmentFile(bamfile, "rb")
+    ProcessedReads = parallel(ReadFrame, Cut_reads, flags.threads)
     
-    ReadFrame = IndexReads(bam)
+    ProcessedReads.dropna(subset=['Sequence', 'Qualities'], inplace=True)
     
-    ReadFrame["ProcessedReads"] = ReadFrame.apply(Cut_reads, args=(BedLeft, BedRight, ForwardList, ReverseList), axis=1)
-    ReadFrame[["ProcessedSeq", "ProcessedQual"]] = pd.DataFrame(ReadFrame["ProcessedReads"].tolist(), index=ReadFrame.index)
-    
-    ReadFrame.drop(columns=['ProcessedReads', 'Sequence', 'Qualities', "StartPos", "EndPos", "Reverse"], inplace=True)
-    
-    ReadDict = ReadFrame.to_dict(orient='records')
+    ReadDict = ProcessedReads.to_dict(orient='records')
     
     with open(output, "w") as fileout:
         for index in range(len(ReadDict)):
@@ -227,11 +317,11 @@ if __name__ == "__main__":
                     fileout.write(
                         "@" + ReadDict[index][key] + "\n"
                     )
-                if key == 'ProcessedSeq':
+                if key == 'Sequence':
                     fileout.write(
                         str(ReadDict[index][key]) + "\n" + "+" + "\n"
                     )
-                if key == 'ProcessedQual':
+                if key == 'Qualities':
                     fileout.write(
                         str(ReadDict[index][key]) + "\n"
                     )

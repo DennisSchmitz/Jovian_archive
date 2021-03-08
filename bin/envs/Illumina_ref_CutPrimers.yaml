@@ -6,10 +6,8 @@ channels:
   - defaults
 dependencies:
   - python=3.7
-  - pysam==0.16.0.1
-  - modin==0.8.3
-  - samtools==1.11
+  - pandas==1.1.4
+  - numpy
   - biopython==1.78
-  - bedtools==2.29.2
   - minimap2==2.17
   - mappy==2.17
