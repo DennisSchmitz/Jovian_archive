@@ -6,6 +6,9 @@ import pandas as pd
 import argparse
 import gffpandas.gffpandas as gffpd
 import re
+from datetime import date
+import sys
+from Bio import SeqIO
 
 arg = argparse.ArgumentParser()
 
@@ -95,6 +98,14 @@ arg.add_argument(
     required=True,
 )
 
+arg.add_argument(
+    "--vcf",
+    metavar="File",
+    help="Output VCF file",
+    type=argparse.FileType("w"),
+    required=True
+)
+
 flags = arg.parse_args()
 
 
@@ -178,9 +189,10 @@ def Inside_an_ORF(location, GFFindex):
 def BeyondStopCodon(location, gffindex, currentseq):
 
     seqstring = "".join(currentseq)
-    
+
     stopcodons = ["TAG", "TAA", "TGA"]
     stopcounter = []
+
     def GFF_start_end(location, GFFindex):
         for index, orf in GFFindex.iterrows():
             in_orf = location in range(orf.start, orf.end)
@@ -202,11 +214,12 @@ def BeyondStopCodon(location, gffindex, currentseq):
     )
     for i in stopcodons:
         stopcounter.append(codons.count(i))
-        
+
     if any(stopcounter) > 0:
         return True
     else:
         return False
+
 
 def slices(mintwo, minone, zero, plusone, plustwo):
     dist_mintwo = {
@@ -237,7 +250,7 @@ def slices(mintwo, minone, zero, plusone, plustwo):
         "G": plusone[4],
         "D": plusone[5],
     }
-    distplustwo = {
+    dist_plustwo = {
         "A": plustwo[1],
         "T": plustwo[2],
         "C": plustwo[3],
@@ -245,7 +258,45 @@ def slices(mintwo, minone, zero, plusone, plustwo):
         "D": plustwo[5],
     }
 
-    return dist_mintwo, dist_minone, dist_zero, dist_plusone, distplustwo
+    return dist_mintwo, dist_minone, dist_zero, dist_plusone, dist_plustwo
+
+
+def MakeSlices(pileupindex, secondback, firstback, currentloc, firstnext, secondnext, lastposition):
+    # currentloc = slice_c
+    # firstnext = slice_n1
+    # secondnext = slice_n2
+    # firstback = slice_p1
+    # secondback = slice_np2
+    
+    slice_c = []
+    slice_n1 = []
+    slice_n2 = []
+    slice_p1 = []
+    slice_p2 = []
+
+    for items in pileupindex.loc[currentloc]:
+        slice_c.append(items)
+
+    if firstnext < lastposition:
+        for items in pileupindex.loc[firstnext]:
+            slice_n1.append(items)
+    else:
+        for items in pileupindex.loc[lastposition]:
+            slice_n1.append(items)
+
+    if secondnext < lastposition:
+        for items in pileupindex.loc[secondnext]:
+            slice_n2.append(items)
+    else:
+        for items in pileupindex.loc[lastposition]:
+            slice_n2.append(items)
+
+    for items in pileupindex.loc[firstback]:
+        slice_p1.append(items)
+    for items in pileupindex.loc[secondback]:
+        slice_p2.append(items)
+    
+    return slice_c, slice_n1, slice_n2, slice_p1, slice_p2
 
 
 def ExtractInserts(bam, position):
@@ -281,6 +332,7 @@ def BuildCoverage(pileupindex):
 def BuildCons(pileupindex, IndexedGFF, mincov, bam):
     standard_cons = []
     corrected_cons = []
+    corr_cons_noinsert = []
 
     hasinsertions, insertlocations, insertpercentages = ListIns(pileupindex)
     for index, rows in pileupindex.iterrows():
@@ -301,40 +353,8 @@ def BuildCons(pileupindex, IndexedGFF, mincov, bam):
 
         Within_ORF = Inside_an_ORF(currentloc, IndexedGFF)
 
-        # currentloc = slice_c
-        # firstnext = slice_n1
-        # secondnext = slice_n2
-        # firstback = slice_p1
-        # secondback = slice_np2
-
-        slice_c = []
-        slice_n1 = []
-        slice_n2 = []
-        slice_p1 = []
-        slice_p2 = []
-
-        for items in pileupindex.loc[currentloc]:
-            slice_c.append(items)
-
-        if firstnext < lastposition:
-            for items in pileupindex.loc[firstnext]:
-                slice_n1.append(items)
-        else:
-            for items in pileupindex.loc[lastposition]:
-                slice_n1.append(items)
-
-        if secondnext < lastposition:
-            for items in pileupindex.loc[secondnext]:
-                slice_n2.append(items)
-        else:
-            for items in pileupindex.loc[lastposition]:
-                slice_n2.append(items)
-
-        for items in pileupindex.loc[firstback]:
-            slice_p1.append(items)
-        for items in pileupindex.loc[secondback]:
-            slice_p2.append(items)
-
+        slice_c, slice_n1, slice_n2, slice_p1, slice_p2 = MakeSlices(pileupindex, secondback, firstback, currentloc, firstnext, secondnext, lastposition)
+        
         ## get the actual nucleotide distributions for every position
 
         prv2_nuc_dist, prv_nuc_dist, cur_nuc_dist, nxt_nuc_dist, nxt2_nuc_dist = slices(
@@ -427,11 +447,13 @@ def BuildCons(pileupindex, IndexedGFF, mincov, bam):
         if cur_cov < mincov:
             standard_cons.append("N")
             corrected_cons.append("N")
+            corr_cons_noinsert.append("N")
         else:
             # als de "currentposition" géén deletie is, plak dan de meerderheid (A/T/C/G/D) in de index van deze positie (komt uit alignment)
             if cur_primary_nuc.upper() != "D":
                 standard_cons.append(cur_primary_nuc)
                 corrected_cons.append(cur_primary_nuc)
+                corr_cons_noinsert.append(cur_primary_nuc)
             # als de "currentposition" wél een deletie is, ga dan kijken naar de status van omliggende nucleotides
             elif cur_primary_nuc.upper() == "D":
                 standard_cons.append(
@@ -439,13 +461,15 @@ def BuildCons(pileupindex, IndexedGFF, mincov, bam):
                 )  ## <-- deze is hier om beide een "standaard consensus" te maken naast de "gap-corrected consensus"
                 if Within_ORF == False:
                     corrected_cons.append("-")
+                    corr_cons_noinsert.append("-")
                 elif Within_ORF == True:
-                    
+
                     if BeyondStopCodon(currentloc, IndexedGFF, corrected_cons) is True:
                         corrected_cons.append("-")
-                    
+                        corr_cons_noinsert.append("-")
+
                     if BeyondStopCodon(currentloc, IndexedGFF, corrected_cons) is False:
-                    
+
                         is_del = False
 
                         # In het geval er een deletie is gerapporteerd als meerderheid op de "currentposition"
@@ -507,8 +531,10 @@ def BuildCons(pileupindex, IndexedGFF, mincov, bam):
                                     sep="",
                                 )
                             corrected_cons.append(cur_second_nuc)
+                            corr_cons_noinsert.append(cur_second_nuc)
                         elif is_del == True:
                             corrected_cons.append("-")
+                            corr_cons_noinsert.append("-")
             if cur_cov > mincov:
                 if hasinsertions is True:
                     for listedposition in insertlocations:
@@ -526,9 +552,72 @@ def BuildCons(pileupindex, IndexedGFF, mincov, bam):
                                 )
                                 continue
 
-    sequences = "".join(standard_cons) + "," + "".join(corrected_cons)
+    sequences = "".join(standard_cons) + "," + "".join(corrected_cons) + "," + "".join(corr_cons_noinsert)
     return sequences
 
+
+def GetVCF(ref, seq_noinsert, pileindex, bam):
+    hasinserts, inspositions, insprominence = ListIns(pileindex)
+    currentdate = date.today().strftime("%Y%m%d")
+    
+    limiter = 0
+    for record in SeqIO.parse(ref, "fasta"):
+        if limiter != 0:
+            continue
+        limiter += 1
+        RefID = record.id
+        reflist = list(record.seq)
+
+    seqlist = list(seq_noinsert)
+
+
+    with flags.vcf as out:
+        ##writeheader
+        out.write(f"""##fileformat=VCFv4.2
+##fileDate={currentdate}
+##source={' '.join(sys.argv)}
+##reference={ref}
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Read Depth">
+##INFO=<ID=INDEL,Number=0,Type=Flag,Description="Indicates that the variant is an INDEL.">
+#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO
+""")
+        #writecontents
+        delskips = []
+        for i in range(len(reflist)):
+            if i in delskips:
+                continue
+            
+            if reflist[i] != seqlist[i]:
+                
+                if seqlist[i] == "N":
+                    continue
+                else:
+                    b = i
+                    
+                    if seqlist[i] == "-":
+                        
+                        extendedreflist = []
+                        while seqlist[b] == "-":
+                            extendedreflist.append(reflist[b])
+                            delskips.append(b)
+                            b+=1
+                            
+                        extRefList = "".join(extendedreflist)
+                        joinedref = str(reflist[i-1] + extRefList)
+                        
+                        out.write(f"{RefID}\t{i}\t.\t{joinedref}\t{seqlist[i-1]}\t.\tPASS\tDP={flags.mincov};INDEL\n")
+                    else:
+                        out.write(f"{RefID}\t{i+1}\t.\t{reflist[i]}\t{seqlist[i]}\t.\tPASS\tDP={flags.mincov}\n")
+            if hasinserts is True:
+                for listedposition in inspositions:
+                    if i == listedposition:
+                        try:
+                            to_insert = ExtractInserts(bam, i)
+                            if to_insert is not None:
+                                combinedentry = seqlist[i] + to_insert
+                                out.write(f"{RefID}\t{i}\t.\t{reflist[i]}\t{combinedentry}\t.\tPASS\tDP={flags.mincov};INDEL\n")
+                        except:
+                            print(f"Unable to add an insertion at {listedposition}. Skipping...")
 
 if __name__ == "__main__":
     bam = pysam.AlignmentFile(flags.input, "rb", threads=flags.threads)
@@ -539,6 +628,7 @@ if __name__ == "__main__":
 
     standard_seq = sequences.split(",")[0]
     corrected_seq = sequences.split(",")[1]
+    corr_seq_noinsert = sequences.split(",")[2]
     with flags.consensus as raw_consensus_seq:
         raw_consensus_seq.write(
             ">"
@@ -572,3 +662,4 @@ if __name__ == "__main__":
         with flags.insertions as insertfile:
             insertfile.write(flags.name + "\t" + "No" + "\t" + ins + "\t" + prc + "\n")
             insertfile.close()
+    GetVCF(flags.reference, corr_seq_noinsert, pileindex, bam)
