@@ -8,7 +8,8 @@ rule consensus_cov_1:
         cons    =   f"{res + seqs}" + "{sample}_standard_cov_ge_1.fa",
         gapcor  =   f"{res + seqs}" + "{sample}_gap_corrected_cov_ge_1.fa",
         cov     =   f"{res + covs}" + "{sample}_coverage1.tsv",
-        ins     =   f"{res + insr}" + "{sample}_inserts_1.tsv"
+        ins     =   f"{res + insr}" + "{sample}_inserts_1.tsv",
+        vcf     =   f"{res + vf}" + "{sample}_1.vcf",
     params:
         coverage    =   "1"
     conda:
@@ -30,7 +31,8 @@ python bin/scripts/Consensus.py \
 --gapcorrected {output.gapcor} \
 --coverage {output.cov} \
 --threads {threads} \
---insertions {output.ins}
+--vcf {output.vcf} \
+--insertions {output.ins} 2>> {log}
         """
 
 
@@ -43,7 +45,8 @@ rule consensus_cov_5:
         cons    =   f"{res + seqs}" + "{sample}_standard_cov_ge_5.fa",
         gapcor  =   f"{res + seqs}" + "{sample}_gap_corrected_cov_ge_5.fa",
         cov     =   f"{res + covs}" + "{sample}_coverage5.tsv",
-        ins     =   f"{res + insr}" + "{sample}_inserts_5.tsv"
+        ins     =   f"{res + insr}" + "{sample}_inserts_5.tsv",
+        vcf     =   f"{res + vf}" + "{sample}_5.vcf",
     params:
         coverage    =   "5"
     conda:
@@ -65,7 +68,8 @@ python bin/scripts/Consensus.py \
 --gapcorrected {output.gapcor} \
 --coverage {output.cov} \
 --threads {threads} \
---insertions {output.ins}
+--vcf {output.vcf} \
+--insertions {output.ins} 2>> {log}
         """
 
 rule consensus_cov_10:
@@ -77,7 +81,8 @@ rule consensus_cov_10:
         cons    =   f"{res + seqs}" + "{sample}_standard_cov_ge_10.fa",
         gapcor  =   f"{res + seqs}" + "{sample}_gap_corrected_cov_ge_10.fa",
         cov     =   f"{res + covs}" + "{sample}_coverage10.tsv",
-        ins     =   f"{res + insr}" + "{sample}_inserts_10.tsv"
+        ins     =   f"{res + insr}" + "{sample}_inserts_10.tsv",
+        vcf     =   f"{res + vf}" + "{sample}_10.vcf",
     params:
         coverage    =   "10"
     conda:
@@ -99,7 +104,8 @@ python bin/scripts/Consensus.py \
 --gapcorrected {output.gapcor} \
 --coverage {output.cov} \
 --threads {threads} \
---insertions {output.ins}
+--vcf {output.vcf} \
+--insertions {output.ins} 2>> {log}
         """
 
 
@@ -112,7 +118,8 @@ rule consensus_cov_30:
         cons    =   f"{res + seqs}" + "{sample}_standard_cov_ge_30.fa",
         gapcor  =   f"{res + seqs}" + "{sample}_gap_corrected_cov_ge_30.fa",
         cov     =   f"{res + covs}" + "{sample}_coverage30.tsv",
-        ins     =   f"{res + insr}" + "{sample}_inserts_30.tsv"
+        ins     =   f"{res + insr}" + "{sample}_inserts_30.tsv",
+        vcf     =   f"{res + vf}" + "{sample}_30.vcf",
     params:
         coverage    =   30
     conda:
@@ -134,7 +141,8 @@ python bin/scripts/Consensus.py \
 --gapcorrected {output.gapcor} \
 --coverage {output.cov} \
 --threads {threads} \
---insertions {output.ins}
+--vcf {output.vcf} \
+--insertions {output.ins} 2>> {log}
         """
 
 rule consensus_cov_100:
@@ -146,7 +154,8 @@ rule consensus_cov_100:
         cons    =   f"{res + seqs}" + "{sample}_standard_cov_ge_100.fa",
         gapcor  =   f"{res + seqs}" + "{sample}_gap_corrected_cov_ge_100.fa",
         cov     =   f"{res + covs}" + "{sample}_coverage100.tsv",
-        ins     =   f"{res + insr}" + "{sample}_inserts_100.tsv"
+        ins     =   f"{res + insr}" + "{sample}_inserts_100.tsv",
+        vcf     =   f"{res + vf}" + "{sample}_100.vcf",
     params:
         coverage    =   "100"
     conda:
@@ -168,5 +177,6 @@ python bin/scripts/Consensus.py \
 --gapcorrected {output.gapcor} \
 --coverage {output.cov} \
 --threads {threads} \
---insertions {output.ins}
+--vcf {output.vcf} \
+--insertions {output.ins} 2>> {log}
         """
