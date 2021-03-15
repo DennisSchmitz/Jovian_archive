@@ -57,7 +57,7 @@ if [ "$cm_installeranswers_compmode" == "U" ]; then
                 echo -e "installeranswers:\n    compmode: G\n   queue: ${queueanswer}" > "${HOME}"/.jovian_installchoice_compmode
                 sed -i '\|drmaa|d' config/config.yaml
                 sed -i "s/.*local-cores:.*/${gridmode_localcores}/g" config/config.yaml
-                echo -e "drmaa: \" -q ${queueanswer} -n {threads} -R \\\"span[hosts=1]\\\"\"" >> config/config.yaml
+                echo -e "drmaa: \" -q ${queueanswer} -n {threads} -R \\\"span[hosts=1]\\\" -R \\\"rusage[mem={resources.memory}GB]\\\"\"" >> config/config.yaml
                 echo -e "drmaa-log-dir: logs/drmaa" >> config/config.yaml
                 break
             done
@@ -101,6 +101,6 @@ elif [ "${cm_installeranswers_compmode}" == "G" ]; then
     echo -e "Jovian is set to run in computing mode: Grid.\n"
     sed -i '\|drmaa|d' config/config.yaml
     sed -i "s/.*local-cores:.*/${gridmode_localcores}/g" config/config.yaml
-    echo -e "drmaa: \" -q ${cm_installeranswers_queue} -n {threads} -R \\\"span[hosts=1]\\\"\"" >> config/config.yaml
+    echo -e "drmaa: \" -q ${cm_installeranswers_queue} -n {threads} -R \\\"span[hosts=1]\\\" -R \\\"rusage[mem={resources.memory}GB]\\\"\"" >> config/config.yaml
     echo -e "drmaa-log-dir: logs/drmaa" >> config/config.yaml
 fi

@@ -12,6 +12,8 @@ rule Cleanup:
     benchmark:
         f"{logdir + bench}" + "Data_Cleanup_{sample}.txt"
     threads: config["threads"]["Nanopore_cleanup"]
+    resources: 
+        memory = config["threads"]["Nanopore_cleanup"] * 12
     params:
         QualityFilter   =   config["Nanopore_ref"]["Quality_score"]
     shell:

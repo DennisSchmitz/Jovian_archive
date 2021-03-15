@@ -15,6 +15,8 @@ rule Remove_Adapters_pt1:
     benchmark:
         f"{logdir + bench}" + "Remove_Adapters_pt1_{sample}.txt"
     threads: config["threads"]["Nanopore_reference_alignment"]
+    resources: 
+        memory = config["threads"]["Nanopore_reference_alignment"] * 12
     params:
         mapthreads = mappingthreads
     shell: 

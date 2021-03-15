@@ -31,6 +31,8 @@ rule RemovePrimers_pt2:
     benchmark:
         f"{logdir + bench}" + "Illumina_RemovePrimers_pt2_{sample}.txt"
     threads: config["threads"]["Illumina_RemovePrimers"]
+    resources: 
+        memory = config["threads"]["Illumina_RemovePrimers"] * 12
     params:
         primer_status = prstatus
     shell:

@@ -17,6 +17,8 @@ rule Illumina_extract_raw_consensus_it1:
     benchmark:
         f"{logdir + bench}" + "Illumina_extract_raw_consensus_it1_{sample}.txt"
     threads: config["threads"]["Illumina_extract_raw_consensus"]
+    resources: 
+        memory = config["threads"]["Illumina_extract_raw_consensus"] * 12
     params:
         max_cov             = config["Illumina_ref"]["SNP"]["Max_coverage"],
     shell: # First codeblock, SNP and indel calling, filter majority SNPs from LoFreq output, zip/normalize/index it, call consensus based on these SNPs.

@@ -21,6 +21,8 @@ rule HuGo_removal_pt1_alignment:
     benchmark:
         f"{logdir + bench}" + "HuGo_removal_pt1_alignment_{sample}.txt"
     threads: config["threads"]["HuGo_removal"]
+    resources: 
+        memory = config["threads"]["HuGo_removal"] * 12
     params:
         alignment_type  =   config["Global"]["HuGo_removal_method"]
     shell:
