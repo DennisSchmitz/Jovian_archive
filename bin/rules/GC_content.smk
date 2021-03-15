@@ -20,7 +20,7 @@ rule Determine_GC_content:
         f"{logdir + bench}" + "Determine_GC_content_{sample}.txt"
     threads: 1
     resources:
-        memory = 8
+        memory = 8 * 1024
     params:
         window_size =   config["Global"]["GC_window_size"]
     shell:

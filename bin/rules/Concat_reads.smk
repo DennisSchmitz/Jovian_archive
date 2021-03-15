@@ -19,7 +19,7 @@ rule concatenate_read_counts:
         f"{logdir + bench}concatenate_read_counts.txt"
     threads: 1
     resources:
-        memory = 4
+        memory = 4 * 1024
     shell:
         """
         bin/scripts/concatenate_mapped_read_counts.py \

@@ -24,7 +24,7 @@ rule HTML_IGVJs_variable_parts:
         f"{logdir + bench}" + "HTML_IGVJs_variable_parts_{sample}.txt"
     threads: 1
     resources:
-        memory = 4
+        memory = 4 * 1024
     shell:
         """
 bash bin/html/igvjs_write_tabs.sh {wildcards.sample} {output.tab_output}
@@ -57,7 +57,7 @@ rule HTML_IGVJs_generate_final:
         f"{logdir + bench}benchmark/HTML_IGVJs_generate_final.txt"
     threads: 1
     resources:
-        memory = 4
+        memory = 4 * 1024
     params:
         tab_basename    =   f"{datadir + html}2_tab_",
         div_basename    =   f"{datadir + html}4_html_divs_",

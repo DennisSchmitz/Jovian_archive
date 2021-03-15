@@ -12,7 +12,7 @@ rule SNP_table:
         f"{logdir + bench}Concatenated_SNPs.txt"
     threads: 1
     resources:
-        memory = 4
+        memory = 4 * 1024
     shell:
         """
 echo -e "Sample\tReference AccessionID\tPosition\tType\tReference\tAlternative\tQuality" > {output}
@@ -32,7 +32,7 @@ rule concat_ins:
         f"{logdir + bench}concat_ins.txt"
     threads: 1
     resources:
-        memory = 4
+        memory = 4 * 1024
     shell:
         """
 echo -e "Sample\tHas Insertions?\tPositions\tPercentage of reads" > {output}

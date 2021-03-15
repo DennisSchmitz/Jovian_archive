@@ -22,7 +22,7 @@ rule ORF_analysis:
         f"{logdir + bench}" + "ORF_prediction_{sample}.txt"
     threads: 1
     resources:
-        memory = 8
+        memory = 8 * 1024
     params:
         procedure       =   config["Global"]["ORF_procedure"],
         output_format   =   config["Global"]["ORF_output_format"]

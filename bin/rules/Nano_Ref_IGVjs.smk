@@ -52,7 +52,7 @@ rule HTML_IGVJs_generate_file:
         f"{logdir + bench}HTML_IGVJs_generate_file.txt"
     threads: 1
     resources:
-        memory = 4
+        memory = 4 * 1024
     params:
         tab_basename    =   f"{datadir + chunks}2_tab_",
         div_basename    =   f"{datadir + chunks}4_html_divs_",

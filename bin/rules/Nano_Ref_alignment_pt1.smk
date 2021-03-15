@@ -17,7 +17,7 @@ rule Align_to_reference_pt1:
         f"{logdir + bench}" + "Align_to_reference_pt1_{sample}.txt"
     threads: config["threads"]["Nanopore_reference_alignment"]
     resources: 
-        memory = config["threads"]["Nanopore_reference_alignment"] * 12
+        memory = (config["threads"]["Nanopore_reference_alignment"] * 12) * 1024
     params:
         mapthreads = mappingthreads
     shell:

@@ -20,7 +20,7 @@ rule De_novo_assembly:
         f"{logdir + bench}" + "De_novo_assembly_{sample}.txt"
     threads: config["threads"]["De_novo_assembly"]
     resources: 
-        memory = config["threads"]["De_novo_assembly"] * 12
+        memory = (config["threads"]["De_novo_assembly"] * 12) * 1024
     params:
         max_GB_RAM          =   config["Illumina_meta"]["Spades"]["Max_gb_ram"],
         kmersizes           =   config["Illumina_meta"]["Spades"]["kmersizes"],

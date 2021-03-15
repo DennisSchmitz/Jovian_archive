@@ -12,7 +12,7 @@ rule Index_ref:
         f"{logdir + bench}Index_ref.txt"
     threads: 4
     resources:
-        memory = 8
+        memory = 8 * 1024
     shell:
         """
 cat {input.ref} | seqkit replace -p "\-" -s -r "N" > {output.refcopy}

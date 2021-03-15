@@ -23,7 +23,7 @@ rule Read2scaffold_alignment_without_rmDup_and_fraglength:
         f"{logdir + bench}" + "Read2scaffold_alignment_without_rmDup_and_fraglength_{sample}.txt"
     threads: config["threads"]["Fragment_length_analysis"]
     resources:
-        memory = config["threads"]["Fragment_length_analysis"] * 6
+        memory = (config["threads"]["Fragment_length_analysis"] * 6) * 1024
     shell:
         """
 bwa index {input.fasta} > {log} 2>&1

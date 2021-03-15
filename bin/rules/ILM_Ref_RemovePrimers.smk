@@ -14,7 +14,7 @@ rule RemovePrimers_pt1:
         f"{logdir + bench}" + "Illumina_RemovePrimers_pt1_{sample}.txt"
     threads: 1
     resources:
-        memory = 4
+        memory = 4 * 1024
     shell:
         """
 cat {input} > {output}
@@ -34,7 +34,7 @@ rule RemovePrimers_pt2:
         f"{logdir + bench}" + "Illumina_RemovePrimers_pt2_{sample}.txt"
     threads: config["threads"]["Illumina_RemovePrimers"]
     resources: 
-        memory = config["threads"]["Illumina_RemovePrimers"] * 12
+        memory = (config["threads"]["Illumina_RemovePrimers"] * 12) * 1024
     params:
         primer_status = prstatus
     shell:

@@ -23,7 +23,7 @@ rule Concat_files:
         f"{logdir + bench}Concat_files.txt"
     threads: 1
     resources:
-        memory = 4
+        memory = 4 * 1024
     params:
         search_folder       =   f"{datadir + tbl}",
         classified_glob     =   "*_taxClassified.tsv",

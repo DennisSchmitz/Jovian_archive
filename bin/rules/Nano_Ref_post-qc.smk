@@ -12,7 +12,7 @@ rule cleaned_quality_control:
         f"{logdir + bench}" + "cleaned_quality_control_{sample}.txt"
     threads: config["threads"]["Nanopore_QC"]
     resources:
-        memory = config["threads"]["Nanopore_QC"] * 4
+        memory = (config["threads"]["Nanopore_QC"] * 4) * 1024
     params:
         outdir  =   f"{datadir + qc_post}"
     shell:

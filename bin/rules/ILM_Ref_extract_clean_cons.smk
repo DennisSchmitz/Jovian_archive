@@ -28,7 +28,7 @@ rule Illumina_extract_clean_consensus:
         f"{logdir + bench}" + "Illumina_extract_clean_consensus_{sample}.txt"
     threads: 1
     resources:
-        memory = 8
+        memory = 8 * 1024
     params:
         output_data_folder      =   f"{datadir + it2 + cons}",
         output_results_folder   =   f"{res + seqs}"

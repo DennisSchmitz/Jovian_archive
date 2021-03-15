@@ -12,7 +12,7 @@ rule raw_quality_control:
         f"{logdir + bench}" + "raw_quality_control_{sample}.txt"
     threads: config["threads"]["Nanopore_QC"]
     resources:
-        memory = config["threads"]["Nanopore_QC"] * 4
+        memory = (config["threads"]["Nanopore_QC"] * 4) * 1024
     params:
         output_dir  =   f"{datadir + qc_pre}"
     shell:

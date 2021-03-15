@@ -25,7 +25,7 @@ rule Merge_all_metrics_into_single_tsv:
         f"{logdir + bench}" + "Merge_all_metrics_into_single_tsv_{sample}.txt"
     threads: 1
     resources:
-        memory = 8
+        memory = 8 * 1024
     shell:
         """
 python bin/scripts/merge_data.py {wildcards.sample} \

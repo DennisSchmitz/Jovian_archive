@@ -16,7 +16,7 @@ rule Remove_Adapters_pt1:
         f"{logdir + bench}" + "Remove_Adapters_pt1_{sample}.txt"
     threads: config["threads"]["Nanopore_reference_alignment"]
     resources: 
-        memory = config["threads"]["Nanopore_reference_alignment"] * 12
+        memory = (config["threads"]["Nanopore_reference_alignment"] * 12) * 1024
     params:
         mapthreads = mappingthreads
     shell: 
@@ -38,7 +38,7 @@ rule Remove_Adapters_pt2:
         f"{logdir + bench}" + "Remove_Adapters_pt2_{sample}.txt"
     threads: config["threads"]["Nanopore_SoftClipper"]
     resources:
-        memory = 12
+        memory = 12 * 1024
     shell: 
         """
 python bin/scripts/SoftClipper.py --input {input} --output {output} --threads {threads}

@@ -16,7 +16,7 @@ rule calculate_BoC:
         f"{logdir + bench}" + "Calculate_boc_{sample}.txt"
     threads: 1
     resources:
-        memory = 8
+        memory = 8 * 1024
     shell:
         """
 bash bin/scripts/BoC_analysis.sh {wildcards.sample} {input.bedgraph} {input.reference} \

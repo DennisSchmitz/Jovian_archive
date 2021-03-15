@@ -18,7 +18,7 @@ rule HuGo_removal_pt3_extract_unpaired_unmapped_reads:
         f"{logdir + bench}" + "HuGo_removal_pt3_extract_unpaired_unmapped_reads_{sample}.txt"
     threads: config["threads"]["HuGo_removal"]
     resources: 
-        memory = config["threads"]["HuGo_removal"] * 12
+        memory = (config["threads"]["HuGo_removal"] * 12) * 1024
     shell:
         """
 samtools view -@ {threads} -b -F 1 -f 4 {input.bam} 2> {log} |\

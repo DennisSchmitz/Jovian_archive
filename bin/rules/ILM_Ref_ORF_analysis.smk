@@ -15,7 +15,7 @@ rule Illumina_reference_ORF_analysis:
         f"{logdir + bench}" + "Illumina_reference_ORF_analysis_{sample}.txt"
     threads: 1
     resources:
-        memory = 8
+        memory = 8 * 1024
     params: #? Currently it's using the same prodigal settings as the main workflow, I see no problems with it since it's both foremost intended for viruses.
         procedure       =   config["Global"]["ORF_procedure"],
         output_format   =   config["Global"]["ORF_output_format"]

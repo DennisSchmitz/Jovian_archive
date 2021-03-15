@@ -116,7 +116,7 @@ rule lca_mgkit:
         f"{logdir + bench}" + "lca_mgkit_{sample}.txt"
     threads: 1
     resources:
-        memory = 12
+        memory = 12 * 1024
     shell:
         """
 taxon-utils lca -b {params.bitscore_threshold} -s -p -n {output.no_lca} -t {params.mgkit_tax_db}taxonomy.pickle {input.filtgff} {output.taxtab} > {log} 2>&1;

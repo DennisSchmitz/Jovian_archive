@@ -13,7 +13,7 @@ rule Krona_chart_and_LCA:
         f"{logdir + bench}" + "Krona_chart_and_LCA_{sample}.txt"
     threads: 1
     resources:
-        memory = 8
+        memory = 8 * 1024
     params:
         bitscoreDelta   =   config["Illumina_meta"]["LCA"]["bitscoreDelta"],
         krona_tax_db    =   config["databases"]["Krona_taxonomy"]

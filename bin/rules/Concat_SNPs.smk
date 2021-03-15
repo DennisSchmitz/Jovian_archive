@@ -19,7 +19,7 @@ rule Concat_filtered_SNPs:
         f"{logdir + bench}Concat_filtered_SNPs.txt"
     threads: 1
     resources:
-        memory = 4
+        memory = 4 * 1024
     params:
         vcf_folder_glob =   f"{datadir + scf_filt}/\*_filtered.vcf"
     shell:

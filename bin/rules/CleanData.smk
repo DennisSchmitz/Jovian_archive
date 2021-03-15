@@ -22,7 +22,7 @@ rule Clean_the_data:
         f"{logdir + bench}" + "Clean_the_data_{sample}.txt"
     threads: config["threads"]["Clean_the_data"]
     resources:
-        memory = config["threads"]["Clean_the_data"] * 4
+        memory = (config["threads"]["Clean_the_data"] * 4) * 1024
     params:
         adapter_removal_config  =   config["Illumina"]["Clean"]["adapter_removal_config"],
         quality_trimming_config =   config["Illumina"]["Clean"]["quality_trimming_config"],

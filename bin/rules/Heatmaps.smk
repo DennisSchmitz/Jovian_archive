@@ -26,7 +26,7 @@ rule draw_heatmaps:
         f"{logdir + bench}draw_heatmaps.txt"
     threads: 1
     resources:
-        memory = 12
+        memory = 12 * 1024
     shell:
         """
 python bin/scripts/draw_heatmaps.py -c {input.classified} -n {input.numbers} -sq {output.super_quantities} -st {output.stats} -vs {output.vir_stats} -ps {output.phage_stats} -bs {output.bact_stats} -s {output.super} -v {output.virus} -p {output.phage} -b {output.bact} > {log} 2>&1

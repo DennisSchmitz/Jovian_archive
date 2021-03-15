@@ -22,7 +22,7 @@ rule MultiQC_report:
         f"{logdir + bench}MultiQC_report.txt"
     threads: 1
     resources:
-        memory = 12
+        memory = 12 * 1024
     params:
         config_file = "files/multiqc_config.yaml",
         output_dir = res,
