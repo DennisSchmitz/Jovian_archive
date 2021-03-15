@@ -18,6 +18,8 @@ rule consensus_cov_1:
     benchmark:
         f"{logdir + bench}" + "Generate_consensus_{sample}.txt"
     threads: 2
+    resources:
+        memory = 24
     shell:
         """
 python bin/scripts/Consensus.py \
@@ -53,6 +55,8 @@ rule consensus_cov_5:
     benchmark:
         f"{logdir + bench}" + "Generate_consensus_{sample}.txt"
     threads: 2
+    resources:
+        memory = 24
     shell:
         """
 python bin/scripts/Consensus.py \
@@ -87,6 +91,8 @@ rule consensus_cov_10:
     benchmark:
         f"{logdir + bench}" + "Generate_consensus_{sample}.txt"
     threads: 2
+    resources:
+        memory = 24
     shell:
         """
 python bin/scripts/Consensus.py \
@@ -122,6 +128,8 @@ rule consensus_cov_30:
     benchmark:
         f"{logdir + bench}" + "Generate_consensus_{sample}.txt"
     threads: 2
+    resources:
+        memory = 24
     shell:
         """
 python bin/scripts/Consensus.py \
@@ -156,6 +164,8 @@ rule consensus_cov_100:
     benchmark:
         f"{logdir + bench}" + "Generate_consensus_{sample}.txt"
     threads: 2
+    resources:
+        memory = 24
     shell:
         """
 python bin/scripts/Consensus.py \

@@ -17,6 +17,8 @@ rule QC_clean_data:
     benchmark:
         f"{logdir + bench}" + "QC_clean_data_{sample}_{read}.txt"
     threads: 6
+    resources:
+        memory = 24
     shell:
         """
 if [ -s "{input}" ] # If file exists and is NOT empty (i.e. filesize > 0) do...

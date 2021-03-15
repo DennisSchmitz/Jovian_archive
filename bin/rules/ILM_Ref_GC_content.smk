@@ -13,6 +13,8 @@ rule Illumina_determine_GC_content:
     benchmark:
         f"{logdir + bench}" + "Illumina_determine_GC_content_{sample}.txt"
     threads: 1
+    resources:
+        memory = 8
     params:
         window_size =   config["Global"]["GC_window_size"]
     shell:

@@ -20,6 +20,8 @@ rule Krona_chart_combine:
     benchmark:
         f"{logdir + bench}Krona_chart_combine.txt"
     threads: 1
+    resources:
+        memory = 8
     params:
         krona_tax_db    =   config["databases"]["Krona_taxonomy"]
     shell:

@@ -22,6 +22,8 @@ rule Read2scaffold_alignment_with_rmDup_and_fraglength:
     benchmark:
         f"{logdir + bench}" + "Read2scaffold_alignment_with_rmDup_and_fraglength_{sample}.txt"
     threads: config["threads"]["Fragment_length_analysis"]
+    resources:
+        memory = config["threads"]["Fragment_length_analysis"] * 6
     params:
         remove_dups     =   "-r", #! This will HARD remove the duplicates instead of only marking them, N.B. this is REQUIRED for the downstream bbtools' pileup.sh to work --> it ignores the DUP marker and counts the reads in its coverage metrics. Thus giving a false sense of confidence.
         markdup_mode    =   "t",

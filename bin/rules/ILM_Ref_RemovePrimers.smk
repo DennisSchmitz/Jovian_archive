@@ -13,6 +13,8 @@ rule RemovePrimers_pt1:
     benchmark:
         f"{logdir + bench}" + "Illumina_RemovePrimers_pt1_{sample}.txt"
     threads: 1
+    resources:
+        memory = 4
     shell:
         """
 cat {input} > {output}

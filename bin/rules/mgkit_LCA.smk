@@ -3,9 +3,9 @@
 ## Remove any entry with a lower bitscore than the user specified bitscore_threshold (i.e. filter short alignments since every match is a +2 bitscore)
 rule make_gff: 
     input:
-         rules.Scaffold_classification.output
+        rules.Scaffold_classification.output
     output:
-         f"{datadir + taxclas}" + "{sample}_lca_raw.gff" #? This is a temp file, removed in the onSuccess//onError clause.
+        f"{datadir + taxclas}" + "{sample}_lca_raw.gff" #? This is a temp file, removed in the onSuccess//onError clause.
     conda:
         f"{conda_envs}mgkit_lca.yaml"
     log:
@@ -13,6 +13,8 @@ rule make_gff:
     benchmark:
         f"{logdir + bench}" + "make_gff_{sample}.txt"
     threads: 1
+    resources:
+        memory = 12
     params:
         bitscore_threshold  =   config["Illumina_meta"]["LCA"]["bitscore_threshold"],
         filt_keywords       =   "/vector\|construct\|synthetic/Id" 
@@ -25,9 +27,9 @@ blast2gff blastdb -b {params.bitscore_threshold} -n {input} {output} > {log} 2>&
 # Reformat gff with accession id blasthit into taxid
 rule addtaxa_gff:
     input:
-         rules.make_gff.output
+        rules.make_gff.output
     output:
-         f"{datadir + taxclas}" + "{sample}_lca_tax.gff" #? This is a temp file, removed in the onSuccess//onError clause.
+        f"{datadir + taxclas}" + "{sample}_lca_tax.gff" #? This is a temp file, removed in the onSuccess//onError clause.
     conda:
         f"{conda_envs}mgkit_lca.yaml"
     log:
@@ -35,6 +37,8 @@ rule addtaxa_gff:
     benchmark:
         f"{logdir + bench}" + "addtaxa_gff_{sample}.txt"
     threads: 1
+    resources:
+        memory = 12
     params:
         mgkit_tax_db    =   config["databases"]["MGKit_taxonomy"]
     shell:
@@ -45,9 +49,9 @@ add-gff-info addtaxa -t <(gunzip -c {params.mgkit_tax_db}nucl_gb.accession2taxid
 # Filter taxid 81077 (https://www.ncbi.nlm.nih.gov/taxonomy/?term=81077 --> artificial sequences) and 12908 (https://www.ncbi.nlm.nih.gov/taxonomy/?term=12908 --> unclassified sequences)
 rule taxfilter_gff:
     input:
-         rules.addtaxa_gff.output
+        rules.addtaxa_gff.output
     output:
-         f"{datadir + taxclas}" + "{sample}_lca_taxfilt.gff" #? This is a temp file, removed in the onSuccess//onError clause.
+        f"{datadir + taxclas}" + "{sample}_lca_taxfilt.gff" #? This is a temp file, removed in the onSuccess//onError clause.
     conda:
         f"{conda_envs}mgkit_lca.yaml"
     log:
@@ -55,6 +59,8 @@ rule taxfilter_gff:
     benchmark:
         f"{logdir + bench}" + "taxfilter_gff_{sample}.txt"
     threads: 1
+    resources:
+        memory = 12
     params:
         mgkit_tax_db    =   config["databases"]["MGKit_taxonomy"]
     shell:
@@ -65,9 +71,9 @@ taxon-utils filter -e 81077 -e 12908 -t {params.mgkit_tax_db}taxonomy.pickle {in
 # Filter gff on the user-specified bitscore-quantile settings.
 rule qfilter_gff:
     input:
-         rules.taxfilter_gff.output
+        rules.taxfilter_gff.output
     output:
-         f"{datadir + taxclas}" + "{sample}_lca_filt.gff" #? This is a temp file, removed in the onSuccess//onError clause.
+        f"{datadir + taxclas}" + "{sample}_lca_filt.gff" #? This is a temp file, removed in the onSuccess//onError clause.
     conda:
         f"{conda_envs}mgkit_lca.yaml"
     log:
@@ -75,6 +81,8 @@ rule qfilter_gff:
     benchmark:
         f"{logdir + bench}" + "qfilter_gff_{sample}.txt"
     threads: 1
+    resources:
+        memory = 12
     params:
         quantile_threshold  =   config["Illumina_meta"]["LCA"]["quantile_threshold"]
     shell:
@@ -106,7 +114,9 @@ rule lca_mgkit:
         f"{logdir}" + "lca_mgkit_{sample}.log" 
     benchmark:
         f"{logdir + bench}" + "lca_mgkit_{sample}.txt"
-    threads: 1        
+    threads: 1
+    resources:
+        memory = 12
     shell:
         """
 taxon-utils lca -b {params.bitscore_threshold} -s -p -n {output.no_lca} -t {params.mgkit_tax_db}taxonomy.pickle {input.filtgff} {output.taxtab} > {log} 2>&1;

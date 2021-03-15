@@ -11,6 +11,8 @@ rule Index_ref:
     benchmark:
         f"{logdir + bench}Index_ref.txt"
     threads: 4
+    resources:
+        memory = 8
     shell:
         """
 cat {input.ref} | seqkit replace -p "\-" -s -r "N" > {output.refcopy}

@@ -10,6 +10,8 @@ rule genomecoverage:
     benchmark:
         f"{logdir + bench}" + "Determine_genome_coverage_{sample}.txt"
     threads: 1
+    resources:
+        memory = 8
     shell:
         """
 bedtools genomecov -bga -ibam {input.bam} > {output.bedgraph} 2>> {log}

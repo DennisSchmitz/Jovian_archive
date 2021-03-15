@@ -21,6 +21,8 @@ rule MultiQC_report:
     benchmark:
         f"{logdir + bench}MultiQC_report.txt"
     threads: 1
+    resources:
+        memory = 12
     params:
         config_file = "files/multiqc_config.yaml",
         output_dir = res,

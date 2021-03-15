@@ -15,6 +15,8 @@ rule determine_GC_content:
     benchmark:
         f"{logdir + bench}Determine_GC_content.txt"
     threads: 1
+    resources:
+        memory = 8
     params:
         window_size =   config["Global"]["GC_window_size"]
     shell:

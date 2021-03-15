@@ -30,6 +30,8 @@ rule quantify_output:
     benchmark:
         f"{logdir + bench}quantify_output.txt"
     threads: config["threads"]["quantify_output"]
+    resources:
+        memory = config["threads"]["quantify_output"] * 4
     shell:
         """
 python bin/scripts/quantify_profiles.py \

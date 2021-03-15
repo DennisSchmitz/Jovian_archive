@@ -17,6 +17,8 @@ rule Illumina_HTML_IGVJs_variable_parts:
     benchmark:
         f"{logdir + bench}" + "Illumina_HTML_IGVJs_variable_parts_{sample}.txt"
     threads: 1
+    resources:
+        memory = 4
     shell:
         """
 bash bin/html/igvjs_write_tabs.sh {wildcards.sample} {output.tab_output}

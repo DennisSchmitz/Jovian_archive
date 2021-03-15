@@ -23,7 +23,7 @@ rule SNP_calling:
         f"{logdir + bench}" + "SNP_calling_{sample}.txt"
     threads: config["threads"]["SNP_calling"]
     resources: 
-        memory = config["threads"]["SNP_calling"] * 12
+        memory = config["threads"]["SNP_calling"] * 8
     params:
         max_cov     =   config["Illumina_meta"]["SNP"]["Max_coverage"],
         minimum_AF  =   config["Illumina_meta"]["SNP"]["Minimum_AF"]

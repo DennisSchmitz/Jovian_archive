@@ -37,6 +37,8 @@ rule Remove_Adapters_pt2:
     benchmark:
         f"{logdir + bench}" + "Remove_Adapters_pt2_{sample}.txt"
     threads: config["threads"]["Nanopore_SoftClipper"]
+    resources:
+        memory = 12
     shell: 
         """
 python bin/scripts/SoftClipper.py --input {input} --output {output} --threads {threads}

@@ -12,6 +12,8 @@ rule SNP_table:
     benchmark:
         f"{logdir + bench}Concatenated_SNPs.txt"
     threads: 1
+    resources:
+        memory = 4
     shell:
         """
 echo -e "# The events below are incorporated into the consensus genome, depending on the INDELS versus the user-supplied reference these coordinates are not comparable to the generated consensus genome in the \"results/sequences/\" folder\nSample\tReference AccessionID\tPosition\tType\tReference\tAlternative\tQuality" > {output}

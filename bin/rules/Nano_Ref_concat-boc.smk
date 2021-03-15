@@ -21,6 +21,8 @@ rule concat_boc:
     benchmark:
         f"{logdir + bench}Concat_boc.txt"
     threads: 1
+    resources:
+        memory = 6
     shell:
         """
 echo -e "Sample_name\tTotal_ref_size\tBoC_at_coverage_threshold_1\tBoC_at_coverage_threshold_5\tBoC_at_coverage_threshold_10\tBoC_at_coverage_threshold_30\tBoC_at_coverage_threshold_100" > {output.conc_boc_int}
