@@ -589,25 +589,22 @@ def GetVCF(ref, seq_noinsert, pileindex, bam):
             
             if reflist[i] != seqlist[i]:
                 
-                if seqlist[i] == "N":
-                    continue
-                else:
-                    b = i
+                b = i
+                
+                if seqlist[i] == "-":
                     
-                    if seqlist[i] == "-":
+                    extendedreflist = []
+                    while seqlist[b] == "-":
+                        extendedreflist.append(reflist[b])
+                        delskips.append(b)
+                        b+=1
                         
-                        extendedreflist = []
-                        while seqlist[b] == "-":
-                            extendedreflist.append(reflist[b])
-                            delskips.append(b)
-                            b+=1
-                            
-                        extRefList = "".join(extendedreflist)
-                        joinedref = str(reflist[i-1] + extRefList)
-                        
-                        out.write(f"{RefID}\t{i}\t.\t{joinedref}\t{seqlist[i-1]}\t.\tPASS\tDP={flags.mincov};INDEL\n")
-                    else:
-                        out.write(f"{RefID}\t{i+1}\t.\t{reflist[i]}\t{seqlist[i]}\t.\tPASS\tDP={flags.mincov}\n")
+                    extRefList = "".join(extendedreflist)
+                    joinedref = str(reflist[i-1] + extRefList)
+                    
+                    out.write(f"{RefID}\t{i}\t.\t{joinedref}\t{seqlist[i-1]}\t.\tPASS\tDP={flags.mincov};INDEL\n")
+                else:
+                    out.write(f"{RefID}\t{i+1}\t.\t{reflist[i]}\t{seqlist[i]}\t.\tPASS\tDP={flags.mincov}\n")
             if hasinserts is True:
                 for listedposition in inspositions:
                     if i == listedposition:
