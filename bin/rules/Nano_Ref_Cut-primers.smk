@@ -11,6 +11,8 @@ rule Cut_primers:
     benchmark:
         f"{logdir + bench}" + "Primer_removal_{sample}.txt"
     threads: config["threads"]["Nanopore_primer_removal"]
+    resources: 
+        memory = (config["threads"]["Nanopore_primer_removal"] * 12) * 1024
     shell:
         """
 python bin/scripts/RemoveONTPrimers.py --input {input.fastq} --reference {input.ref} --primers {input.primers} --threads {threads} --output {output}

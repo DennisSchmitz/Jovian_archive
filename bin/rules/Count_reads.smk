@@ -16,6 +16,8 @@ rule count_mapped_reads:
     benchmark:
         f"{logdir + bench}" + "count_mapped_reads-{sample}.txt"
     threads: 1
+    resources:
+        memory = 12 * 1024
     shell:
         """
 bash bin/scripts/count_mapped_reads.sh {input} > {output} 2> {log}

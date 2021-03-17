@@ -16,6 +16,8 @@ rule ORF_Analysis:
     benchmark:
         f"{logdir + bench}ORF_Analysis.txt"
     threads: 1
+    resources:
+        memory = 12 * 1024
     params:
         procedure       =   config["Global"]["ORF_procedure"],
         output_format   =   config["Global"]["ORF_output_format"]

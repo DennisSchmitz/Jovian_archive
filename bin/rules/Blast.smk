@@ -16,6 +16,8 @@ rule Scaffold_classification:
     benchmark:
         f"{logdir + bench}" + "logs/benchmark/Scaffold_classification_{sample}.txt"
     threads: config["threads"]["Classification_of_scaffolds"]
+    resources: 
+        memory = (config["threads"]["Classification_of_scaffolds"] * 12) * 1024
     params:
         outfmt          =   "6 std qseqid sseqid staxids sscinames stitle",
         evalue          =   config["Illumina_meta"]["Classification"]["e_value"],

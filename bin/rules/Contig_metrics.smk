@@ -20,6 +20,8 @@ rule Generate_contigs_metrics:
     benchmark:
         f"{logdir + bench}" + "Generate_contigs_metrics_{sample}.txt"
     threads: 1
+    resources:
+        memory = 8 * 1024
     shell: #! bbtools' pileup.sh counts every read, even those marked as duplicate upstream. Hence, upstream all duplicates are HARD removed.
         """
 pileup.sh in={input.bam} \

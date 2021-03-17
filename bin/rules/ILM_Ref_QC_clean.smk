@@ -10,6 +10,8 @@ rule ILM_Ref_QC_clean_data:
     benchmark:
         f"{logdir + bench}" + "QC_clean_data_{sample}.txt"
     threads: 6
+    resources:
+        memory = 12 * 1024
     shell:
         """
 if [ -s "{input}" ] # If file exists and is NOT empty (i.e. filesize > 0) do...

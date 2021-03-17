@@ -32,6 +32,9 @@ rule concat_seqs_standard:
         wildcard_10     =   f"{res + seqs}" + "*_standard_cov_ge_10.fa",
         wildcard_30     =   f"{res + seqs}" + "*_standard_cov_ge_30.fa",
         wildcard_100    =   f"{res + seqs}" + "*_standard_cov_ge_100.fa"
+    threads: 1
+    resources:
+        memory = 6 * 1024
     shell:
         """
 cat {params.wildcard_1} >> {output.conc_1}
@@ -76,6 +79,9 @@ rule concat_seqs_gapcorrected:
         wildcard_10     =   f"{res + seqs}" + "*_gap_corrected_cov_ge_10.fa",
         wildcard_30     =   f"{res + seqs}" + "*_gap_corrected_cov_ge_30.fa",
         wildcard_100    =   f"{res + seqs}" + "*_gap_corrected_cov_ge_100.fa"
+    threads: 1
+    resources:
+        memory = 6 * 1024
     shell:
         """
 cat {params.wildcard_1} >> {output.conc_1}

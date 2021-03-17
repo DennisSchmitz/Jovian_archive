@@ -13,6 +13,8 @@ rule Illumina_determine_BoC_at_diff_cov_thresholds:
     benchmark:
         f"{logdir + bench}" + "Illumina_determine_BoC_at_diff_cov_thresholds_{sample}.txt"
     threads: 1
+    resources:
+        memory = 8 * 1024
     shell:
         """
 bash bin/scripts/BoC_analysis.sh {wildcards.sample} {input.bedgraph} {input.reference} \

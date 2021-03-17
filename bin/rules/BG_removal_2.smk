@@ -6,11 +6,11 @@
 
 rule HuGo_removal_pt2_extract_paired_unmapped_reads:
     input:
-         bam        =   rules.HuGo_removal_pt1_alignment.output.sorted_bam,
-         bam_index  =   rules.HuGo_removal_pt1_alignment.output.sorted_bam_index
+        bam        =   rules.HuGo_removal_pt1_alignment.output.sorted_bam,
+        bam_index  =   rules.HuGo_removal_pt1_alignment.output.sorted_bam_index
     output:
-         fastq_R1   =   f"{datadir + cln}" + "{sample}_pR1.fq",
-         fastq_R2   =   f"{datadir + cln}" + "{sample}_pR2.fq"
+        fastq_R1   =   f"{datadir + cln}" + "{sample}_pR1.fq",
+        fastq_R2   =   f"{datadir + cln}" + "{sample}_pR2.fq"
     conda:
         f"{conda_envs}HuGo_removal.yaml"
     log:
@@ -18,6 +18,8 @@ rule HuGo_removal_pt2_extract_paired_unmapped_reads:
     benchmark:
         f"{logdir + bench}" + "HuGo_removal_pt2_extract_paired_unmapped_reads_{sample}.txt"
     threads: config["threads"]["HuGo_removal"]
+    resources: 
+        memory = (config["threads"]["HuGo_removal"] * 12) * 1024
     shell:
         """
 samtools view -@ {threads} -b -f 1 -f 4 -f 8 {input.bam} 2> {log} |\

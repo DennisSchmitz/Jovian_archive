@@ -17,6 +17,8 @@ rule Illumina_HTML_IGVJs_generate_final:
     benchmark:
         f"{logdir + bench}Illumina_HTML_IGVJs_generate_final.txt"
     threads: 1
+    resources:
+        memory = 4 * 1024
     params:
         chunkpath       =   f"{fls + chunks}", 
         tab_basename    =   f"{datadir + html}2_tab_",

@@ -20,6 +20,8 @@ rule Illumina_extract_raw_consensus_it2:
     benchmark:
         f"{logdir + bench}" + "Illumina_extract_raw_consensus_it2_{sample}.txt"
     threads: config["threads"]["Illumina_extract_raw_consensus"]
+    resources: 
+        memory = (config["threads"]["Illumina_extract_raw_consensus"] * 12) * 1024
     params:
         max_cov             = config["Illumina_ref"]["SNP"]["Max_coverage"],
         min_AF              = config["Illumina_ref"]["SNP"]["Minority_SNP_AF_lower_threshold"]

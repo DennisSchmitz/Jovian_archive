@@ -17,6 +17,8 @@ rule QC_raw_data:
     benchmark:
         f"{logdir + bench}" + "QC_raw_data_{sample}_{read}.txt"
     threads: 6
+    resources:
+        memory = 24 * 1024
     params:
         output_dir  =   f"{datadir + qc_pre}"
     shell:

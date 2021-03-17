@@ -18,6 +18,8 @@ rule Illumina_concat_BoC_metrics:
     benchmark:
         f"{logdir + bench}Illumina_concat_BoC_metrics.txt"
     threads: 1
+    resources:
+        memory = 4 * 1024
     shell:
         """
 echo -e "Sample_name\tTotal_ref_size\tBoC_at_coverage_threshold_1\tBoC_at_coverage_threshold_5\tBoC_at_coverage_threshold_10\tBoC_at_coverage_threshold_30\tBoC_at_coverage_threshold_100" > {output.combined_BoC_int_tsv}
