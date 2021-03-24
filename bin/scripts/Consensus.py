@@ -111,6 +111,7 @@ def BuildIndex(bam, fasta):
     for rec in pysamstats.stat_pileup(
         type="variation",
         alignmentfile=bam,
+        stepper='nofilter',
         fafile=fasta,
         pad=True,
         one_based=True,
