@@ -111,7 +111,7 @@ def BuildIndex(bam, fasta):
     for rec in pysamstats.stat_pileup(
         type="variation",
         alignmentfile=bam,
-        stepper='nofilter',
+        stepper="nofilter",
         fafile=fasta,
         pad=True,
         one_based=True,
@@ -179,9 +179,10 @@ def Inside_an_ORF(location, GFFindex):
 def BeyondStopCodon(location, gffindex, currentseq):
 
     seqstring = "".join(currentseq)
-    
+
     stopcodons = ["TAG", "TAA", "TGA"]
     stopcounter = []
+
     def GFF_start_end(location, GFFindex):
         for index, orf in GFFindex.iterrows():
             in_orf = location in range(orf.start, orf.end)
@@ -191,7 +192,7 @@ def BeyondStopCodon(location, gffindex, currentseq):
                 return orf.start
 
     def ORFsequence(startloc, seqstring):
-        orfseq = seqstring[startloc-1:].upper()
+        orfseq = seqstring[startloc - 1 :].upper()
         orfseq = orfseq[orfseq.find("ATG") :]
         return orfseq
 
@@ -203,11 +204,12 @@ def BeyondStopCodon(location, gffindex, currentseq):
     )
     for i in stopcodons:
         stopcounter.append(codons.count(i))
-        
+
     if any(stopcounter) > 0:
         return True
     else:
         return False
+
 
 def slices(mintwo, minone, zero, plusone, plustwo):
     dist_mintwo = {
@@ -441,12 +443,12 @@ def BuildCons(pileupindex, IndexedGFF, mincov, bam):
                 if Within_ORF == False:
                     corrected_cons.append("-")
                 elif Within_ORF == True:
-                    
+
                     if BeyondStopCodon(currentloc, IndexedGFF, corrected_cons) is True:
                         corrected_cons.append("-")
-                    
+
                     if BeyondStopCodon(currentloc, IndexedGFF, corrected_cons) is False:
-                    
+
                         is_del = False
 
                         # In het geval er een deletie is gerapporteerd als meerderheid op de "currentposition"
