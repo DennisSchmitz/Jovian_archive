@@ -8,5 +8,4 @@ dependencies:
     - trimmomatic==0.38
     - openjdk==10.0.2 # See issue #135 on github: https://github.com/DennisSchmitz/Jovian/issues/135
     - fastp==0.20.1
-    - cutadapt==2.10
     - porechop==0.2.4

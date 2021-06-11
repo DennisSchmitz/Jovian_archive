@@ -4,4 +4,5 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-    - mgkit==0.3.4
+    - python=3.7
+    - mgkit==0.5.6

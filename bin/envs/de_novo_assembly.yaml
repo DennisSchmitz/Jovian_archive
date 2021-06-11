@@ -4,6 +4,6 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-    - spades==3.11.0=py36_0
+    - spades>=3.11.0
     - seqtk==1.2.0
     - gawk==4.2.1

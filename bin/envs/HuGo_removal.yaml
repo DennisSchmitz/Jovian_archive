@@ -4,6 +4,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+    - python=3.7
     - bowtie2==2.3.5
     - tbb==2020.3
     - samtools==1.9
