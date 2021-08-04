@@ -11,7 +11,7 @@ if [[ $PATH != *${HELPER_NAME}* ]]; then # If helper env is not in your path (i.
 
     if ! conda activate "${HELPER_NAME}"; then # If exit statement is not 0, i.e. helper conda env hasn't been installed yet, do...
         echo -e "\tInstalling Jovian helper environment..."
-        conda env create -f ${PATH_JOVIAN_HELPER_YAML} # Create the env from the specified yaml file
+        mamba env create -f ${PATH_JOVIAN_HELPER_YAML} # Create the env from the specified yaml file
         set -o allexport
 		conda activate "${HELPER_NAME}"
 		set +o allexport
