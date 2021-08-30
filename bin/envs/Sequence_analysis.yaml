@@ -4,15 +4,15 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-    - prodigal==2.6.3
-    - tabix==0.2.6
-    - samtools==1.10
+    - prodigal>=2.6.3
+    - tabix>=0.2.6
+    - samtools>=1.10
     - bbmap==38.22
-    - bwa==0.7.17
-    - picard==2.18.14
-    - lofreq==2.1.3.1
-    - bedtools==2.27.1
-    - gawk==4.2.1
-    - igvtools==2.3.93
-    - r-base==3.5.1 # r-base is sometimes required for picard to run. this isn't listed in the picard dependency list.
+    - bwa>=0.7.17
+    - picard>=2.18.14
+    - lofreq>=2.1.3.1
+    - bedtools>=2.27.1
+    - gawk>=4.2.1
+    - igvtools>=2.3.93
+    - r-base>=3.5.1 # r-base is sometimes required for picard to run. this isn't listed in the picard dependency list.
     - openjdk==8.0.152 # 2019-Aug: Apparently Picard isn't tested for JDK versions higher than 8. This isn't specified properly in the dependencies and causes errors if not specifically downgraded.

@@ -34,7 +34,7 @@ df_nohits = pd.DataFrame(df_statsID[~df_statsID.isin(df_tax[df_tax.columns[0]])]
 
 df_nohits.insert(loc=1, column="taxID", value=0)
 df_nohits.insert(2, "Avg. log e-value", "1")
-df_tax = pd.concat([df_tax, df_nohits], join_axes=[df_tax.columns])
+df_tax = pd.concat([df_tax, df_nohits], join="inner")
 
 
 df_stats["Nr_of_reads"] = df_stats["Plus_reads"].add(df_stats["Minus_reads"])

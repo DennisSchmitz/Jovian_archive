@@ -553,7 +553,7 @@ def draw_stacked_bars(df, perc, sample="", parts=[], outfile="", colours=COLOURS
         width=0.9,
         color=colours,
         source=df,
-        legend=[value(x) for x in parts],
+        legend_label=str([value(x) for x in parts]),
     )
 
     nr_fig.y_range.start = 0
@@ -583,7 +583,7 @@ def draw_stacked_bars(df, perc, sample="", parts=[], outfile="", colours=COLOURS
         width=0.9,
         color=colours,
         source=perc,
-        legend=[value(x) for x in parts],
+        legend_label=str([value(x) for x in parts]),
     )
 
     perc_fig.y_range.start = 0

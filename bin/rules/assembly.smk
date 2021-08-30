@@ -8,7 +8,7 @@ rule De_novo_assembly:
     input:
         fastq_pR1       =   rules.HuGo_removal_pt2_extract_paired_unmapped_reads.output.fastq_R1,
         fastq_pR2       =   rules.HuGo_removal_pt2_extract_paired_unmapped_reads.output.fastq_R2,
-        fastq_unpaired  =   rules.HuGo_removal_pt3_extract_unpaired_unmapped_reads.output
+        fastq_unpaired  =   rules.HuGo_removal_pt3_extract_unpaired_unmapped_reads.output.fq
     output:
         all_scaffolds   =   f"{datadir + scf_raw}" + "{sample}/scaffolds.fasta",
         filt_scaffolds  =   f"{datadir + scf_filt}" + "{sample}" + f"_scaffolds_ge{minlensize}nt.fasta"

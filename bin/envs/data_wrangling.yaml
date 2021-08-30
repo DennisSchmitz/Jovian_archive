@@ -4,6 +4,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-    - biopython==1.72
-    - pandas==0.23.4
-    - gawk==4.2.1
+  - python=3.7
+  - biopython==1.79
+  - pandas>=0.23.4
+  - gawk>=4.2.1

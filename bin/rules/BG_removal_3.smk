@@ -9,7 +9,8 @@ rule HuGo_removal_pt3_extract_unpaired_unmapped_reads:
         bam         =   rules.HuGo_removal_pt1_alignment.output.sorted_bam,
         bam_index   =   rules.HuGo_removal_pt1_alignment.output.sorted_bam_index
     output:
-        f"{datadir + cln}" + "{sample}_unpaired.fq"
+        tbam = temp(f"{datadir + cln}" + "{sample}_tempbam_unpaired.bam"),
+        fq = f"{datadir + cln}" + "{sample}_unpaired.fq"
     conda:
         f"{conda_envs}HuGo_removal.yaml"
     log:
@@ -22,6 +23,6 @@ rule HuGo_removal_pt3_extract_unpaired_unmapped_reads:
     shell:
         """
 samtools view -@ {threads} -b -F 1 -f 4 {input.bam} 2> {log} |\
-samtools sort -@ {threads} -n - 2>> {log} |\
-bedtools bamtofastq -i - -fq {output} >> {log} 2>&1
+samtools sort -@ {threads} -n -o {output.tbam} 2>> {log}
+bedtools bamtofastq -i {output.tbam} -fq {output.fq} >> {log} 2>&1
         """
