@@ -22,7 +22,7 @@ rule concatenate_read_counts:
         memory = 4 * 1024
     shell:
         """
-        bin/scripts/concatenate_mapped_read_counts.py \
+        python bin/scripts/concatenate_mapped_read_counts.py \
         -i {input} \
         -o {output} \
         > {log} 2>&1

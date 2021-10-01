@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Concatenate the filtered vcf files.
 
 Usage:
