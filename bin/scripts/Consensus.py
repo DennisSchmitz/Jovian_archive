@@ -134,9 +134,7 @@ def ListIns(pileupindex):
     insertpositions = []
     insertpercentage = []
     for index, rows in pileupindex.iterrows():
-        values = []
-        for items in pileupindex.loc[index]:
-            values.append(items)
+        values = list(pileupindex.loc[index])
         position = index
         coverage = values[0]
         inserts = values[6]
@@ -150,8 +148,7 @@ def ListIns(pileupindex):
             insertpercentage.append(number)
     if not insertpositions:
         return False, insertpositions, insertpercentage
-    if insertpositions:
-        return True, insertpositions, insertpercentage
+    return True, insertpositions, insertpercentage
 
 
 def Inside_an_ORF(location, GFFindex):
@@ -160,9 +157,9 @@ def Inside_an_ORF(location, GFFindex):
         in_orf = location in range(orf.start, orf.end)
         exists_in_orf.append(in_orf)
 
-    if any(exists_in_orf) == True:
+    if any(exists_in_orf):
         in_orf = True
-    elif any(exists_in_orf) == False:
+    elif not any(exists_in_orf):
         in_orf = False
     else:
         in_orf = False
@@ -186,9 +183,9 @@ def BeyondStopCodon(location, gffindex, currentseq):
     def GFF_start_end(location, GFFindex):
         for index, orf in GFFindex.iterrows():
             in_orf = location in range(orf.start, orf.end)
-            if in_orf == False:
+            if not in_orf:
                 continue
-            if in_orf == True:
+            if in_orf:
                 return orf.start
 
     def ORFsequence(startloc, seqstring):
@@ -205,10 +202,7 @@ def BeyondStopCodon(location, gffindex, currentseq):
     for i in stopcodons:
         stopcounter.append(codons.count(i))
 
-    if any(stopcounter) > 0:
-        return True
-    else:
-        return False
+    return any(stopcounter) > 0
 
 
 def slices(mintwo, minone, zero, plusone, plustwo):
@@ -257,16 +251,11 @@ def ExtractInserts(bam, position):
     endpos = position
     for pileupcolumn in bam.pileup(refname, startpos, endpos, truncate=True):
         items = pileupcolumn.get_query_sequences(add_indels=True)
-        founditems = []
-        for i in items:
-            founditems.append(i.upper())
+        founditems = [i.upper() for i in items]
         sorteddistribution = dict(Counter(founditems).most_common())
         pileupresult = next(iter(sorteddistribution))
-        match = re.search("(\d)([a-zA-Z]+)", pileupresult)
-
-        if match:
-            nucleotides = match.group(2)
-            return nucleotides
+        if match := re.search("(\d)([a-zA-Z]+)", pileupresult):
+            return match.group(2)
         else:
             return None
 
@@ -274,9 +263,7 @@ def ExtractInserts(bam, position):
 def BuildCoverage(pileupindex):
     with flags.coverage as coverage_output:
         for index, rows in pileupindex.iterrows():
-            slice_c = []
-            for items in pileupindex.loc[index]:
-                slice_c.append(items)
+            slice_c = list(pileupindex.loc[index])
             coverage = slice_c[0]
             coverage_output.write(str(index) + "\t" + str(coverage) + "\n")
 

@@ -56,15 +56,15 @@ flags = arg.parse_args()
 def IndexReads(fastqfile):
     #### Big thanks to this guy who suggested using a giant dict instead of df.append for speed improvements
     #### https://stackoverflow.com/a/50105723
-    
+
     ## Laad het FastQ bestand in memory zodat we geen operaties hoeven te doen op een filehandle
     ## vermijden van filesystem-latency
     with open(fastqfile, "r") as f:
         line = f.read()
-    
+
     ReadDict = {}
     i = 0
-    
+
     ## Biopython wil enkel en alleen handelen op filehandles (beetje raar) dus is het nodig om via StringIO een filehandle te maken vanuit een memory-stream
     fastq_io = StringIO(line)
     for record in SeqIO.parse(fastq_io, "fastq"):
@@ -73,15 +73,16 @@ def IndexReads(fastqfile):
         seq = record.seq
         if len(seq) == 0:
             seq = np.nan
-        ReadDict[i] = {"Readname": str(record.id), "Sequence": str(seq), 'Qualities': str(RecordQualities)}
+        ReadDict[i] = {
+            "Readname": str(record.id),
+            "Sequence": str(seq),
+            'Qualities': RecordQualities,
+        }
         i = i + 1
 
     fastq_io.close()
 
-    ## Maak van de dict een dataframe
-    ReadIndex = pd.DataFrame.from_dict(ReadDict, "index")
-    
-    return ReadIndex
+    return pd.DataFrame.from_dict(ReadDict, "index")
 
 ### zoek de coordinaten van primersequenties
 def search_primers(pattern, reference, id):
@@ -101,21 +102,21 @@ def search_primers(pattern, reference, id):
 def PrimerCoordinates(primers, ref):
     left = ['LEFT', 'PLUS', "POSITIVE"]
     right = ['RIGHT', 'MINUS', 'NEGATIVE']
-    
+
     BedLeft = pd.DataFrame([])
     BedRight = pd.DataFrame([])
-    
+
     for record in SeqIO.parse(primers, "fasta"):
-        if any(orient in record.id for orient in left) is True:
+        if any(orient in record.id for orient in left):
             ref, start, end, id = search_primers(record.seq, reference, record.id)
             BedLeft = BedLeft.append(pd.DataFrame({"chrom": ref, "start": start, "stop": end, "name": id}, index=[0]), ignore_index=True)
-        if any(orient in record.id for orient in right) is True:
+        if any(orient in record.id for orient in right):
             ref, start, end, id = search_primers(record.seq, reference, record.id)
             BedRight = BedRight.append(pd.DataFrame({"chrom": ref, "start": start, "stop": end, "name": id}, index=[0]), ignore_index=True)
-    
+
     ForwardList = PrimerCoordinates_forward(BedLeft)
     ReverseList = PrimerCoordinates_reverse(BedRight)
-    
+
     return ForwardList, ReverseList, BedLeft, BedRight
 
 
@@ -124,18 +125,14 @@ def PrimerCoordinates_forward(bed):
     coordlist = []
     for index, chrom in bed.iterrows():
         list = [*range(chrom.start-1, chrom.stop, 1)]
-        for i in list:
-            coordlist.append(i)
-            
+        coordlist.extend(iter(list))
     return coordlist
 
 def PrimerCoordinates_reverse(bed):
     coordlist = []
     for index, chrom in bed.iterrows():
         list = [*range(chrom.start+1, chrom.stop+1, 1)]
-        for i in list:
-            coordlist.append(i)
-            
+        coordlist.extend(iter(list))
     return coordlist
 
 def slice_forward(readstart, seq, qual):
@@ -158,10 +155,7 @@ def ReadBeforePrimer_FW(readstart, coordlist):
     diff = lambda val: abs(val - readstart)
     nearest_int = min(coordlist, key=diff)
 
-    if readstart <= nearest_int:
-        return True
-    else:
-        return False
+    return readstart <= nearest_int
 
 
 def ReadAfterPrimer_RV(readend, coordlist):
@@ -170,10 +164,7 @@ def ReadAfterPrimer_RV(readend, coordlist):
     diff = lambda val: abs(val - readend)
     nearest_int = min(coordlist, key=diff)
 
-    if readend >= nearest_int:
-        return True
-    else:
-        return False
+    return readend >= nearest_int
     
     
 def Cut_reads(Frame):
@@ -181,14 +172,14 @@ def Cut_reads(Frame):
     reference = flags.reference
     primerfasta = flags.primers
     fwlist, rvlist, BedLeft, BedRight = PrimerCoordinates(primerfasta, reference)
-    
+
     # init the aligner on a "per block" basis to reduce overhead.
     Aln = mp.Aligner(reference, preset="sr", best_n=1)
-    
+
     readnames = Frame['Readname'].tolist()
     sequences = Frame['Sequence'].tolist()
     qualities = Frame['Qualities'].tolist()
-    
+
     processed_readnames = []
     processed_sequences = []
     processed_qualities = []
@@ -204,23 +195,23 @@ def Cut_reads(Frame):
                 continue
             looplimiter +=1
 
-            if hit.strand == 1:
-                reverse = False
             if hit.strand == -1:
                 reverse = True
 
+            elif hit.strand == 1:
+                reverse = False
             start = hit.r_st
             end = hit.r_en
-            
-            qstart = hit.q_st
 
             if reverse is False:
                 
+                qstart = hit.q_st
+
                 if qstart != 0:
                     seq = seq[qstart:]
                     qual = qual[qstart:]
-                    
-                
+
+
                 while ReadBeforePrimer_FW(start, fwlist) is True:
                     seq, qual, start = slice_forward(start, seq, qual)
                     hitlimiter = 0
@@ -231,7 +222,7 @@ def Cut_reads(Frame):
                         start = hit2.r_st
 
                 stepper = 0
-                while (start in fwlist) is True:
+                while start in fwlist:
                     seq, qual, start = slice_forward(start, seq, qual)
                     if stepper == 3:
                         hitlimiter = 0
@@ -256,7 +247,7 @@ def Cut_reads(Frame):
                         end = hit2.r_en
 
                 stepper = 0
-                while (end in rvlist) is True:
+                while end in rvlist:
                     seq, qual, end = slice_reverse(end, seq, qual)
                     if stepper == 3:
                         hitlimiter = 0
@@ -277,12 +268,14 @@ def Cut_reads(Frame):
         processed_readnames.append(name)
         processed_sequences.append(seq)
         processed_qualities.append(qual)
-        
-    ProcessedReads = pd.DataFrame({
-        "Readname": processed_readnames,
-        "Sequence": processed_sequences,
-        "Qualities": processed_qualities})
-    return ProcessedReads
+
+    return pd.DataFrame(
+        {
+            "Readname": processed_readnames,
+            "Sequence": processed_sequences,
+            "Qualities": processed_qualities,
+        }
+    )
 
 def parallel(df, func, workers=min(multiprocessing.cpu_count(), 128)):
     df_split = np.array_split(df, workers)
@@ -297,31 +290,31 @@ if __name__ == "__main__":
     primerfasta = flags.primers
     fastqfile = flags.input
     output = flags.output
-    
-    
+
+
     ReadFrame = IndexReads(fastqfile)
-    
+
     ReadFrame.dropna(subset=['Sequence'], inplace=True)
     ReadFrame = ReadFrame.sample(frac=1).reset_index(drop=True)
-    
+
     ProcessedReads = parallel(ReadFrame, Cut_reads, flags.threads)
-    
+
     ProcessedReads.dropna(subset=['Sequence', 'Qualities'], inplace=True)
-    
+
     ReadDict = ProcessedReads.to_dict(orient='records')
-    
+
     with open(output, "w") as fileout:
         for index in range(len(ReadDict)):
             for key in ReadDict[index]:
-                if key == "Readname":
-                    fileout.write(
-                        "@" + ReadDict[index][key] + "\n"
-                    )
-                if key == 'Sequence':
-                    fileout.write(
-                        str(ReadDict[index][key]) + "\n" + "+" + "\n"
-                    )
                 if key == 'Qualities':
                     fileout.write(
                         str(ReadDict[index][key]) + "\n"
+                    )
+                elif key == 'Sequence':
+                    fileout.write(
+                        str(ReadDict[index][key]) + "\n" + "+" + "\n"
+                    )
+                elif key == "Readname":
+                    fileout.write(
+                        "@" + ReadDict[index][key] + "\n"
                     )

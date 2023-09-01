@@ -290,17 +290,15 @@ def filter_taxa(df, taxon, rank):
     """
     if isinstance(taxon, str):
         # If a string is provided, continue as intended
-        subset_df = df[df[rank] == taxon]
+        return df[df[rank] == taxon]
     elif isinstance(taxon, list) and len(taxon) == 1:
         # If a single-entry list is provided, use taxon as string
         taxon = taxon[0]
-        subset_df = df[df[rank] == taxon]
+        return df[df[rank] == taxon]
     else:
         # If a list is provided, filter all given taxa
         taxa_list = taxon
-        subset_df = df[df[rank].isin(taxa_list)]
-
-    return subset_df
+        return df[df[rank].isin(taxa_list)]
 
 
 def remove_taxa(df, taxon, rank):
@@ -311,17 +309,15 @@ def remove_taxa(df, taxon, rank):
     """
     if isinstance(taxon, str):
         # If a string is provided, continue as intended
-        subset_df = df[~df[rank] == taxon]
+        return df[~df[rank] == taxon]
     elif isinstance(taxon, list) and len(taxon) == 1:
         # If a single-entry list is provided, use taxon as string
         taxon = taxon[0]
-        subset_df = df[~df[rank] == taxon]
+        return df[~df[rank] == taxon]
     else:
         # If a list is provided, filter all given taxa
         taxa_list = taxon
-        subset_df = df[~df[rank].isin(taxa_list)]
-
-    return subset_df
+        return df[~df[rank].isin(taxa_list)]
 
 
 def report_taxonomic_statistics(df, outfile):
@@ -351,7 +347,7 @@ def report_taxonomic_statistics(df, outfile):
         ]:
             f.write("%s\t%i\n" % (t, df[t].nunique()))
 
-    print("File %s has been created!" % outfile)
+    print(f"File {outfile} has been created!")
 
     return None
 

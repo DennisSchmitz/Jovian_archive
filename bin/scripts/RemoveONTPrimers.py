@@ -84,7 +84,7 @@ def PrimerCoordinates(primers, ref):
     BedRight = pd.DataFrame([])
 
     for record in SeqIO.parse(primers, "fasta"):
-        if any(orient in record.id for orient in left) is True:
+        if any(orient in record.id for orient in left):
             try:
                 ref, start, end, id = search_primers(record.seq, reference, record.id)
                 BedLeft = BedLeft.append(
@@ -105,7 +105,7 @@ def PrimerCoordinates(primers, ref):
                     ),
                     ignore_index=True,
                 )
-        if any(orient in record.id for orient in right) is True:
+        if any(orient in record.id for orient in right):
             try:
                 ref, start, end, id = search_primers(record.seq, reference, record.id)
                 BedRight = BedRight.append(
@@ -147,9 +147,7 @@ def PrimerCoordinates_forward(bed):
     coordlist = []
     for index, chrom in bed.iterrows():
         list = [*range(chrom.start, chrom.stop, 1)]
-        for i in list:
-            coordlist.append(i)
-
+        coordlist.extend(iter(list))
     return coordlist
 
 
@@ -157,9 +155,7 @@ def PrimerCoordinates_reverse(bed):
     coordlist = []
     for index, chrom in bed.iterrows():
         list = [*range(chrom.start, chrom.stop, 1)]
-        for i in list:
-            coordlist.append(i)
-
+        coordlist.extend(iter(list))
     return coordlist
 
 
@@ -167,9 +163,7 @@ def PrimerCoordinates_all(bed):
     coordlist = []
     for index, chrom in bed.iterrows():
         list = [*range(chrom.start, chrom.stop, 1)]
-        for i in list:
-            coordlist.append(i)
-
+        coordlist.extend(iter(list))
     return coordlist
 
 
@@ -195,16 +189,13 @@ def IndexReads(fastqfile):
         ReadDict[i] = {
             "Readname": str(record.id),
             "Sequence": str(record.seq),
-            "Qualities": str(RecordQualities),
+            "Qualities": RecordQualities,
         }
         i = i + 1
 
     fastq_io.close()
 
-    ## Maak van de dict een dataframe
-    ReadIndex = pd.DataFrame.from_dict(ReadDict, "index")
-
-    return ReadIndex
+    return pd.DataFrame.from_dict(ReadDict, "index")
 
 
 ### de verschillende cutting-functies om de sequenties en bijbehorende qualities weg te halen
@@ -242,49 +233,35 @@ def slice_reverse_right(readend, seq, qual):
 
 ## basis van de alignerfunctie
 def InitAligner(reference):
-    AlignObject = mp.Aligner(reference, preset="map-ont")
-
-    return AlignObject
+    return mp.Aligner(reference, preset="map-ont")
 
 
 def ReadBeforePrimer_FW(readstart, coordlist):
     diff = lambda val: abs(val - readstart)
     nearest_int = min(coordlist, key=diff)
 
-    if readstart <= nearest_int:
-        return True
-    else:
-        return False
+    return readstart <= nearest_int
 
 
 def ReadAfterPrimer_FW(readend, coordlist):
     diff = lambda val: abs(val - readend)
     nearest_int = min(coordlist, key=diff)
 
-    if readend >= nearest_int:
-        return True
-    else:
-        return False
+    return readend >= nearest_int
 
 
 def ReadBeforePrimer_RV(readstart, coordlist):
     diff = lambda val: abs(val - readstart)
     nearest_int = min(coordlist, key=diff)
 
-    if readstart <= nearest_int:
-        return True
-    else:
-        return False
+    return readstart <= nearest_int
 
 
 def ReadAfterPrimer_RV(readend, coordlist):
     diff = lambda val: abs(val - readend)
     nearest_int = min(coordlist, key=diff)
 
-    if readend >= nearest_int:
-        return True
-    else:
-        return False
+    return readend >= nearest_int
 
 
 def Cut_FastQ(input, reference, ForwardList, ReverseList, AllList):
@@ -298,11 +275,11 @@ def Cut_FastQ(input, reference, ForwardList, ReverseList, AllList):
         readseq = seq
         readqual = qual
 
-        if hit.strand == 1:
-            is_reverse = False
         if hit.strand == -1:
             is_reverse = True
 
+        elif hit.strand == 1:
+            is_reverse = False
         readstart = hit.r_st
         readend = hit.r_en
 
@@ -322,14 +299,14 @@ def Cut_FastQ(input, reference, ForwardList, ReverseList, AllList):
                 for hit2 in Aln.map(readseq):
                     readend = hit2.r_en
 
-            while (readstart in AllList) is True:
+            while readstart in AllList:
                 readseq, readqual, readstart = slice_forward_left(
                     readstart, readseq, readqual
                 )
                 for hit2 in Aln.map(readseq):
                     readstart = hit2.r_st
 
-            while (readend in AllList) is True:
+            while readend in AllList:
                 readseq, readqual, readend = slice_forward_right(
                     readend, readseq, readqual
                 )
@@ -352,24 +329,21 @@ def Cut_FastQ(input, reference, ForwardList, ReverseList, AllList):
                 for hit2 in Aln.map(readseq):
                     readend = hit2.r_en
 
-            while (readstart in AllList) is True:
+            while readstart in AllList:
                 readseq, readqual, readstart = slice_reverse_left(
                     readstart, readseq, readqual
                 )
                 for hit2 in Aln.map(readseq):
                     readstart = hit2.r_st
 
-            while (readend in AllList) is True:
+            while readend in AllList:
                 readseq, readqual, readend = slice_reverse_right(
                     readend, readseq, readqual
                 )
                 for hit2 in Aln.map(readseq):
                     readend = hit2.r_en
-        
-        if len(readseq) == 0:
-            return np.nan
-        
-        return readseq, readqual
+
+        return np.nan if len(readseq) == 0 else (readseq, readqual)
 
 
 if __name__ == "__main__":
@@ -389,7 +363,7 @@ if __name__ == "__main__":
     )
 
     ReadFrame.dropna(subset=['ProcessedReads'], inplace=True)
-    
+
     ReadFrame[["ProcessedSeq", "ProcessedQual"]] = pd.DataFrame(
         ReadFrame["ProcessedReads"].tolist(), index=ReadFrame.index
     )
@@ -405,9 +379,9 @@ if __name__ == "__main__":
     with open(output, "w") as fileout:
         for index in range(len(ReadDict)):
             for key in ReadDict[index]:
-                if key == "Readname":
-                    fileout.write("@" + ReadDict[index][key] + "\n")
-                if key == "ProcessedSeq":
-                    fileout.write(str(ReadDict[index][key]) + "\n" + "+" + "\n")
                 if key == "ProcessedQual":
                     fileout.write(str(ReadDict[index][key]) + "\n")
+                elif key == "ProcessedSeq":
+                    fileout.write(str(ReadDict[index][key]) + "\n" + "+" + "\n")
+                elif key == "Readname":
+                    fileout.write(f"@{ReadDict[index][key]}" + "\n")

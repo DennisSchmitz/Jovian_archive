@@ -38,8 +38,7 @@ def execute_samtools(pos, infile):
     prc_output = process.stdout.readline()
     intermediate = prc_output.split("\t")
     tup = tuple(intermediate)
-    avg_cov = tup[6]
-    return avg_cov
+    return tup[6]
 
 
 for a in bampaths:

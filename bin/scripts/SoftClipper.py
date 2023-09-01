@@ -34,10 +34,10 @@ with flags.output as fileout:
     bamfile = pysam.AlignmentFile(flags.input, "rb", threads=flags.threads)
     for read in bamfile:
 
-        read_start = read.query_alignment_start
         read_end = read.query_alignment_end
 
         trimmed_seq = read.query_alignment_sequence
+        read_start = read.query_alignment_start
         trimmed_qual = read.qual[read_start:read_end]
 
         if read.is_reverse == True:
@@ -49,8 +49,7 @@ with flags.output as fileout:
             trimmed_qual = trimmed_qual[::-1]
 
         fileout.write(
-            "@"
-            + str(read.query_name)
+            f"@{str(read.query_name)}"
             + "\n"
             + str(trimmed_seq)
             + "\n"

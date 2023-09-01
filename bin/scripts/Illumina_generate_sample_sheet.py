@@ -34,10 +34,9 @@ def main(args):
     for file_ in args.dir.iterdir():
         if file_.is_dir():
             continue
-        match = fq_pattern.fullmatch(file_.name)
-        if match:
+        if match := fq_pattern.fullmatch(file_.name):
             sample = samples.setdefault(match.group(1), {})
-            sample["R{}".format(match.group(3))] = str(file_)
+            sample[f"R{match.group(3)}"] = str(file_)
 
     print(yaml.dump(samples, default_flow_style=False))
 

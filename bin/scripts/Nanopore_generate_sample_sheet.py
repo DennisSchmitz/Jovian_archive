@@ -34,8 +34,7 @@ def main(args):
     for file_ in args.dir.iterdir():
         if file_.is_dir():
             continue
-        match = fq_pattern.fullmatch(file_.name)
-        if match:
+        if match := fq_pattern.fullmatch(file_.name):
             file = str(file_)
             sample = samples.setdefault(match.group(1), file)
 

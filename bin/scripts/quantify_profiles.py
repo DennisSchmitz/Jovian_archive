@@ -328,8 +328,8 @@ def count_non_human_reads(file_list, threads):
 
     read_df = pd.DataFrame(
         {
-            "Sample": [n for n in read_counts.keys()],
-            "Non-human_reads": [n for n in read_counts.values()],
+            "Sample": list(read_counts.keys()),
+            "Non-human_reads": list(read_counts.values()),
         }
     )
 
@@ -371,13 +371,13 @@ def sum_superkingdoms(classified_file, mapped_reads_file):
     # Check all samples and superkingdoms to find out for which superkingdoms there is no data
     samples_superkingdoms_dict = {}
     for i in superkingdom_sums.index:
-        if i[0] not in samples_superkingdoms_dict.keys():
-            # If the sample name is not yet in the dictionary, add it with the corresponding superkingdom
-            samples_superkingdoms_dict[i[0]] = [i[1]]
-        else:
+        if i[0] in samples_superkingdoms_dict:
             # If the sample is there already, add the current superkingdom
             samples_superkingdoms_dict[i[0]].append(i[1])
 
+        else:
+            # If the sample name is not yet in the dictionary, add it with the corresponding superkingdom
+            samples_superkingdoms_dict[i[0]] = [i[1]]
     # Make a dataframe for the missing data
     newdata = pd.DataFrame(index=superkingdom_sums.index, columns=[])
 
@@ -391,9 +391,6 @@ def sum_superkingdoms(classified_file, mapped_reads_file):
         ]:
             if superkingdom not in value:
                 newdata.loc[(key, superkingdom), "mapped_reads"] = 0
-            else:
-                pass
-
     # Concatenate the missing data into the dataframe
     new_df = pd.concat([superkingdom_sums, newdata], sort=False)
     new_df.reset_index(inplace=True)
@@ -461,7 +458,6 @@ def validate_numbers(df, log=False):
 
     errors = []
     for i in range(len(df)):
-        sample = df.loc[i, "Sample"]
         total = df.loc[i, "Total_reads"]
         reads_sum = (
             df.loc[i, "Low-quality"]
@@ -474,6 +470,7 @@ def validate_numbers(df, log=False):
         )
 
         if not total >= reads_sum:
+            sample = df.loc[i, "Sample"]
             if log:
                 with open(log, "a") as logfile:
                     logfile.write(
@@ -486,26 +483,22 @@ def validate_numbers(df, log=False):
                     % (df.loc[i, "Sample"], reads_sum, total)
                 )
             errors.append(df.loc[i, "Sample"])
-        else:
-            pass
-
     if log:
         with open(log, "a") as logfile:
-            if len(errors) == 0:
-                logfile.write("All numbers okay: no sums are higher than the total!\n")
-            else:
+            if errors:
                 logfile.write(
                     "%i errors have been found, these are from samples: %s\n"
                     % (len(errors), errors)
                 )
+            else:
+                logfile.write("All numbers okay: no sums are higher than the total!\n")
+    elif not errors:
+        print("All numbers okay: no sums are higher than the total!\n")
     else:
-        if len(errors) == 0:
-            print("All numbers okay: no sums are higher than the total!\n")
-        else:
-            print(
-                "%i errors have been found, these are from samples: %s"
-                % (len(errors), errors)
-            )
+        print(
+            "%i errors have been found, these are from samples: %s"
+            % (len(errors), errors)
+        )
 
     return None
 
@@ -544,7 +537,7 @@ def draw_stacked_bars(df, perc, sample="", parts=[], outfile="", colours=COLOURS
         title="Composition of samples (read-based)",
         toolbar_location=None,
         tools="hover, pan",
-        tooltips="@%s $name: @$name" % sample,
+        tooltips=f"@{sample} $name: @$name",
     )
 
     nr_fig.vbar_stack(
@@ -574,7 +567,7 @@ def draw_stacked_bars(df, perc, sample="", parts=[], outfile="", colours=COLOURS
         title="Composition of samples (percentages)",
         toolbar_location=None,
         tools="hover, pan",
-        tooltips="@%s $name: @$name" % sample,
+        tooltips=f"@{sample} $name: @$name",
     )
 
     perc_fig.vbar_stack(
@@ -682,11 +675,8 @@ def main():
                 logfile.write("Cores not provided by snakemake,\n")
                 logfile.write("trying to read them from the -cpu argument...\n")
 
-            if not isinstance(threads, int) or not threads in range(1, 32):
+            if not isinstance(threads, int) or threads not in range(1, 32):
                 threads = 4
-            else:
-                pass
-
             logfile.write(
                 "Continuing with %i threads for reading fastq files.\n" % threads
             )
@@ -700,11 +690,8 @@ def main():
             print("\nCores not provided by snakemake,")
             print("trying to read them from the -cpu argument...")
 
-        if not isinstance(threads, int) or not threads in range(1, 32):
+        if not isinstance(threads, int) or threads not in range(1, 32):
             threads = 4
-        else:
-            pass
-
         print("Continuing with %i threads for reading fastq files." % threads)
 
     # 2. Total (raw) read numbers/sample
@@ -863,10 +850,7 @@ def main():
         if header == "Sample":
             # Copy the Sample column
             perc_df[header] = nrs_df[header]
-        elif header == "Total_reads":
-            # Skip the Total_reads column (no need with percentages)
-            pass
-        else:
+        elif header != "Total_reads":
             # Create a percentage column for all other values
             perc_df[header] = nrs_df[header] / nrs_df["Total_reads"] * 100
 
